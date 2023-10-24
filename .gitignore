@@ -1,0 +1,9 @@
+# Ignore custom cmake directories
+bin/
+
+# Ignore generated ANTLR sources
+gen/
+
+# Ignore CLion files
+cmake-build*/
+.idea/

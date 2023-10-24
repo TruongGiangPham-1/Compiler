@@ -1,0 +1,46 @@
+============================================================================================
+*** Meeting Date/Time start/end:
+ 19/08/2020 1:30 PM
+ 19/08/2020 2:30 PM
+ 
+*** Attendees:
+  Nelson
+  Braedy (Arrived at 1:45 PM)
+  Deric (Left at 2:20 PM)
+  
+*** Member's Progress:
+    Nelson: Finished the revisions to the specs document and pushed to the repo. Reviewed and returned Braedy PR with comments about documentation. 
+    Braedy: Completed the implementation of the type-inference functions and created a PR.
+    Deric: Found and corrected the bug on the argument types for the buffer allocators. Working on the bit-vector function implementation.
+*** Discussion items/agenda:
+    Memory allocator memory leak.
+    Missing documentation on type inference functions.
+*** Actions:
+  - Nelson volunteers to address the memory allocator leak.
+  - Braedy promises to be better about documentation in the future and will
+    return to these functions to add documentation today.
+  - Deric will discuss documentation style with Braedy and will create a PR for the bit-vector functions.
+*** Outstanding Issues:
+  - Improve test generation.
+  - Matrix implementation
+*** Round table:
+  - Deric:
+    - Wants to work on matrix multiplication in grammar and AST next.
+  - Nelson:
+    - Completed I/O runtime functions last week.
+    - Working on matrix multiplication runtime functions this week.
+  - Braedy:
+    - Completed integer arithmetic lowering to IR.
+    - Started and will continue to work on float arithmetic.
+    - Stretch goal for next week: integer-to-float promotion.
+
+============================================================================================
+*** Meeting Date/Time start/end:
+*** Attendees:
+*** Late arrivals (Person (time)):
+*** Early departures (Person(time)):
+*** Member's Progress:
+*** Discussion items/agenda:
+*** Actions:
+*** Outstanding Issues:
+*** Round table:
