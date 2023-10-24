@@ -1,0 +1,34 @@
+{
+  "inDir": "<inDir>",
+  "outDir": "<outDir>",
+  "inStrDir": "<inStrDir>",
+  "testedExecutablePaths": {
+    "<team id>": "<path_to_gazc_exe>"
+  },
+  "runtimes": {
+    "<team id>": "<path_to_libgazrt.so>"
+  },
+  "toolchains": {
+    "gazprea": [
+      {
+        "stepName": "gazc",
+        "executablePath": "$EXE",
+        "arguments": [
+          "$INPUT",
+          "$OUTPUT"
+          ],
+        "output": "gazc.ll"
+      },
+      {
+        "stepName": "lli",
+        "executablePath": "/cshome/c415/415-resources/llvmi/bin/lli",
+        "arguments": [
+          "$INPUT"
+        ],
+        "output": "-",
+        "usesRuntime": true,
+        "usesInStr": true
+      }
+    ]
+  }
+}
