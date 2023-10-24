@@ -1,0 +1,41 @@
+============================================================================================
+*** Meeting Date/Time start/end:
+ 19/08/2020 1:30 PM
+ 19/08/2020 1:45 PM
+ 
+*** Attendees:
+  Nelson 
+  Braedy (arrived 1:34 PM)
+  Deric (left at 1:42 PM
+  
+*** Progress:
+  - Deric:
+    - Found a memory leak in the memory allocator.
+      - Specifically with resizing vectors during additions.
+      - Nelson volunteered to fix it.
+    - Done:
+      - Started working on matrix multiplication in grammar and AST.
+    - Next:
+      - Will continue the same work.
+  - Nelson:
+    - Type promotion between vectors with different scalar types is missing
+      documentation.
+      - Braedy promises to be better about documentation in the future.
+      - Braedy will complete the documentation today.
+        - Deric will verify it is complete.
+    - Done:
+      - Completed I/O runtime functions.
+    - Next:
+      - Working on matrix multiplication runtime functions.
+  - Braedy:
+    - No issues.
+    - Done:
+      - Completed integer arithmetic lowering.
+    - Next:
+      - Started and will continue to work on float arithmetic.
+      - Stretch: integer to float promotion.
+
+*** Issues:
+     In future documentation should be completed before creating a PR to avoid waisting reviewer's time
+*** Actions:
+    PRs without documentation to be sent back immediately without review.
