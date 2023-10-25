@@ -40,8 +40,6 @@ int main(int argc, char **argv) {
   // Visit the tree
   // visitor.visit(tree);
 
-  BackEnd backend;
-  backend.emitMain();
 
   // HOW TO WRITE OUT.
   // std::ofstream out(argv[2]);
