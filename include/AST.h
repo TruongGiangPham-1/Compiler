@@ -46,3 +46,73 @@ public:
 
     virtual ~AST();
 };
+
+class IDNode : public AST {
+public:
+    Symbol* sym; // pointer to symbol definition
+
+    IDNode(antlr4::Token* token, Symbol* sym) : AST(token), sym(sym) {}
+    IDNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+};
+
+class DeclNode : public AST {
+public:
+    Symbol* sym;
+    AST* expr;
+
+    DeclNode(antlr4::Token* token, Symbol* sym) : AST(token), sym(sym) {}
+    DeclNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+};
+
+// assign nodes have the same definition as DeclNodes
+class AssignNode : public DeclNode {
+public:
+    AssignNode(antlr4::Token* token, Symbol* sym) : DeclNode(token, sym) {}
+};
+
+// ----
+// EXPR
+// ----
+
+
+class ExprAST : public AST {
+public:
+    Type* type;  // For type checking
+
+    ExprAST(antlr4::Token* token) : AST(token), type(nullptr) {}
+    ExprAST(size_t tokenType) : AST(tokenType), type(nullptr) {}
+};
+
+
+class BinaryExpr
+{
+public:
+    BinaryExpr(){}
+    virtual ~BinaryExpr(){}
+    virtual void getLHS() = 0;
+    virtual void getRHS() = 0;
+};
+
+class UnaryExpr
+{
+public:
+    UnaryExpr(){}
+    virtual ~UnaryExpr(){}
+    virtual void getExpr() = 0;
+};
+
+class RangeVecNode : public ExprAST, public BinaryExpr {
+public:
+    ExprAST* left;
+    ExprAST* right;
+
+    RangeVecNode(antlr4::Token* token) : ExprAST(token), left(nullptr), right(nullptr) {}
+};
+
+class BinaryArithNode : public ExprAST, public BinaryExpr {
+public:
+    ExprAST* left;
+    ExprAST* right;
+
+    BinaryArithNode(antlr4::Token* token) : ExprAST(token), left(nullptr), right(nullptr) {}
+};
