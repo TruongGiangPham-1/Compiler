@@ -3,6 +3,21 @@ set(
   gazprea_src_files
     "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/BackEnd.cpp"
+        ../include/Symbol.h
+        ../include/Type.h
+        ../include/Scope.h
+        ../include/BuiltInTypeSymbol.h
+        BaseScope.cpp
+        ../include/BaseScope.h
+        AST.cpp
+        ../include/AST.h
+        ASTBuilder.cpp
+        ../include/ASTBuilder.h
+        Symbol.cpp
+        DefRef.cpp
+        ../include/ASTWalker.h
+        SymbolTable.cpp
+        ../include/SymbolTable.h
 )
 
 # Build our executable from the source files.
