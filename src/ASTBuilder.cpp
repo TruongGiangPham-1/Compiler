@@ -1,27 +1,46 @@
 #include "ASTBuilder.h"
 #include "AST.h"
 
+#define DEBUG
+
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
+#ifdef DEBUG
+        std::cout << "INIT BUILDER: VISITING FILE" << std::endl;
+#endif
+
         AST *t = new AST();
         for ( auto statement : ctx->statement() ) {
+
             t->addChild(visit(statement));
         }
         return t;
     }
 
     std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
-        AST *t = new AST(GazpreaParser::VAR_DECL);
-        t->addChild(visit(ctx->type()));
-        t->addChild(new AST(ctx->ID()->getSymbol()));
-        t->addChild(visit(ctx->expression()));
-        return t;
+#ifdef DEBUG
+        std::cout << "visitVarDecl type " << ctx->getStart()->getType() << ": "
+                  << ctx->ID()->getText() << std::endl;
+#endif
+        Symbol* sym = new Symbol(ctx->ID()->getSymbol()->getText());
+        DeclNode *t = new DeclNode(GazpreaParser::VAR_DECL, sym);
+        t->expr = std::any_cast<ExprAST*>(visit(ctx->expression()));
+        t->type = std::any_cast<TypeNode*>(visit(ctx->type()));
+        std::cout << "Returning vardecl" << std::endl;
+        AST* ret = t;
+
+        return ret;
     }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
-        AST *t = new AST(GazpreaParser::ASSIGN);
-        t->addChild(new AST(ctx->ID()->getSymbol()));
-        t->addChild(visit(ctx->expression()));
+#ifdef DEBUG
+        std::cout << "visitAssign " << ctx->getStart()->getType() << ": "
+                  << ctx->ID()->getText() << std::endl;
+#endif
+        Symbol* sym = new Symbol(ctx->ID()->getSymbol()->getText());
+        AssignNode *t = new AssignNode(GazpreaParser::VAR_DECL, sym);
+        t->expr = std::any_cast<ExprAST*>(visit(ctx->expression()));
+
         return t;
     }
 
@@ -63,9 +82,9 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitRange(GazpreaParser::RangeContext *ctx) {
-        AST *t = new AST(GazpreaParser::RANGE);
-        t->addChild(visit(ctx->expr(0)));
-        t->addChild(visit(ctx->expr(1)));
+        RangeVecNode *t = new RangeVecNode(GazpreaParser::RANGE);
+        t->left = std::any_cast<ExprAST*>(ctx->expr(0));
+        t->right = std::any_cast<ExprAST*>(ctx->expr(1));
         return t;
     }
 
@@ -86,56 +105,85 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
-        AST *t = nullptr;
-        if (ctx->op->getType() == GazpreaParser::MULT) {
-            t = new AST(GazpreaParser::MULT);
+        // TODO remove token - we don't need it here!
+        BinaryArithNode *t = new BinaryArithNode(ctx->op->getType());
+
+        BINOP op;
+        switch (ctx->op->getType()) {
+            case GazpreaParser::MULT:
+                op = BINOP::MULT;
+                break;
+            case GazpreaParser::DIV:
+                op = BINOP::DIV;
+                break;
+            case GazpreaParser::ADD:
+                op = BINOP::ADD;
+            case GazpreaParser::SUB:
+                op = BINOP::SUB;
         }
-        else if (ctx->op->getType() == GazpreaParser::DIV){
-            t = new AST(GazpreaParser::DIV);
-        }
-        else if (ctx->op->getType() == GazpreaParser::ADD){
-            t = new AST(GazpreaParser::ADD);
-        }
-        else
-            t = new AST(GazpreaParser::SUB);
-        t->addChild(visit(ctx->expr(0)));
-        t->addChild(visit(ctx->expr(1)));
+        t->left = std::any_cast<ExprAST*>(visit(ctx->expr(0)));
+        t->right = std::any_cast<ExprAST*>(visit(ctx->expr(1)));
+        t->op = op;
         return t;
     }
 
     std::any ASTBuilder::visitCmp(GazpreaParser::CmpContext *ctx) {
-        AST *t = nullptr;
-        if (ctx->op->getType() == GazpreaParser::LT) {
-            t = new AST(GazpreaParser::LT);
+        BinaryCmpNode *t = new BinaryCmpNode(ctx->op->getType());
+
+        BINOP op;
+        switch (ctx->op->getType()) {
+            case GazpreaParser::MULT:
+                op = BINOP::MULT;
+                break;
+            case GazpreaParser::DIV:
+                op = BINOP::DIV;
+                break;
+            case GazpreaParser::ADD:
+                op = BINOP::ADD;
+            case GazpreaParser::SUB:
+                op = BINOP::SUB;
         }
-        else if (ctx->op->getType() == GazpreaParser::GT){
-            t = new AST(GazpreaParser::GT);
-        }
-        else if (ctx->op->getType() == GazpreaParser::EQ){
-            t = new AST(GazpreaParser::EQ);
-        }
-        else
-            t = new AST(GazpreaParser::NEQ);
-        t->addChild(visit(ctx->expr(0)));
-        t->addChild(visit(ctx->expr(1)));
+        t->left = std::any_cast<ExprAST*>(visit(ctx->expr(0)));
+        t->right = std::any_cast<ExprAST*>(visit(ctx->expr(1)));
+        t->op = op;
         return t;
     }
 
     std::any ASTBuilder::visitLiteralID(GazpreaParser::LiteralIDContext *ctx) {
-        return new AST(ctx->ID()->getSymbol());
+#ifdef DEBUG
+        std::cout << "visitID " << ctx->ID()->getSymbol()->getText() << std::endl;
+#endif
+        Symbol* sym = new Symbol(ctx->ID()->getSymbol()->getText());
+        return new IDNode(ctx->ID()->getSymbol(), sym);
     }
 
     std::any ASTBuilder::visitLiteralInt(GazpreaParser::LiteralIntContext *ctx) {
-        return new AST(ctx->INT()->getSymbol());
+#ifdef DEBUG
+        std::cout << "visitInt " << ctx->getText() << std::endl;
+#endif
+        ExprAST* t = new IntNode(GazpreaParser::INT,std::stoi(ctx->getText()));
+        return t;
+//        ExprAST* ret = new IntNode(GazpreaParser::INT,std::stoi(ctx->getText()));
+//        std::cout << "INT: casting" << std::endl;
+//        auto retCasted = std::any_cast<ExprAST*>(ret);
+//        std::cout << "INT: done casting" << std::endl;
+//        return retCasted;
     }
 
     std::any ASTBuilder::visitType(GazpreaParser::TypeContext *ctx) {
-        return new AST(ctx->getStart());
+#ifdef DEBUG
+        std::cout << "visitType " << ctx->getText() << std::endl;
+#endif
+        Symbol* sym = new Symbol(ctx->getText());
+        return new TypeNode(ctx->getStart(), sym);
     }
 
     std::any ASTBuilder::visitExpression(GazpreaParser::ExpressionContext *ctx) {
-        AST *t = new AST(GazpreaParser::EXPRESSION);
-        t->addChild(visit(ctx->expr()));
-        return t;
+#ifdef DEBUG
+        std::cout << "visitExpression (parent) " << ctx->getText() << std::endl;
+#endif
+        // just return the inner expression
+        // the parent expression is just to help the grammar, so it's not needed here
+        return std::any_cast<ExprAST*>(visit(ctx->expr()));
     }
 }

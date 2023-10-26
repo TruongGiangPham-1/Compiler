@@ -2,6 +2,7 @@
 
 #include "antlr4-runtime.h"
 #include "mlir/IR/Value.h"
+#include "GazpreaParser.h"
 
 #include <vector>
 #include <string>
@@ -10,7 +11,7 @@
 #include "Scope.h"
 #include "Type.h"
 #include "Symbol.h"
-
+#include "BINOP.h"
 
 class Scope;
 class Symbol;
@@ -22,7 +23,6 @@ public:
     Scope* scope;               // containing scope
     Symbol* symbol;             // containing symbol
     Type* type;
-    mlir::Value mlirValue;
 
     AST(); // for making nil-rooted nodes
     AST(antlr4::Token* token);
@@ -47,27 +47,33 @@ public:
     virtual ~AST();
 };
 
-class IDNode : public AST {
+// TODO in Cymbol, the type node was the same as IDNode, and both were called SymAST
+// I wonder if it's worth to differentiate between them...
+class TypeNode : public AST {
 public:
-    Symbol* sym; // pointer to symbol definition
+    Symbol* sym; // symbol of the name of the type
 
-    IDNode(antlr4::Token* token, Symbol* sym) : AST(token), sym(sym) {}
-    IDNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+    TypeNode(antlr4::Token* token, Symbol* sym) : AST(token), sym(sym) {}
+    TypeNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
 };
 
+class ExprAST;
+class AssignNode : public AST {
+public:
+    Symbol* sym;
+    ExprAST* expr;
+
+    AssignNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+};
+
+// Decl nodes are very similar to Assign nodes, but with more stuff
 class DeclNode : public AST {
 public:
     Symbol* sym;
-    AST* expr;
+    ExprAST* expr;
+    TypeNode* type;
 
-    DeclNode(antlr4::Token* token, Symbol* sym) : AST(token), sym(sym) {}
     DeclNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
-};
-
-// assign nodes have the same definition as DeclNodes
-class AssignNode : public DeclNode {
-public:
-    AssignNode(antlr4::Token* token, Symbol* sym) : DeclNode(token, sym) {}
 };
 
 // ----
@@ -79,40 +85,62 @@ class ExprAST : public AST {
 public:
     Type* type;  // For type checking
 
-    ExprAST(antlr4::Token* token) : AST(token), type(nullptr) {}
     ExprAST(size_t tokenType) : AST(tokenType), type(nullptr) {}
+    ExprAST(antlr4::Token* token) : AST(token), type(nullptr) {}
 };
 
 
-class BinaryExpr
+class IDNode : public ExprAST  {
+public:
+    Symbol* sym; // pointer to symbol definition
+
+    IDNode(antlr4::Token* token, Symbol* sym) : ExprAST(token), sym(sym) {}
+    IDNode(size_t tokenType, Symbol* sym) : ExprAST(tokenType), sym(sym) {}
+};
+
+class IntNode : public ExprAST {
+public:
+    int val;
+
+    IntNode(size_t tokenType, int val) : ExprAST(tokenType), val(val) {}
+};
+
+
+class BinaryExpr : public ExprAST
 {
 public:
-    BinaryExpr(){}
-    virtual ~BinaryExpr(){}
-    virtual void getLHS() = 0;
-    virtual void getRHS() = 0;
+    BinaryExpr(size_t tokenType) : ExprAST(tokenType), left(nullptr), right(nullptr) {}
+    ExprAST* getLHS() { return left; };
+    ExprAST* getRHS() { return right; };
+
+    ExprAST* left;
+    ExprAST* right;
+    BINOP op;
+private:
 };
 
-class UnaryExpr
+// a Unary expression
+// TODO add unaryop enum
+class UnaryExpr : public ExprAST
 {
 public:
-    UnaryExpr(){}
-    virtual ~UnaryExpr(){}
-    virtual void getExpr() = 0;
+    UnaryExpr(size_t tokenType) : ExprAST(tokenType), expr(nullptr) {}
+    ExprAST* getExpr() { return expr; }
+
+    ExprAST* expr;
 };
 
-class RangeVecNode : public ExprAST, public BinaryExpr {
+class RangeVecNode : public BinaryExpr {
 public:
-    ExprAST* left;
-    ExprAST* right;
-
-    RangeVecNode(antlr4::Token* token) : ExprAST(token), left(nullptr), right(nullptr) {}
+    RangeVecNode(size_t tokenType) : BinaryExpr(tokenType) {}
 };
 
-class BinaryArithNode : public ExprAST, public BinaryExpr {
+class BinaryArithNode : public BinaryExpr {
 public:
-    ExprAST* left;
-    ExprAST* right;
+    BinaryArithNode(size_t tokenType) : BinaryExpr(tokenType){}
+};
 
-    BinaryArithNode(antlr4::Token* token) : ExprAST(token), left(nullptr), right(nullptr) {}
+class BinaryCmpNode : public BinaryExpr {
+public:
+    BinaryCmpNode(size_t tokenType) : BinaryExpr(tokenType){}
 };

@@ -33,20 +33,15 @@ int main(int argc, char **argv) {
   antlr4::tree::ParseTree *tree = parser.file();
 
   // build AST
-  std::cerr << "Building AST" << std::endl;
+  std::cout << "\n\n=== Building AST" << std::endl;
   gazprea::ASTBuilder builder;
   AST* ast = std::any_cast<AST*>(builder.visit(tree));
 
-  std::cerr << "\n\n=== Building SymbolTable" << std::endl;
+  std::cout << "\n\n=== Building SymbolTable" << std::endl;
   SymbolTable symbolTable;
 
-  gazprea::DefRef defref(&symbolTable, ast);
-  defref.visit(ast);
-
-  std::cerr << "\n\n=== Computing Types" << std::endl;
-  gazprea::ComputeType typeCompute(&symbolTable);
-  typeCompute.visit(ast);
-  std::cout << "Finished type computing" << std::endl;
+//  gazprea::DefRef defref(&symbolTable, ast);
+//  defref.visit(ast);
 
   // HOW TO WRITE OUT.
   // std::ofstream out(argv[2]);
