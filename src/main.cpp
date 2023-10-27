@@ -35,10 +35,10 @@ int main(int argc, char **argv) {
   // build AST
   std::cout << "\n\n=== Building AST" << std::endl;
   gazprea::ASTBuilder builder;
-  AST* ast = std::any_cast<AST*>(builder.visit(tree));
+  auto ast = std::any_cast<std::shared_ptr<AST>>(builder.visit(tree));
 
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
-  SymbolTable symbolTable;
+//  SymbolTable symbolTable;
 
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);

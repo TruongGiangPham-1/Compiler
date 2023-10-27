@@ -14,7 +14,6 @@ set(
         ASTBuilder.cpp
         ../include/ASTBuilder.h
         Symbol.cpp
-        DefRef.cpp
         ../include/ASTWalker.h
         SymbolTable.cpp
         ../include/SymbolTable.h

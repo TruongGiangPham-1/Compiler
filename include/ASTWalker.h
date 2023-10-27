@@ -16,7 +16,7 @@ namespace gazprea {
         }
 
         virtual void visitChildren(AST *t) {
-            for (auto child: t->children) visit(child);
+//            for (auto child: t->children) visit(child);
         }
     };
 
@@ -39,24 +39,5 @@ namespace gazprea {
         void visitLOOPCONDITIONAL(AST *t);
         void visitFILTERGENERATOR(AST *t);
         void visitID(AST *t);
-    };
-
-    class ComputeType : public ASTWalker {
-    private:
-        size_t ancestorCount;
-        SymbolTable *symtab;
-    public:
-        ComputeType(SymbolTable *symtab);
-        std::any visit(AST *t) override;
-        void visitChildren(AST *t) override;
-
-        // tokens in our grammar
-        void visitEXPRESSION(AST* t);
-        void visitINT(AST* t);
-        void visitVectorConstructor(AST* t);
-        void visitINDEX(AST* t);
-        void visitPARENTHESES(AST* t);
-        void visitID(AST* t);
-        void visitBinaryOp(AST* t);
     };
 }

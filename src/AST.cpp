@@ -15,10 +15,10 @@ AST::AST(size_t tokenType) {
 size_t AST::getNodeType() { return token->getType(); }
 
 void AST::addChild(std::any t) {
-    this->addChild(std::any_cast<AST*>(t)); // There is only one valid type for t. Pass it to AST::addChild(AST* t)
+    this->addChild(std::any_cast<std::shared_ptr<AST>>(t)); // There is only one valid type for t. Pass it to AST::addChild(AST* t)
 }
 
-void AST::addChild(AST* t) { children.push_back(t); }
+void AST::addChild(std::shared_ptr<AST> t) { children.push_back(t); }
 
 bool AST::isNil() { return token == nullptr; }
 
@@ -31,7 +31,7 @@ std::string AST::toStringTree() {
         buf << '(' << toString() << ' ';
     }
     for (auto iter = children.begin(); iter != children.end(); iter++) {
-        AST* t = *iter; // normalized (unnamed) children
+        std::shared_ptr<AST> t = *iter; // normalized (unnamed) children
         if ( iter != children.begin() ) buf << ' ';
         buf << t->toStringTree();
     }

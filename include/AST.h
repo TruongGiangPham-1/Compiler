@@ -19,10 +19,8 @@ class Symbol;
 class AST {
 public:
     antlr4::Token* token;       // From which token did we create node?
-    std::vector<AST*> children; // normalized list of children
-    Scope* scope;               // containing scope
-    Symbol* symbol;             // containing symbol
-    Type* type;
+    std::vector<std::shared_ptr<AST>> children; // normalized list of children
+    std::shared_ptr<Scope> scope;               // containing scope
 
     AST(); // for making nil-rooted nodes
     AST(antlr4::Token* token);
@@ -34,7 +32,7 @@ public:
     size_t getNodeType();
 
     void addChild(std::any t);
-    void addChild(AST* t);
+    void addChild(std::shared_ptr<AST> t);
     bool isNil();
 
     /** Compute string for single node */
@@ -51,29 +49,29 @@ public:
 // I wonder if it's worth to differentiate between them...
 class TypeNode : public AST {
 public:
-    Symbol* sym; // symbol of the name of the type
+    std::shared_ptr<Symbol> sym; // symbol of the name of the type
 
-    TypeNode(antlr4::Token* token, Symbol* sym) : AST(token), sym(sym) {}
-    TypeNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+    TypeNode(antlr4::Token* token, std::shared_ptr<Symbol> sym) : AST(token), sym(sym) {}
+    TypeNode(size_t tokenType, std::shared_ptr<Symbol> sym) : AST(tokenType), sym(sym) {}
 };
 
 class ExprAST;
 class AssignNode : public AST {
 public:
-    Symbol* sym;
-    ExprAST* expr;
+    std::shared_ptr<Symbol> sym;
+    std::shared_ptr<ExprAST> expr;
 
-    AssignNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+    AssignNode(size_t tokenType,std::shared_ptr<Symbol> sym) : AST(tokenType), sym(sym) {}
 };
 
 // Decl nodes are very similar to Assign nodes, but with more stuff
 class DeclNode : public AST {
 public:
-    Symbol* sym;
-    ExprAST* expr;
-    TypeNode* type;
+    std::shared_ptr<Symbol> sym;
+    std::shared_ptr<ExprAST> expr;
+    std::shared_ptr<TypeNode> type;
 
-    DeclNode(size_t tokenType, Symbol* sym) : AST(tokenType), sym(sym) {}
+    DeclNode(size_t tokenType,std::shared_ptr<Symbol> sym) : AST(tokenType), sym(sym) {}
 };
 
 // ----
@@ -83,7 +81,7 @@ public:
 
 class ExprAST : public AST {
 public:
-    Type* type;  // For type checking
+    std::shared_ptr<Type> type;  // For type checking
 
     ExprAST(size_t tokenType) : AST(tokenType), type(nullptr) {}
     ExprAST(antlr4::Token* token) : AST(token), type(nullptr) {}
@@ -92,10 +90,10 @@ public:
 
 class IDNode : public ExprAST  {
 public:
-    Symbol* sym; // pointer to symbol definition
+    std::shared_ptr<Symbol> sym; // pointer to symbol definition
 
-    IDNode(antlr4::Token* token, Symbol* sym) : ExprAST(token), sym(sym) {}
-    IDNode(size_t tokenType, Symbol* sym) : ExprAST(tokenType), sym(sym) {}
+    IDNode(antlr4::Token* token, std::shared_ptr<Symbol> sym) : ExprAST(token), sym(sym) {}
+    IDNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ExprAST(tokenType), sym(sym) {}
 };
 
 class IntNode : public ExprAST {
@@ -110,11 +108,11 @@ class BinaryExpr : public ExprAST
 {
 public:
     BinaryExpr(size_t tokenType) : ExprAST(tokenType), left(nullptr), right(nullptr) {}
-    ExprAST* getLHS() { return left; };
-    ExprAST* getRHS() { return right; };
+    std::shared_ptr<ExprAST> getLHS() { return left; };
+    std::shared_ptr<ExprAST> getRHS() { return right; };
 
-    ExprAST* left;
-    ExprAST* right;
+    std::shared_ptr<ExprAST> left;
+    std::shared_ptr<ExprAST> right;
     BINOP op;
 private:
 };
@@ -125,9 +123,9 @@ class UnaryExpr : public ExprAST
 {
 public:
     UnaryExpr(size_t tokenType) : ExprAST(tokenType), expr(nullptr) {}
-    ExprAST* getExpr() { return expr; }
+    std::shared_ptr<ExprAST> getExpr() { return expr; }
 
-    ExprAST* expr;
+    std::shared_ptr<ExprAST> expr;
 };
 
 class RangeVecNode : public BinaryExpr {
