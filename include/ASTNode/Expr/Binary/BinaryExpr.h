@@ -20,14 +20,14 @@ public:
 // because these next two classes are so short, I'll keep them in this file
 // they have no overrides and no new methods
 
-class BinaryArithNode : public BinaryExpr {
+class ArithNode : public BinaryExpr {
 public:
-    BinaryArithNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
+    ArithNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
 };
 
-class BinaryCmpNode : public BinaryExpr {
+class CmpNode : public BinaryExpr {
 public:
-    BinaryCmpNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
+    CmpNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
 };
 
 // given a[b], children are [a, b]
