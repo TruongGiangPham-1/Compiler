@@ -38,9 +38,9 @@ set(
         ../include/ASTNode/Expr/Vector/BaseVectorNode.h
         ASTNode/Block/BlockNode.cpp
         ../include/ASTNode/Block/BlockNode.h
-        ../include/ASTNode/Block/LoopNode.cpp
+        ASTNode/Block/LoopNode.cpp
         ../include/ASTNode/Block/LoopNode.h
-        ../include/ASTNode/Block/ConditionalNode.cpp
+        ASTNode/Block/ConditionalNode.cpp
         ../include/ASTNode/Block/ConditionalNode.h
 )
 
