@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "ASTNode.h"
+#include "ASTNode/ASTNode.h"
 
 ASTNode::ASTNode() : token(nullptr), scope(nullptr) {}
 

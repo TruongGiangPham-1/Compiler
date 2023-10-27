@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ASTNode.h"
+#include "ASTNode/ASTNode.h"
 #include "Scope.h"
 #include "SymbolTable.h"
 #include "BuiltInTypeSymbol.h"

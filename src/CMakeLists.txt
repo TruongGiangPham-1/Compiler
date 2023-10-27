@@ -9,14 +9,15 @@ set(
         ../include/BuiltInTypeSymbol.h
         BaseScope.cpp
         ../include/BaseScope.h
-        AST.cpp
-        ../include/ASTNode.h
+        ASTNode/ASTNode.cpp
+        ../include/ASTNode/ASTNode.h
         ASTBuilder.cpp
         ../include/ASTBuilder.h
         Symbol.cpp
         ../include/ASTWalker.h
         SymbolTable.cpp
         ../include/SymbolTable.h
+        ../include/Operands/UNARYOP.h
 )
 
 # Build our executable from the source files.

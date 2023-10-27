@@ -11,16 +11,17 @@
 #include "Scope.h"
 #include "Type.h"
 #include "Symbol.h"
-#include "BINOP.h"
+#include "Operands/BINOP.h"
+#include "Operands/UNARYOP.h"
 
 class Scope;
 class Symbol;
 
 class ASTNode {
 public:
-    antlr4::Token* token;       // From which token did we create node?
+    antlr4::Token* token;                           // From which token did we create node?
     std::vector<std::shared_ptr<ASTNode>> children; // normalized list of children
-    std::shared_ptr<Scope> scope;               // containing scope
+    std::shared_ptr<Scope> scope;                   // containing scope
 
     ASTNode(); // for making nil-rooted nodes
     ASTNode(antlr4::Token* token);
@@ -55,30 +56,36 @@ public:
     TypeNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
 };
 
-class ExprNode;
+// instead of holding an ID node, we directly hold the symbol
+// Children: [ IDNode, ExprNode ]
 class AssignNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym;
-    std::shared_ptr<ExprNode> expr;
 
-    AssignNode(size_t tokenType,std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
+    AssignNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
+
+    std::shared_ptr<Symbol> getID();
+    std::shared_ptr<ASTNode> getExprNode();
 };
 
 // Decl nodes are very similar to Assign nodes, but with more stuff
+// Children: [ TypeNode, IDNode, ExprNode ]
 class DeclNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym;
-    std::shared_ptr<ExprNode> expr;
-    std::shared_ptr<TypeNode> type;
 
-    DeclNode(size_t tokenType,std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
+    DeclNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
+
+    std::shared_ptr<ASTNode> getTypeNode();
+    std::shared_ptr<Symbol> getIDNode();
+    std::shared_ptr<ASTNode> getExprNode();
 };
 
 // ----
 // EXPR
 // ----
 
-
+// all expressions must have a Type associated (this is populated in the Typecheck phase)
 class ExprNode : public ASTNode {
 public:
     std::shared_ptr<Type> type;  // For type checking
@@ -87,7 +94,7 @@ public:
     ExprNode(antlr4::Token* token) : ASTNode(token), type(nullptr) {}
 };
 
-
+// No children, just `sym` attribute
 class IDNode : public ExprNode  {
 public:
     std::shared_ptr<Symbol> sym; // pointer to symbol definition
@@ -95,40 +102,38 @@ public:
     IDNode(antlr4::Token* token, std::shared_ptr<Symbol> sym) : ExprNode(token), sym(sym) {}
     IDNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ExprNode(tokenType), sym(sym) {}
 
-    std::string getValue() { return sym->getName(); }
+    std::string getName();
 };
 
+// `val` is calculated in the first pass (Builder)
 class IntNode : public ExprNode {
 public:
     int val;
 
     IntNode(size_t tokenType, int val) : ExprNode(tokenType), val(val) {}
-    int getValue() { return val; }
+    int getVal();
 };
 
-
+// Children: [leftExpr, rightExpr]
 class BinaryExpr : public ExprNode
 {
 public:
-    BinaryExpr(size_t tokenType) : ExprNode(tokenType), left(nullptr), right(nullptr) {}
-    std::shared_ptr<ExprNode> getLHS() { return left; };
-    std::shared_ptr<ExprNode> getRHS() { return right; };
-
-    std::shared_ptr<ExprNode> left;
-    std::shared_ptr<ExprNode> right;
     BINOP op;
+
+    BinaryExpr(size_t tokenType) : ExprNode(tokenType) {}
+    std::shared_ptr<ASTNode> getLHS();
+    std::shared_ptr<ASTNode> getRHS();
 private:
 };
 
-// a Unary expression
-// TODO add unaryop enum
+// Children: [expr]
 class UnaryExpr : public ExprNode
 {
 public:
-    UnaryExpr(size_t tokenType) : ExprNode(tokenType), expr(nullptr) {}
-    std::shared_ptr<ExprNode> getExpr() { return expr; }
+    UNARYOP op;
 
-    std::shared_ptr<ExprNode> expr;
+    UnaryExpr(size_t tokenType) : ExprNode(tokenType) {}
+    std::shared_ptr<ASTNode> getExpr();
 };
 
 class RangeVecNode : public BinaryExpr {

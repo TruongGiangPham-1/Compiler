@@ -7,7 +7,7 @@
 
 #include "Type.h"
 #include "Scope.h"
-#include "ASTNode.h"
+#include "ASTNode/ASTNode.h"
 
 class Scope; // forward declaration of Scope to resolve circular dependency
 

@@ -1,5 +1,5 @@
 #include "Symbol.h"
-#include "ASTNode.h"
+#include "ASTNode/ASTNode.h"
 
 Symbol::Symbol(std::string name) : name(name), type(nullptr) {}
 Symbol::Symbol(std::string name, Type* type) : name(name), type(type) {}

@@ -6,7 +6,7 @@
 #include "tree/ParseTree.h"
 #include "tree/ParseTreeWalker.h"
 
-#include "ASTNode.h"
+#include "ASTNode/ASTNode.h"
 #include "ASTBuilder.h"
 #include "SymbolTable.h"
 #include "ASTWalker.h"
