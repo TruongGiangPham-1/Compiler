@@ -42,6 +42,10 @@ set(
         ../include/ASTNode/Block/LoopNode.h
         ASTNode/Block/ConditionalNode.cpp
         ../include/ASTNode/Block/ConditionalNode.h
+        ASTNode/Expr/Vector/GeneratorNode.cpp
+        ../include/ASTNode/Expr/Vector/GeneratorNode.h
+        ASTNode/Expr/Vector/FilterNode.cpp
+        ../include/ASTNode/Expr/Vector/FilterNode.h
 )
 
 # Build our executable from the source files.

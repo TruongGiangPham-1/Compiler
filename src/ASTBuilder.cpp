@@ -5,11 +5,12 @@
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/TypeNode.h"
 #include "ASTNode/DeclNode.h"
-#include "ASTNode/Expr/ExprNode.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
+#include "ASTNode/Expr/Vector/GeneratorNode.h"
+#include "ASTNode/Expr/Vector/FilterNode.h"
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
@@ -93,6 +94,7 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitParen(GazpreaParser::ParenContext *ctx) {
+        // no need to make an AST node for this rule
         std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::PARENTHESES, ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expr()));
@@ -110,18 +112,24 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitRange(GazpreaParser::RangeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitRange" << std::endl;
+#endif
         std::shared_ptr<ASTNode> t = std::make_shared<RangeVecNode>(GazpreaParser::RANGE, ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
 
-        return std::static_pointer_cast<ExprNode>(t);
+        return t;
     }
 
     std::any ASTBuilder::visitGenerator(GazpreaParser::GeneratorContext *ctx) {
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::GENERATOR, ctx->getStart()->getLine());
+#ifdef DEBUG
+        std::cout << "visitGenerator" << std::endl;
+#endif
+        std::string domainVar = ctx->ID()->getSymbol()->getText();
+        std::shared_ptr<ASTNode> t = std::make_shared<GeneratorNode>(GazpreaParser::GENERATOR, domainVar, ctx->getStart()->getLine());
 
-//        t->addChild(new ASTNode(ctx->ID()->getSymbol()));
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
 
@@ -129,9 +137,12 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitFilter(GazpreaParser::FilterContext *ctx) {
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::FILTER, ctx->getStart()->getLine());
+#ifdef DEBUG
+        std::cout << "visitFilter" << std::endl;
+#endif
+        std::string domainVar = ctx->ID()->getSymbol()->getText();
+        std::shared_ptr<ASTNode> t = std::make_shared<FilterNode>(GazpreaParser::FILTER, domainVar, ctx->getStart()->getLine());
 
-//        t->addChild(new ASTNode(ctx->ID()->getSymbol()));
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
 
