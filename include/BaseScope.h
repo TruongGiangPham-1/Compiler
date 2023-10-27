@@ -7,15 +7,15 @@
 
 class BaseScope : public Scope {
 public:
-    Scope* enclosingScope; // nullptr if global (outermost) scope
-    std::map<std::string, Symbol*> symbols;
+    std::shared_ptr<Scope> enclosingScope; // nullptr if global (outermost) scope
+    std::map<std::string, std::shared_ptr<Symbol>> symbols;
 
-    BaseScope(Scope *parent) : enclosingScope(parent) {}
+    BaseScope(std::shared_ptr<Scope> parent) : enclosingScope(parent) {}
 
-    Symbol* resolve(const std::string &name) override;
-    virtual void define(Symbol* sym) override;
-    virtual Scope* getEnclosingScope() override;
-    virtual void setEnclosingScope(Scope* scope) override;
+    std::shared_ptr<Symbol> resolve(const std::string &name) override;
+    virtual void define(std::shared_ptr<Symbol> sym) override;
+    virtual std::shared_ptr<Scope> getEnclosingScope() override;
+    virtual void setEnclosingScope(std::shared_ptr<Scope> scope) override;
 
     virtual std::string toString() override;
 };
@@ -25,7 +25,7 @@ private:
     std::string scopeName;
 
 public:
-    LocalScope(std::string& sname, Scope* parent)
+    LocalScope(std::string& sname, std::shared_ptr<Scope> parent)
             : BaseScope(parent), scopeName(sname) {}
 
     std::string getScopeName() override {

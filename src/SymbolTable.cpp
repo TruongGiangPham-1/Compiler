@@ -8,13 +8,13 @@
 #include "SymbolTable.h"
 #include "BaseScope.h"
 
-Scope* SymbolTable::enterScope(std::string& name, Scope* enclosingScope) {
-    Scope *newScope = new LocalScope(name, enclosingScope);
+std::shared_ptr<Scope> SymbolTable::enterScope(std::string& name, const std::shared_ptr<Scope>& enclosingScope) {
+    std::shared_ptr<Scope> newScope = std::make_shared<LocalScope>(name, enclosingScope);
     scopes.push_back(newScope);
     return newScope;
 }
 
-Scope* SymbolTable::enterScope(Scope* newScope) {
+std::shared_ptr<Scope> SymbolTable::enterScope(std::shared_ptr<Scope> newScope) {
     scopes.push_back(newScope);
     return newScope;
 }
@@ -22,7 +22,7 @@ Scope* SymbolTable::enterScope(Scope* newScope) {
 std::string SymbolTable::toString() {
     std::stringstream str;
     str << "SymbolTable {" << std::endl;
-    for (auto s : scopes) {
+    for (const auto& s : scopes) {
         str << s->getScopeName() << ": " << s->toString() << std::endl;
     }
     str << "}" << std::endl;
