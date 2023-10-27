@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AST.h"
+#include "ASTNode.h"
 #include "Scope.h"
 #include "SymbolTable.h"
 #include "BuiltInTypeSymbol.h"
@@ -10,12 +10,12 @@ namespace gazprea {
     public:
         ASTWalker() {}
 
-        virtual std::any visit(AST *t) {
+        virtual std::any visit(ASTNode *t) {
             visitChildren(t);
             return 0;
         }
 
-        virtual void visitChildren(AST *t) {
+        virtual void visitChildren(ASTNode *t) {
 //            for (auto child: t->children) visit(child);
         }
     };
@@ -26,18 +26,18 @@ namespace gazprea {
         Scope *currentScope;
 
     public:
-        DefRef(SymbolTable *symtab, AST *root);
-        std::any visit(AST *t) override;
-        void visitChildren(AST *t) override;
+        DefRef(SymbolTable *symtab, ASTNode *root);
+        std::any visit(ASTNode *t) override;
+        void visitChildren(ASTNode *t) override;
 
         // custom
-        BuiltInTypeSymbol* resolveType(AST *t);
+        BuiltInTypeSymbol* resolveType(ASTNode *t);
 
         // tokens in our grammar
-        void visitVAR_DECL(AST *t);
-        void visitASSIGN(AST *t);
-        void visitLOOPCONDITIONAL(AST *t);
-        void visitFILTERGENERATOR(AST *t);
-        void visitID(AST *t);
+        void visitVAR_DECL(ASTNode *t);
+        void visitASSIGN(ASTNode *t);
+        void visitLOOPCONDITIONAL(ASTNode *t);
+        void visitFILTERGENERATOR(ASTNode *t);
+        void visitID(ASTNode *t);
     };
 }

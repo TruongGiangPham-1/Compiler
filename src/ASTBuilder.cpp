@@ -1,5 +1,5 @@
 #include "ASTBuilder.h"
-#include "AST.h"
+#include "ASTNode.h"
 
 #define DEBUG
 
@@ -8,7 +8,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "INIT BUILDER: VISITING FILE" << std::endl;
 #endif
-        std::shared_ptr<AST> t = std::make_shared<AST>();
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>();
         for ( auto statement : ctx->statement() ) {
 
             t->addChild(visit(statement));
@@ -26,12 +26,12 @@ namespace gazprea {
 
         t->type = std::any_cast<std::shared_ptr<TypeNode>>(visit(ctx->type()));
         std::cout << "About to visit inner expr of vardecl" << std::endl;
-        t->expr = std::any_cast<std::shared_ptr<ExprAST>>(visit(ctx->expression()));
+        t->expr = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expression()));
         std::cout << "Returning vardecl" << std::endl;
 
-        // go up the hierarchy, since the parent (visitFile) expects an AST
+        // go up the hierarchy, since the parent (visitFile) expects an ASTNode
         // without this, we'll get a bad any cast err
-        return std::static_pointer_cast<AST>(t);
+        return std::static_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
@@ -42,14 +42,14 @@ namespace gazprea {
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
         std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(GazpreaParser::ASSIGN, sym);
 
-        t->expr = std::any_cast<std::shared_ptr<ExprAST>>(visit(ctx->expression()));
+        t->expr = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expression()));
 
-        // go up the hierarchy, since the parent (visitFile) expects an AST
-        return std::static_pointer_cast<AST>(t);
+        // go up the hierarchy, since the parent (visitFile) expects an ASTNode
+        return std::static_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitCond(GazpreaParser::CondContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::CONDITIONAL);
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::CONDITIONAL);
         t->addChild(visit(ctx->expression()));
         for (auto statement: ctx->statement()) {
             t->addChild(visit(statement));
@@ -58,7 +58,7 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitLoop(GazpreaParser::LoopContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::CONDITIONAL);
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::CONDITIONAL);
         t->addChild(visit(ctx->expression()));
         for (auto statement: ctx->statement()) {
             t->addChild(visit(statement));
@@ -67,19 +67,19 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitPrint(GazpreaParser::PrintContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::PRINT);
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::PRINT);
         t->addChild(visit(ctx->expression()));
         return t;
     }
 
     std::any ASTBuilder::visitParen(GazpreaParser::ParenContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::PARENTHESES);
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::PARENTHESES);
         t->addChild(visit(ctx->expr()));
         return t;
     }
 
     std::any ASTBuilder::visitIndex(GazpreaParser::IndexContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::INDEX);
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::INDEX);
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
         return t;
@@ -87,24 +87,24 @@ namespace gazprea {
 
     std::any ASTBuilder::visitRange(GazpreaParser::RangeContext *ctx) {
         std::shared_ptr<RangeVecNode> t = std::make_shared<RangeVecNode>(GazpreaParser::RANGE);
-        t->left = std::any_cast<std::shared_ptr<ExprAST>>(ctx->expr(0));
-        t->right = std::any_cast<std::shared_ptr<ExprAST>>(ctx->expr(1));
+        t->left = std::any_cast<std::shared_ptr<ExprNode>>(ctx->expr(0));
+        t->right = std::any_cast<std::shared_ptr<ExprNode>>(ctx->expr(1));
 
-        // parents of these nodes expect an ExprAST. Without the cast, we'll get a bad_any cast
-        return std::static_pointer_cast<ExprAST>(t);
+        // parents of these nodes expect an ExprNode. Without the cast, we'll get a bad_any cast
+        return std::static_pointer_cast<ExprNode>(t);
     }
 
     std::any ASTBuilder::visitGenerator(GazpreaParser::GeneratorContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::GENERATOR);
-        t->addChild(new AST(ctx->ID()->getSymbol()));
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::GENERATOR);
+        t->addChild(new ASTNode(ctx->ID()->getSymbol()));
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
         return t;
     }
 
     std::any ASTBuilder::visitFilter(GazpreaParser::FilterContext *ctx) {
-        std::shared_ptr<AST> t = std::make_shared<AST>(GazpreaParser::FILTER);
-        t->addChild(new AST(ctx->ID()->getSymbol()));
+        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::FILTER);
+        t->addChild(new ASTNode(ctx->ID()->getSymbol()));
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
         return t;
@@ -127,12 +127,12 @@ namespace gazprea {
             case GazpreaParser::SUB:
                 op = BINOP::SUB;
         }
-        t->left = std::any_cast<std::shared_ptr<ExprAST>>(visit(ctx->expr(0)));
-        t->right = std::any_cast<std::shared_ptr<ExprAST>>(visit(ctx->expr(1)));
+        t->left = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expr(0)));
+        t->right = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expr(1)));
         t->op = op;
 
-        // parents of these nodes expect an ExprAST. Without the cast, we'll get a bad_any cast
-        return std::static_pointer_cast<ExprAST>(t);
+        // parents of these nodes expect an ExprNode. Without the cast, we'll get a bad_any cast
+        return std::static_pointer_cast<ExprNode>(t);
     }
 
     std::any ASTBuilder::visitCmp(GazpreaParser::CmpContext *ctx) {
@@ -152,12 +152,12 @@ namespace gazprea {
             case GazpreaParser::SUB:
                 op = BINOP::SUB;
         }
-        t->left = std::any_cast<std::shared_ptr<ExprAST>>(visit(ctx->expr(0)));
-        t->right = std::any_cast<std::shared_ptr<ExprAST>>(visit(ctx->expr(1)));
+        t->left = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expr(0)));
+        t->right = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expr(1)));
         t->op = op;
 
-        // parents of these nodes expect an ExprAST. Without the cast, we'll get a bad_any cast
-        return std::static_pointer_cast<ExprAST>(t);
+        // parents of these nodes expect an ExprNode. Without the cast, we'll get a bad_any cast
+        return std::static_pointer_cast<ExprNode>(t);
     }
 
     std::any ASTBuilder::visitLiteralID(GazpreaParser::LiteralIDContext *ctx) {
@@ -167,8 +167,8 @@ namespace gazprea {
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
         std::shared_ptr<IDNode> t = std::make_shared<IDNode>(ctx->ID()->getSymbol(), sym);
 
-        // parents of these nodes expect an ExprAST. Without the cast, we'll get a bad_any cast
-//        return std::static_pointer_cast<ExprAST>(t);
+        // parents of these nodes expect an ExprNode. Without the cast, we'll get a bad_any cast
+//        return std::static_pointer_cast<ExprNode>(t);
         return t;
     }
 
@@ -178,8 +178,8 @@ namespace gazprea {
 #endif
         std::shared_ptr<IntNode> t = std::make_shared<IntNode>(GazpreaParser::INT,std::stoi(ctx->getText()));
 
-        // parents of these nodes expect an ExprAST. Without the cast, we'll get a bad_any cast
-        return std::static_pointer_cast<ExprAST>(t);
+        // parents of these nodes expect an ExprNode. Without the cast, we'll get a bad_any cast
+        return std::static_pointer_cast<ExprNode>(t);
     }
 
     std::any ASTBuilder::visitType(GazpreaParser::TypeContext *ctx) {

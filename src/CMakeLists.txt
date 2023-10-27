@@ -10,7 +10,7 @@ set(
         BaseScope.cpp
         ../include/BaseScope.h
         AST.cpp
-        ../include/AST.h
+        ../include/ASTNode.h
         ASTBuilder.cpp
         ../include/ASTBuilder.h
         Symbol.cpp

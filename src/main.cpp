@@ -6,7 +6,7 @@
 #include "tree/ParseTree.h"
 #include "tree/ParseTreeWalker.h"
 
-#include "AST.h"
+#include "ASTNode.h"
 #include "ASTBuilder.h"
 #include "SymbolTable.h"
 #include "ASTWalker.h"
@@ -32,10 +32,10 @@ int main(int argc, char **argv) {
   // Get the root of the parse tree. Use your base rule name.
   antlr4::tree::ParseTree *tree = parser.file();
 
-  // build AST
-  std::cout << "\n\n=== Building AST" << std::endl;
+  // build ASTNode
+  std::cout << "\n\n=== Building ASTNode" << std::endl;
   gazprea::ASTBuilder builder;
-  auto ast = std::any_cast<std::shared_ptr<AST>>(builder.visit(tree));
+  auto ast = std::any_cast<std::shared_ptr<ASTNode>>(builder.visit(tree));
 
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 //  SymbolTable symbolTable;
