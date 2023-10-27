@@ -7,9 +7,9 @@ class DeclNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym;
 
-    DeclNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
+    DeclNode(size_t tokenType, int line, std::shared_ptr<Symbol> sym) : ASTNode(tokenType, line), sym(sym) {}
 
-    // the full Symbol classs of the ID being declared
+    // the full Symbol class of the ID being declared
     std::shared_ptr<Symbol> getID();
     // just the name of the ID being declared
     std::string getIDName();

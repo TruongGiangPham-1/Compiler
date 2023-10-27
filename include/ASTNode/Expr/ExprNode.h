@@ -7,6 +7,5 @@ class ExprNode : public ASTNode {
 public:
     std::shared_ptr<Type> type;  // For type checking
 
-    ExprNode(size_t tokenType) : ASTNode(tokenType), type(nullptr) {}
-    ExprNode(antlr4::Token* token) : ASTNode(token), type(nullptr) {}
+    ExprNode(size_t tokenType, int line) : ASTNode(tokenType, line), type(nullptr) {}
 };

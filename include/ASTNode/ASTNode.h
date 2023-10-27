@@ -18,15 +18,16 @@ class Scope;
 class Symbol;
 
 class ASTNode {
+protected:
+    int line;                                       // line number in source file
 public:
     antlr4::Token* token;                           // From which token did we create node?
     std::vector<std::shared_ptr<ASTNode>> children; // normalized list of children
     std::shared_ptr<Scope> scope;                   // containing scope
 
     ASTNode(); // for making nil-rooted nodes
-    ASTNode(antlr4::Token* token);
     /** Create node from token type; used mainly for imaginary tokens */
-    ASTNode(size_t tokenType);
+    ASTNode(size_t tokenType, int line);
 
     void addChild(std::any t);
     void addChild(std::shared_ptr<ASTNode> t);

@@ -4,12 +4,10 @@
 
 ASTNode::ASTNode() : token(nullptr), scope(nullptr) {}
 
-ASTNode::ASTNode(antlr4::Token* token)
-        : token(new antlr4::CommonToken(token)), scope(nullptr) {}
-
-ASTNode::ASTNode(size_t tokenType) {
+ASTNode::ASTNode(size_t tokenType, int line) {
     token = new antlr4::CommonToken(tokenType);
     scope = nullptr;
+    this->line = line;
 }
 
 void ASTNode::addChild(std::any t) {
