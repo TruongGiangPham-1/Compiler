@@ -36,9 +36,9 @@ public:
     void addChild(std::shared_ptr<ASTNode> t);
     bool isNil();
 
-    /** Compute string for single node */
-    std::string toString();
-    /** Compute string for a whole tree not just a node */
+    /** Compute string for child nodes */
+    virtual std::string toString();
+    /** Compute string for a whole tree (only for top level node) */
     std::string toStringTree();
 
     size_t loc();
@@ -46,27 +46,6 @@ public:
     virtual ~ASTNode();
 };
 
-// TODO in Cymbol, the type node was the same as IDNode, and both were called SymAST
-// I wonder if it's worth to differentiate between them...
-class TypeNode : public ASTNode {
-public:
-    std::shared_ptr<Symbol> sym; // symbol of the name of the type
-
-    TypeNode(antlr4::Token* token, std::shared_ptr<Symbol> sym) : ASTNode(token), sym(sym) {}
-    TypeNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
-};
-
-// instead of holding an ID node, we directly hold the symbol
-// Children: [ IDNode, ExprNode ]
-class AssignNode : public ASTNode {
-public:
-    std::shared_ptr<Symbol> sym;
-
-    AssignNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
-
-    std::shared_ptr<Symbol> getID();
-    std::shared_ptr<ASTNode> getExprNode();
-};
 
 // Decl nodes are very similar to Assign nodes, but with more stuff
 // Children: [ TypeNode, IDNode, ExprNode ]
@@ -77,7 +56,7 @@ public:
     DeclNode(size_t tokenType, std::shared_ptr<Symbol> sym) : ASTNode(tokenType), sym(sym) {}
 
     std::shared_ptr<ASTNode> getTypeNode();
-    std::shared_ptr<Symbol> getIDNode();
+    std::shared_ptr<Symbol> getID();
     std::shared_ptr<ASTNode> getExprNode();
 };
 

@@ -18,6 +18,10 @@ set(
         SymbolTable.cpp
         ../include/SymbolTable.h
         ../include/Operands/UNARYOP.h
+        ASTNode/TypeNode.cpp
+        ../include/ASTNode/TypeNode.h
+        ASTNode/AssignNode.cpp
+        ../include/ASTNode/AssignNode.h
 )
 
 # Build our executable from the source files.
