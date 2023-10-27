@@ -1,9 +1,9 @@
 #pragma once
-#include "BaseVectorNode.h"
+#include "BaseVectorExpr.h"
 
 // [domainVar in vector | expr]
 // children: [vector, expr]
-class GeneratorNode : public BaseVectorNode {
+class GeneratorNode : public BaseVectorExpr {
 public:
     std::string domainVar;
     GeneratorNode(std::string domainVar, int line);

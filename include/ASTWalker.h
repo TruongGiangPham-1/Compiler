@@ -1,4 +1,3 @@
-#include "ASTBuilder.h"
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/TypeNode.h"
@@ -23,23 +22,27 @@ namespace gazprea {
         ASTWalker() {};
 
         std::any walk(std::shared_ptr<ASTNode> tree);
-        virtual std::any visitArith(std::shared_ptr<ArithNode> tree);
+
+        // === TOP LEVEL AST NODES ===
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
-        virtual std::any visitBaseVector(std::shared_ptr<BaseVectorNode> tree);
-        // MISNOMER ALERT: this is for any node containing a nested scope (i.e. nested conditionals, loops)
-        // this might not call at all
-        virtual std::any visitBlock(std::shared_ptr<BlockNode> tree);
-        virtual std::any visitComp(std::shared_ptr<CmpNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
+        virtual std::any visitPrint(std::shared_ptr<PrintNode> tree);
+        virtual std::any visitType(std::shared_ptr<TypeNode> tree);
+
+        // === EXPRESSION AST NODES ===
+        virtual std::any visitID(std::shared_ptr<IDNode> tree);
+        virtual std::any visitInt(std::shared_ptr<IntNode> tree);
+        // Expr/Binary
+        virtual std::any visitArith(std::shared_ptr<ArithNode> tree);
+        virtual std::any visitCmp(std::shared_ptr<CmpNode> tree);
+        virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
+        // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);
         virtual std::any visitGenerator(std::shared_ptr<GeneratorNode> tree);
-        virtual std::any visitID(std::shared_ptr<IDNode> tree);
-        virtual std::any visitIfStatement(std::shared_ptr<ConditionalNode> tree);
-        virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
-        virtual std::any visitInt(std::shared_ptr<IntNode> tree);
+        virtual std::any visitRangeVec(std::shared_ptr<RangeVecNode> tree);
+
+        // === BLOCK AST NODES ===
+        virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
         virtual std::any visitLoop(std::shared_ptr<LoopNode> tree);
-        virtual std::any visitPrint(std::shared_ptr<PrintNode> tree);
-        virtual std::any visitRangeVector(std::shared_ptr<RangeVecNode> tree);
-        virtual std::any visitType(std::shared_ptr<TypeNode> tree);
     };
 }

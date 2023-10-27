@@ -35,7 +35,7 @@ set(
         ../include/ASTNode/Expr/Vector/RangeVecNode.h
         ASTNode/Expr/Unary/UnaryExpr.cpp
         ../include/ASTNode/Expr/Unary/UnaryExpr.h
-        ../include/ASTNode/Expr/Vector/BaseVectorNode.h
+        ../include/ASTNode/Expr/Vector/BaseVectorExpr.h
         ASTNode/Block/BlockNode.cpp
         ../include/ASTNode/Block/BlockNode.h
         ASTNode/Block/LoopNode.cpp

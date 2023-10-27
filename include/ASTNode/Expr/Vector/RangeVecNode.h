@@ -1,10 +1,10 @@
 #pragma once
 
-#include "BaseVectorNode.h"
+#include "BaseVectorExpr.h"
 
-class RangeVecNode : public BaseVectorNode {
+class RangeVecNode : public BaseVectorExpr {
 public:
-    RangeVecNode(int line) : BaseVectorNode(line) {}
+    RangeVecNode(int line) : BaseVectorExpr(line) {}
 
     std::string toString() override;
 

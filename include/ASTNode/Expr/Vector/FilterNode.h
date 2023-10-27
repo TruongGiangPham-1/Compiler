@@ -1,9 +1,9 @@
 #pragma once
-#include "BaseVectorNode.h"
+#include "BaseVectorExpr.h"
 
 // [domainVar in vector & expr]
 // children: [vector, expr]
-class FilterNode : public BaseVectorNode {
+class FilterNode : public BaseVectorExpr {
 public:
     std::string domainVar;
     FilterNode(std::string domainVar, int line);
