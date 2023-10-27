@@ -4,7 +4,6 @@
 
 std::string AssignNode::toString() {
     return "assign " + getIDName() + " = " + getExprNode()->toString();
-
 }
 
 std::string AssignNode::getIDName() {

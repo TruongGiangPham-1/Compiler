@@ -12,8 +12,6 @@ ASTNode::ASTNode(size_t tokenType) {
     scope = nullptr;
 }
 
-size_t ASTNode::getNodeType() { return token->getType(); }
-
 void ASTNode::addChild(std::any t) {
     this->addChild(std::any_cast<std::shared_ptr<ASTNode>>(t)); // There is only one valid type for t. Pass it to ASTNode::addChild(ASTNode* t)
 }

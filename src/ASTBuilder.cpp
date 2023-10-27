@@ -4,6 +4,13 @@
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/TypeNode.h"
+#include "ASTNode/DeclNode.h"
+#include "ASTNode/Expr/ExprNode.h"
+#include "ASTNode/Expr/IDNode.h"
+#include "ASTNode/Expr/IntNode.h"
+#include "ASTNode/Expr/Binary/BinaryExpr.h"
+#include "ASTNode/Expr/Binary/RangeVecNode.h"
+#include "ASTNode/Expr/Unary/UnaryExpr.h"
 
 #define DEBUG
 

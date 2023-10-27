@@ -22,6 +22,19 @@ set(
         ../include/ASTNode/TypeNode.h
         ASTNode/AssignNode.cpp
         ../include/ASTNode/AssignNode.h
+        ASTNode/DeclNode.cpp
+        ../include/ASTNode/DeclNode.h
+        ../include/ASTNode/Expr/ExprNode.h
+        ASTNode/Expr/IDNode.cpp
+        ../include/ASTNode/Expr/IDNode.h
+        ASTNode/Expr/IntNode.cpp
+        ../include/ASTNode/Expr/IntNode.h
+        ASTNode/Expr/Binary/BinaryExpr.cpp
+        ../include/ASTNode/Expr/Binary/BinaryExpr.h
+        ASTNode/Expr/Binary/RangeVecNode.cpp
+        ../include/ASTNode/Expr/Binary/RangeVecNode.h
+        ../include/ASTNode/Expr/Unary/UnaryExpr.cpp
+        ../include/ASTNode/Expr/Unary/UnaryExpr.h
 )
 
 # Build our executable from the source files.
