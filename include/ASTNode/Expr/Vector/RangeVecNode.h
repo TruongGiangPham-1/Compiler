@@ -4,7 +4,7 @@
 
 class RangeVecNode : public BaseVectorNode {
 public:
-    RangeVecNode(size_t tokenType, int line) : BaseVectorNode(tokenType, line) {}
+    RangeVecNode(int line) : BaseVectorNode(line) {}
 
     std::string toString() override;
 

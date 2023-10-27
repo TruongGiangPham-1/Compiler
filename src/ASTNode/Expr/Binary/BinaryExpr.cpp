@@ -1,6 +1,8 @@
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "Operands/BINOP.h"
 
+BinaryExpr::BinaryExpr(int line) : ExprNode(line) {};
+
 std::string BinaryExpr::toString() {
     std::string opStr;
 
@@ -30,7 +32,7 @@ std::string BinaryExpr::toString() {
             opStr = "<";
             break;
     }
-    return opStr + " " + getLHS()->toString() + " " + getRHS()->toString();
+    return "BINOP " + opStr;
 }
 
 std::shared_ptr<ASTNode> BinaryExpr::getLHS() {

@@ -2,6 +2,8 @@
 
 #include "ASTNode/AssignNode.h"
 
+AssignNode::AssignNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {};
+
 std::string AssignNode::toString() {
     return "assign " + getIDName() + " = " + getExprNode()->toString();
 }

@@ -9,7 +9,7 @@ class BinaryExpr : public ExprNode
 public:
     BINOP op;
 
-    BinaryExpr(size_t tokenType, int line) : ExprNode(tokenType, line) {}
+    BinaryExpr(int line);
     std::shared_ptr<ASTNode> getLHS();
     std::shared_ptr<ASTNode> getRHS();
 
@@ -22,16 +22,16 @@ public:
 
 class ArithNode : public BinaryExpr {
 public:
-    ArithNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
+    ArithNode(int line) : BinaryExpr(line){}
 };
 
 class CmpNode : public BinaryExpr {
 public:
-    CmpNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
+    CmpNode(int line) : BinaryExpr(line){}
 };
 
 // given a[b], children are [a, b]
 class IndexNode : public BinaryExpr {
 public:
-    IndexNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
+    IndexNode(int line) : BinaryExpr(line){}
 };

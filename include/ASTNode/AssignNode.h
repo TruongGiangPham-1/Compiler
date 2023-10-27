@@ -8,7 +8,7 @@ class AssignNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym;
 
-    AssignNode(size_t tokenType, int line, std::shared_ptr<Symbol> sym) : ASTNode(tokenType, line), sym(sym) {}
+    AssignNode(int line, std::shared_ptr<Symbol> sym);
 
     std::shared_ptr<Symbol> getID();
     std::shared_ptr<ASTNode> getExprNode();

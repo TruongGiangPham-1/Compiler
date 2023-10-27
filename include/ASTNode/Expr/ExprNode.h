@@ -7,5 +7,5 @@ class ExprNode : public ASTNode {
 public:
     std::shared_ptr<Type> type;  // For type checking
 
-    ExprNode(size_t tokenType, int line) : ASTNode(tokenType, line), type(nullptr) {}
+    ExprNode(int line) : ASTNode(line), type(nullptr) {}
 };

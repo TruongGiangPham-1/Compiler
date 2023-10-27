@@ -7,7 +7,7 @@ class DeclNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym;
 
-    DeclNode(size_t tokenType, int line, std::shared_ptr<Symbol> sym) : ASTNode(tokenType, line), sym(sym) {}
+    DeclNode(int line, std::shared_ptr<Symbol> sym);
 
     // the full Symbol class of the ID being declared
     std::shared_ptr<Symbol> getID();
@@ -17,6 +17,5 @@ public:
     std::shared_ptr<ASTNode> getTypeNode();
     std::shared_ptr<ASTNode> getExprNode();
 
-    // toString debug
     std::string toString() override;
 };

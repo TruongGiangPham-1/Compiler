@@ -6,7 +6,7 @@
 // but in the future, it can also stand by itself for Block Statements (https://cmput415.github.io/415-docs/gazprea/spec/statements.html#block-statements)
 class BlockNode : public ASTNode {
 public:
-    BlockNode(size_t tokenType, int line);
+    BlockNode(int line);
 
     std::string toString() override;
 

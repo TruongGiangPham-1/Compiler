@@ -1,7 +1,7 @@
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
 
 std::string RangeVecNode::toString() {
-    return "RangeVec: " + getStart()->toString() + " .. " + getEnd()->toString();
+    return "RangeVec";
 }
 
 std::shared_ptr<ASTNode> RangeVecNode::getStart() {

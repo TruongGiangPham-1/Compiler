@@ -8,7 +8,7 @@ class TypeNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym; // symbol of the name of the type
 
-    TypeNode(size_t tokenType, int line, std::shared_ptr<Symbol> sym) : ASTNode(tokenType, line), sym(sym) {}
+    TypeNode(int line, std::shared_ptr<Symbol> sym);
 
     std::string getTypeName();
     std::string toString() override;

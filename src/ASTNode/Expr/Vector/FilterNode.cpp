@@ -1,6 +1,6 @@
 #include "ASTNode/Expr/Vector/FilterNode.h"
 
-FilterNode::FilterNode(size_t type, std::string domainVar, int line) : BaseVectorNode(type, line), domainVar(domainVar) {}
+FilterNode::FilterNode(std::string domainVar, int line) : BaseVectorNode(line), domainVar(domainVar) {}
 
 std::shared_ptr<ASTNode> FilterNode::getVecNode() {
     return children[0];

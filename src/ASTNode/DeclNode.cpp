@@ -1,8 +1,10 @@
 #pragma once
 #include "ASTNode/DeclNode.h"
 
+DeclNode::DeclNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {}
+
 std::string DeclNode::toString() {
-    return "declare " + getIDName() + " = " + getExprNode()->toString();
+    return "DECLARE";
 }
 
 std::shared_ptr<Symbol> DeclNode::getID() {

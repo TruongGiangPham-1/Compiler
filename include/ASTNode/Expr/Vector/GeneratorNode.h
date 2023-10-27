@@ -1,3 +1,4 @@
+#pragma once
 #include "BaseVectorNode.h"
 
 // [domainVar in vector | expr]
@@ -5,7 +6,7 @@
 class GeneratorNode : public BaseVectorNode {
 public:
     std::string domainVar;
-    GeneratorNode(size_t type, std::string domainVar, int line);
+    GeneratorNode(std::string domainVar, int line);
 
     std::shared_ptr<ASTNode> getVecNode();
     std::shared_ptr<ASTNode> getExpr();

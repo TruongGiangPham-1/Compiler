@@ -1,3 +1,4 @@
+#pragma once
 #include "ExprNode.h"
 
 
@@ -6,7 +7,7 @@ class IDNode : public ExprNode  {
 public:
     std::shared_ptr<Symbol> sym; // pointer to symbol definition
 
-    IDNode(size_t tokenType, int line, std::shared_ptr<Symbol> sym) : ExprNode(tokenType, line), sym(sym) {}
+    IDNode(int line, std::shared_ptr<Symbol> sym);
 
     std::string toString() override;
     std::string getName();

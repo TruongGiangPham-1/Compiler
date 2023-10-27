@@ -1,7 +1,6 @@
 #include "ASTWalker.h"
 
-#include "ASTWalker.h"
- #define DEBUG
+#define DEBUG
 
 namespace gazprea {
     std::any ASTWalker::walkChildren(std::shared_ptr<ASTNode> tree) {

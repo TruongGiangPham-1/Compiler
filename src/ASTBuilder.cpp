@@ -37,7 +37,7 @@ namespace gazprea {
                   << ctx->ID()->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-        std::shared_ptr<ASTNode> t = std::make_shared<DeclNode>(GazpreaParser::VAR_DECL, ctx->getStart()->getLine(), sym);
+        std::shared_ptr<ASTNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
 
         t->addChild(visit(ctx->type()));
         t->addChild(visit(ctx->expression()));
@@ -51,7 +51,7 @@ namespace gazprea {
                   << ctx->ID()->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(GazpreaParser::ASSIGN, ctx->getStart()->getLine(), sym);
+        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), sym);
 
         t->addChild(visit(ctx->expression()));
 
@@ -62,7 +62,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCond " << std::endl;
 #endif
-        std::shared_ptr<ConditionalNode> t = std::make_shared<ConditionalNode>(GazpreaParser::CONDITIONAL, ctx->getStart()->getLine());
+        std::shared_ptr<ConditionalNode> t = std::make_shared<ConditionalNode>(ctx->getStart()->getLine());
         t->condition = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
         for (auto statement: ctx->statement()) {
             t->addChild(visit(statement));
@@ -75,7 +75,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitLoop" << std::endl;
 #endif
-        std::shared_ptr<LoopNode> t = std::make_shared<LoopNode>(GazpreaParser::LOOP, ctx->getStart()->getLine());
+        std::shared_ptr<LoopNode> t = std::make_shared<LoopNode>(ctx->getStart()->getLine());
         t->condition = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
 
         for (auto statement: ctx->statement()) {
@@ -90,7 +90,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitPrint" << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<PrintNode>(GazpreaParser::PRINT, ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<PrintNode>(ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expression()));
 
@@ -109,7 +109,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitIndex" << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<IndexNode>(GazpreaParser::INDEX, ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<IndexNode>(ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
@@ -121,7 +121,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitRange" << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<RangeVecNode>(GazpreaParser::RANGE, ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<RangeVecNode>(ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
@@ -134,7 +134,7 @@ namespace gazprea {
         std::cout << "visitGenerator" << std::endl;
 #endif
         std::string domainVar = ctx->ID()->getSymbol()->getText();
-        std::shared_ptr<ASTNode> t = std::make_shared<GeneratorNode>(GazpreaParser::GENERATOR, domainVar, ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<GeneratorNode>(domainVar, ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
@@ -147,7 +147,7 @@ namespace gazprea {
         std::cout << "visitFilter" << std::endl;
 #endif
         std::string domainVar = ctx->ID()->getSymbol()->getText();
-        std::shared_ptr<ASTNode> t = std::make_shared<FilterNode>(GazpreaParser::FILTER, domainVar, ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<FilterNode>(domainVar, ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
@@ -159,7 +159,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<ArithNode> t = std::make_shared<ArithNode>(GazpreaParser::EXPRESSION, ctx->getStart()->getLine());
+        std::shared_ptr<ArithNode> t = std::make_shared<ArithNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::MULT:
@@ -187,7 +187,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCmp, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<CmpNode> t = std::make_shared<CmpNode>(GazpreaParser::EXPRESSION, ctx->getStart()->getLine());
+        std::shared_ptr<CmpNode> t = std::make_shared<CmpNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::MULT:
@@ -216,7 +216,7 @@ namespace gazprea {
         std::cout << "visitID " << ctx->ID()->getSymbol()->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-        std::shared_ptr<ASTNode> t = std::make_shared<IDNode>(GazpreaParser::ID, ctx->getStart()->getLine(), sym);
+        std::shared_ptr<ASTNode> t = std::make_shared<IDNode>(ctx->getStart()->getLine(), sym);
 
         return t;
     }
@@ -225,7 +225,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitInt " << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(GazpreaParser::INT, ctx->getStart()->getLine(),std::stoi(ctx->getText()));
+        std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
 
         return t;
     }
@@ -235,7 +235,7 @@ namespace gazprea {
         std::cout << "visitType " << ctx->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
-        std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(GazpreaParser::TYPE, ctx->getStart()->getLine(), sym);
+        std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
 
         return t;
     }

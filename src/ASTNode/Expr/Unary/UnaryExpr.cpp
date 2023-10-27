@@ -1,5 +1,7 @@
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
 
+UnaryExpr::UnaryExpr(int line) : ExprNode(line) {};
+
 std::shared_ptr<ASTNode> UnaryExpr::getExpr() {
     return children[0];
 }
@@ -14,5 +16,5 @@ std::string UnaryExpr::toString() {
             opStr = "-";
             break;
     }
-    return opStr + " " + getExpr()->toString();
+    return "UNARYOP " + opStr;
 }

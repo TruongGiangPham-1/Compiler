@@ -1,7 +1,7 @@
 #include "ASTNode/Block/BlockNode.h"
 
 
-BlockNode::BlockNode(size_t tokenType, int line) : ASTNode(tokenType, line) {}
+BlockNode::BlockNode(int line) : ASTNode(line) {}
 
 std::string BlockNode::toString() {
     return "Block";
