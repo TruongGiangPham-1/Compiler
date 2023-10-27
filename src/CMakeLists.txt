@@ -33,7 +33,7 @@ set(
         ../include/ASTNode/Expr/Binary/BinaryExpr.h
         ASTNode/Expr/Binary/RangeVecNode.cpp
         ../include/ASTNode/Expr/Binary/RangeVecNode.h
-        ../include/ASTNode/Expr/Unary/UnaryExpr.cpp
+        ASTNode/Expr/Unary/UnaryExpr.cpp
         ../include/ASTNode/Expr/Unary/UnaryExpr.h
 )
 
