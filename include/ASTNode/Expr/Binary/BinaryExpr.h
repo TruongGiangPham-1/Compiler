@@ -29,3 +29,9 @@ class BinaryCmpNode : public BinaryExpr {
 public:
     BinaryCmpNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
 };
+
+// given a[b], children are [a, b]
+class IndexNode : public BinaryExpr {
+public:
+    IndexNode(size_t tokenType, int line) : BinaryExpr(tokenType, line){}
+};

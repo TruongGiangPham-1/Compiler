@@ -46,6 +46,8 @@ set(
         ../include/ASTNode/Expr/Vector/GeneratorNode.h
         ASTNode/Expr/Vector/FilterNode.cpp
         ../include/ASTNode/Expr/Vector/FilterNode.h
+        ASTNode/PrintNode.cpp
+        ../include/ASTNode/PrintNode.h
 )
 
 # Build our executable from the source files.

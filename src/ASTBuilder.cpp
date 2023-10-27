@@ -5,6 +5,7 @@
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/TypeNode.h"
 #include "ASTNode/DeclNode.h"
+#include "ASTNode/PrintNode.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
@@ -86,7 +87,10 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitPrint(GazpreaParser::PrintContext *ctx) {
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::PRINT, ctx->getStart()->getLine());
+#ifdef DEBUG
+        std::cout << "visitPrint" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PrintNode>(GazpreaParser::PRINT, ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expression()));
 
@@ -94,16 +98,18 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitParen(GazpreaParser::ParenContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitParen" << std::endl;
+#endif
         // no need to make an AST node for this rule
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::PARENTHESES, ctx->getStart()->getLine());
-
-        t->addChild(visit(ctx->expr()));
-
-        return t;
+        return visit(ctx->expr());
     }
 
     std::any ASTBuilder::visitIndex(GazpreaParser::IndexContext *ctx) {
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::INDEX, ctx->getStart()->getLine());
+#ifdef DEBUG
+        std::cout << "visitIndex" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<IndexNode>(GazpreaParser::INDEX, ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
