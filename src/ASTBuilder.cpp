@@ -156,6 +156,9 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
+#endif
         std::shared_ptr<BinaryArithNode> t = std::make_shared<BinaryArithNode>(GazpreaParser::EXPRESSION, ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
@@ -181,6 +184,9 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitCmp(GazpreaParser::CmpContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitCmp, op = " << ctx->op->getText() << std::endl;
+#endif
         std::shared_ptr<BinaryCmpNode> t = std::make_shared<BinaryCmpNode>(GazpreaParser::EXPRESSION, ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
