@@ -2,8 +2,8 @@
 #include "ASTNode/ASTNode.h"
 
 Symbol::Symbol(std::string name) : name(name), type(nullptr) {}
-Symbol::Symbol(std::string name, Type* type) : name(name), type(type) {}
-Symbol::Symbol(std::string name, Type* type, Scope* scope) : name(name), type(type), scope(scope) {}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type) : name(name), type(type) {}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type, std::shared_ptr<Scope> scope) : name(name), type(type), scope(scope) {}
 
 
 std::string Symbol::getName() { return name; }
