@@ -9,8 +9,10 @@
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
-#include "ASTNode/Expr/Binary/RangeVecNode.h"
+#include "ASTNode/Expr/Vector/RangeVecNode.h"
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
+#include "ASTNode/Block/LoopNode.h"
+#include "ASTNode/Block/ConditionalNode.h"
 
 #define DEBUG
 
@@ -55,23 +57,31 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitCond(GazpreaParser::CondContext *ctx) {
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::CONDITIONAL, ctx->getStart()->getLine());
-        t->addChild(visit(ctx->expression()));
+#ifdef DEBUG
+        std::cout << "visitCond " << std::endl;
+#endif
+        std::shared_ptr<ConditionalNode> t = std::make_shared<ConditionalNode>(GazpreaParser::CONDITIONAL, ctx->getStart()->getLine());
+        t->condition = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
         for (auto statement: ctx->statement()) {
             t->addChild(visit(statement));
         }
-        return t;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitLoop(GazpreaParser::LoopContext *ctx) {
-        std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>(GazpreaParser::CONDITIONAL, ctx->getStart()->getLine());
+#ifdef DEBUG
+        std::cout << "visitLoop" << std::endl;
+#endif
+        std::shared_ptr<LoopNode> t = std::make_shared<LoopNode>(GazpreaParser::LOOP, ctx->getStart()->getLine());
+        t->condition = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
 
-        t->addChild(visit(ctx->expression()));
         for (auto statement: ctx->statement()) {
             t->addChild(visit(statement));
         }
 
-        return t;
+        // dynamically casting upward to an ASTNode
+        return std::dynamic_pointer_cast<ASTNode>(t);;
     }
 
     std::any ASTBuilder::visitPrint(GazpreaParser::PrintContext *ctx) {

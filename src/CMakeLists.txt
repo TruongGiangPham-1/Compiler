@@ -31,10 +31,17 @@ set(
         ../include/ASTNode/Expr/IntNode.h
         ASTNode/Expr/Binary/BinaryExpr.cpp
         ../include/ASTNode/Expr/Binary/BinaryExpr.h
-        ASTNode/Expr/Binary/RangeVecNode.cpp
-        ../include/ASTNode/Expr/Binary/RangeVecNode.h
+        ASTNode/Expr/Vector/RangeVecNode.cpp
+        ../include/ASTNode/Expr/Vector/RangeVecNode.h
         ASTNode/Expr/Unary/UnaryExpr.cpp
         ../include/ASTNode/Expr/Unary/UnaryExpr.h
+        ../include/ASTNode/Expr/Vector/BaseVectorNode.h
+        ASTNode/Block/BlockNode.cpp
+        ../include/ASTNode/Block/BlockNode.h
+        ../include/ASTNode/Block/LoopNode.cpp
+        ../include/ASTNode/Block/LoopNode.h
+        ../include/ASTNode/Block/ConditionalNode.cpp
+        ../include/ASTNode/Block/ConditionalNode.h
 )
 
 # Build our executable from the source files.

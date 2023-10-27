@@ -3,6 +3,7 @@
 #include "ASTNode/Expr/ExprNode.h"
 
 // Children: [leftExpr, rightExpr]
+// similar to ExprNode, this class should theoretically never be instantiated by itself
 class BinaryExpr : public ExprNode
 {
 public:
