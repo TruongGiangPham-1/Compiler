@@ -20,7 +20,6 @@ int TypeWalker::getTypeIndex(const std::string type) {
 }
 
 std::shared_ptr<Type> TypeWalker::getPromotedType(const std::shared_ptr<Type> left, const std::shared_ptr<Type> right) {
-  
   auto leftIndex = this->getTypeIndex(left->getName());
   auto rightIndex = this->getTypeIndex(right->getName());
   auto promotedString = this->promotionTable[leftIndex][rightIndex];
@@ -31,6 +30,7 @@ std::shared_ptr<Type> TypeWalker::getPromotedType(const std::shared_ptr<Type> le
   std::cout << "type promotions between " <<  left->getName() << ", " << right->getName();
   std::cout << "result :" <<  promotedType->getName() << std::endl;
 #endif 
+
   return promotedType;
 }
 

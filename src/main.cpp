@@ -41,6 +41,8 @@ int main(int argc, char **argv) {
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 //  SymbolTable symbolTable;
 
+  TypeWalker types;
+  types.walk(ast);
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);
 
