@@ -46,6 +46,7 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any Def::visitPrint(std::shared_ptr<PrintNode> tree) {
+    walkChildren(tree);
     return 0;
 }
 
@@ -76,18 +77,37 @@ std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
 }
 
 std::any Def::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
+
     return 0;
 }
 
 std::any Def::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
+    walkChildren(tree);
     return 0;
 }
 
 std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
+    walk(tree->condition);
+    // enter scope
+    std::string sname = "loopcond" + std::to_string(tree->loc());
+    currentScope = symtab->enterScope(sname, currentScope);
+
+    for (auto &stmt: tree->getStatements()) {
+        walk(stmt);
+    }
+    currentScope = symtab->exitScope(currentScope);
     return 0;
 }
 
 std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
+    walk(tree->condition);
+    // enter scope
+    std::string sname = "loopcond" + std::to_string(tree->loc());
+    currentScope = symtab->enterScope(sname, currentScope);
+    for (auto &stmt: tree->getStatements()) {
+        walk(stmt);
+    }
+    currentScope = symtab->exitScope(currentScope);
     return 0;
 }
 
