@@ -11,6 +11,7 @@
 #include "SymbolTable.h"
 #include "ASTWalker.h"
 #include "BackEnd.h"
+#include "TypeWalker.h"
 
 #include <iostream>
 #include <fstream>

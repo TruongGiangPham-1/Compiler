@@ -49,6 +49,8 @@ set(
         ASTNode/PrintNode.cpp
         ../include/ASTNode/PrintNode.h
         ASTWalker.cpp
+        ../include/TypeWalker.h
+        TypeWalker.cpp
 )
 
 # Build our executable from the source files.
