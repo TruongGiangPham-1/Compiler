@@ -49,6 +49,8 @@ set(
         ASTNode/PrintNode.cpp
         ../include/ASTNode/PrintNode.h
         ASTWalker.cpp
+        Def.cpp
+
 )
 
 # Build our executable from the source files.

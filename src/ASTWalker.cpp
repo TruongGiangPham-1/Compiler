@@ -15,7 +15,7 @@
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     std::any ASTWalker::walkChildren(std::shared_ptr<ASTNode> tree) {

@@ -8,6 +8,7 @@ public:
     std::string domainVar;
     GeneratorNode(std::string domainVar, int line);
 
+    std::shared_ptr<Symbol> domainVarSym;
     std::string toString() override;
 
     std::shared_ptr<ASTNode> getVecNode();

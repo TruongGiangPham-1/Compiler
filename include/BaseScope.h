@@ -32,3 +32,12 @@ public:
         return scopeName;
     }
 };
+
+class GlobalScope: public BaseScope {
+public:
+    GlobalScope(): BaseScope(nullptr) {};
+    std::string getScopeName() override {
+        return "Global";
+    }
+};
+

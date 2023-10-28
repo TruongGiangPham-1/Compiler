@@ -6,6 +6,7 @@
 class FilterNode : public BaseVectorExpr {
 public:
     std::string domainVar;
+    std::shared_ptr<Symbol>domainVarSym;
     FilterNode(std::string domainVar, int line);
 
     std::string toString() override;
