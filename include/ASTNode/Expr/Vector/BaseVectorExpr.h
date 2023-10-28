@@ -1,8 +1,8 @@
 #pragma once
-#include "ASTNode/ASTNode.h"
+#include "ASTNode/Expr/ExprNode.h"
 
 // should never be instantiated by itself
-class BaseVectorExpr : public ASTNode {
+class BaseVectorExpr : public ExprNode {
 public:
-    BaseVectorExpr(int line) : ASTNode(line) {}
+    BaseVectorExpr(int line) : ExprNode(line) {}
 };

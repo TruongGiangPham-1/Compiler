@@ -10,8 +10,8 @@ public:
     BINOP op;
 
     BinaryExpr(int line);
-    std::shared_ptr<ASTNode> getLHS();
-    std::shared_ptr<ASTNode> getRHS();
+    std::shared_ptr<ExprNode> getLHS();
+    std::shared_ptr<ExprNode> getRHS();
 
     // base toString method
     std::string toString() override;
