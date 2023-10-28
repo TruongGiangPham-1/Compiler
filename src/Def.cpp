@@ -73,10 +73,64 @@ std::any Def::visitInt(std::shared_ptr<IntNode> tree) {
 }
 
 std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
+    /*
+     * 1. RESOLVE THE VARIABLES IN THE <DOMAIN> 1st
+     * 2. push scope, define <DOMAINVAR> into the new scope,
+     */
+
+
+    walk(tree->getVecNode());  // walk to the <domain> to resolve any ID in <domain>
+
+    // create gen/filter scope
+    std::string sname = "genfilter" + std::to_string(tree->loc());
+    currentScope = symtab->enterScope(sname, currentScope);
+    // define domainVar as in this scope
+    std::shared_ptr<VariableSymbol> domainVarSym = std::make_shared<VariableSymbol>(tree->domainVar,
+                                                                                    std::make_shared<BuiltInTypeSymbol>("int"));
+
+    domainVarSym->scope = currentScope;
+    domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
+    currentScope->define(domainVarSym);  // define domain var symbol in this scope
+    std::cout << "in line " << tree->loc()
+              << "domainVar=" << tree->domainVar << " defined as "
+              << domainVarSym->mlirName << std::endl;
+
+    tree->scope = currentScope;  // any resolve in this scope will find the domainVar
+    tree->domainVarSym = domainVarSym;
+
+    walk(tree->getExpr());
+    currentScope = symtab->exitScope(currentScope);
+
     return 0;
 }
 
 std::any Def::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
+    /*
+     * 1. RESOLVE THE VARIABLES IN THE <DOMAIN> 1st
+     * 2. push scope, define <DOMAINVAR> into the new scope,
+     */
+    walk(tree->getVecNode());  // walk to the <domain> to resolve any ID in <domain>
+
+    // create gen/filter scope
+    std::string sname = "genfilter" + std::to_string(tree->loc());
+    currentScope = symtab->enterScope(sname, currentScope);
+    // define domainVar as in this scope
+    std::shared_ptr<VariableSymbol> domainVarSym = std::make_shared<VariableSymbol>(tree->domainVar,
+                std::make_shared<BuiltInTypeSymbol>("int"));
+
+    domainVarSym->scope = currentScope;
+    domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
+    currentScope->define(domainVarSym);  // define domain var symbol in this scope
+    std::cout << "in line " << tree->loc()
+              << "domainVar=" << tree->domainVar << " defined as "
+              << domainVarSym->mlirName << std::endl;
+
+    tree->scope = currentScope;  // any resolve in this scope will find the domainVar
+    tree->domainVarSym = domainVarSym;
+
+    walk(tree->getExpr());
+    currentScope = symtab->exitScope(currentScope);
+
 
     return 0;
 }
