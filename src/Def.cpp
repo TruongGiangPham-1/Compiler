@@ -61,7 +61,7 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
                   << " ref null\n"; // variable not defined
     } else {
         std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-                  << "  ref " << idSym->mlirName << " Type is " << idSym->type
+                  << "  ref " << idSym->mlirName << " Type is " << idSym->type->getName()
                   << std::endl;
     }
     tree->scope = currentScope;
