@@ -1,3 +1,4 @@
+#pragma once
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/TypeNode.h"
