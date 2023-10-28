@@ -7,20 +7,20 @@
 
 #include "Type.h"
 #include "Scope.h"
-#include "AST.h"
+#include "ASTNode/ASTNode.h"
 
 class Scope; // forward declaration of Scope to resolve circular dependency
 
 class Symbol { // A generic programming language symbol
 public:
     std::string name;  // All symbols at least have a name
-    Type* type;
-    Scope* scope;
+    std::shared_ptr<Type> type;
+    std::shared_ptr<Scope> scope;
     mlir::Value mlirAddr;
 
     Symbol(std::string name);
-    Symbol(std::string name, Type* type);
-    Symbol(std::string name, Type* type, Scope* scope);
+    Symbol(std::string name, std::shared_ptr<Type> type);
+    Symbol(std::string name, std::shared_ptr<Type> type, std::shared_ptr<Scope> scope);
 
     virtual std::string getName();
 
@@ -34,6 +34,6 @@ public:
 
 class VariableSymbol : public Symbol {
 public:
-    VariableSymbol(std::string name, Type* t) : Symbol(name, t) {}
-    VariableSymbol(std::string name, Type* t, Scope* scope) : Symbol(name, t, scope) {}
+    VariableSymbol(std::string name, std::shared_ptr<Type> t) : Symbol(name, t) {}
+    VariableSymbol(std::string name, std::shared_ptr<Type> t, std::shared_ptr<Scope> scope) : Symbol(name, t, scope) {}
 };

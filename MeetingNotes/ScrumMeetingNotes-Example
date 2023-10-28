@@ -14,7 +14,7 @@
       - Specifically with resizing vectors during additions.
       - Nelson volunteered to fix it.
     - Done:
-      - Started working on matrix multiplication in grammar and AST.
+      - Started working on matrix multiplication in grammar and ASTNode.
     - Next:
       - Will continue the same work.
   - Nelson:

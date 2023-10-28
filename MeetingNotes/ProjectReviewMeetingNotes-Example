@@ -25,7 +25,7 @@
   - Matrix implementation
 *** Round table:
   - Deric:
-    - Wants to work on matrix multiplication in grammar and AST next.
+    - Wants to work on matrix multiplication in grammar and ASTNode next.
   - Nelson:
     - Completed I/O runtime functions last week.
     - Working on matrix multiplication runtime functions this week.

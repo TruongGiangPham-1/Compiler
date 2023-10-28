@@ -11,7 +11,8 @@ tokens {
   GENERATOR,
   INDEX,
   EXPRESSION,
-  PARENTHESES
+  PARENTHESES,
+  TYPE
 }
 
 file

@@ -1,62 +1,48 @@
-#pragma once
-
-#include "AST.h"
-#include "Scope.h"
-#include "SymbolTable.h"
-#include "BuiltInTypeSymbol.h"
+#include "ASTNode/ASTNode.h"
+#include "ASTNode/AssignNode.h"
+#include "ASTNode/TypeNode.h"
+#include "ASTNode/DeclNode.h"
+#include "ASTNode/PrintNode.h"
+#include "ASTNode/Expr/IDNode.h"
+#include "ASTNode/Expr/IntNode.h"
+#include "ASTNode/Expr/Binary/BinaryExpr.h"
+#include "ASTNode/Expr/Vector/RangeVecNode.h"
+#include "ASTNode/Expr/Vector/GeneratorNode.h"
+#include "ASTNode/Expr/Vector/FilterNode.h"
+#include "ASTNode/Expr/Unary/UnaryExpr.h"
+#include "ASTNode/Block/LoopNode.h"
+#include "ASTNode/Block/ConditionalNode.h"
 
 namespace gazprea {
     class ASTWalker {
-    public:
-        ASTWalker() {}
-
-        virtual std::any visit(AST *t) {
-            visitChildren(t);
-            return 0;
-        }
-
-        virtual void visitChildren(AST *t) {
-            for (auto child: t->children) visit(child);
-        }
-    };
-
-    class DefRef : public ASTWalker {
-    private:
-        SymbolTable *symtab;
-        Scope *currentScope;
+    protected:
+        std::any walkChildren(std::shared_ptr<ASTNode> tree);
 
     public:
-        DefRef(SymbolTable *symtab, AST *root);
-        std::any visit(AST *t) override;
-        void visitChildren(AST *t) override;
+        ASTWalker() {};
 
-        // custom
-        BuiltInTypeSymbol* resolveType(AST *t);
+        std::any walk(std::shared_ptr<ASTNode> tree);
 
-        // tokens in our grammar
-        void visitVAR_DECL(AST *t);
-        void visitASSIGN(AST *t);
-        void visitLOOPCONDITIONAL(AST *t);
-        void visitFILTERGENERATOR(AST *t);
-        void visitID(AST *t);
-    };
+        // === TOP LEVEL AST NODES ===
+        virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
+        virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
+        virtual std::any visitPrint(std::shared_ptr<PrintNode> tree);
+        virtual std::any visitType(std::shared_ptr<TypeNode> tree);
 
-    class ComputeType : public ASTWalker {
-    private:
-        size_t ancestorCount;
-        SymbolTable *symtab;
-    public:
-        ComputeType(SymbolTable *symtab);
-        std::any visit(AST *t) override;
-        void visitChildren(AST *t) override;
+        // === EXPRESSION AST NODES ===
+        virtual std::any visitID(std::shared_ptr<IDNode> tree);
+        virtual std::any visitInt(std::shared_ptr<IntNode> tree);
+        // Expr/Binary
+        virtual std::any visitArith(std::shared_ptr<ArithNode> tree);
+        virtual std::any visitCmp(std::shared_ptr<CmpNode> tree);
+        virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
+        // Expr/Vector
+        virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);
+        virtual std::any visitGenerator(std::shared_ptr<GeneratorNode> tree);
+        virtual std::any visitRangeVec(std::shared_ptr<RangeVecNode> tree);
 
-        // tokens in our grammar
-        void visitEXPRESSION(AST* t);
-        void visitINT(AST* t);
-        void visitVectorConstructor(AST* t);
-        void visitINDEX(AST* t);
-        void visitPARENTHESES(AST* t);
-        void visitID(AST* t);
-        void visitBinaryOp(AST* t);
+        // === BLOCK AST NODES ===
+        virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
+        virtual std::any visitLoop(std::shared_ptr<LoopNode> tree);
     };
 }

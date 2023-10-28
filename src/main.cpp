@@ -6,7 +6,7 @@
 #include "tree/ParseTree.h"
 #include "tree/ParseTreeWalker.h"
 
-#include "AST.h"
+#include "ASTNode/ASTNode.h"
 #include "ASTBuilder.h"
 #include "SymbolTable.h"
 #include "ASTWalker.h"
@@ -32,21 +32,16 @@ int main(int argc, char **argv) {
   // Get the root of the parse tree. Use your base rule name.
   antlr4::tree::ParseTree *tree = parser.file();
 
-  // build AST
-  std::cerr << "Building AST" << std::endl;
+  // build ASTNode
+  std::cout << "\n\n=== Building ASTNode" << std::endl;
   gazprea::ASTBuilder builder;
-  AST* ast = std::any_cast<AST*>(builder.visit(tree));
+  auto ast = std::any_cast<std::shared_ptr<ASTNode>>(builder.visit(tree));
 
-  std::cerr << "\n\n=== Building SymbolTable" << std::endl;
-  SymbolTable symbolTable;
+  std::cout << "\n\n=== Building SymbolTable" << std::endl;
+//  SymbolTable symbolTable;
 
-  gazprea::DefRef defref(&symbolTable, ast);
-  defref.visit(ast);
-
-  std::cerr << "\n\n=== Computing Types" << std::endl;
-  gazprea::ComputeType typeCompute(&symbolTable);
-  typeCompute.visit(ast);
-  std::cout << "Finished type computing" << std::endl;
+//  gazprea::DefRef defref(&symbolTable, ast);
+//  defref.visit(ast);
 
   // HOW TO WRITE OUT.
   // std::ofstream out(argv[2]);

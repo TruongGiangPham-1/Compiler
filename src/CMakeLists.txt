@@ -9,15 +9,46 @@ set(
         ../include/BuiltInTypeSymbol.h
         BaseScope.cpp
         ../include/BaseScope.h
-        AST.cpp
-        ../include/AST.h
+        ASTNode/ASTNode.cpp
+        ../include/ASTNode/ASTNode.h
         ASTBuilder.cpp
         ../include/ASTBuilder.h
         Symbol.cpp
-        DefRef.cpp
         ../include/ASTWalker.h
         SymbolTable.cpp
         ../include/SymbolTable.h
+        ../include/Operands/UNARYOP.h
+        ASTNode/TypeNode.cpp
+        ../include/ASTNode/TypeNode.h
+        ASTNode/AssignNode.cpp
+        ../include/ASTNode/AssignNode.h
+        ASTNode/DeclNode.cpp
+        ../include/ASTNode/DeclNode.h
+        ../include/ASTNode/Expr/ExprNode.h
+        ASTNode/Expr/IDNode.cpp
+        ../include/ASTNode/Expr/IDNode.h
+        ASTNode/Expr/IntNode.cpp
+        ../include/ASTNode/Expr/IntNode.h
+        ASTNode/Expr/Binary/BinaryExpr.cpp
+        ../include/ASTNode/Expr/Binary/BinaryExpr.h
+        ASTNode/Expr/Vector/RangeVecNode.cpp
+        ../include/ASTNode/Expr/Vector/RangeVecNode.h
+        ASTNode/Expr/Unary/UnaryExpr.cpp
+        ../include/ASTNode/Expr/Unary/UnaryExpr.h
+        ../include/ASTNode/Expr/Vector/BaseVectorExpr.h
+        ASTNode/Block/BlockNode.cpp
+        ../include/ASTNode/Block/BlockNode.h
+        ASTNode/Block/LoopNode.cpp
+        ../include/ASTNode/Block/LoopNode.h
+        ASTNode/Block/ConditionalNode.cpp
+        ../include/ASTNode/Block/ConditionalNode.h
+        ASTNode/Expr/Vector/GeneratorNode.cpp
+        ../include/ASTNode/Expr/Vector/GeneratorNode.h
+        ASTNode/Expr/Vector/FilterNode.cpp
+        ../include/ASTNode/Expr/Vector/FilterNode.h
+        ASTNode/PrintNode.cpp
+        ../include/ASTNode/PrintNode.h
+        ASTWalker.cpp
 )
 
 # Build our executable from the source files.

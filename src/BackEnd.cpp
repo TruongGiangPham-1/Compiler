@@ -27,7 +27,7 @@
 // need to declare a runtime
 #include "mlir/Dialect/LLVMIR/FunctionCallUtils.h"
 
-#include "BINOP.h"
+#include "Operands/BINOP.h"
 #include "BackEnd.h"
 
 #define DEBUG
