@@ -23,10 +23,9 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>();
         for ( auto statement : ctx->statement() ) {
-
             t->addChild(visit(statement));
         }
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
@@ -40,7 +39,7 @@ namespace gazprea {
         t->addChild(visit(ctx->type()));
         t->addChild(visit(ctx->expression()));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
@@ -53,7 +52,7 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expression()));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitCond(GazpreaParser::CondContext *ctx) {
@@ -81,7 +80,7 @@ namespace gazprea {
         }
 
         // dynamically casting upward to an ASTNode
-        return std::dynamic_pointer_cast<ASTNode>(t);;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitPrint(GazpreaParser::PrintContext *ctx) {
@@ -92,7 +91,7 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expression()));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitParen(GazpreaParser::ParenContext *ctx) {
@@ -112,7 +111,7 @@ namespace gazprea {
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitRange(GazpreaParser::RangeContext *ctx) {
@@ -124,7 +123,7 @@ namespace gazprea {
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitGenerator(GazpreaParser::GeneratorContext *ctx) {
@@ -137,7 +136,7 @@ namespace gazprea {
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitFilter(GazpreaParser::FilterContext *ctx) {
@@ -150,7 +149,7 @@ namespace gazprea {
         t->addChild(visit(ctx->expression(0)));
         t->addChild(visit(ctx->expression(1)));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
@@ -171,10 +170,9 @@ namespace gazprea {
             case GazpreaParser::SUB:
                 t->op = BINOP::SUB;
         }
-
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
-
+    
         // casting upward to an ASTNode
         // we want to use the .op attribute, so we don't want to cast it upward when initializing
         // like in the case of most other nodes
@@ -216,7 +214,7 @@ namespace gazprea {
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
         std::shared_ptr<ASTNode> t = std::make_shared<IDNode>(ctx->getStart()->getLine(), sym);
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitLiteralInt(GazpreaParser::LiteralIntContext *ctx) {
@@ -225,7 +223,7 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitType(GazpreaParser::TypeContext *ctx) {
@@ -235,7 +233,7 @@ namespace gazprea {
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
         std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitExpression(GazpreaParser::ExpressionContext *ctx) {
