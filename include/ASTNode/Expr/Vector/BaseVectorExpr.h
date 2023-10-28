@@ -6,4 +6,3 @@ class BaseVectorExpr : public ASTNode {
 public:
     BaseVectorExpr(int line) : ASTNode(line) {}
 };
-

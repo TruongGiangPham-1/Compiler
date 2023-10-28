@@ -8,6 +8,8 @@ public:
     std::string domainVar;
     GeneratorNode(std::string domainVar, int line);
 
+    std::string toString() override;
+
     std::shared_ptr<ASTNode> getVecNode();
     std::shared_ptr<ASTNode> getExpr();
 };

@@ -2,6 +2,10 @@
 
 FilterNode::FilterNode(std::string domainVar, int line) : BaseVectorExpr(line), domainVar(domainVar) {}
 
+std::string FilterNode::toString() {
+    return "Filter " + domainVar;
+}
+
 std::shared_ptr<ASTNode> FilterNode::getVecNode() {
     return children[0];
 }
