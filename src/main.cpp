@@ -10,7 +10,8 @@
 #include "ASTBuilder.h"
 #include "SymbolTable.h"
 #include "ASTWalker.h"
-#include "BackEnd.h"
+#include "TypeWalker.h"
+#include "BackendWalker.h"
 #include "Def.h"
 
 #include <iostream>
@@ -30,6 +31,8 @@ int main(int argc, char **argv) {
   antlr4::CommonTokenStream tokens(&lexer);
   gazprea::GazpreaParser parser(&tokens);
 
+  std::ofstream out(argv[2]);
+
   // Get the root of the parse tree. Use your base rule name.
   antlr4::tree::ParseTree *tree = parser.file();
 
@@ -41,10 +44,17 @@ int main(int argc, char **argv) {
   std::cout << ast->toStringTree() << std::endl;
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 
-
+  
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
   gazprea::Def def(symbolTable);
   def.walk(ast);
+
+  TypeWalker types;
+  types.walk(ast);
+
+  BackendWalker backend(out);
+  backend.generateCode(ast);
+
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);
 
