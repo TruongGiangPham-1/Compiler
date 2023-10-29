@@ -51,6 +51,7 @@ set(
         ASTWalker.cpp
         ../include/TypeWalker.h
         TypeWalker.cpp
+        Def.cpp
 )
 
 # Build our executable from the source files.

@@ -17,6 +17,7 @@ public:
     std::shared_ptr<Type> type;
     std::shared_ptr<Scope> scope;
     mlir::Value mlirAddr;
+    std::string mlirName;
 
     Symbol(std::string name);
     Symbol(std::string name, std::shared_ptr<Type> type);

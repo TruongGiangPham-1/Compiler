@@ -12,6 +12,7 @@
 #include "ASTWalker.h"
 #include "BackEnd.h"
 #include "TypeWalker.h"
+#include "Def.h"
 
 #include <iostream>
 #include <fstream>
@@ -38,11 +39,17 @@ int main(int argc, char **argv) {
   gazprea::ASTBuilder builder;
   auto ast = std::any_cast<std::shared_ptr<ASTNode>>(builder.visit(tree));
 
+  std::cout << ast->toStringTree() << std::endl;
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
-//  SymbolTable symbolTable;
+
+  
+  std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
+  gazprea::Def def(symbolTable);
+  def.walk(ast);
 
   TypeWalker types;
   types.walk(ast);
+
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);
 
