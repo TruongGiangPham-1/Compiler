@@ -7,11 +7,11 @@ class TypeWalker : public gazprea::ASTWalker {
   private:
     std::string promotionTable[5][5] = {
 /*             boolean   character    integer  real  vector */ 
-/*boolean*/  {"boolean", "",     "",    "",   "vector" }, 
-/*character*/{"",   "character", "",    "",   "vector" },
-/*integer*/  {"",   "",     "integer",  "real",    "vector" },
-/*real*/     {"",   "",     "",    "real",    "vector" },
-/*vector*/   {"vector",   "vector",   "vector",   "vector",  "vector" }
+/*boolean*/  {"boolean",  "",         "",         "",       "vector" }, 
+/*character*/{"",         "character","",         "",       "vector" },
+/*integer*/  {"",         "",         "integer",  "real",   "vector" },
+/*real*/     {"",         "",         "",         "real",   "vector" },
+/*vector*/   {"vector",   "vector",   "vector",   "vector", "vector" }
 
     };
 
