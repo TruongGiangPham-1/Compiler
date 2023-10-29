@@ -25,10 +25,12 @@ class TypeWalker : public gazprea::ASTWalker {
     bool isListType(const std::shared_ptr<Type> type);
     std::shared_ptr<Type> getPromotedType(const std::shared_ptr<Type> from, const std::shared_ptr<Type> to);
   public:
+    std::any visitID(std::shared_ptr<IDNode> tree) override;
+
     std::any visitArith(std::shared_ptr<ArithNode> tree) override;
     std::any visitCmp(std::shared_ptr<CmpNode> tree) override;
     std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
-    std::any visitID(std::shared_ptr<IDNode> tree) override;
+
     std::any visitInt(std::shared_ptr<IntNode> tree) override;
     std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
     std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;

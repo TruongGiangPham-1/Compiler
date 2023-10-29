@@ -8,7 +8,7 @@ int TypeWalker::getTypeIndex(const std::string type) {
     return this->boolIndex;
   } else if (type == "character") {
     return this->charIndex;
-  } else if (type == "integer") {
+  } else if (type == "int") {
     return this->integerIndex;
   } else if (type == "real") {
     return this->realIndex;
@@ -27,8 +27,8 @@ std::shared_ptr<Type> TypeWalker::getPromotedType(const std::shared_ptr<Type> le
   auto promotedType = std::make_shared<BuiltInTypeSymbol>(this->promotionTable[leftIndex][rightIndex]);
 
 #ifdef DEBUG
-  std::cout << "type promotions between " <<  left->getName() << ", " << right->getName();
-  std::cout << "result :" <<  promotedType->getName() << std::endl;
+  std::cout << "type promotions between " <<  left->getName() << ", " << right->getName() << "\n";
+  std::cout << "result: " <<  promotedType->getName() << "\n";
 #endif 
 
   return promotedType;
@@ -47,6 +47,9 @@ std::any TypeWalker::visitArith(std::shared_ptr<ArithNode> tree) {
   tree->getRHS()->promoteTo = promoteRight;
   tree->getLHS()->promoteTo = promoteLeft;
 
+  // arbitrary, they both should be the same type at this point (unless cant promote)
+  tree->type = promoteRight;
+
   return 0;
 }
 
@@ -63,13 +66,15 @@ std::any TypeWalker::visitCmp(std::shared_ptr<CmpNode> tree) {
   tree->getRHS()->promoteTo = promoteRight;
   tree->getLHS()->promoteTo = promoteLeft;
 
+  tree->type = std::make_shared<BuiltInTypeSymbol>("int");
+
   return 0;
 }
 
 std::any TypeWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
   // TODO this
   auto right = tree->getRHS()->type;
-  auto type = std::make_shared<BuiltInTypeSymbol>("integer");
+  auto type = std::make_shared<BuiltInTypeSymbol>("int");
   tree->type = type;
 
 #ifdef DEBUG
@@ -78,18 +83,8 @@ std::any TypeWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
   return 0;
 }
 
-std::any TypeWalker::visitID(std::shared_ptr<IDNode> tree) {
-  //TODO fix this, we need to pull from defref walk
-  auto type = std::make_shared<BuiltInTypeSymbol>("integer");
-#ifdef DEBUG
-  std::cout << "Visint identifier, resolve to\n";
-#endif // DEBUG
-  tree->type = type;
-  return 0;
-}
-
 std::any TypeWalker::visitInt(std::shared_ptr<IntNode> tree) {
-  auto type = std::make_shared<BuiltInTypeSymbol>("integer");
+  auto type = std::make_shared<BuiltInTypeSymbol>("int");
   tree->type = type;
   return 0;
 }
@@ -109,6 +104,11 @@ std::any TypeWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 std::any TypeWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
   auto type = std::make_shared<BuiltInTypeSymbol>("vector");
   tree->type = type;
+  return 0;
+}
+
+std::any TypeWalker::visitID(std::shared_ptr<IDNode> tree) {
+  tree->type = tree->sym->type;
   return 0;
 }
 
