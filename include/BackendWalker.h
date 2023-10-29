@@ -1,7 +1,7 @@
 #include "ASTWalker.h"
 #include "BackEnd.h"
 
-class BackendWalker : public gazprea::ASTWalker {
+class BackendWalker : private gazprea::ASTWalker {
 private:
   BackEnd codeGenerator;
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
