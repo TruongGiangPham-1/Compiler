@@ -25,28 +25,28 @@ statement
     ;
 
 vardecl
-    : qualifier? inferred_sized_type ID '=' expr ';'
-    | qualifier? known_sized_type ID ('=' expr)? ';'
-    | qualifier ID '=' expr ';';
+    : qualifier? inferred_sized_type ID '=' expression ';'
+    | qualifier? known_sized_type ID ('=' expression)? ';'
+    | qualifier ID '=' expression ';';
 
 type: known_sized_type | inferred_sized_type;
 tuple_allowed_type: built_in_type | vector_type | string_type | matrix_type | inferred_sized_type;
 
 known_sized_type: built_in_type | tuple_type | vector_type | string_type | matrix_type;
 inferred_sized_type
-    : built_in_type '[' MULT ']'            #vector
-    | RESERVED_STRING '[' MULT ']'          #string
-    | built_in_type '[' MULT ',' expr ']'   #matrixFirst
-    | built_in_type '[' expr ',' MULT ']'   #matrixSecond
-    | built_in_type '[' MULT ',' MULT ']'   #matrix
+    : built_in_type '[' MULT ']'                #vector
+    | RESERVED_STRING '[' MULT ']'              #string
+    | built_in_type '[' MULT ',' expression ']' #matrixFirst
+    | built_in_type '[' expression ',' MULT ']' #matrixSecond
+    | built_in_type '[' MULT ',' MULT ']'       #matrix
     ;
 
 qualifier: RESERVED_CONST | RESERVED_VAR;
 built_in_type: RESERVED_BOOLEAN | RESERVED_CHARACTER | RESERVED_INTEGER | RESERVED_REAL | ID; // ID incase of typedefs... This might be changed
 tuple_type: RESERVED_TUPLE '(' tuple_allowed_type ID? (',' tuple_allowed_type ID?)+ ')';
-vector_type: built_in_type '[' expr ']';
-string_type: RESERVED_STRING ('[' expr ']')?;
-matrix_type: built_in_type '[' expr ',' expr ']';
+vector_type: built_in_type '[' expression ']';
+string_type: RESERVED_STRING ('[' expression ']')?;
+matrix_type: built_in_type '[' expression ',' expression ']';
 
 assign
     : ID '=' expression ';'
@@ -64,26 +64,41 @@ expression // root of an expression tree
     :   expr
     ;
 expr
-    : '(' expr ')'                                      #paren
-    | expr '[' expr ']'                                 #index
-    | expr '..' expr                                    #range
-    | '[' ID RESERVED_IN expression '|' expression ']'  #generator
-    | '[' ID RESERVED_IN expression '&' expression ']'  #filter
-    | expr op=(MULT | DIV) expr                         #math
-    | expr op=(ADD | SUB) expr                          #math
-    | expr op=(LT | GT) expr                            #cmp
-    | expr op=(EQ | NEQ) expr                           #cmp
-    | INT                                               #literalInt
-    | ID                                                #literalID
+    : '(' expr ')'                                                                                      #paren
+    | expr '[' expr (',' expr)? ']'                                                                     #index
+    | expr RANGE_OPERATOR expr                                                                          #range
+    | '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
+    | '[' ID RESERVED_IN expression FILTER_OPERATOR expression (',' expression)* ']'                    #filter
+    | <assoc=right> op=(ADD | SUB | RESERVED_NOT) expr                                                  #unary
+    | <assoc=right> expr op=EXP expr                                                                    #math
+    | expr op=(MULT | DIV | REM | DOT_PRODUCT) expr                                                     #math
+    | expr op=(ADD | SUB) expr                                                                          #math
+    | expr RESERVED_BY expr                                                                             #stride
+    | expr op=(LT | GT | LE | GE) expr                                                                  #cmp
+    | expr op=(EQ | NEQ) expr                                                                           #cmp
+    | expr RESERVED_AND expr                                                                            #binary
+    | expr (RESERVED_OR | RESERVED_XOR) expr                                                            #binary
+    | expr CONCAT expr                                                                                  #concatenation
+    | RESERVED_IDENTITY                                                                                 #identity
+    | RESERVED_NULL                                                                                     #null
+    | LITERAL_BOOLEAN                                                                                   #literalBoolean
+    | LITERAL_CHARACTER                                                                                 #literalCharacter
+    | INT                                                                                               #literalInt
+    | LITERAL_REAL                                                                                      #literalReal
+    | literal_tuple                                                                                     #literalTuple
+    | literal_vector                                                                                    #literalVector
+    | LITERAL_STRING                                                                                    #literalString
+    | literal_matrix                                                                                    #literalMatrix
+    | ID                                                                                                #literalID
     ;
 
-literal_tuple: '(' expr (',' expr)+ ')';
-literal_vector: '[' (expr (',' expr)*)? ']'; // empty vectors allowed
+literal_tuple: '(' expression (',' expression)+ ')';
+literal_vector: '[' (expression (',' expression)*)? ']'; // empty vectors allowed
 literal_matrix: '[' (literal_vector (',' literal_vector)*)? ']'; // empty matrices allowed
-cast: RESERVED_AS LT known_sized_type GT '(' expr ')';
+cast: RESERVED_AS LT known_sized_type GT '(' expression ')';
 typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
-    : expr RIGHT_ARROW RESERVED_STD_OUTPUT ';'              #outputStream
+    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';'        #outputStream
     | ID LEFT_ARROW RESERVED_STD_INPUT ';'                  #inputStream
     | ID DOT (INT | ID) LEFT_ARROW RESERVED_STD_INPUT ';'   #inputStream
     ;
@@ -105,6 +120,8 @@ DOT: '.';
 CONCAT: '||';
 DOT_PRODUCT: '**';
 RANGE_OPERATOR: '..';
+FILTER_OPERATOR: '&';
+GENERATOR_OPERATOR: '|';
 RIGHT_ARROW: '->';
 LEFT_ARROW: '<-';
 
@@ -156,7 +173,7 @@ INT : DIGIT+;
 LITERAL_BOOLEAN: RESERVED_TRUE | RESERVED_FALSE;
 LITERAL_CHARACTER: '\'' SCHAR '\'';
 LITERAL_STRING: '"' SCHAR+ '"';
-LITERAL_FLOAT
+LITERAL_REAL
     : INT? DOT INT EXPONENT?
     | INT DOT? EXPONENT?
     ;
