@@ -77,6 +77,17 @@ expr
     | ID                                                #literalID
     ;
 
+literal_tuple: '(' expr (',' expr)+ ')';
+literal_vector: '[' (expr (',' expr)*)? ']'; // empty vectors allowed
+literal_matrix: '[' (literal_vector (',' literal_vector)*)? ']'; // empty matrices allowed
+cast: RESERVED_AS LT known_sized_type GT '(' expr ')';
+typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
+stream
+    : expr RIGHT_ARROW RESERVED_STD_OUTPUT ';'              #outputStream
+    | ID LEFT_ARROW RESERVED_STD_INPUT ';'                  #inputStream
+    | ID DOT (INT | ID) LEFT_ARROW RESERVED_STD_INPUT ';'   #inputStream
+    ;
+
 // operators
 MULT: '*';
 DIV: '/';
@@ -86,6 +97,17 @@ LT: '<';
 GT: '>';
 EQ: '==';
 NEQ: '!=';
+REM: '%';
+EXP: '^';
+LE: '<=';
+GE: '>=';
+DOT: '.';
+CONCAT: '||';
+DOT_PRODUCT: '**';
+RANGE_OPERATOR: '..';
+RIGHT_ARROW: '->';
+LEFT_ARROW: '<-';
+
 
 // reserved keywords
 RESERVED_AND: 'and';
@@ -100,6 +122,7 @@ RESERVED_CONST: 'const';
 RESERVED_CONTINUE: 'continue';
 RESERVED_ELSE: 'else';
 RESERVED_FALSE: 'false';
+RESERVED_FORMAT: 'format';
 RESERVED_FUNCTION: 'function';
 RESERVED_IDENTITY: 'identity';
 RESERVED_IF: 'if';
@@ -127,8 +150,17 @@ RESERVED_VAR: 'var';
 RESERVED_WHILE: 'while';
 RESERVED_XOR: 'xor';
 
-ID : ('_' | CHAR) ('_' | CHAR | DIGIT)*;
+ID : ('_' | ALPHABET) ('_' | ALPHABET | DIGIT)*;
 INT : DIGIT+;
+
+LITERAL_BOOLEAN: RESERVED_TRUE | RESERVED_FALSE;
+LITERAL_CHARACTER: '\'' SCHAR '\'';
+LITERAL_STRING: '"' SCHAR+ '"';
+LITERAL_FLOAT
+    : INT? DOT INT EXPONENT?
+    | INT DOT? EXPONENT?
+    ;
+EXPONENT: ('e' | 'E') (SUB | ADD)? INT;
 
 // Skip comments & whitespace
 BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
@@ -137,4 +169,5 @@ WS : [ \t\r\n]+ -> skip;
 
 fragment
 DIGIT : [0-9];
-CHAR : [a-zA-Z];
+ALPHABET : [a-zA-Z];
+SCHAR : ('\\' [0abtnr"'\\] | .);
