@@ -1,0 +1,2 @@
+print([i in 1..10 | 0]);
+print([i in [ j in 1..10 | j * 2] | i * i]);

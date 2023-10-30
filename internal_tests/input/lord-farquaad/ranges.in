@@ -1,0 +1,7 @@
+print(1..10);
+print((10-8)..(9+2));
+int i = (0-4);
+print(i..5);
+int k = 3;
+int j = 0;
+print(k..j);

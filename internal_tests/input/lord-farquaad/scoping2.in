@@ -1,0 +1,12 @@
+int i = 0;
+if (1 == 1)
+  int i = i + 1;
+  print(i);
+fi;
+
+vector v = 0..3;
+print([i in i..3 | i]);
+print([v in v & v < 2]);
+
+int j = 5;
+print([i in v | i * j]);
