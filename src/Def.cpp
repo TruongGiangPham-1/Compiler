@@ -36,9 +36,10 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
     std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
     std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), type);
     idSym->mlirName = mlirName;
-
     idSym->scope = currentScope;
+
     currentScope->define(idSym);
+
     std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << idSym->type->getName()
               << " as mlirNmae: " << mlirName << "\n";
 
@@ -47,31 +48,19 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
     return 0;
 }
 
-std::any Def::visitPrint(std::shared_ptr<PrintNode> tree) {
-    walkChildren(tree);
-    return 0;
-}
-
-std::any Def::visitType(std::shared_ptr<TypeNode> tree) {
-    return 0;
-}
-
 std::any Def::visitID(std::shared_ptr<IDNode> tree) {
-    std::shared_ptr<Symbol> idSym = currentScope->resolve(tree->sym->getName());
-    if (idSym == nullptr) {
+    std::shared_ptr<Symbol> referencedSymbol = currentScope->resolve(tree->sym->getName());
+    if (referencedSymbol == nullptr) {
         std::cout << "in line " << tree->loc()
                   << " ref null\n"; // variable not defined
     } else {
         std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-                  << "  ref " << idSym->mlirName << " Type is " << idSym->type->getName()
+                  << "  ref " << referencedSymbol->mlirName << " Type is " << referencedSymbol->type->getName()
                   << std::endl;
     }
+    tree->sym = referencedSymbol;
     tree->scope = currentScope;
     return 0;
-}
-
-std::any Def::visitInt(std::shared_ptr<IntNode> tree) {
-    return tree->getVal();
 }
 
 std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
@@ -137,11 +126,6 @@ std::any Def::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     return 0;
 }
 
-std::any Def::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
-    walkChildren(tree);
-    return 0;
-}
-
 std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
     walk(tree->condition);
     // enter scope
@@ -189,5 +173,4 @@ int Def::getNextId() {
     this->varID++;
     return varID;
 }
-
 }
