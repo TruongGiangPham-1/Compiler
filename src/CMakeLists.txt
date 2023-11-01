@@ -54,6 +54,7 @@ set(
         TypeWalker.cpp
         Def.cpp
         BackendWalker.cpp
+        ../include/customError/ErrorListener.h
 )
 
 # Build our executable from the source files.

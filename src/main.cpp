@@ -13,6 +13,7 @@
 #include "TypeWalker.h"
 #include "BackendWalker.h"
 #include "Def.h"
+#include "../include/customError/ErrorListener.h"
 
 #include <iostream>
 #include <fstream>
@@ -30,6 +31,9 @@ int main(int argc, char **argv) {
   gazprea::GazpreaLexer lexer(&afs);
   antlr4::CommonTokenStream tokens(&lexer);
   gazprea::GazpreaParser parser(&tokens);
+
+  parser.removeErrorListeners();
+  parser.addErrorListener(new ErrorListener());
 
   std::ofstream out(argv[2]);
 
