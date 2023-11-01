@@ -161,6 +161,7 @@ std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
     }
     if (typeN->getTypeName() != "int" && typeN->getTypeName() != "vector") {
         std::cerr << "type must be int or vector, invalid type at line " << t->loc() << "\n";
+        throw SyntaxError(t->loc(), "type must be int or vector, invalid type");
         return nullptr;
     }
 

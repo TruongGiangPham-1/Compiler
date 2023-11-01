@@ -8,6 +8,7 @@
 #include "ASTWalker.h"
 #include "SymbolTable.h"
 #include "BuiltInTypeSymbol.h"
+#include "CompileTimeExceptions.h"
 
 namespace gazprea {
     class Def : public ASTWalker {
