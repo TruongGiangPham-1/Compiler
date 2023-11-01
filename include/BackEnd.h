@@ -15,8 +15,15 @@ public:
   void generate();
   void print(mlir::Value value);
   void printVec(mlir::Value value);
+  void printCommonType(mlir::Value value);
 
   mlir::Value generateInteger(int value);
+  mlir::Value generateValue(int value);
+  mlir::Value generateValue(float value);
+  mlir::Value generateValue(char* value);
+  mlir::Value generateValue(char value);
+  mlir::Value generateCommonType(mlir::Value value, int Type);
+
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);
   mlir::Value generateVectorOfSize(mlir::Value size);
@@ -84,6 +91,7 @@ protected:
   void setupPrint();
   void setupPrintVec();
   void setupVectorRuntime();
+  void setupCommonTypeRuntime();
   int writeLLVMIR();
 
 private:

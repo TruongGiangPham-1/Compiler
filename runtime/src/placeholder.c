@@ -1,4 +1,5 @@
 #include "Operands/BINOP.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,10 +8,45 @@ void print(int i) {
   printf("%d\n", i);
 }
 
+
+
 typedef struct vecStruct {
   int* base;
   int sizeOf;
 } vecStruct;
+
+typedef struct commonType {
+  int type; // type. defined in an enum
+  long int* value; // long int is technically void ptr
+} commonType;
+
+void printCommonType(commonType *type) {
+  switch (type->type) {
+    case 1:
+      printf("value %d\n", *(int*)type->value);
+      break;
+    case 2:
+      printf("value %c\n", *(char*)type->value);
+      break;
+    case 3:
+      printf("value %f\n", *(float*)type->value);
+      break;
+  }
+  return;
+}
+
+// can later check if list types to de-allocate 
+commonType* allocateCommonType(long int* value, int type) {
+  commonType* newType = (commonType*)malloc(sizeof(commonType));
+
+  newType->type = type;
+  newType->value = value;
+
+  printf("just allocated\n");
+
+  return newType;
+}
+
 
 void fill(vecStruct *a, int lower, int upper) {
   memset(a->base, 0, sizeof(int) * a->sizeOf);

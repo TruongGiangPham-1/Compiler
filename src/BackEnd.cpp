@@ -1,3 +1,4 @@
+#include "llvm/ADT/APFloat.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_os_ostream.h"
@@ -15,6 +16,7 @@
 #include "mlir/IR/Verifier.h"
 
 // need these to translate LLVM dialect MLIR to LLVM IR
+#include "mlir/Support/LLVM.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Export.h"
 
@@ -58,6 +60,14 @@ void BackEnd::generate() {
             << std::endl;
 #endif
 
+  auto a = this->generateCommonType(generateValue(3.2f), 3);
+  auto b = this->generateCommonType(generateValue('c'), 2);
+  auto c = this->generateCommonType(generateValue(1), 1);
+
+  this->printCommonType(a);
+  this->printCommonType(b);
+  this->printCommonType(c);
+
   this->deallocateVectors();
 
   auto intType = builder->getI32Type();
@@ -66,7 +76,6 @@ void BackEnd::generate() {
       loc, builder->getIntegerAttr(intType, 0));
   builder->create<mlir::LLVM::ReturnOp>(loc, zero);
 
-  module.dump(); 
   if (mlir::failed(mlir::verify(
           module))) { // trying to verify will complain about some issue that
                       // did not exist when I dump it in visitLoop()
@@ -118,6 +127,7 @@ BackEnd::BackEnd(std::ostream &out)
 
   setupPrint();
   setupVectorRuntime();
+  setupCommonTypeRuntime();
 }
 
 int BackEnd::emitMain() {
@@ -132,7 +142,6 @@ int BackEnd::emitMain() {
       loc, intType, builder->getIntegerAttr(intType, 0));
   builder->create<mlir::LLVM::ReturnOp>(builder->getUnknownLoc(), zero);
 
-  module.dump();
 
   if (mlir::failed(mlir::verify(module))) {
     module.emitError("module failed to verify");
@@ -140,6 +149,37 @@ int BackEnd::emitMain() {
   }
   return 0;
 }
+
+void BackEnd::setupCommonTypeRuntime() {
+  auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+  auto intType = builder->getI32Type();
+  auto int64Type = builder->getI64Type();
+
+  auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
+
+  // mlir doesn't allow void types. we do a little hacking
+  auto voidPtrType = mlir::LLVM::LLVMPointerType::get(int64Type);
+
+  auto commonType =
+      mlir::LLVM::LLVMStructType::getLiteral(&context, {intPtrType, intType});
+
+  auto commonTypeAddr = mlir::LLVM::LLVMPointerType::get(commonType);
+
+  auto printType = mlir::LLVM::LLVMFunctionType::get(
+      voidType, {commonTypeAddr});
+  auto allocateCommonType =
+      mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
+  auto deallocateCommonType =
+      mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
+
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printCommonType",
+                                            printType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
+                                            allocateCommonType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
+                                            deallocateCommonType);
+}
+
 
 /**
  * Set up the function signature for the runtime function
@@ -245,9 +285,66 @@ void BackEnd::printVec(mlir::Value value) {
   builder->create<mlir::LLVM::CallOp>(loc, printVecFunc, value);
 }
 
+// === === === Printing === === ===
+
+void BackEnd::printCommonType(mlir::Value value) {
+  mlir::LLVM::GlobalOp global;
+
+  mlir::LLVM::LLVMFuncOp printVecFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("printCommonType");
+  builder->create<mlir::LLVM::CallOp>(loc, printVecFunc, value);
+}
+
+// === === === TYPEs === === === 
+
+mlir::Value BackEnd::generateCommonType(mlir::Value value, int type) {
+  auto intType = builder->getI32Type();
+  mlir::Value one = builder->create<mlir::LLVM::ConstantOp>(
+      loc, builder->getIntegerAttr(intType, 1));
+
+  mlir::LLVM::LLVMFuncOp allocateCommonType =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateCommonType");
+    mlir::Value typeValue = generateValue(type);
+
+  mlir::Value valuePtr = builder->create<mlir::LLVM::AllocaOp>(
+      loc, mlir::LLVM::LLVMPointerType::get(typeValue.getType()), one, 0);
+
+  builder->create<mlir::LLVM::StoreOp>(loc, value, valuePtr);
+
+  return builder->create<mlir::LLVM::CallOp>(
+      loc, 
+      allocateCommonType, 
+      mlir::ValueRange({valuePtr, typeValue})
+      )
+    .getResult();
+}
+
+
 mlir::Value BackEnd::generateInteger(int value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI32Type(), value);
+  return result;
+}
+
+mlir::Value BackEnd::generateValue(int value) {
+  mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
+      loc, builder->getI32Type(), value);
+  return result;
+}
+
+mlir::Value BackEnd::generateValue(float value) {
+  // google says so. no idea what this is 
+  llvm::APFloat floatValue = llvm::APFloat(value);
+
+  mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
+      loc, builder->getF32Type(), floatValue);
+
+  return result;
+}
+
+mlir::Value BackEnd::generateValue(char value) {
+  mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
+      loc, builder->getI8Type(), value);
   return result;
 }
 
