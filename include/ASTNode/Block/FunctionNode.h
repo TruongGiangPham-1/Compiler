@@ -35,6 +35,7 @@ public:
 };
 
 class FunctionBlockNode: public FunctionNode {
+public:
     FunctionBlockNode(int line, std::shared_ptr<Symbol>funcNameSym): FunctionNode(line, funcNameSym){};
     std::string toString() override {
         return "FunctionBlockNode";

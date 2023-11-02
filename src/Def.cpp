@@ -159,13 +159,13 @@ std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
     std::shared_ptr<Type> retType = std::make_shared<BuiltInTypeSymbol>("integer");  // create a random type for now
 
     // define function scope Symbol
-    std::string fname = "FuncDecl" + std::to_string(tree->loc());
+    std::string fname = "FuncDeclScope" + std::to_string(tree->loc());
     std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
                                                                                fname, retType, symtab->globalScope);
 
-    currentScope->define(funcSym);
+    currentScope->define(funcSym);  // define function symbol in global
     std::cout << "in line " << tree->loc()
-              << "functionNamer=" << tree->funcNameSym->getName() << " defined\n";
+              << " functionNamer= " << tree->funcNameSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
     currentScope = symtab->enterScope(fname, funcSym);
     // define the argument symbols
     for (auto argIDNode: tree->orderedArgsID) {
@@ -173,9 +173,11 @@ std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
         auto idNode = std::dynamic_pointer_cast<IDNode>(argIDNode);
         //TODO: this id symbol dont have types yet. waiting for visitType implementation
         assert(idNode);  // not null
+        std::cout << "in line " << tree->loc()
+                  << " argument = " << idNode->sym->getName() << " defined in " << currentScope->getScopeName() << "\n";
+
         currentScope->define(idNode->sym);  // define arg in curren scope
         idNode->scope = currentScope;  // set scope to function scope
-
     }
 
     currentScope = symtab->exitScope(currentScope);

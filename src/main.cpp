@@ -56,13 +56,13 @@ int main(int argc, char **argv) {
 
   std::cout << "\n\n=== REF PASS\n";
   gazprea::Ref ref(symbolTable);
-  def.walk(ast);
+  ref.walk(ast);
 
-    TypeWalker types;
-  types.walk(ast);
+  //  TypeWalker types;
+  //types.walk(ast);
 
-  BackendWalker backend(out);
-  backend.generateCode(ast);
+  //BackendWalker backend(out);
+  //backend.generateCode(ast);
 
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);

@@ -23,7 +23,11 @@ namespace gazprea {
         std::cout << "INIT BUILDER: VISITING FILE" << std::endl;
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<ASTNode>();
+        int size = ctx->children.size();
+        int c = 0;
         for ( auto statement : ctx->children) {
+            c++;
+            if (c == size) break;
             t->addChild(visit(statement));
         }
         return std::dynamic_pointer_cast<ASTNode>(t);
@@ -254,20 +258,48 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitFunctionBlock(GazpreaParser::FunctionBlockContext *ctx) {
-
-        return nullptr;
-    }
-
-    // func decl node, holds retType,
-    std::any ASTBuilder::visitFunctionForward(GazpreaParser::FunctionForwardContext *ctx) {
+        std::cout << "visiting function block\n";
         // ctx->ID(0) is always the function name, kind of mystery indexing
         std::shared_ptr<Symbol> funcNameSym = std::make_shared<Symbol>(ctx->ID(0)->getSymbol()->getText());
-        std::shared_ptr<FunctionNode> t = std::make_shared<FunctionForwardNode>(ctx->getStart()->getLine(), funcNameSym);
+        std::shared_ptr<FunctionBlockNode> t = std::make_shared<FunctionBlockNode>(ctx->getStart()->getLine(), funcNameSym);
 
         auto typesArray = ctx->type();
         auto argIDArray = ctx->ID();
         // TODO: add the retType node(doesnt work yet without type walker)
-        t->addChild(visit(typesArray[typesArray.size() - 1])); // the last type is always the return type?
+        //t->addChild(visit(typesArray[typesArray.size() - 1])); // the last type is always the return type?
+
+        // iterate thru all the orderedArg
+        // ctx->ID() is an array of arguments id, skip ID(0) because thats the function name
+        // type of the argument ID(i) is at ctx->type(i - 1)
+        for (int i = 1; i < argIDArray.size(); i++) {
+            // TODO: cant visit type yet since its not yet done
+            //auto argTypeNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(typesArray[i - 1]));
+            auto  sym = std::make_shared<Symbol>(argIDArray[i]->getSymbol()->getText());
+            auto argIDnode = std::make_shared<IDNode>(argIDArray[i]->getSymbol()->getLine(), sym);
+            // TODO:  set the type of the ID node once visit Type is implemented
+            //argIDnode->type = std::any_cast<std::shared_ptr<Type>>(visit(typesArray[i - 1]));
+
+            t->orderedArgsID.push_back(argIDnode);
+
+        }
+        // TODO: add block node when visitBlock is implemented
+        //t->addChild(visit(ctx->block()));
+        return std::dynamic_pointer_cast<ASTNode>(t);
+
+    }
+
+    // func decl node, holds retType,
+    std::any ASTBuilder::visitFunctionForward(GazpreaParser::FunctionForwardContext *ctx) {
+        std::cout << "visiting function forwward\n";
+        // ctx->ID(0) is always the function name, kind of mystery indexing
+        std::shared_ptr<Symbol> funcNameSym = std::make_shared<Symbol>(ctx->ID(0)->getSymbol()->getText());
+        std::shared_ptr<FunctionForwardNode> t = std::make_shared<FunctionForwardNode>(ctx->getStart()->getLine(), funcNameSym);
+
+        auto typesArray = ctx->type();
+        auto argIDArray = ctx->ID();
+        // TODO: add the retType node(doesnt work yet without type walker)
+        //t->addChild(visit(typesArray[typesArray.size() - 1])); // the last type is always the return type?
+
 
 
         // iterate thru all the orderedArg

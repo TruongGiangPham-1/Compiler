@@ -19,11 +19,13 @@ namespace gazprea {
 
         if (funcSym == nullptr) {
             // there is no declaratioin for this function
+            std::cout << "line " << tree->loc() << " no forward declaration\n";
         } else {
             // check if this symbol is a function symbol
             if (std::dynamic_pointer_cast<FunctionSymbol>(funcSym)) {
                 // there was a forward declaration
-                std::cout << "resolved function name " << funcSym->getName() << " at line: " << tree->loc() << std::endl;
+                std::cout << "resolved function definition " << funcSym->getName() << " at line: " << tree->loc() << " at scope "
+                    << currentScope->getScopeName()<< std::endl;
                 // we need to push local scope to walk the children
                 //currentScope = symtab->en
 
