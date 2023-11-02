@@ -88,33 +88,33 @@ commonType* allocateCommonType(void* value, enum BuiltIn type) {
       {
         int* newIntVal = malloc(sizeof(int));
         *newIntVal = *(int*)value;
-        newType->value = (long*)newIntVal;
+        newType->value = (void*)newIntVal;
       }
       break;
     case BOOL:
       {
         bool* newBoolVal = malloc(sizeof(bool));
         *newBoolVal = *(bool*)value;
-        newType->value = (long*)newBoolVal;
+        newType->value = (void*)newBoolVal;
       }
       break;
     case REAL:
       {
         float* newFloatVal = malloc(sizeof(float));
         *newFloatVal = *(float*)value;
-        newType->value = (long*)newFloatVal;
+        newType->value = (void*)newFloatVal;
       }
       break;
     case TUPLE:
       {
-        newType->value = (tuple*)value;
+        newType->value = value;
       }
       break;
     case CHAR: 
       {
         char* newCharVal = malloc(sizeof(char));
         *newCharVal = *(char*)value;
-        newType->value = (long*)newCharVal;
+        newType->value = (void*)newCharVal;
       }
 
       break;
@@ -166,25 +166,57 @@ void appendTuple(tuple* tuple, commonType *value) {
 // bjarne stoustrup would've taken my keyboard away
 commonType* boolPromotion(bool fromValue, enum BuiltIn toType) {
 #ifdef DEBUGPROMOTION
-  printf("promoting from bool\n");
+  printf("Cast from int\n");
 #endif /* ifdef DEBUGPROMOTION */
-  switch (toType) {
+    switch (toType) {
     case BOOL:
-    return allocateCommonType((long int*)&fromValue, BOOL);
-    case INT:
-    return allocateCommonType((long int*)&fromValue, BOOL);
-    case CHAR:
-    return allocateCommonType((long int*)&fromValue, BOOL);
-    case TUPLE:
-    return allocateCommonType((long int*)&fromValue, BOOL);
-    case REAL:
-    return allocateCommonType((long int*)&fromValue, BOOL);
+#ifdef DEBUGPROMOTION
+  printf("To bool\n");
+#endif /* ifdef DEBUGPROMOTION */
+    return allocateCommonType((void*)&fromValue, BOOL);
+    default:
+    printf("WARNING: Attempting bad cast\n");
+    return NULL;
   }
 }
 
 commonType* intPromotion(int fromValue, enum BuiltIn toType) {
 #ifdef DEBUGPROMOTION
-  printf("promoting from int\n");
+  printf("Cast from int\n");
+#endif /* ifdef DEBUGPROMOTION */
+    switch (toType) {
+    case BOOL:
+#ifdef DEBUGPROMOTION
+  printf("To bool\n");
+#endif /* ifdef DEBUGPROMOTION */
+    bool new = fromValue != 0;
+    return allocateCommonType((void*)&new, BOOL);
+    case INT:
+#ifdef DEBUGPROMOTION
+  printf("To int\n");
+#endif /* ifdef DEBUGPROMOTION */
+    return allocateCommonType((void*)&fromValue, INT);
+    case CHAR:
+#ifdef DEBUGPROMOTION
+  printf("To char\n");
+#endif /* ifdef DEBUGPROMOTION */
+    char newchar = (char)(((unsigned int) fromValue) % 256);
+    return allocateCommonType((void*)&newchar, CHAR);
+    case REAL:
+#ifdef DEBUGPROMOTION
+  printf("To real\n");
+#endif /* ifdef DEBUGPROMOTION */
+    float newfloat = (float)fromValue;
+    return allocateCommonType((void*)&newfloat, REAL);
+    default:
+    printf("WARNING: Attempting bad cast\n");
+    return NULL;
+  }
+}
+
+commonType* charPromotion(char fromValue, enum BuiltIn toType) {
+#ifdef DEBUGPROMOTION
+  printf("Cast from char\n");
 #endif /* ifdef DEBUGPROMOTION */
     switch (toType) {
     case BOOL:
@@ -205,7 +237,7 @@ commonType* intPromotion(int fromValue, enum BuiltIn toType) {
     char newchar = (char)(fromValue%256);
     printf("%d\n", fromValue);
     printf("%c\n",(char) fromValue);
-    return allocateCommonType((long int*)&newchar, CHAR);
+    return allocateCommonType((void*)&newchar, CHAR);
     case TUPLE:
 #ifdef DEBUGPROMOTION
   printf("To tuple\n");
@@ -220,40 +252,27 @@ commonType* intPromotion(int fromValue, enum BuiltIn toType) {
   }
 }
 
-commonType* charPromotion(char fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
-  printf("promoting from char\n");
-#endif /* ifdef DEBUGPROMOTION */
-  switch (toType) {
-      case BOOL:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case INT:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case CHAR:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case TUPLE:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case REAL:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-    }
-}
-
-commonType* realPromotion(char fromValue, enum BuiltIn toType) {
+commonType* realPromotion(float fromValue, enum BuiltIn toType) {
 #ifdef DEBUGPROMOTION
   printf("promoting from real\n");
 #endif /* ifdef DEBUGPROMOTION */
-  switch (toType) {
-      case BOOL:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case INT:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case CHAR:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case TUPLE:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-      case REAL:
-      return allocateCommonType((long int*)&fromValue, BOOL);
-    }
+    switch (toType) {
+    case INT:
+#ifdef DEBUGPROMOTION
+  printf("To int\n");
+#endif /* ifdef DEBUGPROMOTION */
+    int newInt = (int)fromValue;
+    return allocateCommonType((void*)&newInt, INT);
+    case TUPLE:
+#ifdef DEBUGPROMOTION
+  printf("To real\n");
+#endif /* ifdef DEBUGPROMOTION */
+    float newfloat = (float)fromValue;
+    return allocateCommonType((void*)&newfloat, REAL);
+    default:
+    printf("WARNING: Attempting bad cast\n");
+    return NULL;
+  }
 }
 
 // promote and return temporary
