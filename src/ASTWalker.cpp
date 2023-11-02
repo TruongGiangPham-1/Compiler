@@ -131,6 +131,22 @@ namespace gazprea {
             std::cout << "about to visit Loop" << std::endl;
 #endif // DEBUG
             return this->visitLoop(std::dynamic_pointer_cast<LoopNode>(tree));
+
+        } else if (std::dynamic_pointer_cast<FunctionForwardNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit functionForwardNode" << std::endl;
+#endif // DEBUG
+        } else if (std::dynamic_pointer_cast<FunctionSingleNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit functionSingleNode" << std::endl;
+#endif // DEBUG
+
+        } else if (std::dynamic_pointer_cast<FunctionBlockNode>(tree)) {
+
+#ifdef DEBUG
+            std::cout << "about to visit FunctionBlockNode" << std::endl;
+#endif // DEBUG
+
         }
 
         // NIL node
@@ -186,5 +202,15 @@ namespace gazprea {
     }
     std::any ASTWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
         return this->walkChildren(tree);
+    }
+    // FUNCTION
+    std::any ASTWalker::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
+        return  this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) {
+        return  this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
+        return  this->walkChildren(tree);
     }
 }

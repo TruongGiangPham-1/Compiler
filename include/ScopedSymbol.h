@@ -9,17 +9,19 @@
 
 class ScopedSymbol: public Symbol, public Scope{
 public:
-    std::string scopeName;
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;
 
     ScopedSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope)
-            : Symbol(symName, retType), enclosingScope(enclosingScope), scopeName(scopeName) {};
+            : Symbol(symName, retType), enclosingScope(enclosingScope) {};
     // from Scope.h
     std::shared_ptr<Symbol> resolve(const std::string &name) override;
     void define(std::shared_ptr<Symbol> sym) override;
     std::shared_ptr<Scope> getEnclosingScope() override;
-    //std::string getScopeName() override;
+    void setEnclosingScope(std::shared_ptr<Scope> scope) override;
+    std::string getScopeName() override {
+        return "ScopeSymbol";
+    };
 
     // from Symbol.h
     std::string getName() override;
@@ -28,7 +30,9 @@ public:
 
 class FunctionSymbol: public ScopedSymbol {
 public:
-    std::string scopeName; // function or procedure
+    std::string scopeName;
+    FunctionSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope):
+            ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName) {};
 
     std::string getScopeName() override {
         return scopeName;
@@ -38,8 +42,7 @@ public:
 
 class ProcedureSymbol: public ScopedSymbol {
 public:
-    std::string scopeName; // function or procedure
-
+    std::string scopeName;
     std::string getScopeName() override {
         return  scopeName;
     };

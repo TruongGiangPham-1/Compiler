@@ -29,6 +29,9 @@ std::string ScopedSymbol::getName() {
     return name;
 }
 
+void ScopedSymbol::setEnclosingScope(std::shared_ptr<Scope> scope) {
+    enclosingScope = scope;
+}
 std::string ScopedSymbol::toString() {
     std::stringstream str;
     str << "method" << Symbol::toString() << ":{";

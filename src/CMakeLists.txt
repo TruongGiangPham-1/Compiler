@@ -59,6 +59,8 @@ set(
         ../include/ScopedSymbol.h
         ../include/ASTNode/Block/FunctionNode.h
         ASTNode/Block/FunctionNode.cpp
+        ../include/Ref.h
+        Ref.cpp
 )
 
 # Build our executable from the source files.

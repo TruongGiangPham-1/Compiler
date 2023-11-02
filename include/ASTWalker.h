@@ -13,6 +13,7 @@
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
+#include "ASTNode/Block/FunctionNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -45,5 +46,11 @@ namespace gazprea {
         // === BLOCK AST NODES ===
         virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
         virtual std::any visitLoop(std::shared_ptr<LoopNode> tree);
+        // === BLOCK FUNCTION NODES ===
+        virtual std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree);
+        virtual std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree);
+        virtual std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree);
+        // === BlOCK PROCEDURE NODES ===
+
     };
 }

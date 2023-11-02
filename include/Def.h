@@ -9,6 +9,7 @@
 #include "SymbolTable.h"
 #include "BuiltInTypeSymbol.h"
 #include "CompileTimeExceptions.h"
+#include "ScopedSymbol.h"
 
 namespace gazprea {
     class Def : public ASTWalker {
@@ -38,6 +39,11 @@ namespace gazprea {
         // === BLOCK AST NODES ===
         std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
         std::any visitLoop(std::shared_ptr<LoopNode> tree) override;
+
+        // === BlOCK FUNCTION AST NODES ===
+        std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) override;
+        //std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
+        //std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
     };
 
 }

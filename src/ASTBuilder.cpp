@@ -262,19 +262,30 @@ namespace gazprea {
     std::any ASTBuilder::visitFunctionForward(GazpreaParser::FunctionForwardContext *ctx) {
         // ctx->ID(0) is always the function name, kind of mystery indexing
         std::shared_ptr<Symbol> funcNameSym = std::make_shared<Symbol>(ctx->ID(0)->getSymbol()->getText());
-        std::shared_ptr<FunctionNode> t = std::make_shared<FunctionNode>(ctx->getStart()->getLine(), funcNameSym);
+        std::shared_ptr<FunctionNode> t = std::make_shared<FunctionForwardNode>(ctx->getStart()->getLine(), funcNameSym);
 
         auto typesArray = ctx->type();
-        // add the retType node
+        auto argIDArray = ctx->ID();
+        // TODO: add the retType node(doesnt work yet without type walker)
         t->addChild(visit(typesArray[typesArray.size() - 1])); // the last type is always the return type?
+
 
         // iterate thru all the orderedArg
         // ctx->ID() is an array of arguments id, skip ID(0) because thats the function name
         // type of the argument ID(i) is at ctx->type(i - 1)
-        for (int i = 1; i < ctx->ID().size(); i++) {
+        for (int i = 1; i < argIDArray.size(); i++) {
+            // TODO: cant visit type yet since its not yet done
+            //auto argTypeNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(typesArray[i - 1]));
+            auto  sym = std::make_shared<Symbol>(argIDArray[i]->getSymbol()->getText());
+            auto argIDnode = std::make_shared<IDNode>(argIDArray[i]->getSymbol()->getLine(), sym);
+            // TODO:  set the type of the ID node once visit Type is implemented
+            //argIDnode->type = std::any_cast<std::shared_ptr<Type>>(visit(typesArray[i - 1]));
+
+            t->orderedArgsID.push_back(argIDnode);
 
         }
+        // doesnt have the block expression
 
-        return nullptr;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 }

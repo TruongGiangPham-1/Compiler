@@ -12,3 +12,7 @@ FunctionNode::FunctionNode(int line, std::shared_ptr<Symbol>funcNameSym): BlockN
 std::string FunctionNode::toString() {
     return "Function";
 }
+
+std::shared_ptr<ASTNode> FunctionNode::getRetTypeNode() {
+    return this->children[0];
+}

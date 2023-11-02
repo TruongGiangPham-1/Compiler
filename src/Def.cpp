@@ -9,8 +9,11 @@ Def::Def(std::shared_ptr<SymbolTable> symTab) : symtab(symTab) {
     std::shared_ptr<GlobalScope> globalScope = std::make_shared<GlobalScope>();
     symTab->globalScope = globalScope;
     // push builtin type to global scope
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("int"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("integer"));
     globalScope->define(std::make_shared<BuiltInTypeSymbol>("vector"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("character"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("rael"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("tuple"));
 
     currentScope = symtab->enterScope(globalScope);  // enter global scope
 }
@@ -151,6 +154,36 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
     return 0;
 }
 
+std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
+    // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
+    std::shared_ptr<Type> retType = std::make_shared<BuiltInTypeSymbol>("integer");  // create a random type for now
+
+    // define function scope Symbol
+    std::string fname = "FuncDecl" + std::to_string(tree->loc());
+    std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
+                                                                               fname, retType, symtab->globalScope);
+
+    currentScope->define(funcSym);
+    std::cout << "in line " << tree->loc()
+              << "functionNamer=" << tree->funcNameSym->getName() << " defined\n";
+    currentScope = symtab->enterScope(fname, funcSym);
+    // define the argument symbols
+    for (auto argIDNode: tree->orderedArgsID) {
+        // define this myself, dont need mlir name because arguments are
+        auto idNode = std::dynamic_pointer_cast<IDNode>(argIDNode);
+        //TODO: this id symbol dont have types yet. waiting for visitType implementation
+        assert(idNode);  // not null
+        currentScope->define(idNode->sym);  // define arg in curren scope
+        idNode->scope = currentScope;  // set scope to function scope
+
+    }
+
+    currentScope = symtab->exitScope(currentScope);
+    return 0;
+}
+
+
+
 std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
     // type note
     std::shared_ptr<TypeNode> typeN = std::dynamic_pointer_cast<TypeNode>(t);
@@ -159,7 +192,7 @@ std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
         std::cerr << "cannot cast to type node at line " << t->loc() << "\n";
         return nullptr;
     }
-    if (typeN->getTypeName() != "int" && typeN->getTypeName() != "vector") {
+    if (typeN->getTypeName() != "integer" && typeN->getTypeName() != "vector" ) {
         std::cerr << "type must be int or vector, invalid type at line " << t->loc() << "\n";
         throw SyntaxError(t->loc(), "type must be int or vector, invalid type");
         return nullptr;
