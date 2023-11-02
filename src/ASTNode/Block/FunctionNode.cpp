@@ -6,7 +6,7 @@
 
 
 
-FunctionNode::FunctionNode(int line): BlockNode(line) {}
+FunctionNode::FunctionNode(int line, std::shared_ptr<Symbol>funcNameSym): BlockNode(line), funcNameSym(funcNameSym) {}
 
 
 std::string FunctionNode::toString() {
