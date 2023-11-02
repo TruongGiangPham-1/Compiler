@@ -16,3 +16,13 @@ std::string FunctionNode::toString() {
 std::shared_ptr<ASTNode> FunctionNode::getRetTypeNode() {
     return this->children[0];
 }
+
+// === FunctionBlock
+std::shared_ptr<ASTNode> FunctionBlockNode::getBlock() {
+    return this->children[1];
+}
+
+// === Function Single node
+std::shared_ptr<ASTNode>FunctionSingleNode::getExpr() {
+    return this->children[1];
+}

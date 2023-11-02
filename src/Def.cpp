@@ -168,7 +168,7 @@ std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
               << " functionNamer= " << tree->funcNameSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
     currentScope = symtab->enterScope(fname, funcSym);
     // define the argument symbols
-    for (auto argIDNode: tree->orderedArgsID) {
+    for (auto argIDNode: tree->orderedArgs) {
         // define this myself, dont need mlir name because arguments are
         auto idNode = std::dynamic_pointer_cast<IDNode>(argIDNode);
         //TODO: this id symbol dont have types yet. waiting for visitType implementation

@@ -27,7 +27,7 @@ public:
     std::string getName() override;
     std::string toString() override;
 };
-
+// TODO: are they the same?
 class FunctionSymbol: public ScopedSymbol {
 public:
     std::string scopeName;

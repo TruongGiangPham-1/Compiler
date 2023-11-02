@@ -22,13 +22,13 @@ namespace gazprea {
         std::shared_ptr<Type> resolveType(std::shared_ptr<ASTNode> t);
 
         int getNextId();
-
+        void defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
+                                          int isFunc); //
         Ref(std::shared_ptr<SymbolTable> symTab);
 
         int varID = 1;
 
         // === BlOCK FUNCTION AST NODES ===
-        std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) override;
         std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
         std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
     };
