@@ -55,6 +55,8 @@ set(
         Def.cpp
         BackendWalker.cpp
         ../include/customError/ErrorListener.h
+        ScopedSymbol.cpp
+        ../include/ScopedSymbol.h
 )
 
 # Build our executable from the source files.
