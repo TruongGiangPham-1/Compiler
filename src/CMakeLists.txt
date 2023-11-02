@@ -57,6 +57,8 @@ set(
         ../include/customError/ErrorListener.h
         ScopedSymbol.cpp
         ../include/ScopedSymbol.h
+        ../include/ASTNode/Block/FunctionNode.h
+        ASTNode/Block/FunctionNode.cpp
 )
 
 # Build our executable from the source files.
