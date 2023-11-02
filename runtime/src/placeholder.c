@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 #define DEBUGTUPLE
+#define DEBUGPROMOTION
 
 void print(int i) {
   printf("%d\n", i);
@@ -68,6 +69,7 @@ void printType(commonType *type, bool nl) {
 }
 
 void printCommonType(commonType *type) {
+  printf("Printing common type %p ", type);
   printType(type, true);
 }
 
@@ -77,15 +79,50 @@ void printAddress(long int* value) {
 
 
 // can later check if list types to de-allocate 
-commonType* allocateCommonType(long int* value, enum BuiltIn type) {
+commonType* allocateCommonType(void* value, enum BuiltIn type) {
   commonType* newType = (commonType*)malloc(sizeof(commonType));
-
-  #ifdef DEBUGTUPLE
-  printf("Allocated common type: %p\n",newType);
-  #endif
-
   newType->type = type;
-  newType->value = value;
+
+  switch (type) {
+    case INT:
+      {
+        int* newIntVal = malloc(sizeof(int));
+        *newIntVal = *(int*)value;
+        newType->value = (long*)newIntVal;
+      }
+      break;
+    case BOOL:
+      {
+        bool* newBoolVal = malloc(sizeof(bool));
+        *newBoolVal = *(bool*)value;
+        newType->value = (long*)newBoolVal;
+      }
+      break;
+    case REAL:
+      {
+        float* newFloatVal = malloc(sizeof(float));
+        *newFloatVal = *(float*)value;
+        newType->value = (long*)newFloatVal;
+      }
+      break;
+    case TUPLE:
+      {
+        newType->value = (tuple*)value;
+      }
+      break;
+    case CHAR: 
+      {
+        char* newCharVal = malloc(sizeof(char));
+        *newCharVal = *(char*)value;
+        newType->value = (long*)newCharVal;
+      }
+
+      break;
+  }
+
+  printf("===\nAllocated common type: %p\nPrinting Contents\n",newType);
+  printCommonType(newType);
+  printf("===\n");
 
   return newType;
 }
@@ -126,36 +163,125 @@ void appendTuple(tuple* tuple, commonType *value) {
   tuple->currentSize++;
 }
 
-commonType* performCommonTypeBinop(commonType* left, commonType* right, enum BINOP op) {
-
-}
-
-
 // bjarne stoustrup would've taken my keyboard away
 commonType* boolPromotion(bool fromValue, enum BuiltIn toType) {
-  return allocateCommonType((long int*)&fromValue, toType);
+#ifdef DEBUGPROMOTION
+  printf("promoting from bool\n");
+#endif /* ifdef DEBUGPROMOTION */
+  switch (toType) {
+    case BOOL:
+    return allocateCommonType((long int*)&fromValue, BOOL);
+    case INT:
+    return allocateCommonType((long int*)&fromValue, BOOL);
+    case CHAR:
+    return allocateCommonType((long int*)&fromValue, BOOL);
+    case TUPLE:
+    return allocateCommonType((long int*)&fromValue, BOOL);
+    case REAL:
+    return allocateCommonType((long int*)&fromValue, BOOL);
+  }
 }
 
 commonType* intPromotion(int fromValue, enum BuiltIn toType) {
-  return allocateCommonType((long int*)&fromValue, toType);
+#ifdef DEBUGPROMOTION
+  printf("promoting from int\n");
+#endif /* ifdef DEBUGPROMOTION */
+    switch (toType) {
+    case BOOL:
+#ifdef DEBUGPROMOTION
+  printf("To bool\n");
+#endif /* ifdef DEBUGPROMOTION */
+    bool new = (bool)fromValue;
+    return allocateCommonType((void*)&new, BOOL);
+    case INT:
+#ifdef DEBUGPROMOTION
+  printf("To int\n");
+#endif /* ifdef DEBUGPROMOTION */
+    return allocateCommonType((void*)&fromValue, INT);
+    case CHAR:
+#ifdef DEBUGPROMOTION
+  printf("To char\n");
+#endif /* ifdef DEBUGPROMOTION */
+    char newchar = (char)(fromValue%256);
+    printf("%d\n", fromValue);
+    printf("%c\n",(char) fromValue);
+    return allocateCommonType((long int*)&newchar, CHAR);
+    case TUPLE:
+#ifdef DEBUGPROMOTION
+  printf("To tuple\n");
+#endif /* ifdef DEBUGPROMOTION */
+    return allocateCommonType((void*)&fromValue, TUPLE);
+    case REAL:
+#ifdef DEBUGPROMOTION
+  printf("To real\n");
+#endif /* ifdef DEBUGPROMOTION */
+    float newfloat = (float)fromValue;
+    return allocateCommonType((void*)&newfloat, REAL);
+  }
 }
 
 commonType* charPromotion(char fromValue, enum BuiltIn toType) {
-  return allocateCommonType((long int*)&fromValue, toType);
+#ifdef DEBUGPROMOTION
+  printf("promoting from char\n");
+#endif /* ifdef DEBUGPROMOTION */
+  switch (toType) {
+      case BOOL:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case INT:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case CHAR:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case TUPLE:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case REAL:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+    }
+}
+
+commonType* realPromotion(char fromValue, enum BuiltIn toType) {
+#ifdef DEBUGPROMOTION
+  printf("promoting from real\n");
+#endif /* ifdef DEBUGPROMOTION */
+  switch (toType) {
+      case BOOL:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case INT:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case CHAR:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case TUPLE:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+      case REAL:
+      return allocateCommonType((long int*)&fromValue, BOOL);
+    }
 }
 
 // promote and return temporary
-commonType* performTypePromotion(commonType* from, commonType* to) {
+commonType* promotion(commonType* from, commonType* to) {
   switch (from->type) {
     case BOOL:
     return boolPromotion((bool)*from->value, to->type);
     case INT:
     return intPromotion((int)*from->value, to->type);
     case CHAR:
+    return charPromotion((int)*from->value, to->type);
     case TUPLE:
+    return realPromotion((float)*from->value, to->type);
     case REAL:
+    return realPromotion((float)*from->value, to->type);
   }
 }
+
+commonType* performCommonTypeBinop(commonType* left, commonType* right, enum BINOP op) {
+  commonType* promotedLeft;
+  commonType* promotedRight;
+  promotedLeft = promotion(left,right);
+  promotedRight = promotion(left,right);
+
+  return promotedLeft;
+}
+
+
 
 
 void fill(vecStruct *a, int lower, int upper) {
