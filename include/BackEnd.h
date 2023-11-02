@@ -57,6 +57,7 @@ public:
   void generateAssignment(std::string varName, mlir::Value value);
   void generateInitializeGlobalVar(std::string varName, mlir::Value value);
   void deallocateVectors();
+  void deallocateObjects();
 
   // LOOP METHOD 2: we either discard method 1 later
   void generateCompAndJump(mlir::Block *trueBlock, mlir::Block *falseBlock,
@@ -102,7 +103,11 @@ protected:
 
 private:
   std::vector<std::string> vectorLabels;
+  std::vector<std::string> objectLabels;
+
   unsigned int allocatedVectors = 0;
+  unsigned int allocatedObjects = 0;
+
   mlir::MLIRContext context;
   mlir::ModuleOp module;
   std::shared_ptr<mlir::OpBuilder> builder;
