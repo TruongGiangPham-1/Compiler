@@ -1,33 +1,86 @@
 grammar Gazprea;
 
-tokens {
-  VAR_DECL,
-  ASSIGN,
-  CONDITIONAL,
-  LOOP,
-  PRINT,
-  RANGE,
-  FILTER,
-  GENERATOR,
-  INDEX,
-  EXPRESSION,
-  PARENTHESES,
-  TYPE
-}
-
 file
-    : statement* EOF
+    : (globalDecl | typedef | procedure | function)* EOF
     ;
 
-// vardecls, assignments, nested loops, nested conditionals, prints
-statement
-    : vardecl | assign | loop | cond | print
+globalDecl
+    : RESERVED_CONST (type)? ID '=' expression ';'
     ;
 
 vardecl
-    : qualifier? inferred_sized_type ID '=' expression ';'
-    | qualifier? known_sized_type ID ('=' expression)? ';'
-    | qualifier ID '=' expression ';';
+    : qualifier? inferred_sized_type ID '=' expression ';'  #inferred_size
+    | qualifier? known_sized_type ID ('=' expression)? ';'  #sized
+    | qualifier ID '=' expression ';'                       #inferred_type
+    ;
+
+assign
+    : lvalue '=' expression ';'
+    ;
+
+lvalue
+    : ID                                            #variable
+    | tuple_index                                   #tupleVariable
+    | (ID | tuple_index) (',' (ID | tuple_index))+  #tupleUnpack
+    | ID '[' expression ']'                         #vectorIndex
+    | ID '[' expression ',' expression ']'          #matrixIndex
+    | tuple_index '[' expression ']'                #tupleVectorIndex
+    | tuple_index '[' expression ',' expression ']' #tupleMatrixIndex
+    ;
+
+non_decl
+    : assign | cond | loop | break | continue | return | stream | procedure_call
+    ;
+
+block
+    : '{' (vardecl)* (non_decl | block)* '}'
+    | non_decl
+    ;
+
+cond
+    : RESERVED_IF '(' expression ')' block (RESERVED_ELSE RESERVED_IF '(' expression ')' block)* (RESERVED_ELSE block)?
+    ;
+
+loop
+    : RESERVED_LOOP block                                                               #infiniteLoop
+    | RESERVED_LOOP RESERVED_WHILE '(' expression ')' block                             #predicatedLoop
+    | RESERVED_LOOP ID RESERVED_IN expression (',' ID RESERVED_IN expression)* block    #iteratorLoop
+    | RESERVED_LOOP block RESERVED_WHILE '(' expression ')' ';'                         #postPredicatedLoop
+    ;
+
+break
+    : RESERVED_BREAK ';'
+    ;
+
+continue
+    : RESERVED_CONTINUE ';'
+    ;
+
+return
+    : RESERVED_RETURN expression? ';'
+    ;
+
+function
+    : RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type '=' expression ';' #functionSingle
+    | RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type block              #functionBlock
+    | RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type ';'                #functionForward
+    ;
+
+procedure
+    : RESERVED_PROCEDURE ID '(' (qualifier? type ID (',' qualifier? type ID)*)? ')' (RESERVED_RETURNS type)? block  #procedureBlock
+    | RESERVED_PROCEDURE ID '(' (qualifier? type ID (',' qualifier? type ID)*)? ')' (RESERVED_RETURNS type)? ';'    #procedureForward
+    ;
+
+procedure_call
+    : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';'
+    | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';' // Since in built stream_state() is a procedure defined in Gazprea
+    ;
+
+function_call
+    : ID '(' (expression (',' expression)*)? ')' // no semicolon for functions because they always return and hence can be used as an expression
+    | (RESERVED_LENGTH | RESERVED_ROWS | RESERVED_COLUMNS | RESERVED_REVERSE | RESERVED_FORMAT) '(' expression ')'
+    | RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'
+    ;
 
 type: known_sized_type | inferred_sized_type;
 tuple_allowed_type: built_in_type | vector_type | string_type | matrix_type | inferred_sized_type;
@@ -48,23 +101,13 @@ vector_type: built_in_type '[' expression ']';
 string_type: RESERVED_STRING ('[' expression ']')?;
 matrix_type: built_in_type '[' expression ',' expression ']';
 
-assign
-    : ID '=' expression ';'
-    ;
-loop
-    : RESERVED_LOOP '(' expression ')' statement* RESERVED_POOL ';'
-    ;
-cond
-    : RESERVED_IF '(' expression ')' statement* RESERVED_FI ';'
-    ;
-print
-    : RESERVED_PRINT '(' expression ')' ';'
-    ;
 expression // root of an expression tree
     :   expr
     ;
 expr
-    : '(' expr ')'                                                                                      #paren
+    : '(' expr ')'                                                                                      #parentheses
+    | cast                                                                                              #typeCast
+    | function_call                                                                                     #funcCall
     | expr '[' expr (',' expr)? ']'                                                                     #index
     | expr RANGE_OPERATOR expr                                                                          #range
     | '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
@@ -86,6 +129,7 @@ expr
     | INT                                                                                               #literalInt
     | LITERAL_REAL                                                                                      #literalReal
     | literal_tuple                                                                                     #literalTuple
+    | tuple_index                                                                                       #tupleIndex
     | literal_vector                                                                                    #literalVector
     | LITERAL_STRING                                                                                    #literalString
     | literal_matrix                                                                                    #literalMatrix
@@ -100,8 +144,9 @@ typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
     : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';'        #outputStream
     | ID LEFT_ARROW RESERVED_STD_INPUT ';'                  #inputStream
-    | ID DOT (INT | ID) LEFT_ARROW RESERVED_STD_INPUT ';'   #inputStream
+    | tuple_index LEFT_ARROW RESERVED_STD_INPUT ';'         #inputStream
     ;
+tuple_index: ID DOT (INT | ID);
 
 // operators
 MULT: '*';
