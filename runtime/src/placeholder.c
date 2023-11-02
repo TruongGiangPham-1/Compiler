@@ -1,14 +1,16 @@
 #include "Operands/BINOP.h"
+#include "BuiltinTypes/BuiltInTypes.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+#define DEBUGTUPLE
 
 void print(int i) {
   printf("%d\n", i);
 }
-
-
 
 typedef struct vecStruct {
   int* base;
@@ -16,35 +18,143 @@ typedef struct vecStruct {
 } vecStruct;
 
 typedef struct commonType {
-  int type; // type. defined in an enum
-  long int* value; // long int is technically void ptr
+  enum BuiltIn type; // type. defined in an enum
+  long int* value; // long int is technically void ptr. i'm seeing some unexpected interactions
+  // someone smarter should ask me about this and investigate
 } commonType;
 
-void printCommonType(commonType *type) {
+typedef struct tuple {
+  int size;
+  int currentSize;
+  commonType** values; // list of values
+} tuple;
+
+void printType(commonType *type, bool nl) {
   switch (type->type) {
-    case 1:
-      printf("value %d\n", *(int*)type->value);
+    case INT:
+      printf("%d", *(int*)type->value);
       break;
-    case 2:
-      printf("value %c\n", *(char*)type->value);
+    case CHAR:
+      printf("%c", *(char*)type->value);
       break;
-    case 3:
-      printf("value %f\n", *(float*)type->value);
+    case BOOL:
+      printf("%b", *(bool*)type->value);
+      break;
+    case REAL:
+      printf("%f", *(float*)type->value);
+      break;
+    case TUPLE:
+      // {} bc we can't declare variables in switch
+      {
+        tuple *mTuple = (tuple *)(*type->value);
+        #ifdef DEBUGTUPLE
+        printf("Printing tuple %p\n", mTuple);
+        #endif
+        printf("(");
+        for (int i = 0 ; i < mTuple->size ; i++) {
+          #ifdef DEBUGTUPLE
+          printf("\nprinting tuple value at %p\n", &mTuple->values[i]);
+          #endif
+          printType(mTuple->values[i], false);
+          if (i != mTuple->size) printf(" ");
+        }
+        printf(")");
+      }
       break;
   }
+
+  if (nl) printf("\n");
   return;
 }
 
+void printCommonType(commonType *type) {
+  printType(type, true);
+}
+
+void printAddress(long int* value) {
+  printf("HERE %p\n", value);
+}
+
+
 // can later check if list types to de-allocate 
-commonType* allocateCommonType(long int* value, int type) {
+commonType* allocateCommonType(long int* value, enum BuiltIn type) {
   commonType* newType = (commonType*)malloc(sizeof(commonType));
+
+  #ifdef DEBUGTUPLE
+  printf("Allocated common type: %p\n",newType);
+  #endif
 
   newType->type = type;
   newType->value = value;
 
-  printf("just allocated\n");
-
   return newType;
+}
+
+tuple* allocateTuple(int size) {
+  tuple* newTuple = (tuple*) malloc(sizeof(tuple));
+  commonType** valueList = (commonType**) calloc(size, sizeof(commonType*));
+  memset(valueList, 0, size * sizeof(commonType));
+
+  newTuple->size = size;
+  newTuple->currentSize = 0;
+  newTuple->values= valueList;
+
+  #ifdef DEBUGTUPLE
+  printf("Created tuple at %p\n", newTuple);
+  printf("tuple list starts at %p\n", valueList);
+  #endif
+  
+  return newTuple;
+};
+
+void appendTuple(tuple* tuple, commonType *value) {
+#ifdef DEBUGTUPLE
+  printf("====== Appending to tuple\n");
+  printf("Tuple currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
+#endif
+
+  tuple->values[tuple->currentSize] = value;
+
+#ifdef DEBUGTUPLE
+  printf("appended to tuple at %p, %p\n", &tuple->values[tuple->currentSize], value);
+  printf("Tuple now holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
+  printf("appended value is:\n");
+  printCommonType(value);
+  printf("====== Append complete\n"); 
+#endif /* ifdef DEBUGTUPLE */
+
+  tuple->currentSize++;
+}
+
+commonType* performCommonTypeBinop(commonType* left, commonType* right, enum BINOP op) {
+
+}
+
+
+// bjarne stoustrup would've taken my keyboard away
+commonType* boolPromotion(bool fromValue, enum BuiltIn toType) {
+  return allocateCommonType((long int*)&fromValue, toType);
+}
+
+commonType* intPromotion(int fromValue, enum BuiltIn toType) {
+  return allocateCommonType((long int*)&fromValue, toType);
+}
+
+commonType* charPromotion(char fromValue, enum BuiltIn toType) {
+  return allocateCommonType((long int*)&fromValue, toType);
+}
+
+// promote and return temporary
+commonType* performTypePromotion(commonType* from, commonType* to) {
+  switch (from->type) {
+    case BOOL:
+    return boolPromotion((bool)*from->value, to->type);
+    case INT:
+    return intPromotion((int)*from->value, to->type);
+    case CHAR:
+    case TUPLE:
+    case REAL:
+  }
 }
 
 

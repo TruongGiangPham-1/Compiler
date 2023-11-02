@@ -4,6 +4,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "Operands/BINOP.h"
+#include "BuiltinTypes/BuiltInTypes.h"
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 
@@ -22,6 +23,11 @@ public:
   mlir::Value generateValue(float value);
   mlir::Value generateValue(char* value);
   mlir::Value generateValue(char value);
+  mlir::Value generateValue(bool value);
+
+  // construct tuple from values
+  mlir::Value generateValue(std::vector<mlir::Value> values);
+
   mlir::Value generateCommonType(mlir::Value value, int Type);
 
   mlir::Value generateValuePtr(mlir::Value value);
