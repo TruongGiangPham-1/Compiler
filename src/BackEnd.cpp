@@ -66,8 +66,9 @@ void BackEnd::functionShowcase() {
 
   auto mvec2 = std::vector<mlir::Value>();
   mvec2.push_back(a);
+  mvec2.push_back(a);
+  mvec2.push_back(a);
 
-  // known bug. without giivng tuples space something causes them to overwrite eachother
   auto tupl2 = this->generateValue(mvec2);
   auto tuple = this->generateValue(mvec);
 
@@ -114,6 +115,8 @@ void BackEnd::generate() {
             << std::endl;
 #endif
   auto intType = builder->getI32Type();
+
+  this->functionShowcase();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
@@ -285,10 +288,11 @@ mlir::Value BackEnd::generateCommonType(mlir::Value value, int type) {
   mlir::Value one = generateInteger(1);
   mlir::LLVM::LLVMFuncOp allocateCommonType =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateCommonType");
+
   mlir::Value typeValue = generateInteger(type);
 
   mlir::Value valuePtr = builder->create<mlir::LLVM::AllocaOp>(
-      loc, mlir::LLVM::LLVMPointerType::get(typeValue.getType()), one);
+      loc, mlir::LLVM::LLVMPointerType::get(value.getType()), one);
 
   builder->create<mlir::LLVM::StoreOp>(loc, value, valuePtr);
 
