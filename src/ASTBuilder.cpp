@@ -46,7 +46,7 @@ namespace gazprea {
          * This includes vectors (integer[*]) and matrices (integer[*][*])
          */
 #ifdef DEBUG
-        std::cout << "visitVarDecl (inferred size) type " << ctx->getStart()->getType() << ": "
+        std::cout << "visitInferred_size (vardecl inferred size) type " << ctx->getStart()->getType() << ": "
                   << ctx->inferred_sized_type()->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
@@ -74,7 +74,7 @@ namespace gazprea {
          * note that this includes types where there is no size (e.g. integer, boolean)
          */
 #ifdef DEBUG
-        std::cout << "visitVarDecl (sized) type " << ctx->getStart()->getType() << ": "
+        std::cout << "visitSized (vardecl sized) type " << ctx->getStart()->getType() << ": "
                   << ctx->ID()->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
@@ -103,7 +103,6 @@ namespace gazprea {
             std::cout << "\tAdding null to empty decl" << std::endl;
 #endif
         }
-        t->addChild(visit(ctx->expression()));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -137,7 +136,7 @@ namespace gazprea {
 
     std::any ASTBuilder::visitVector(GazpreaParser::VectorContext *ctx) {
         /*
-         * A vector type where the size is inferred
+         * <innerType>[*]
          */
 #ifdef DEBUG
         std::cout << "visitVector (inferred size vector type)" << ctx->getText() << std::endl;
@@ -151,17 +150,50 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitString(GazpreaParser::StringContext *ctx) {
+    std::any ASTBuilder::visitVector_type(GazpreaParser::Vector_typeContext *ctx) {
         /*
-         * A string type. Very similar to vectors, except there is no explicit inner type
+         * <innerType>[expr] (known size vector type)
          */
 #ifdef DEBUG
-        std::cout << "visitString (inferred size vector type)" << ctx->getText() << std::endl;
+        std::cout << "visitVector_type (known size)" << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<VectorTypeNode> t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::VECTOR;
+        t->size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitString(GazpreaParser::StringContext *ctx) {
+        /*
+         * string[*] (inferred size)
+         */
+#ifdef DEBUG
+        std::cout << "visitString (inferred size)" << ctx->getText() << std::endl;
 #endif
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
         std::shared_ptr<StringTypeNode> t = std::make_shared<StringTypeNode>(ctx->getStart()->getLine(), sym);
 
         t->typeEnum = TYPE::STRING;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitString_type(GazpreaParser::String_typeContext *ctx) {
+        /*
+         * string[expr] (known size)
+         */
+#ifdef DEBUG
+        std::cout << "visitString_type (known size)" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<StringTypeNode> t = std::make_shared<StringTypeNode>(ctx->getStart()->getLine(), sym);
+
+        t->typeEnum = TYPE::STRING;
+        t->size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -180,7 +212,9 @@ namespace gazprea {
         t->typeEnum = TYPE::MATRIX;
 
         // get right size
-        t->sizeRight = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expression()));
+        t->sizeRight = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+        std::cout << "Done matrix" << std::endl;
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
@@ -198,11 +232,27 @@ namespace gazprea {
         t->typeEnum = TYPE::MATRIX;
 
         // get right size
-        t->sizeLeft = std::any_cast<std::shared_ptr<ExprNode>>(visit(ctx->expression()));
+        t->sizeLeft = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitMatrix(GazpreaParser::MatrixContext *ctx) {
+        /*
+         * matrix[*, *]
+         */
+#ifdef DEBUG
+        std::cout << "visitMatrix [*, *] " << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<MatrixTypeNode> t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::MATRIX;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrix_type(GazpreaParser::Matrix_typeContext *ctx) {
         /*
          * matrix[*, *]
          */
@@ -214,9 +264,10 @@ namespace gazprea {
         std::shared_ptr<MatrixTypeNode> t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
 
         t->typeEnum = TYPE::MATRIX;
+        t->sizeLeft = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(0)));
+        t->sizeRight = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(1)));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
-
     }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {

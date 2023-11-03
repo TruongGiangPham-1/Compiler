@@ -16,13 +16,16 @@ namespace gazprea {
         // type stuff
         std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
         std::any visitBuilt_in_type(GazpreaParser::Built_in_typeContext *ctx) override;
+        // unknown sizes
         std::any visitVector(GazpreaParser::VectorContext *ctx) override;
         std::any visitString(GazpreaParser::StringContext *ctx) override;
         std::any visitMatrixFirst(GazpreaParser::MatrixFirstContext *ctx) override;
         std::any visitMatrixSecond(GazpreaParser::MatrixSecondContext *ctx) override;
         std::any visitMatrix(GazpreaParser::MatrixContext *ctx) override;
-
-
+        // known sizes
+        std::any visitVector_type(GazpreaParser::Vector_typeContext *ctx) override;
+        std::any visitString_type(GazpreaParser::String_typeContext *ctx) override;
+        std::any visitMatrix_type(GazpreaParser::Matrix_typeContext *ctx) override;
 
         std::any visitCond(GazpreaParser::CondContext *ctx) override;
         std::any visitIndex(GazpreaParser::IndexContext *ctx) override;
