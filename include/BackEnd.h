@@ -25,23 +25,18 @@ public:
   mlir::Value generateValue(char value);
   mlir::Value generateValue(bool value);
 
+  void functionShowcase();
+
   // construct tuple from values
   mlir::Value generateValue(std::vector<mlir::Value> values);
 
-  mlir::Value generateCommonType(mlir::Value value, int Type);
+  mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
+
 
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);
   mlir::Value generateVectorOfSize(mlir::Value size);
   mlir::Value generateVectorFromRange(mlir::Value lower, mlir::Value upper);
-  mlir::Value generateVectorToFit(mlir::Value left, mlir::Value right);
-  mlir::Value generateVectorToVectorBINOP(mlir::Value left, mlir::Value right,
-                                          BINOP op);
-  mlir::Value generateVectorToIntegerBINOP(mlir::Value left, mlir::Value right,
-                                           BINOP op);
-  mlir::Value generateIntegerToVectorBINOP(mlir::Value left, mlir::Value right,
-                                           BINOP op);
-
   mlir::Value generateIndexWithInteger(mlir::Value vector, mlir::Value index);
   mlir::Value generateIndexWithVector(mlir::Value indexee, mlir::Value indexor);
 
@@ -107,6 +102,8 @@ private:
 
   unsigned int allocatedVectors = 0;
   unsigned int allocatedObjects = 0;
+
+  mlir::Value generateCommonType(mlir::Value value, int Type);
 
   mlir::MLIRContext context;
   mlir::ModuleOp module;

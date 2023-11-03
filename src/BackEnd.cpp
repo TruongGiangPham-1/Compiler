@@ -52,6 +52,59 @@ void BackEnd::init() {
   builder->setInsertionPointToStart(mainEntry);
 }
 
+void BackEnd::functionShowcase() {
+  auto a = this->generateValue(86);
+  auto b = this->generateValue('c');
+  auto c = this->generateValue(3.4f);
+
+  this->printCommonType(a);
+  this->printCommonType(b);
+
+  auto mvec = std::vector<mlir::Value>();
+  mvec.push_back(a);
+  mvec.push_back(b);
+
+  auto mvec2 = std::vector<mlir::Value>();
+  mvec2.push_back(a);
+
+  // known bug. without giivng tuples space something causes them to overwrite eachother
+  auto tupl2 = this->generateValue(mvec2);
+  auto tuple = this->generateValue(mvec);
+
+  this->printCommonType(tupl2);
+  this->printCommonType(tuple);
+
+  mlir::LLVM::LLVMFuncOp promote =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
+
+  auto casted = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,b})).getResult();
+  auto castedReal = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,c})).getResult();
+
+  this->printCommonType(tuple);
+  this->printCommonType(casted);
+  this->printCommonType(castedReal);
+
+  this->printCommonType(tuple);
+  this->generateDeclaration("tst", tuple);
+  this->generateDeclaration("tst3", tuple);
+  this->generateDeclaration("tst2", casted);
+
+  this->printCommonType(this->generateLoadIdentifier("tst2"));
+  this->printCommonType(this->generateLoadIdentifier("tst3"));
+  this->printCommonType(this->generateLoadIdentifier("tst"));
+
+  auto h = this->performBINOP(a, c, ADD);
+  auto sub = this->performBINOP(a, c, SUB);
+  auto eq = this->performBINOP(a, a, EQUAL);
+
+
+  this->printCommonType(h);
+  this->printCommonType(sub);
+  this->printCommonType(eq);
+  // de-allocate. will break because of the tuples
+  // this->deallocateObjects()
+}
+
 /**
  * Finish codegen + main function.
  */
@@ -60,34 +113,6 @@ void BackEnd::generate() {
   std::cout << "CODEGEN FINISHED, ending main function and outputting"
             << std::endl;
 #endif
-
-  auto a = this->generateCommonType(generateValue(86), BuiltIn::INT);
-  auto b = this->generateCommonType(generateValue('c'), BuiltIn::CHAR);
-  auto c = this->generateCommonType(generateValue(3.4f), BuiltIn::REAL);
-
-  this->printCommonType(a);
-  this->printCommonType(b);
-
-  auto mvec = std::vector<mlir::Value>();
-  mvec.push_back(a);
-  mvec.push_back(b);
-  mvec.push_back(c);
-
-  mlir::LLVM::LLVMFuncOp promote =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
-
-  auto casted = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,b})).getResult();
-  auto castedReal = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,c})).getResult();
-
-  this->printCommonType(casted);
-  this->printCommonType(castedReal);
-  auto typle = this->generateCommonType(this->generateValue(mvec), TUPLE);
-  this->printCommonType(typle);
-
-  
-  this->deallocateVectors();
-
-
   auto intType = builder->getI32Type();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
@@ -143,8 +168,6 @@ BackEnd::BackEnd(std::ostream &out)
   module = mlir::ModuleOp::create(builder->getUnknownLoc());
   builder->setInsertionPointToStart(module.getBody());
 
-  setupPrint();
-  setupVectorRuntime();
   setupCommonTypeRuntime();
 }
 
@@ -202,7 +225,10 @@ void BackEnd::setupCommonTypeRuntime() {
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
 
+  auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
 
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeBINOP",
+                                            commonBinopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printCommonType",
                                             printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "promotion",
@@ -213,115 +239,31 @@ void BackEnd::setupCommonTypeRuntime() {
                                             allocateTupleType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendTuple",
                                             appendTupleType);
-
-
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
 }
 
-/**
- * Set up the function signature for the runtime function
- * we call dynamic library during runtime
- */
-void BackEnd::setupVectorRuntime() {
-  auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
-  auto intType = builder->getI32Type();
+mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
+  mlir::LLVM::LLVMFuncOp binopFunc=
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("performCommonTypeBINOP");
 
-  auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, 
+      binopFunc, 
+      mlir::ValueRange({
+        left, 
+        right, 
+        generateInteger(op)})
+      ).getResult();
 
-  auto vectorStruct =
-      mlir::LLVM::LLVMStructType::getLiteral(&context, {intPtrType, intType});
-  auto vectorStructAddr = mlir::LLVM::LLVMPointerType::get(vectorStruct);
+  std::string newLabel =
+      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
+  this->objectLabels.push_back(newLabel);
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
 
-  auto allocateVectorType =
-      mlir::LLVM::LLVMFunctionType::get(vectorStructAddr, intType);
-  auto deallocateVectorType =
-      mlir::LLVM::LLVMFunctionType::get(voidType, vectorStructAddr);
-
-  auto v2iindexType =
-      mlir::LLVM::LLVMFunctionType::get(intType, {vectorStructAddr, intType});
-  auto v2vindexType = mlir::LLVM::LLVMFunctionType::get(
-      voidType, {vectorStructAddr, vectorStructAddr, vectorStructAddr});
-  auto v2vbinopType = mlir::LLVM::LLVMFunctionType::get(
-      voidType,
-      {vectorStructAddr, vectorStructAddr, vectorStructAddr, intType});
-  auto v2ibinopType = mlir::LLVM::LLVMFunctionType::get(
-      voidType, {vectorStructAddr, intType, vectorStructAddr, intType});
-  auto i2vbinopType = mlir::LLVM::LLVMFunctionType::get(
-      voidType, {intType, vectorStructAddr, vectorStructAddr, intType});
-
-  auto getSizeType = mlir::LLVM::LLVMFunctionType::get(
-      intType, {vectorStructAddr, vectorStructAddr});
-  auto getTrueVectorSizeType =
-      mlir::LLVM::LLVMFunctionType::get(intType, intType);
-  auto fillType = mlir::LLVM::LLVMFunctionType::get(voidType, vectorStructAddr);
-  auto printType = mlir::LLVM::LLVMFunctionType::get(
-      voidType, {vectorStructAddr, intType, intType});
-  auto vectorStoreValueType = mlir::LLVM::LLVMFunctionType::get(
-      voidType, {vectorStructAddr, intType, intType});
-  auto vectorLoadValueType =
-      mlir::LLVM::LLVMFunctionType::get(intType, {vectorStructAddr, intType});
-
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateVector",
-                                          allocateVectorType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateVector",
-                                          deallocateVectorType);
-
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "getMaxSize", getSizeType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "getTrueVectorSize",
-                                          getTrueVectorSizeType);
-
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "vectorToIntegerIndex",
-                                          v2iindexType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "vectorToVectorIndex",
-                                          v2vindexType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "vectorToVectorBINOP",
-                                          v2vbinopType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "integerToVectorBINOP",
-                                          i2vbinopType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "vectorToIntegerBINOP",
-                                          v2ibinopType);
-
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "fill", printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printVec", fillType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "vectorStoreValueAtIndex",
-                                          vectorStoreValueType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "vectorLoadValueAtIndex",
-                                          vectorLoadValueType);
+  return result;
 }
 
-/**
- * Set up the function signature for the runtime function
- * we call dynamic library during runtime
- */
-void BackEnd::setupPrint() {
-  auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
-  mlir::Type intType = mlir::IntegerType::get(&context, 32);
-  auto llvmFnType = mlir::LLVM::LLVMFunctionType::get(voidType, intType);
-
-  // Insert the printf function into the body of the parent module.
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "print", llvmFnType);
-}
-
-/**
- * Calls the runtime "print" signature
- * @param value
- */
-void BackEnd::print(mlir::Value value) {
-  mlir::LLVM::GlobalOp global;
-
-  mlir::LLVM::LLVMFuncOp printfFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("print");
-  builder->create<mlir::LLVM::CallOp>(loc, printfFunc, value);
-}
-
-void BackEnd::printVec(mlir::Value value) {
-  mlir::LLVM::GlobalOp global;
-
-  mlir::LLVM::LLVMFuncOp printVecFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("printVec");
-  builder->create<mlir::LLVM::CallOp>(loc, printVecFunc, value);
-}
 
 // === === === Printing === === ===
 
@@ -335,14 +277,15 @@ void BackEnd::printCommonType(mlir::Value value) {
 
 // === === === TYPEs === === === 
 
+/*
+ * Common type is a struct wrapper for all of the types in the compiler
+ * The runtime handles all operations.
+ */
 mlir::Value BackEnd::generateCommonType(mlir::Value value, int type) {
-  auto intType = builder->getI32Type();
-  mlir::Value one = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(intType, 1));
-
+  mlir::Value one = generateInteger(1);
   mlir::LLVM::LLVMFuncOp allocateCommonType =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateCommonType");
-  mlir::Value typeValue = generateValue(type);
+  mlir::Value typeValue = generateInteger(type);
 
   mlir::Value valuePtr = builder->create<mlir::LLVM::AllocaOp>(
       loc, mlir::LLVM::LLVMPointerType::get(typeValue.getType()), one);
@@ -357,30 +300,25 @@ mlir::Value BackEnd::generateCommonType(mlir::Value value, int type) {
     .getResult();
 
   std::string newLabel =
-      "VECTOR_NUMBER_" + std::to_string(this->allocatedObjects);
-  this->allocatedObjects++;
+      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
   this->objectLabels.push_back(newLabel);
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
 
-  return result;
-}
-
-
-mlir::Value BackEnd::generateInteger(int value) {
-  mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getI32Type(), value);
   return result;
 }
 
 mlir::Value BackEnd::generateValue(int value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI32Type(), value);
-  return result;
+  
+  return this->generateCommonType(result, INT);
 }
 
 mlir::Value BackEnd::generateValue(bool value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI1Type(), value);
-  return result;
+  return this->generateCommonType(result, value);
 }
 
 mlir::Value BackEnd::generateValue(float value) {
@@ -390,36 +328,19 @@ mlir::Value BackEnd::generateValue(float value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getF32Type(), floatValue);
 
-  return result;
+  return this->generateCommonType(result, REAL);
 }
 
 mlir::Value BackEnd::generateValue(char value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI8Type(), value);
-  return result;
+  return this->generateCommonType(result, CHAR);
 }
 
-
-// for tuples
 mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
-  auto intType = builder->getI32Type();
-  auto int64Type = builder->getI64Type();
-  auto intPtrType = mlir::LLVM::LLVMPointerType::get(int64Type);
-
-  auto commonType = mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intPtrType});
-  auto commonTypeAddr = mlir::LLVM::LLVMPointerType::get(commonType);
-
-  // pointer to common types
-  mlir::Value valuesPtr = builder->create<mlir::LLVM::AllocaOp>(
-      loc, 
-      commonTypeAddr, 
-      generateValue((int)values.size()),8);
-
-  int index = 0;
-
   mlir::LLVM::LLVMFuncOp allocateTupleFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateTuple");
 
-  auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateTupleFunc, mlir::ValueRange({generateValue((int) values.size())})).getResult();
+  auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateTupleFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
 
   mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendTuple");
 
@@ -427,30 +348,25 @@ mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
     builder->create<mlir::LLVM::CallOp>(loc, appendTuple, mlir::ValueRange({tuple, value}));
   }
 
-  return tuple;
+  return this->generateCommonType(tuple, TUPLE);
 }
 
-/**
- * Dirty free trick
- * */
-void BackEnd::deallocateVectors() {
-  for (auto label : vectorLabels) {
-    mlir::LLVM::LLVMFuncOp deallocateVectorFunc =
-        module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateVector");
-    auto vector = this->generateLoadIdentifier(label);
-    builder->create<mlir::LLVM::CallOp>(loc, deallocateVectorFunc, vector);
-  }
+mlir::Value BackEnd::generateInteger(int value) {
+  mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
+      loc, builder->getI32Type(), value);
+  return result;
 }
 
 void BackEnd::deallocateObjects() {
-  for (auto label : vectorLabels) {
-    mlir::LLVM::LLVMFuncOp deallocateVectorFunc =
+  for (auto label : objectLabels) {
+    mlir::LLVM::LLVMFuncOp deallocateObject =
         module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
+
     auto object = this->generateLoadIdentifier(label);
-    builder->create<mlir::LLVM::CallOp>(loc, deallocateVectorFunc, object);
+
+    builder->create<mlir::LLVM::CallOp>(loc, deallocateObject, object);
   }
 }
-
 
 /**
  * Generate a vector of the given size
@@ -550,63 +466,6 @@ mlir::Value BackEnd::generateIntegerBinaryOperation(mlir::Value left,
   return result;
 }
 
-mlir::Value BackEnd::generateVectorToVectorBINOP(mlir::Value left,
-                                                 mlir::Value right, BINOP op) {
-  auto result = this->generateVectorToFit(left, right);
-
-  auto vectorToVectorFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("vectorToVectorBINOP");
-  auto binop = this->generateInteger(op);
-
-  builder->create<mlir::LLVM::CallOp>(
-      loc, vectorToVectorFunc, mlir::ValueRange({left, right, result, binop}));
-
-  return result;
-}
-
-mlir::Value BackEnd::generateIntegerToVectorBINOP(mlir::Value left,
-                                                  mlir::Value right, BINOP op) {
-  auto result = this->generateVectorToFit(right, right);
-
-  auto vectorToVectorFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("integerToVectorBINOP");
-  auto binop = this->generateInteger(op);
-
-  builder->create<mlir::LLVM::CallOp>(
-      loc, vectorToVectorFunc, mlir::ValueRange({left, right, result, binop}));
-
-  return result;
-}
-
-mlir::Value BackEnd::generateVectorToIntegerBINOP(mlir::Value left,
-                                                  mlir::Value right, BINOP op) {
-  auto result = this->generateVectorToFit(left, left);
-
-  auto vectorToVectorFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("vectorToIntegerBINOP");
-  auto binop = this->generateInteger(op);
-
-  builder->create<mlir::LLVM::CallOp>(
-      loc, vectorToVectorFunc, mlir::ValueRange({left, right, result, binop}));
-
-  return result;
-}
-
-/**
- * left is a vector struct address type
- * right is a vector struct address type
- * we are doing operations with two vectors. The size depends on both of them
- **/
-mlir::Value BackEnd::generateVectorToFit(mlir::Value left, mlir::Value right) {
-  auto getSizeFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("getMaxSize");
-  auto newSize = builder
-                     ->create<mlir::LLVM::CallOp>(
-                         loc, getSizeFunc, mlir::ValueRange({left, right}))
-                     .getResult();
-
-  return this->generateVectorOfSize(newSize);
-}
-
 void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {
   this->generateInitializeGlobalVar(varName, value);
   this->generateAssignment(varName, value);
@@ -703,21 +562,6 @@ mlir::Value BackEnd::generateIndexWithInteger(mlir::Value vector,
       ->create<mlir::LLVM::CallOp>(loc, vectorToIntegerIndex,
                                    mlir::ValueRange({vector, index}))
       .getResult();
-}
-
-/**
- * Index vector
- * */
-mlir::Value BackEnd::generateIndexWithVector(mlir::Value indexee,
-                                             mlir::Value indexor) {
-  // result is sizeof indexor
-  auto result = this->generateVectorToFit(indexor, indexor);
-  auto vectorToVectorFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("vectorToVectorIndex");
-  builder->create<mlir::LLVM::CallOp>(
-      loc, vectorToVectorFunc, mlir::ValueRange({indexee, indexor, result}));
-
-  return result;
 }
 
 /*
