@@ -308,6 +308,114 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    // EXPR
+
+
+    std::any ASTBuilder::visitExpression(GazpreaParser::ExpressionContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitExpression (parent) " << ctx->getText() << std::endl;
+#endif
+        // just return the inner expression
+        // the parent expression is just to help the grammar, so it's not needed here
+        return visit(ctx->expr());
+    }
+
+    std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitIdentity " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<NullNode>(ctx->getStart()->getLine());
+
+        return t;
+    }
+
+    std::any ASTBuilder::visitNull(GazpreaParser::NullContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitNull " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<NullNode>(ctx->getStart()->getLine());
+
+        return t;
+    }
+
+
+    std::any ASTBuilder::visitLiteralID(GazpreaParser::LiteralIDContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitID " << ctx->ID()->getSymbol()->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<ASTNode> t = std::make_shared<IDNode>(ctx->getStart()->getLine(), sym);
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitLiteralInt(GazpreaParser::LiteralIntContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitInt " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
+
+        return t;
+    }
+
+
+
+    std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
+#endif
+        std::shared_ptr<ArithNode> t = std::make_shared<ArithNode>(ctx->getStart()->getLine());
+
+        switch (ctx->op->getType()) {
+            case GazpreaParser::MULT:
+                t->op = BINOP::MULT;
+                break;
+            case GazpreaParser::DIV:
+                t->op = BINOP::DIV;
+                break;
+            case GazpreaParser::ADD:
+                t->op = BINOP::ADD;
+            case GazpreaParser::SUB:
+                t->op = BINOP::SUB;
+        }
+        t->addChild(visit(ctx->expr(0)));
+        t->addChild(visit(ctx->expr(1)));
+
+        // casting upward to an ASTNode
+        // we want to use the .op attribute, so we don't want to cast it upward when initializing
+        // like in the case of most other nodes
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitCmp(GazpreaParser::CmpContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitCmp, op = " << ctx->op->getText() << std::endl;
+#endif
+        std::shared_ptr<CmpNode> t = std::make_shared<CmpNode>(ctx->getStart()->getLine());
+
+        switch (ctx->op->getType()) {
+            case GazpreaParser::MULT:
+                t->op = BINOP::MULT;
+                break;
+            case GazpreaParser::DIV:
+                t->op = BINOP::DIV;
+                break;
+            case GazpreaParser::ADD:
+                t->op = BINOP::ADD;
+            case GazpreaParser::SUB:
+                t->op = BINOP::SUB;
+        }
+
+        t->addChild(visit(ctx->expr(0)));
+        t->addChild(visit(ctx->expr(1)));
+
+        // casting upward to an ASTNode
+        // we want to use the .op attribute, so we don't want to cast it upward when initializing
+        // like in the case of most other nodes
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
 //#ifdef DEBUG
 //        std::cout << "visitAssign " << ctx->getStart()->getType() << ": "
@@ -386,88 +494,7 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
-#endif
-        std::shared_ptr<ArithNode> t = std::make_shared<ArithNode>(ctx->getStart()->getLine());
 
-        switch (ctx->op->getType()) {
-            case GazpreaParser::MULT:
-                t->op = BINOP::MULT;
-                break;
-            case GazpreaParser::DIV:
-                t->op = BINOP::DIV;
-                break;
-            case GazpreaParser::ADD:
-                t->op = BINOP::ADD;
-            case GazpreaParser::SUB:
-                t->op = BINOP::SUB;
-        }
-        t->addChild(visit(ctx->expr(0)));
-        t->addChild(visit(ctx->expr(1)));
-    
-        // casting upward to an ASTNode
-        // we want to use the .op attribute, so we don't want to cast it upward when initializing
-        // like in the case of most other nodes
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
-
-    std::any ASTBuilder::visitCmp(GazpreaParser::CmpContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitCmp, op = " << ctx->op->getText() << std::endl;
-#endif
-        std::shared_ptr<CmpNode> t = std::make_shared<CmpNode>(ctx->getStart()->getLine());
-
-        switch (ctx->op->getType()) {
-            case GazpreaParser::MULT:
-                t->op = BINOP::MULT;
-                break;
-            case GazpreaParser::DIV:
-                t->op = BINOP::DIV;
-                break;
-            case GazpreaParser::ADD:
-                t->op = BINOP::ADD;
-            case GazpreaParser::SUB:
-                t->op = BINOP::SUB;
-        }
-
-        t->addChild(visit(ctx->expr(0)));
-        t->addChild(visit(ctx->expr(1)));
-
-        // casting upward to an ASTNode
-        // we want to use the .op attribute, so we don't want to cast it upward when initializing
-        // like in the case of most other nodes
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
-
-    std::any ASTBuilder::visitLiteralID(GazpreaParser::LiteralIDContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitID " << ctx->ID()->getSymbol()->getText() << std::endl;
-#endif
-        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-        std::shared_ptr<ASTNode> t = std::make_shared<IDNode>(ctx->getStart()->getLine(), sym);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
-
-    std::any ASTBuilder::visitLiteralInt(GazpreaParser::LiteralIntContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitInt " << ctx->getText() << std::endl;
-#endif
-        std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
-
-        return t;
-    }
-
-    std::any ASTBuilder::visitExpression(GazpreaParser::ExpressionContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitExpression (parent) " << ctx->getText() << std::endl;
-#endif
-        // just return the inner expression
-        // the parent expression is just to help the grammar, so it's not needed here
-        return visit(ctx->expr());
-    }
 
     std::any ASTBuilder::visitFunctionSingle(GazpreaParser::FunctionSingleContext *ctx) {
         std::cout << "visiting function Single\n";
