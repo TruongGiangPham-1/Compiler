@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ASTNode.h"
 #include "Types/QUALIFIER.h"
 

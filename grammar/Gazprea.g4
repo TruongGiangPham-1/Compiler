@@ -1,8 +1,10 @@
 grammar Gazprea;
 
 file
-    : (globalDecl | typedef | procedure | function)* EOF
+    : globalStatements* EOF
     ;
+
+globalStatements : (globalDecl | typedef | procedure | function);
 
 globalDecl
     : RESERVED_CONST (type)? ID '=' expression ';'

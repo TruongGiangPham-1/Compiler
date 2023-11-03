@@ -8,6 +8,11 @@ namespace gazprea {
     public:
         std::any visitFile(GazpreaParser::FileContext *ctx) override;
         std::any visitAssign(GazpreaParser::AssignContext *ctx) override;
+
+        // variable declarations
+        std::any visitSized(GazpreaParser::SizedContext *ctx) override;
+        std::any visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) override;
+
         std::any visitCond(GazpreaParser::CondContext *ctx) override;
         std::any visitIndex(GazpreaParser::IndexContext *ctx) override;
         std::any visitRange(GazpreaParser::RangeContext *ctx) override;

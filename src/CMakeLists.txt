@@ -64,6 +64,10 @@ set(
         ../include/ASTNode/FunctionCallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
+        ../include/ASTNode/Expr/NullNode.h
+        ../include/ASTNode/Expr/IdentityNode.h
+        ASTNode/Expr/IdentityNode.cpp
+        ASTNode/Expr/NullNode.cpp
 )
 
 # Build our executable from the source files.

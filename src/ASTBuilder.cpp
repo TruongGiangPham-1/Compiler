@@ -6,6 +6,7 @@
 #include "ASTNode/PrintNode.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
+#include "ASTNode/Expr/NullNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
 #include "ASTNode/Expr/Vector/GeneratorNode.h"
@@ -17,7 +18,7 @@
 #include "FunctionCallTypes/FuncCallType.h"
 #include "ASTNode/FunctionCallNode.h"
 
-//#define DEBUG
+#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
@@ -35,6 +36,60 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    std::any ASTBuilder::visitSized(GazpreaParser::SizedContext *ctx) {
+        /*
+         * "Sized" declarations are declarations where the type's size is known ar compile time
+         * note that this includes types where there is no size (e.g. integer, boolean)
+         */
+#ifdef DEBUG
+        std::cout << "visitVarDecl (sized) type " << ctx->getStart()->getType() << ": "
+                  << ctx->ID()->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<DeclNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
+
+        // get qualifier
+        if (ctx->qualifier() == nullptr) {
+            std::cout << "No qualifier" << std::endl;
+            t->qualifier = QUALIFIER::NONE;
+        } else if (ctx->qualifier()->RESERVED_CONST()) {
+            std::cout << "const qualifier" << std::endl;
+            t->qualifier = QUALIFIER::CONST;
+        } else if (ctx->qualifier()->RESERVED_VAR()) {
+            std::cout << "var qualifier" << std::endl;
+            t->qualifier = QUALIFIER::VAR;
+        } else {
+            std::cout << "ERROR: unknown qualifier" << ctx->qualifier()->getText() << std::endl;
+            throw std::runtime_error("unknown qualifier " + ctx->qualifier()->getText());
+        }
+        std::cout << "Got qualifier " << t->qualifier << std::endl;`
+
+        // visit type
+        t->addChild(visit(ctx->known_sized_type()));
+
+        // check if expression is present
+        if (ctx->expression()) {
+            t->addChild(visit(ctx->expression()));
+        } else {
+            std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(ctx->getStart()->getLine());
+            t->addChild(nullNode);
+#ifdef DEBUG
+            std::cout << "Adding null to empty declaration" << std::endl;
+#endif
+        }
+        t->addChild(visit(ctx->expression()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) {
+        /*
+         * "Inferred size" declarations are declarations where the type's size is not known at compile time
+         * This includes vectors (integer[*]) and matrices (integer[*][*])
+         */
+        // TODO: this
+        visitChildren(ctx);
+    }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
 //#ifdef DEBUG

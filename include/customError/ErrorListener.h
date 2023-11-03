@@ -5,6 +5,8 @@
 #ifndef GAZPREABASE_ERRORLISTENER_H
 #define GAZPREABASE_ERRORLISTENER_H
 
+#pragma once
+
 #include "../CompileTimeExceptions.h"
 #include "antlr4-runtime.h"
 

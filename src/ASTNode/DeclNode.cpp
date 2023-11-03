@@ -1,4 +1,3 @@
-#pragma once
 #include "ASTNode/DeclNode.h"
 
 DeclNode::DeclNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {}
