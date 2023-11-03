@@ -26,7 +26,6 @@ namespace gazprea {
         std::any visitCmp(GazpreaParser::CmpContext *ctx) override;
         std::any visitLiteralID(GazpreaParser::LiteralIDContext *ctx) override;
         std::any visitLiteralInt(GazpreaParser::LiteralIntContext *ctx) override;
-        std::any visitType(GazpreaParser::TypeContext *ctx) override;
         std::any visitExpression(GazpreaParser::ExpressionContext *ctx) override;
 
         std::any visitFunctionSingle(GazpreaParser::FunctionSingleContext *ctx) override;

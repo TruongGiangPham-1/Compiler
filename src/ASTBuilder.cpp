@@ -60,18 +60,22 @@ namespace gazprea {
 
         // check if expression is present
         if (ctx->expression()) {
+#ifdef DEBUG
+            std::cout << "\tAdding non-null expression to decl" << std::endl;
+#endif
             t->addChild(visit(ctx->expression()));
         } else {
             std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(ctx->getStart()->getLine());
             t->addChild(nullNode);
 #ifdef DEBUG
-            std::cout << "Adding null to empty declaration" << std::endl;
+            std::cout << "\tAdding null to empty decl" << std::endl;
 #endif
         }
         t->addChild(visit(ctx->expression()));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
+
 
     std::any ASTBuilder::visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) {
         /*
@@ -257,17 +261,7 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
-
-    std::any ASTBuilder::visitType(GazpreaParser::TypeContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitType " << ctx->getText() << std::endl;
-#endif
-        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
-        std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        return t;
     }
 
     std::any ASTBuilder::visitExpression(GazpreaParser::ExpressionContext *ctx) {
