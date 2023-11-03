@@ -1,11 +1,12 @@
-#pragma once
 #include "ASTNode.h"
+#include "Types/QUALIFIER.h"
 
 // Decl nodes are very similar to Assign nodes, but with more stuff
 // Children: [ TypeNode, ExprNode ]
 class DeclNode : public ASTNode {
 public:
     std::shared_ptr<Symbol> sym;
+    QUALIFIER qualifier;
 
     DeclNode(int line, std::shared_ptr<Symbol> sym);
 
