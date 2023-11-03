@@ -98,10 +98,12 @@ inferred_sized_type
 
 qualifier: RESERVED_CONST | RESERVED_VAR;
 built_in_type: RESERVED_BOOLEAN | RESERVED_CHARACTER | RESERVED_INTEGER | RESERVED_REAL | ID; // ID incase of typedefs... This might be changed
-tuple_type: RESERVED_TUPLE '(' tuple_allowed_type ID? (',' tuple_allowed_type ID?)+ ')';
+tuple_type: RESERVED_TUPLE '(' tuple_type_element (',' tuple_type_element)+ ')';
 vector_type: built_in_type '[' expression ']';
 string_type: RESERVED_STRING ('[' expression ']')?;
 matrix_type: built_in_type '[' expression ',' expression ']';
+
+tuple_type_element : tuple_allowed_type ID?;
 
 expression // root of an expression tree
     :   expr

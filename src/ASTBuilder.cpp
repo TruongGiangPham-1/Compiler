@@ -20,6 +20,7 @@
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "FunctionCallTypes/FuncCallType.h"
 #include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/Type/TupleTypeNode.h"
 
 #define DEBUG
 
@@ -267,6 +268,31 @@ namespace gazprea {
         t->sizeLeft = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(0)));
         t->sizeRight = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(1)));
 
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTuple_type(GazpreaParser::Tuple_typeContext *ctx) {
+        /*
+         * tuple[<type>, <type>, ...]
+         */
+#ifdef DEBUG
+        std::cout << "visitTuple_type " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<TupleTypeNode> t = std::make_shared<TupleTypeNode>(ctx->getStart()->getLine(), sym);
+
+        for (auto tupleElement : ctx->tuple_type_element()) {
+            std::cout << "tuple type: " << tupleElement->getText() << std::endl;
+            auto typeCtx = tupleElement->tuple_allowed_type();
+            auto idCtx = tupleElement->ID();
+            std::string idName = "";
+            if (idCtx) {
+                idName = idCtx->getSymbol()->getText();
+            }
+            t->innerTypes.push_back(std::make_pair(idName, std::any_cast<std::shared_ptr<ASTNode>>(visit(typeCtx))));
+        }
+
+        t->typeEnum = TYPE::TUPLE;
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 

@@ -12,4 +12,5 @@ enum TYPE {
     STRING,
     VECTOR,
     MATRIX,
+    TUPLE,
 };
