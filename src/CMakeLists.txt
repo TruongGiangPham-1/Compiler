@@ -18,8 +18,8 @@ set(
         SymbolTable.cpp
         ../include/SymbolTable.h
         ../include/Operands/UNARYOP.h
-        ASTNode/TypeNode.cpp
-        ../include/ASTNode/TypeNode.h
+        ASTNode/Type/TypeNode.cpp
+        ../include/ASTNode/Type/TypeNode.h
         ASTNode/AssignNode.cpp
         ../include/ASTNode/AssignNode.h
         ASTNode/DeclNode.cpp
@@ -64,6 +64,19 @@ set(
         ../include/ASTNode/FunctionCallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
+        ../include/ASTNode/Expr/NullNode.h
+        ../include/ASTNode/Expr/IdentityNode.h
+        ASTNode/Expr/IdentityNode.cpp
+        ASTNode/Expr/NullNode.cpp
+        ASTNode/Type/VectorTypeNode.cpp
+        ../include/ASTNode/Type/VectorTypeNode.h
+        ../include/Types/TYPES.h
+        ASTNode/Type/StringTypeNode.cpp
+        ../include/ASTNode/Type/StringTypeNode.h
+        ASTNode/Type/MatrixTypeNode.cpp
+        ../include/ASTNode/Type/MatrixTypeNode.h
+        ASTNode/Type/TupleTypeNode.cpp
+        ../include/ASTNode/Type/TupleTypeNode.h
 )
 
 # Build our executable from the source files.

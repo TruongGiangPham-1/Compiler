@@ -1,11 +1,11 @@
 #include "ASTBuilder.h"
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
-#include "ASTNode/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/PrintNode.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
+#include "ASTNode/Expr/NullNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
 #include "ASTNode/Expr/Vector/GeneratorNode.h"
@@ -14,10 +14,15 @@
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Block/FunctionNode.h"
+#include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Type/VectorTypeNode.h"
+#include "ASTNode/Type/StringTypeNode.h"
+#include "ASTNode/Type/MatrixTypeNode.h"
 #include "FunctionCallTypes/FuncCallType.h"
 #include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/Type/TupleTypeNode.h"
 
-//#define DEBUG
+#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
@@ -35,6 +40,261 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    // DECLARATION STUFF
+    std::any ASTBuilder::visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) {
+        /*
+         * "Inferred size" declarations are declarations where the type's size is not known at compile time
+         * This includes vectors (integer[*]) and matrices (integer[*][*])
+         */
+#ifdef DEBUG
+        std::cout << "visitInferred_size (vardecl inferred size) type " << ctx->getStart()->getType() << ": "
+                  << ctx->inferred_sized_type()->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<DeclNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
+
+        // Qualifier
+        if (ctx->qualifier()) {
+            t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
+        } else {
+            t->qualifier = QUALIFIER::NONE;
+        }
+
+        // Type
+        t->addChild(visit(ctx->inferred_sized_type()));
+
+        // expression (it is always present when inferred)
+        t->addChild(visit(ctx->expression()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitSized(GazpreaParser::SizedContext *ctx) {
+        /*
+         * "Sized" declarations are declarations where the type's size is known ar compile time
+         * note that this includes types where there is no size (e.g. integer, boolean)
+         */
+#ifdef DEBUG
+        std::cout << "visitSized (vardecl sized) type " << ctx->getStart()->getType() << ": "
+                  << ctx->ID()->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<DeclNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
+
+        // Qualifier
+        if (ctx->qualifier()) {
+            t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
+        } else {
+            t->qualifier = QUALIFIER::NONE;
+        }
+
+        // Type
+        t->addChild(visit(ctx->known_sized_type()));
+
+        // check if expression is present
+        if (ctx->expression()) {
+#ifdef DEBUG
+            std::cout << "\tAdding non-null expression to decl" << std::endl;
+#endif
+            t->addChild(visit(ctx->expression()));
+        } else {
+            std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(ctx->getStart()->getLine());
+            t->addChild(nullNode);
+#ifdef DEBUG
+            std::cout << "\tAdding null to empty decl" << std::endl;
+#endif
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+
+    // TYPE STUFF
+    std::any ASTBuilder::visitQualifier(GazpreaParser::QualifierContext *ctx) {
+        if (ctx->RESERVED_CONST()) {
+            return QUALIFIER::CONST;
+        } else if (ctx->RESERVED_VAR()) {
+            return QUALIFIER::VAR;
+        } else {
+            std::cout << "ERROR: unknown qualifier" << ctx->getText() << std::endl;
+            throw std::runtime_error("unknown qualifier " + ctx->getText());
+        }
+    }
+
+    std::any ASTBuilder::visitBuilt_in_type(GazpreaParser::Built_in_typeContext *ctx) {
+        /*
+         * I chose to not distinguish between the RESERVED and ID types
+         * since when we do the Def and Ref passes, i think we will resolve them in the same way
+         */
+#ifdef DEBUG
+        std::cout << "visitBuiltin Type " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
+
+        return t;
+    }
+
+    std::any ASTBuilder::visitVector(GazpreaParser::VectorContext *ctx) {
+        /*
+         * <innerType>[*]
+         */
+#ifdef DEBUG
+        std::cout << "visitVector (inferred size vector type)" << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<VectorTypeNode> t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::VECTOR;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitVector_type(GazpreaParser::Vector_typeContext *ctx) {
+        /*
+         * <innerType>[expr] (known size vector type)
+         */
+#ifdef DEBUG
+        std::cout << "visitVector_type (known size)" << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<VectorTypeNode> t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::VECTOR;
+        t->size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitString(GazpreaParser::StringContext *ctx) {
+        /*
+         * string[*] (inferred size)
+         */
+#ifdef DEBUG
+        std::cout << "visitString (inferred size)" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<StringTypeNode> t = std::make_shared<StringTypeNode>(ctx->getStart()->getLine(), sym);
+
+        t->typeEnum = TYPE::STRING;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitString_type(GazpreaParser::String_typeContext *ctx) {
+        /*
+         * string[expr] (known size)
+         */
+#ifdef DEBUG
+        std::cout << "visitString_type (known size)" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<StringTypeNode> t = std::make_shared<StringTypeNode>(ctx->getStart()->getLine(), sym);
+
+        t->typeEnum = TYPE::STRING;
+        t->size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrixFirst(GazpreaParser::MatrixFirstContext *ctx) {
+        /*
+         * matrix[*, expr]
+         */
+#ifdef DEBUG
+        std::cout << "visitMatrixFirst [*, expr] " << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<MatrixTypeNode> t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::MATRIX;
+
+        // get right size
+        t->sizeRight = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+        std::cout << "Done matrix" << std::endl;
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrixSecond(GazpreaParser::MatrixSecondContext *ctx) {
+        /*
+         * matrix[expr, *]
+         */
+#ifdef DEBUG
+        std::cout << "visitMatrixSecond [*, expr] " << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<MatrixTypeNode> t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::MATRIX;
+
+        // get right size
+        t->sizeLeft = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrix(GazpreaParser::MatrixContext *ctx) {
+        /*
+         * matrix[*, *]
+         */
+#ifdef DEBUG
+        std::cout << "visitMatrix [*, *] " << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<MatrixTypeNode> t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::MATRIX;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrix_type(GazpreaParser::Matrix_typeContext *ctx) {
+        /*
+         * matrix[*, *]
+         */
+#ifdef DEBUG
+        std::cout << "visitMatrix [expr, expr] " << ctx->getText() << std::endl;
+#endif
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->built_in_type()));
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<MatrixTypeNode> t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        t->typeEnum = TYPE::MATRIX;
+        t->sizeLeft = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(0)));
+        t->sizeRight = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(1)));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTuple_type(GazpreaParser::Tuple_typeContext *ctx) {
+        /*
+         * tuple[<type>, <type>, ...]
+         */
+#ifdef DEBUG
+        std::cout << "visitTuple_type " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<TupleTypeNode> t = std::make_shared<TupleTypeNode>(ctx->getStart()->getLine(), sym);
+
+        for (auto tupleElement : ctx->tuple_type_element()) {
+            std::cout << "tuple type: " << tupleElement->getText() << std::endl;
+            auto typeCtx = tupleElement->tuple_allowed_type();
+            auto idCtx = tupleElement->ID();
+            std::string idName = "";
+            if (idCtx) {
+                idName = idCtx->getSymbol()->getText();
+            }
+            t->innerTypes.push_back(std::make_pair(idName, std::any_cast<std::shared_ptr<ASTNode>>(visit(typeCtx))));
+        }
+
+        t->typeEnum = TYPE::TUPLE;
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
 //#ifdef DEBUG
@@ -185,17 +445,7 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
-
-    std::any ASTBuilder::visitType(GazpreaParser::TypeContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitType " << ctx->getText() << std::endl;
-#endif
-        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
-        std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        return t;
     }
 
     std::any ASTBuilder::visitExpression(GazpreaParser::ExpressionContext *ctx) {

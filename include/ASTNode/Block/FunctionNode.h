@@ -5,6 +5,8 @@
 #ifndef GAZPREABASE_FUNCTIONNODE_H
 #define GAZPREABASE_FUNCTIONNODE_H
 
+#pragma once
+
 #include "BlockNode.h"
 #include "Symbol.h"
 #include "Type.h"
