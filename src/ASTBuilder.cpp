@@ -35,19 +35,6 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    //std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
-    //#ifdef DEBUG
-    //    std::cout << "visitVarDecl type " << ctx->getStart()->getType() << ": "
-    //              << ctx->ID()->getText() << std::endl;
-    //#endif
-    //    std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-    //    std::shared_ptr<ASTNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
-
-    //    t->addChild(visit(ctx->type()));
-    //    t->addChild(visit(ctx->expression()));
-
-    //    return std::dynamic_pointer_cast<ASTNode>(t);
-    //}
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
 //#ifdef DEBUG
@@ -76,40 +63,6 @@ namespace gazprea {
         //return std::dynamic_pointer_cast<ASTNode>(t);
         return nullptr;
     }
-
-    //std::any ASTBuilder::visitLoop(GazpreaParser::LoopContext *ctx) {
-//#ifdef DEBUG
-    //    std::cout << "visitLoop" << std::endl;
-//#end//if
-    //    std::shared_ptr<LoopNode> t = std::make_shared<LoopNode>(ctx->getStart()->getLine());
-    //    t->condition = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
-
-    //    for (auto statement: ctx->statement()) {
-    //        t->addChild(visit(statement));
-    //    }
-
-    //    // dynamically casting upward to an ASTNode
-    //    return std::dynamic_pointer_cast<ASTNode>(t);
-    //}
-
-    //std::any ASTBuilder::visitPrint(GazpreaParser::PrintContext *ctx) {
-//#ifdef DEBUG
-    //    std::cout << "visitPrint" << std::endl;
-//#endif
-    //    std::shared_ptr<ASTNode> t = std::make_shared<PrintNode>(ctx->getStart()->getLine());
-
-    //    t->addChild(visit(ctx->expression()));
-
-    //    return std::dynamic_pointer_cast<ASTNode>(t);
-    //}
-
-//    std::any ASTBuilder::visitParen(GazpreaParser::ParenContext *ctx) {
-//#ifdef DEBUG
-//        std::cout << "visitParen" << std::endl;
-//#endif
-//        // no need to make an AST node for this rule
-//        return visit(ctx->expr());
-//    }
 
     std::any ASTBuilder::visitIndex(GazpreaParser::IndexContext *ctx) {
 #ifdef DEBUG
@@ -367,5 +320,15 @@ namespace gazprea {
             t->funcCallName = funcCallSym;
         }
         return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitFuncCall(GazpreaParser::FuncCallContext *ctx) {
+        std::shared_ptr<ASTNode> funcNode;
+        assert(ctx->children.size() == 1);
+        for (auto child: ctx->children) {
+            // should only have one child
+            funcNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(child));
+        }
+        return funcNode;
     }
 }

@@ -44,6 +44,8 @@ namespace gazprea {
         std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) override;
         std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
         std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
+
+        std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree) override;
     };
 
 }

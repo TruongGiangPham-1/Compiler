@@ -196,6 +196,11 @@ std::any Def::visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) {
     return 0;
 }
 
+std::any Def::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
+    // SKIP, DO NOT VISIT CHILDREN
+    return 0;
+}
+
 std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
     // type note
     std::shared_ptr<TypeNode> typeN = std::dynamic_pointer_cast<TypeNode>(t);
@@ -214,6 +219,7 @@ std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
             (symtab->globalScope->resolve(typeN->getTypeName())));
     return typeSym;
 }
+
 
 int Def::getNextId() {
     (*varID) ++;
