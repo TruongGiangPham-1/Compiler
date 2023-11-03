@@ -17,6 +17,17 @@ namespace gazprea {
             // need to declare and define this function
             defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
 
+            // push a local scope for function block,  to walk childre
+            std::string sname = "functionScope" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+
+            // TODO: use getBody() later when function node have types
+            walk(tree->children[0]);  // ref all the symbol inside function block;
+
+            currentScope = symtab->exitScope(currentScope);  // pop local scope
+            currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+
         } else {
             // check if this symbol is a function symbol
             if (std::dynamic_pointer_cast<FunctionSymbol>(funcSym)) {
@@ -27,6 +38,16 @@ namespace gazprea {
                 // as the type of arguments in declaration. Raise error if types are mismatching
                 //currentScope = symtab->en
 
+                // push a local scope for function block,  to walk childre
+                std::string sname = "functionScope" + std::to_string(tree->loc());
+                currentScope = symtab->enterScope(sname, currentScope);
+
+                // TODO: use getBody() later when function node have types
+                walk(tree->children[0]);  // ref all the symbol inside function block;
+
+                currentScope = symtab->exitScope(currentScope);  // pop local scope
+                currentScope = symtab->exitScope(currentScope);  // pop method scope
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
             } else {  // this is not a functionSymbol
                 throw SymbolError(tree->loc(), "function same name as another identifier in the global scope");
             }
@@ -51,10 +72,11 @@ namespace gazprea {
 
             currentScope = symtab->exitScope(currentScope);  // pop local scope
             currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
 
         } else {
             // check if this symbol is a function symbol
-            if (std::dynamic_pointer_cast<FunctionSymbol>(funcSym)) {
+            if (std::dynamic_pointer_cast<FunctionSymbol>(funcSym)) {  // CASE: function forward declared && valid function Symbol
                 // there was a forward declaration and we found it
                 std::cout << "resolved function definition " << funcSym->getName() << " at line: " << tree->loc() << " at scope "
                           << currentScope->getScopeName()<< std::endl;
@@ -71,7 +93,8 @@ namespace gazprea {
 
                 currentScope = symtab->exitScope(currentScope);  // pop local scope
                 currentScope = symtab->exitScope(currentScope);  // pop method scope
-            } else {  // this is not a functionSymbol
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // assert that we are at global scope for sanity
+            } else {                                                     // case: conflicting identifier with another non function
                 throw SymbolError(tree->loc(), "function same name as another identifier in the global scope");
             }
         }
@@ -97,7 +120,7 @@ namespace gazprea {
                       << " ref null\n"; // variable not defined
         } else {
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-                      << "  ref " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";
+                      << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";
         }
         tree->sym = referencedSymbol;
     }

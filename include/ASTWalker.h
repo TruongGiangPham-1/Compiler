@@ -14,6 +14,7 @@
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Block/FunctionNode.h"
+#include "ASTNode/FunctionCallNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -51,6 +52,9 @@ namespace gazprea {
         virtual std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree);
         virtual std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree);
         // === BlOCK PROCEDURE NODES ===
+
+        // === FUNCTION CALL NODE ===
+        virtual std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree);
 
     };
 }

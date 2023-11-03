@@ -14,6 +14,8 @@
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Block/FunctionNode.h"
+#include "FunctionCallTypes/FuncCallType.h"
+#include "ASTNode/FunctionCallNode.h"
 
 //#define DEBUG
 
@@ -324,8 +326,6 @@ namespace gazprea {
         // TODO: add the retType node(doesnt work yet without type walker)
         //t->addChild(visit(typesArray[typesArray.size() - 1])); // the last type is always the return type?
 
-
-
         // iterate thru all the orderedArg
         // ctx->ID() is an array of arguments id, skip ID(0) because thats the function name
         // type of the argument ID(i) is at ctx->type(i - 1)
@@ -342,6 +342,30 @@ namespace gazprea {
         }
         // doesnt have the block expression
 
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitFunction_call(GazpreaParser::Function_callContext *ctx) {
+        std::shared_ptr<FunctionCallNode> t;
+        if (ctx->RESERVED_COLUMNS()) {
+
+        } else if (ctx->RESERVED_FORMAT()) {
+
+        } else if (ctx->RESERVED_LENGTH()) {
+
+        } else if (ctx->RESERVED_REVERSE()) {
+
+        } else if (ctx->RESERVED_ROWS()) {
+
+        } else if (ctx->RESERVED_STD_INPUT()) {
+
+        } else if (ctx->RESERVED_STREAM_STATE()) {
+
+        } else if (ctx->ID()) {
+            t = std::make_shared<FunctionCallNode>(ctx->ID()->getSymbol()->getLine(), FUNCTYPE::FUNC_NORMAL);
+            std::shared_ptr<Symbol> funcCallSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+            t->funcCallName = funcCallSym;
+        }
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 }

@@ -28,6 +28,8 @@ namespace gazprea {
         std::any visitFunctionBlock(GazpreaParser::FunctionBlockContext *ctx) override;
         std::any visitFunctionForward(GazpreaParser::FunctionForwardContext *ctx) override;
 
+        std::any visitFunction_call(GazpreaParser::Function_callContext *ctx) override;
+
     };
 
 }

@@ -15,7 +15,7 @@
 #include "ASTNode/Block/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     std::any ASTWalker::walkChildren(std::shared_ptr<ASTNode> tree) {
@@ -143,12 +143,15 @@ namespace gazprea {
 #endif // DEBUG
             return  this->visitFunctionSingle(std::dynamic_pointer_cast<FunctionSingleNode>(tree));
         } else if (std::dynamic_pointer_cast<FunctionBlockNode>(tree)) {
-            return  this->visitFunctionBlock(std::dynamic_pointer_cast<FunctionBlockNode>(tree));
-
 #ifdef DEBUG
             std::cout << "about to visit FunctionBlockNode" << std::endl;
 #endif // DEBUG
-
+            return  this->visitFunctionBlock(std::dynamic_pointer_cast<FunctionBlockNode>(tree));
+        } else if (std::dynamic_pointer_cast<FunctionCallNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit FunctionCallNode" << std::endl;
+#endif // DEBUG
+            return this->visitFunction_call(std::dynamic_pointer_cast<FunctionCallNode>(tree));
         }
 
         // NIL node
@@ -214,5 +217,8 @@ namespace gazprea {
     }
     std::any ASTWalker::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
         return  this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
+        return this->walkChildren(tree);
     }
 }

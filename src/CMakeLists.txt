@@ -61,6 +61,9 @@ set(
         ASTNode/Block/FunctionNode.cpp
         ../include/Ref.h
         Ref.cpp
+        ../include/ASTNode/FunctionCallNode.h
+        ../include/FunctionCallTypes/FuncCallType.h
+        FunctionCallTypes/FuncCallType.cpp
 )
 
 # Build our executable from the source files.
