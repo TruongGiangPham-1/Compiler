@@ -163,7 +163,7 @@ std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
     // define function scope Symbol
     std::string fname = "FuncScope" + tree->funcNameSym->getName() + std::to_string(tree->loc());
     std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
-                                                                               fname, retType, symtab->globalScope);
+                                                                               fname, retType, symtab->globalScope, tree->loc());
 
     currentScope->define(funcSym);  // define function symbol in global
     std::cout << "in line " << tree->loc()

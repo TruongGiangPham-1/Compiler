@@ -11,6 +11,7 @@
 #include "BuiltInTypeSymbol.h"
 #include "CompileTimeExceptions.h"
 #include "ScopedSymbol.h"
+#include "FunctionCallTypes/FuncCallType.h"
 
 
 namespace gazprea {
@@ -34,6 +35,10 @@ namespace gazprea {
         // === BlOCK FUNCTION AST NODES ===
         std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
         std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
+
+
+        // === Function Call ===
+        std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree) override;
     };
 }
 #endif //GAZPREABASE_REF_H
