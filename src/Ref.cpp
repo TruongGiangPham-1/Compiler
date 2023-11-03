@@ -123,6 +123,7 @@ namespace gazprea {
                       << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";
         }
         tree->sym = referencedSymbol;
+        return 0;
     }
 
     /*
@@ -132,7 +133,7 @@ namespace gazprea {
      *      orderedArgs = list of function/prcedure arguments
      *      isFunc? 1: 0    // 1 to define function, 0 to define procedure
      * 1.defines function name in global
-     * 2. push method scope and define argument inside it
+     * 2. push method scope , enter it, and define arguments inside it
      *
      */
     void Ref::defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
@@ -142,13 +143,14 @@ namespace gazprea {
         // define function scope Symbol
         std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
         std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
-                                                                                   fname, retType, symtab->globalScope);
+                                                                                   fname, retType, symtab->globalScope, loc);
         currentScope->define(funcSym);  // define function symbol in global
 
 
         currentScope = symtab->enterScope(funcSym);
+
         // define the argument symbols
-        for (auto argIDNode: orderedArgs) {
+        for (auto &argIDNode: orderedArgs) {
             // define this myself, dont need mlir name because arguments are
             auto idNode = std::dynamic_pointer_cast<IDNode>(argIDNode);
             //TODO: this id symbol dont have types yet. waiting for visitType implementation
@@ -162,6 +164,35 @@ namespace gazprea {
             idNode->scope = currentScope;  // set scope to function scope
         }
         //currentScope = symtab->exitScope(currentScope);
+    }
+
+
+    std::any Ref::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
+        std::shared_ptr<Symbol> sym;
+        if (tree->functype == FUNCTYPE::FUNC_NORMAL) {
+            sym = currentScope->resolve(tree->funcCallName->getName());
+            assert(sym);
+            std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
+            if (cast) {
+                // valid
+                // check if it is called before declaration/definition
+                if (tree->loc() < (size_t)cast->line) {
+
+                   throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
+
+                } else {
+
+                    std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
+
+                }
+            } else {
+                // function call overshaddowed by a non function declaration above || function dont exist
+                std::string errMSg = sym->getName() +  " is not a function to be called. It is undefined or overshadowed"
+                                                       "by another declaration above\n";
+                throw SymbolError(tree->loc(), errMSg);
+            }
+        }
+        return 0;
     }
 
     int Ref::getNextId() {
