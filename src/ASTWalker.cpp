@@ -135,14 +135,13 @@ namespace gazprea {
         } else if (std::dynamic_pointer_cast<FunctionForwardNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit functionForwardNode" << std::endl;
-            return  this->visitFunctionForward(std::dynamic_pointer_cast<FunctionForwardNode>(tree));
 #endif // DEBUG
+            return  this->visitFunctionForward(std::dynamic_pointer_cast<FunctionForwardNode>(tree));
         } else if (std::dynamic_pointer_cast<FunctionSingleNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit functionSingleNode" << std::endl;
-            return  this->visitFunctionSingle(std::dynamic_pointer_cast<FunctionSingleNode>(tree));
 #endif // DEBUG
-
+            return  this->visitFunctionSingle(std::dynamic_pointer_cast<FunctionSingleNode>(tree));
         } else if (std::dynamic_pointer_cast<FunctionBlockNode>(tree)) {
             return  this->visitFunctionBlock(std::dynamic_pointer_cast<FunctionBlockNode>(tree));
 

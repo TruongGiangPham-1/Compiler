@@ -21,9 +21,9 @@ namespace gazprea {
 
         int getNextId();
 
-        Def(std::shared_ptr<SymbolTable> symTab);
+        Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID);
 
-        int varID = 1;
+        std::shared_ptr<int> varID;
 
         // === TOP LEVEL AST NODES ===
         std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
@@ -42,8 +42,8 @@ namespace gazprea {
 
         // === BlOCK FUNCTION AST NODES ===
         std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) override;
-        //std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
-        //std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
+        std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
+        std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
     };
 
 }

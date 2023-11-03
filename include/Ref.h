@@ -24,9 +24,12 @@ namespace gazprea {
         int getNextId();
         void defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
                                           int isFunc); //
-        Ref(std::shared_ptr<SymbolTable> symTab);
+        Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
-        int varID = 1;
+        std::shared_ptr<int> varID;
+
+        // === EXPRESSION AST NODES ===
+        std::any visitID(std::shared_ptr<IDNode> tree) override;
 
         // === BlOCK FUNCTION AST NODES ===
         std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;

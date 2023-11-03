@@ -50,12 +50,14 @@ int main(int argc, char **argv) {
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 
   std::cout << "\n\n=== DEF PASS\n";
+  int mlirID = 1;
+  std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
-  gazprea::Def def(symbolTable);
+  gazprea::Def def(symbolTable, mlirIDptr);
   def.walk(ast);
 
   std::cout << "\n\n=== REF PASS\n";
-  gazprea::Ref ref(symbolTable);
+  gazprea::Ref ref(symbolTable, mlirIDptr);
   ref.walk(ast);
 
   //  TypeWalker types;

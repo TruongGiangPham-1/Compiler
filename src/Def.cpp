@@ -4,7 +4,7 @@
 #include "../include/Def.h"
 
 namespace gazprea {
-Def::Def(std::shared_ptr<SymbolTable> symTab) : symtab(symTab) {
+Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symtab(symTab), varID(mlirID) {
 
     std::shared_ptr<GlobalScope> globalScope = std::make_shared<GlobalScope>();
     symTab->globalScope = globalScope;
@@ -52,15 +52,16 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any Def::visitID(std::shared_ptr<IDNode> tree) {
+    // only resolves and add scope information in AST for ref pass
     std::shared_ptr<Symbol> referencedSymbol = currentScope->resolve(tree->sym->getName());
-    if (referencedSymbol == nullptr) {
-        std::cout << "in line " << tree->loc()
-                  << " ref null\n"; // variable not defined
-    } else {
-        std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-                  << "  ref " << referencedSymbol->mlirName << " Type is " << referencedSymbol->type->getName()
-                  << std::endl;
-    }
+    //if (referencedSymbol == nullptr) {
+    //    std::cout << "in line " << tree->loc()
+    //              << " ref null\n"; // variable not defined
+    //} else {
+    //    std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
+    //              << "  ref " << referencedSymbol->mlirName << " Type is " << referencedSymbol->type->getName()
+    //              << std::endl;
+    //}
     tree->sym = referencedSymbol;
     tree->scope = currentScope;
     return 0;
@@ -155,18 +156,19 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
 }
 
 std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
+    std::cout << "visiting def function forward\n";
     // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
     std::shared_ptr<Type> retType = std::make_shared<BuiltInTypeSymbol>("integer");  // create a random type for now
 
     // define function scope Symbol
-    std::string fname = "FuncDeclScope" + std::to_string(tree->loc());
+    std::string fname = "FuncScope" + tree->funcNameSym->getName() + std::to_string(tree->loc());
     std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
                                                                                fname, retType, symtab->globalScope);
 
     currentScope->define(funcSym);  // define function symbol in global
     std::cout << "in line " << tree->loc()
               << " functionNamer= " << tree->funcNameSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
-    currentScope = symtab->enterScope(fname, funcSym);
+    currentScope = symtab->enterScope( funcSym);
     // define the argument symbols
     for (auto argIDNode: tree->orderedArgs) {
         // define this myself, dont need mlir name because arguments are
@@ -184,7 +186,15 @@ std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
     return 0;
 }
 
+std::any Def::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
+    // skip, DO NOT VISIT CHILDREN
+    return 0;
+}
 
+std::any Def::visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) {
+    // skip, DO NOT VISIT CHILDREN
+    return 0;
+}
 
 std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
     // type note
@@ -206,7 +216,7 @@ std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
 }
 
 int Def::getNextId() {
-    this->varID++;
-    return varID;
+    (*varID) ++;
+    return *varID;
 }
 }

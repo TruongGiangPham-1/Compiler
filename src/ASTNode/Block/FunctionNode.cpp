@@ -19,10 +19,12 @@ std::shared_ptr<ASTNode> FunctionNode::getRetTypeNode() {
 
 // === FunctionBlock
 std::shared_ptr<ASTNode> FunctionBlockNode::getBlock() {
+    assert(this->children.size() == 2);
     return this->children[1];
 }
 
 // === Function Single node
 std::shared_ptr<ASTNode>FunctionSingleNode::getExpr() {
+    assert(this->children.size() == 2);
     return this->children[1];
 }

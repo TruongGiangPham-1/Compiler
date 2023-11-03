@@ -15,7 +15,7 @@
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Block/FunctionNode.h"
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
@@ -256,7 +256,7 @@ namespace gazprea {
         std::cout << "visiting function Single\n";
         // ctx->ID(0) is always the function name, kind of mystery indexing
         std::shared_ptr<Symbol> funcNameSym = std::make_shared<Symbol>(ctx->ID(0)->getSymbol()->getText());
-        std::shared_ptr<FunctionBlockNode> t = std::make_shared<FunctionBlockNode>(ctx->getStart()->getLine(), funcNameSym);
+        std::shared_ptr<FunctionSingleNode> t = std::make_shared<FunctionSingleNode>(ctx->getStart()->getLine(), funcNameSym);
 
         auto typesArray = ctx->type();
         auto argIDArray = ctx->ID();
