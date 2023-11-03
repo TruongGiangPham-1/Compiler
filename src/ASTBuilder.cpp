@@ -36,6 +36,22 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    // DECLARATION STUFF
+    std::any ASTBuilder::visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) {
+        /*
+         * "Inferred size" declarations are declarations where the type's size is not known at compile time
+         * This includes vectors (integer[*]) and matrices (integer[*][*])
+         */
+#ifdef DEBUG
+        std::cout << "visitVarDecl (inferred size) type " << ctx->getStart()->getType() << ": "
+                  << ctx->inferred_sized_type()->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<DeclNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
+
+        return nullptr;
+    }
+
     std::any ASTBuilder::visitSized(GazpreaParser::SizedContext *ctx) {
         /*
          * "Sized" declarations are declarations where the type's size is known ar compile time
@@ -76,15 +92,6 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-
-    std::any ASTBuilder::visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) {
-        /*
-         * "Inferred size" declarations are declarations where the type's size is not known at compile time
-         * This includes vectors (integer[*]) and matrices (integer[*][*])
-         */
-        // TODO: this
-        visitChildren(ctx);
-    }
 
     // TYPE STUFF
     std::any ASTBuilder::visitQualifier(GazpreaParser::QualifierContext *ctx) {
