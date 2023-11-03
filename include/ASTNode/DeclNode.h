@@ -19,6 +19,7 @@ public:
 
     std::shared_ptr<ASTNode> getTypeNode();
     std::shared_ptr<ASTNode> getExprNode();
+    QUALIFIER getQualifier();
 
     std::string toString() override;
 };

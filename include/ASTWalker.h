@@ -1,7 +1,7 @@
 #pragma once
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
-#include "ASTNode/TypeNode.h"
+#include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/PrintNode.h"
 #include "ASTNode/Expr/IDNode.h"

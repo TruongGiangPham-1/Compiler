@@ -21,3 +21,7 @@ std::shared_ptr<ASTNode> DeclNode::getTypeNode() {
 std::shared_ptr<ASTNode> DeclNode::getExprNode() {
     return children[1];
 }
+
+QUALIFIER DeclNode::getQualifier() {
+    return qualifier;
+}
