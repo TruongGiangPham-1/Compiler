@@ -46,8 +46,8 @@ set(
         ../include/ASTNode/Expr/Vector/GeneratorNode.h
         ASTNode/Expr/Vector/FilterNode.cpp
         ../include/ASTNode/Expr/Vector/FilterNode.h
-        ASTNode/PrintNode.cpp
-        ../include/ASTNode/PrintNode.h
+        ASTNode/Stream/StreamOut.cpp
+        ../include/ASTNode/Stream/StreamOut.h
         ASTWalker.cpp
         ../include/TypeWalker.h
         ../include/BackendWalker.h

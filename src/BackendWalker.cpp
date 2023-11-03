@@ -19,7 +19,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
-std::any BackendWalker::visitPrint(std::shared_ptr<PrintNode> tree) {
+std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
   if (tree->getExpr()->type->getName() == "int") {

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "ASTNode.h"
+#include "ASTNode/ASTNode.h"
 #include "ASTNode/Expr/ExprNode.h"
 
-class PrintNode : public ASTNode{
+// Children: [ expr ]
+class StreamOut : public ASTNode{
 public:
-    PrintNode(int line);
+    StreamOut(int line);
 
     std::shared_ptr<ExprNode> getExpr();
 

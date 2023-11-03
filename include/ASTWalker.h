@@ -3,7 +3,7 @@
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
-#include "ASTNode/PrintNode.h"
+#include "ASTNode/Stream/StreamOut.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
@@ -29,7 +29,7 @@ namespace gazprea {
         // === TOP LEVEL AST NODES ===
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
-        virtual std::any visitPrint(std::shared_ptr<PrintNode> tree);
+        virtual std::any visitPrint(std::shared_ptr<StreamOut> tree);
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
 
         // === EXPRESSION AST NODES ===

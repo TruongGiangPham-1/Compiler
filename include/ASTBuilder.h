@@ -9,6 +9,9 @@ namespace gazprea {
         std::any visitFile(GazpreaParser::FileContext *ctx) override;
         std::any visitAssign(GazpreaParser::AssignContext *ctx) override;
 
+        // streams
+        std::any visitOutputStream(GazpreaParser::OutputStreamContext *ctx) override;
+
         // variable declarations
         std::any visitSized(GazpreaParser::SizedContext *ctx) override;
         std::any visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) override;
