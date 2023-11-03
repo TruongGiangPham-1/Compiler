@@ -165,7 +165,7 @@ void deallocateCommonType(commonType* object) {
 
 tuple* allocateTuple(int size) {
   tuple* newTuple = (tuple*) malloc(sizeof(tuple));
-  commonType** valueList = (commonType**) calloc(size*2, sizeof(commonType*));
+  commonType** valueList = (commonType**) calloc(size, sizeof(commonType*));
 
   newTuple->size = size;
   newTuple->currentSize = 0;
