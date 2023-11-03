@@ -48,23 +48,14 @@ namespace gazprea {
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
         std::shared_ptr<DeclNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), sym);
 
-        // get qualifier
-        if (ctx->qualifier() == nullptr) {
-            std::cout << "No qualifier" << std::endl;
-            t->qualifier = QUALIFIER::NONE;
-        } else if (ctx->qualifier()->RESERVED_CONST()) {
-            std::cout << "const qualifier" << std::endl;
-            t->qualifier = QUALIFIER::CONST;
-        } else if (ctx->qualifier()->RESERVED_VAR()) {
-            std::cout << "var qualifier" << std::endl;
-            t->qualifier = QUALIFIER::VAR;
+        // Qualifier
+        if (ctx->qualifier()) {
+            t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
         } else {
-            std::cout << "ERROR: unknown qualifier" << ctx->qualifier()->getText() << std::endl;
-            throw std::runtime_error("unknown qualifier " + ctx->qualifier()->getText());
+            t->qualifier = QUALIFIER::NONE;
         }
-        std::cout << "Got qualifier " << t->qualifier << std::endl;`
 
-        // visit type
+        // Type
         t->addChild(visit(ctx->known_sized_type()));
 
         // check if expression is present
@@ -89,6 +80,32 @@ namespace gazprea {
          */
         // TODO: this
         visitChildren(ctx);
+    }
+
+    // TYPE STUFF
+    std::any ASTBuilder::visitQualifier(GazpreaParser::QualifierContext *ctx) {
+        if (ctx->RESERVED_CONST()) {
+            return QUALIFIER::CONST;
+        } else if (ctx->RESERVED_VAR()) {
+            return QUALIFIER::VAR;
+        } else {
+            std::cout << "ERROR: unknown qualifier" << ctx->getText() << std::endl;
+            throw std::runtime_error("unknown qualifier " + ctx->getText());
+        }
+    }
+
+    std::any ASTBuilder::visitBuilt_in_type(GazpreaParser::Built_in_typeContext *ctx) {
+        /*
+         * I chose to not distinguish between the RESERVED and ID types
+         * since when we do the Def and Ref passes, i think we will resolve them in the same way
+         */
+#ifdef DEBUG
+        std::cout << "visitBuiltin Type " << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        std::shared_ptr<ASTNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
+
+        return t;
     }
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {

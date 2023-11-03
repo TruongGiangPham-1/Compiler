@@ -13,6 +13,10 @@ namespace gazprea {
         std::any visitSized(GazpreaParser::SizedContext *ctx) override;
         std::any visitInferred_size(GazpreaParser::Inferred_sizeContext *ctx) override;
 
+        // type stuff
+        std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
+        std::any visitBuilt_in_type(GazpreaParser::Built_in_typeContext *ctx) override;
+
         std::any visitCond(GazpreaParser::CondContext *ctx) override;
         std::any visitIndex(GazpreaParser::IndexContext *ctx) override;
         std::any visitRange(GazpreaParser::RangeContext *ctx) override;
