@@ -214,7 +214,7 @@ commonType* boolPromotion(bool fromValue, enum BuiltIn toType) {
 
 commonType* intPromotion(int fromValue, enum BuiltIn toType) {
 #ifdef DEBUGPROMOTION
-  printf("Cast from int\n");
+  printf("Promotion from int\n");
 #endif /* ifdef DEBUGPROMOTION */
 
   switch (toType) {
@@ -234,22 +234,28 @@ commonType* intPromotion(int fromValue, enum BuiltIn toType) {
 
 commonType* charPromotion(char fromValue, enum BuiltIn toType) {
 #ifdef DEBUGPROMOTION
-  printf("Cast from char\n");
+  printf("Promotion from char\n");
 #endif /* ifdef DEBUGPROMOTION */
 
     switch (toType) {
     default:
-    return allocateCommonType(&fromValue, REAL);
+#ifdef DEBUGPROMOTION
+  printf("To char\n");
+#endif /* ifdef DEBUGPROMOTION */
+    return allocateCommonType(&fromValue, CHAR);
   }
 }
 
 commonType* realPromotion(float fromValue, enum BuiltIn toType) {
 #ifdef DEBUGPROMOTION
-  printf("promoting from real\n");
+  printf("Promotion from real\n");
 #endif /* ifdef DEBUGPROMOTION */
     switch (toType) {
+#ifdef DEBUGPROMOTION
+  printf("To real\n");
+#endif /* ifdef DEBUGPROMOTION */
     default:
-    return allocateCommonType((void*)&fromValue, REAL);
+    return allocateCommonType(&fromValue, REAL);
   }
 }
 
@@ -312,7 +318,7 @@ int intBINOP(int l, int r, enum BINOP op) {
   }
 }
 
-float realBINOP(float l, float r, enum BINOP op) {
+float realBINOP(float l, float r, enum BINOP op) {{}
   switch (op) {
     case ADD:
     return l + r;
@@ -357,8 +363,6 @@ char charBINOP(char l, char r, enum BINOP op) {
 tuple tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
 
 }
-
-
 
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op) {
   commonType* promotedLeft;
