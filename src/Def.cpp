@@ -12,8 +12,11 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     globalScope->define(std::make_shared<BuiltInTypeSymbol>("integer"));
     globalScope->define(std::make_shared<BuiltInTypeSymbol>("vector"));
     globalScope->define(std::make_shared<BuiltInTypeSymbol>("character"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("rael"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("real"));
     globalScope->define(std::make_shared<BuiltInTypeSymbol>("tuple"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("matrix"));
+    globalScope->define(std::make_shared<BuiltInTypeSymbol>("boolean"));
+
 
     currentScope = symtab->enterScope(globalScope);  // enter global scope
 }
@@ -31,6 +34,7 @@ std::any Def::visitAssign(std::shared_ptr<AssignNode> tree) {
 std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
     // resolve type
     std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
+
     assert(type);  // ensure its not nullptr  // should be builtin type
 
     walk(tree->getExprNode());
@@ -43,8 +47,8 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
 
     currentScope->define(idSym);
 
-    std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << idSym->type->getName()
-              << " as mlirNmae: " << mlirName << "\n";
+    std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << type->getName()
+              << " as mlirNmae: " << mlirName << "\n" ;
 
     tree->scope = currentScope;
     tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
@@ -82,7 +86,6 @@ std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
     // define domainVar as in this scope
     std::shared_ptr<VariableSymbol> domainVarSym = std::make_shared<VariableSymbol>(tree->domainVar,
                                                                                     std::make_shared<BuiltInTypeSymbol>("int"));
-
     domainVarSym->scope = currentScope;
     domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
     currentScope->define(domainVarSym);  // define domain var symbol in this scope
@@ -95,7 +98,6 @@ std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
 
     walk(tree->getExpr());
     currentScope = symtab->exitScope(currentScope);
-
     return 0;
 }
 
@@ -155,6 +157,7 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
     return 0;
 }
 
+
 std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
     std::cout << "visiting def function forward\n";
     // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
@@ -201,23 +204,82 @@ std::any Def::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
     return 0;
 }
 
+std::any Def::visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) {
+    return 0;
+}
+
+std::any Def::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
+    // define forward declaration if any
+    std::shared_ptr<Type>retType;
+    if (tree->hasReturn) {
+        retType = resolveType(tree->getRetTypeNode());
+    }
+    tree->nameSym->type = retType;  // set return type
+    // define procedure scope Symbol
+    std::string fname = "FuncScope" + tree->nameSym->getName() + std::to_string(tree->loc());
+    std::shared_ptr<ProcedureSymbol> procSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
+                                                                               fname, retType, symtab->globalScope, tree->loc());
+
+    currentScope = symtab->enterScope( procSym);
+
+    // define args
+    for (auto argIDNode: tree->orderedArgs) {
+        // define this myself, dont need mlir name because arguments are
+        auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
+        //TODO: this id symbol dont have types yet. waiting for visitType implementation
+        assert(argNode);  // not null
+
+        // TODO: weird bug where resolve is returning wrong Type here but correct Type in
+        //auto res= resolveType(argNode->getArgType());
+        //argNode->idSym->type = res;
+        std::cout << "in line " << tree->loc()
+                  << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName();
+                   //" as type " << argNode->idSym->type->getName() <<"\n";
+
+        currentScope->define(argNode->idSym);  // define arg in curren scope
+        argNode->scope = currentScope;  // set scope to function scope
+    }
+    currentScope = symtab->exitScope(currentScope);
+    return 0;
+}
+
+std::any Def::visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) {
+    return 0;
+}
+
 std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
     // type note
     std::shared_ptr<TypeNode> typeN = std::dynamic_pointer_cast<TypeNode>(t);
     std::cout << "Resolve Type: " << typeN->getTypeName() << std::endl;
     if (typeN == nullptr) {
-        std::cerr << "cannot cast to type node at line " << t->loc() << "\n";
-        return nullptr;
+        throw TypeError(t->loc(), "cannot cast to TypeNode");
     }
-    if (typeN->getTypeName() != "integer" && typeN->getTypeName() != "vector" ) {
-        std::cerr << "type must be int or vector, invalid type at line " << t->loc() << "\n";
-        throw SyntaxError(t->loc(), "type must be int or vector, invalid type");
-        return nullptr;
+    // currently naive and cheap resolve
+    std::shared_ptr<Type> ty;
+    std::shared_ptr<Symbol> res;
+    switch (typeN->typeEnum) {
+        case TYPE::INTEGER:
+            res = symtab->globalScope->resolve("integer");
+        case TYPE::REAL:
+            res = (symtab->globalScope->resolve("real"));
+        case TYPE::TUPLE:
+            res = (symtab->globalScope->resolve("tuple"));
+        case TYPE::VECTOR:
+            res = (symtab->globalScope->resolve("vector"));
+        case TYPE::BOOLEAN:
+            res = (symtab->globalScope->resolve("boolean"));
+        case TYPE::CHAR:
+            res = (symtab->globalScope->resolve("character"));
+        case TYPE::MATRIX:
+            res = (symtab->globalScope->resolve("matrix"));
+        case TYPE::STRING:
+            res = (symtab->globalScope->resolve("string"));
     }
-
-    std::shared_ptr<Type> typeSym = std::dynamic_pointer_cast<Type>(
-            (symtab->globalScope->resolve(typeN->getTypeName())));
-    return typeSym;
+    assert(res);
+    ty = std::dynamic_pointer_cast<Type>(res);
+    assert(ty);
+    return ty;
+    // TODO: handling user type?
 }
 
 

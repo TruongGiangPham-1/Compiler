@@ -39,6 +39,11 @@ namespace gazprea {
 
         // === Function Call ===
         std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree) override;
+
+        // === procedure
+        std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
+        std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
+
     };
 }
 #endif //GAZPREABASE_REF_H

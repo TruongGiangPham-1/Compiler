@@ -59,41 +59,41 @@ namespace gazprea {
         std::shared_ptr<Symbol> funcSym = currentScope->resolve(tree->funcNameSym->getName());
         if (funcSym == nullptr) {
             // there is no declaratioin for this function
-            std::cout << "line " << tree->loc() << " no forward declaration, define function\n";
-            // define method scope and push. define method symbol
-            defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
+            //std::cout << "line " << tree->loc() << " no forward declaration, define function\n";
+            //// define method scope and push. define method symbol
+            //defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
 
-            // push a local scope for function block,  to walk childre
-            std::string sname = "functionScope" + std::to_string(tree->loc());
-            currentScope = symtab->enterScope(sname, currentScope);
+            //// push a local scope for function block,  to walk childre
+            //std::string sname = "functionScope" + std::to_string(tree->loc());
+            //currentScope = symtab->enterScope(sname, currentScope);
 
-            // TODO: use getExpr() later when function node have types
-            walk(tree->children[0]);  // ref all the symbol inside function block;
+            //// TODO: use getExpr() later when function node have types
+            //walk(tree->children[0]);  // ref all the symbol inside function block;
 
-            currentScope = symtab->exitScope(currentScope);  // pop local scope
-            currentScope = symtab->exitScope(currentScope);  // pop method scope
-            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+            //currentScope = symtab->exitScope(currentScope);  // pop local scope
+            //currentScope = symtab->exitScope(currentScope);  // pop method scope
+            //assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
 
         } else {
             // check if this symbol is a function symbol
             if (std::dynamic_pointer_cast<FunctionSymbol>(funcSym)) {  // CASE: function forward declared && valid function Symbol
                 // there was a forward declaration and we found it
-                std::cout << "resolved function definition " << funcSym->getName() << " at line: " << tree->loc() << " at scope "
-                          << currentScope->getScopeName()<< std::endl;
-                //TODO: iterate through all the ordered arguments of this function definition, and check if all the types in arguments are the same
-                // as the type of arguments in declaration. Raise error if types are mismatching
-                //currentScope = symtab->en
-                defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
-                // push a local scope for function block,  to walk childre
-                std::string sname = "functionScope" + std::to_string(tree->loc());
-                currentScope = symtab->enterScope(sname, currentScope);
+                //std::cout << "resolved function definition " << funcSym->getName() << " at line: " << tree->loc() << " at scope "
+                //          << currentScope->getScopeName()<< std::endl;
+                ////TODO: iterate through all the ordered arguments of this function definition, and check if all the types in arguments are the same
+                //// as the type of arguments in declaration. Raise error if types are mismatching
+                ////currentScope = symtab->en
+                //defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
+                //// push a local scope for function block,  to walk childre
+                //std::string sname = "functionScope" + std::to_string(tree->loc());
+                //currentScope = symtab->enterScope(sname, currentScope);
 
-                // TODO: use getExpr() later when function node have types
-                walk(tree->children[0]);  // ref all the symbol inside function block;
+                //// TODO: use getExpr() later when function node have types
+                //walk(tree->children[0]);  // ref all the symbol inside function block;
 
-                currentScope = symtab->exitScope(currentScope);  // pop local scope
-                currentScope = symtab->exitScope(currentScope);  // pop method scope
-                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // assert that we are at global scope for sanity
+                //currentScope = symtab->exitScope(currentScope);  // pop local scope
+                //currentScope = symtab->exitScope(currentScope);  // pop method scope
+                //assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // assert that we are at global scope for sanity
             } else {                                                     // case: conflicting identifier with another non function
                 throw SymbolError(tree->loc(), "function same name as another identifier in the global scope");
             }
@@ -125,6 +125,31 @@ namespace gazprea {
         tree->sym = referencedSymbol;
         return 0;
     }
+    // === Procedure
+    std::any Ref::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
+        return 0; // WE SKIP
+    }
+
+    std::any Ref::visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) {
+        std::shared_ptr<Symbol> funcSym = currentScope->resolve(tree->nameSym->getName());
+        if (funcSym == nullptr) {  // case: never been declared b4
+            // define method scope and push. define method symbol
+            defineFunctionAndProcedure(tree->loc(), tree->nameSym, tree->orderedArgs, 0);
+
+            // push a local scope for function block,  to walk childre
+            std::string sname = "procedureScope" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+
+            walk(tree->getBlock());  // ref all the symbol inside function block;
+
+            currentScope = symtab->exitScope(currentScope);  // pop local scope
+            currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        } else {
+            // TODO:
+        }
+        return 0;
+    }
 
     /*
      * @args:
@@ -142,30 +167,33 @@ namespace gazprea {
 
         // define function scope Symbol
         std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
-        std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
-                                                                                   fname, retType, symtab->globalScope, loc);
-        currentScope->define(funcSym);  // define function symbol in global
-
-
-        currentScope = symtab->enterScope(funcSym);
+        std::shared_ptr<ScopedSymbol> methodSym;
+        if (isFunc) {
+            methodSym  = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
+                                                                                       fname, retType, symtab->globalScope, loc);
+        } else {
+            methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
+                                                          fname, retType, symtab->globalScope, loc);
+        }
+        currentScope->define(methodSym);  // define methd symbol in global
+        currentScope = symtab->enterScope(methodSym);
 
         // define the argument symbols
         for (auto &argIDNode: orderedArgs) {
             // define this myself, dont need mlir name because arguments are
-            auto idNode = std::dynamic_pointer_cast<IDNode>(argIDNode);
+            auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
             //TODO: this id symbol dont have types yet. waiting for visitType implementation
-            assert(idNode);  // not null
-            idNode->sym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+            assert(argNode);  // not null
+            argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
             std::cout << "in line " << loc
-                      << " argument = " << idNode->sym->getName() << " defined in " << currentScope->getScopeName() << "\n";
+                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
 
             // define mlirname
-            currentScope->define(idNode->sym);  // define arg in curren scope
-            idNode->scope = currentScope;  // set scope to function scope
+            currentScope->define(argNode->idSym);  // define arg in curren scope
+            argNode->scope = currentScope;  // set scope to function scope
         }
         //currentScope = symtab->exitScope(currentScope);
     }
-
 
     std::any Ref::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
         std::shared_ptr<Symbol> sym;

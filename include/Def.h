@@ -46,6 +46,12 @@ namespace gazprea {
         std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
 
         std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree) override;
+
+
+        // === BLOCK PROCEDURE AST NODES
+        std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
+        std::any visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) override;
+        std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
     };
 
 }

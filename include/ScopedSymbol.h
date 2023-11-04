@@ -44,8 +44,12 @@ public:
 class ProcedureSymbol: public ScopedSymbol {
 public:
     std::string scopeName;
+    int line;  // line number it was created
+    ProcedureSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line):
+    ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName), line(line) {};
     std::string getScopeName() override {
         return  scopeName;
     };
 };
+
 #endif //GAZPREABASE_SCOPEDSYMBOL_H

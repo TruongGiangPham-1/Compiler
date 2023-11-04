@@ -169,6 +169,8 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitProcedureForward(std::dynamic_pointer_cast<ProcedureForwardNode>(tree));
 
+        } else if (std::dynamic_pointer_cast<BlockNode>(tree)) {
+            return this->visitBlock(std::dynamic_pointer_cast<BlockNode>(tree));
         }
 
         // NIL node
@@ -248,6 +250,9 @@ namespace gazprea {
     }
 
     std::any ASTWalker::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
         return this->walkChildren(tree);
     }
 

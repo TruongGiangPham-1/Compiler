@@ -46,6 +46,9 @@ namespace gazprea {
         virtual std::any visitGenerator(std::shared_ptr<GeneratorNode> tree);
         virtual std::any visitRangeVec(std::shared_ptr<RangeVecNode> tree);
 
+
+        // == BLock
+        virtual std::any visitBlock(std::shared_ptr<BlockNode>tree);
         // === BLOCK AST NODES ===
         virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
         virtual std::any visitLoop(std::shared_ptr<LoopNode> tree);

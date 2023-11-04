@@ -607,6 +607,7 @@ namespace gazprea {
     }
 
 
+// TODO: change grammar to use function_args later
     std::any ASTBuilder::visitFunctionSingle(GazpreaParser::FunctionSingleContext *ctx) {
         std::cout << "visiting function Single\n";
         // ctx->ID(0) is always the function name, kind of mystery indexing
@@ -636,6 +637,7 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+// TODO: change grammar to use function_args later
     std::any ASTBuilder::visitFunctionBlock(GazpreaParser::FunctionBlockContext *ctx) {
         std::cout << "visiting function block\n";
         // ctx->ID(0) is always the function name, kind of mystery indexing
@@ -668,6 +670,7 @@ namespace gazprea {
     }
 
     // func decl node, holds retType,
+// TODO: change grammar to use function_args later
     std::any ASTBuilder::visitFunctionForward(GazpreaParser::FunctionForwardContext *ctx) {
         std::cout << "visiting function forwward\n";
         // ctx->ID(0) is always the function name, kind of mystery indexing
@@ -747,7 +750,7 @@ namespace gazprea {
          */
         std::shared_ptr<Symbol> procNameSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
         std::shared_ptr<ProcedureBlockNode> t = std::make_shared<ProcedureBlockNode>(ctx->getStart()->getLine(), procNameSym);
-
+        t->nameSym = procNameSym;
         if (ctx->RESERVED_RETURNS()) {  // case: has return type
             t->hasReturn = 1;
             t->addChild(visit(ctx->type()));
@@ -780,7 +783,7 @@ namespace gazprea {
 
         std::shared_ptr<Symbol> procNameSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
         std::shared_ptr<ProcedureForwardNode> t = std::make_shared<ProcedureForwardNode>(ctx->getStart()->getLine(), procNameSym);
-
+        t->nameSym = procNameSym;
         if (ctx->RESERVED_RETURNS()) {  // case: has return type
             t->hasReturn = 1;
             t->addChild(visit(ctx->type()));
@@ -789,7 +792,7 @@ namespace gazprea {
             t->hasReturn = 0;
         }
         for (auto arg: ctx->procedure_arg()) {
-            auto argNode = std::any_cast<std::shared_ptr<ASTNode>>(arg);
+            auto argNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
             t->orderedArgs.push_back(argNode);
         }
         return std::dynamic_pointer_cast<ASTNode>(t);
@@ -807,7 +810,7 @@ namespace gazprea {
             t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
         } else t->qualifier = QUALIFIER::NONE;
         std::shared_ptr<Symbol> idSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-
+        t->idSym = idSym;
         // child[0] = typenode,
         t->addChild(visit(ctx->type()));
         return std::dynamic_pointer_cast<ASTNode>(t);
