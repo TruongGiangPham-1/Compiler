@@ -62,6 +62,9 @@ return
     : RESERVED_RETURN expression? ';'
     ;
 
+procedure_arg: qualifier? type ID;
+function_arg: type ID;
+
 function
     : RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type '=' expression ';' #functionSingle
     | RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type block              #functionBlock
@@ -69,9 +72,10 @@ function
     ;
 
 procedure
-    : RESERVED_PROCEDURE ID '(' (qualifier? type ID (',' qualifier? type ID)*)? ')' (RESERVED_RETURNS type)? block  #procedureBlock
-    | RESERVED_PROCEDURE ID '(' (qualifier? type ID (',' qualifier? type ID)*)? ')' (RESERVED_RETURNS type)? ';'    #procedureForward
+    : RESERVED_PROCEDURE ID '(' (procedure_arg (',' procedure_arg)*)? ')' (RESERVED_RETURNS type)? block  #procedureBlock
+    | RESERVED_PROCEDURE ID '(' (procedure_arg (',' procedure_arg)*)? ')' (RESERVED_RETURNS type)? ';'    #procedureForward
     ;
+
 
 procedure_call
     : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';'

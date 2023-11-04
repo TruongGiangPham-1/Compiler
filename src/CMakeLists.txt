@@ -64,6 +64,8 @@ set(
         ../include/ASTNode/FunctionCallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
+        ASTNode/Block/ProcedureNode.cpp
+        ../include/ASTNode/Block/ProcedureNode.h
         ../include/ASTNode/Expr/NullNode.h
         ../include/ASTNode/Expr/IdentityNode.h
         ASTNode/Expr/IdentityNode.cpp
@@ -79,6 +81,8 @@ set(
         ../include/ASTNode/Type/TupleTypeNode.h
         ASTNode/TypeDefNode.cpp
         ../include/ASTNode/TypeDefNode.h
+        ASTNode/ArgNode.cpp
+        ../include/ASTNode/ArgNode.h
 )
 
 # Build our executable from the source files.

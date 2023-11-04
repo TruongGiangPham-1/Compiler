@@ -22,6 +22,8 @@
 #include "FunctionCallTypes/FuncCallType.h"
 #include "ASTNode/FunctionCallNode.h"
 #include "ASTNode/Type/TupleTypeNode.h"
+#include "ASTNode/Block/ProcedureNode.h"
+#include "ASTNode/ArgNode.h"
 
 #define DEBUG
 
@@ -519,17 +521,16 @@ namespace gazprea {
 
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
+        // TODO: implement
 //#ifdef DEBUG
 //        std::cout << "visitAssign " << ctx->getStart()->getType() << ": "
 //                  << ctx->ID()->getText() << std::endl;
 //#endif
-//        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
-//        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), sym);
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>("DummyAssign");
+        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), sym);
 //
-//        t->addChild(visit(ctx->expression()));
 
-//        return std::dynamic_pointer_cast<ASTNode>(t);
-        return nullptr;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitCond(GazpreaParser::CondContext *ctx) {
@@ -596,6 +597,14 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+
+
+    std::any ASTBuilder::visitBlock(GazpreaParser::BlockContext *ctx) {
+        // TODO: implement
+
+        auto blockNode = std::make_shared<BlockNode>(1);
+        return std::dynamic_pointer_cast<ASTNode>(blockNode);
+    }
 
 
     std::any ASTBuilder::visitFunctionSingle(GazpreaParser::FunctionSingleContext *ctx) {
@@ -721,5 +730,86 @@ namespace gazprea {
             funcNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(child));
         }
         return funcNode;
+    }
+
+    std::any ASTBuilder::visitProcedureBlock(GazpreaParser::ProcedureBlockContext *ctx) {
+        /*
+         *
+            procedure
+                : RESERVED_PROCEDURE ID '(' (procedure_arg (',' procedure_arg)*)? ')' (RESERVED_RETURNS type)? block  #procedureBlock
+
+            case: procedure has no return
+                child[0] = blockNode
+            case: procedure has return
+                child[0] = return TypeNode
+                child[1] = blockNode
+         *
+         */
+        std::shared_ptr<Symbol> procNameSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<ProcedureBlockNode> t = std::make_shared<ProcedureBlockNode>(ctx->getStart()->getLine(), procNameSym);
+
+        if (ctx->RESERVED_RETURNS()) {  // case: has return type
+            t->hasReturn = 1;
+            t->addChild(visit(ctx->type()));
+
+        } else {
+            t->hasReturn = 0;
+        }
+
+        for (auto arg: ctx->procedure_arg()) {
+            auto argNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
+            t->orderedArgs.push_back(argNode);
+        }
+
+        t->addChild(visit(ctx->block()));
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+
+    std::any ASTBuilder::visitProcedureForward(GazpreaParser::ProcedureForwardContext *ctx) {
+        /*
+         * rule
+         * procedure:
+            | RESERVED_PROCEDURE ID '(' (procedure_arg (',' procedure_arg)*)? ')' (RESERVED_RETURNS type)? ';'
+
+            case 1: if procedure has no return
+                 it has no children
+            case 2: if procedure has a return
+                 child[0] = return TypeNode
+         */
+
+        std::shared_ptr<Symbol> procNameSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<ProcedureForwardNode> t = std::make_shared<ProcedureForwardNode>(ctx->getStart()->getLine(), procNameSym);
+
+        if (ctx->RESERVED_RETURNS()) {  // case: has return type
+            t->hasReturn = 1;
+            t->addChild(visit(ctx->type()));
+
+        } else {
+            t->hasReturn = 0;
+        }
+        for (auto arg: ctx->procedure_arg()) {
+            auto argNode = std::any_cast<std::shared_ptr<ASTNode>>(arg);
+            t->orderedArgs.push_back(argNode);
+        }
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitProcedure_arg(GazpreaParser::Procedure_argContext *ctx) {
+        /*
+         *  rule:
+         *     procedure_args:     (qualifier)? type ID
+         *  child[0] = typeNode
+         *
+         */
+        std::shared_ptr<ProcedureArgNode> t = std::make_shared<ProcedureArgNode>(ctx->ID()->getSymbol()->getLine());
+        if (ctx->qualifier()) {
+            t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
+        } else t->qualifier = QUALIFIER::NONE;
+        std::shared_ptr<Symbol> idSym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        // child[0] = typenode,
+        t->addChild(visit(ctx->type()));
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 }

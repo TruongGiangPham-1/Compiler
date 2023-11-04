@@ -49,6 +49,9 @@ namespace gazprea {
         std::any visitGenerator(GazpreaParser::GeneratorContext *ctx) override;
         std::any visitFilter(GazpreaParser::FilterContext *ctx) override;
 
+        std::any visitBlock(GazpreaParser::BlockContext *ctx) override;
+        // === procedure and function stuff
+
         std::any visitFunctionSingle(GazpreaParser::FunctionSingleContext *ctx) override;
         std::any visitFunctionBlock(GazpreaParser::FunctionBlockContext *ctx) override;
         std::any visitFunctionForward(GazpreaParser::FunctionForwardContext *ctx) override;
@@ -56,6 +59,9 @@ namespace gazprea {
         std::any visitFunction_call(GazpreaParser::Function_callContext *ctx) override;
         std::any visitFuncCall(GazpreaParser::FuncCallContext *ctx) override;
 
+        std::any visitProcedureBlock(GazpreaParser::ProcedureBlockContext *ctx) override;
+        std::any visitProcedureForward(GazpreaParser::ProcedureForwardContext *ctx) override;
+        std::any visitProcedure_arg(GazpreaParser::Procedure_argContext *ctx) override;
     };
 
 }
