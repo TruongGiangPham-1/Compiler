@@ -5,6 +5,7 @@
 #ifndef GAZPREABASE_FUNCTIONCALLNODE_H
 #define GAZPREABASE_FUNCTIONCALLNODE_H
 
+#pragma once
 #include "ASTNode.h"
 #include "FunctionCallTypes/FuncCallType.h"
 

@@ -1,4 +1,4 @@
-#include "ASTNode/TypeNode.h"
+#include "ASTNode/Type/TypeNode.h"
 
 TypeNode::TypeNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {};
 
