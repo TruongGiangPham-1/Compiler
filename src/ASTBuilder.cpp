@@ -603,6 +603,7 @@ namespace gazprea {
         // TODO: implement
 
         auto blockNode = std::make_shared<BlockNode>(1);
+
         return std::dynamic_pointer_cast<ASTNode>(blockNode);
     }
 
