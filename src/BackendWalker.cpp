@@ -42,14 +42,14 @@ std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
 
 // Expr/Binary
 
-std::any BackendWalker::visitArith(std::shared_ptr<ArithNode> tree) {
+std::any BackendWalker::visitArith(std::shared_ptr<ArithOpNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
 
   return codeGenerator.generateIntegerBinaryOperation(lhs, rhs, tree->op);
 }
 
-std::any BackendWalker::visitCmp(std::shared_ptr<CmpNode> tree) {
+std::any BackendWalker::visitCmp(std::shared_ptr<CmpOpNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
 

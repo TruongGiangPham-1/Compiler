@@ -36,8 +36,8 @@ namespace gazprea {
         virtual std::any visitID(std::shared_ptr<IDNode> tree);
         virtual std::any visitInt(std::shared_ptr<IntNode> tree);
         // Expr/Binary
-        virtual std::any visitArith(std::shared_ptr<ArithNode> tree);
-        virtual std::any visitCmp(std::shared_ptr<CmpNode> tree);
+        virtual std::any visitArith(std::shared_ptr<ArithOpNode> tree);
+        virtual std::any visitCmp(std::shared_ptr<CmpOpNode> tree);
         virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
         // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);

@@ -17,5 +17,9 @@ enum BINOP {
     // vectors, strings
     CONCAT,
     // vectors+ matrix
-    DOT_PROD
+    DOT_PROD,
+    // boolean
+    AND,
+    OR,
+    XOR
 };

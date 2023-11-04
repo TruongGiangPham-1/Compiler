@@ -39,6 +39,7 @@ namespace gazprea {
         std::any visitLiteralInt(GazpreaParser::LiteralIntContext *ctx) override;
         std::any visitMath(GazpreaParser::MathContext *ctx) override;
         std::any visitCmp(GazpreaParser::CmpContext *ctx) override;
+        std::any visitBinary(GazpreaParser::BinaryContext *ctx) override;
 
         std::any visitCond(GazpreaParser::CondContext *ctx) override;
         std::any visitIndex(GazpreaParser::IndexContext *ctx) override;

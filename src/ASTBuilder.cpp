@@ -364,7 +364,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<ArithNode> t = std::make_shared<ArithNode>(ctx->getStart()->getLine());
+        std::shared_ptr<ArithOpNode> t = std::make_shared<ArithOpNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::EXP:
@@ -391,6 +391,8 @@ namespace gazprea {
             case GazpreaParser::DOT_PRODUCT:
                 t->op = BINOP::DOT_PROD;
                 break;
+            default:
+                throw std::runtime_error("unknown arithmetic operator " + ctx->op->getText());
         }
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
@@ -405,7 +407,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCmp, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<CmpNode> t = std::make_shared<CmpNode>(ctx->getStart()->getLine());
+        std::shared_ptr<CmpOpNode> t = std::make_shared<CmpOpNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::LT:
@@ -426,6 +428,37 @@ namespace gazprea {
             case GazpreaParser::NEQ:
                 t->op = BINOP::NEQUAL;
                 break;
+            default:
+                throw std::runtime_error("unknown comparison operator " + ctx->op->getText());
+        }
+
+        t->addChild(visit(ctx->expr(0)));
+        t->addChild(visit(ctx->expr(1)));
+
+        // casting upward to an ASTNode
+        // we want to use the .op attribute, so we don't want to cast it upward when initializing
+        // like in the case of most other nodes
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitBinary(GazpreaParser::BinaryContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitBinary, op = " << ctx->op->getText() << std::endl;
+#endif
+        std::shared_ptr<BoolOpNode> t = std::make_shared<BoolOpNode>(ctx->getStart()->getLine());
+
+        switch (ctx->op->getType()) {
+            case GazpreaParser::RESERVED_AND:
+                t->op = BINOP::AND;
+                break;
+                case GazpreaParser::RESERVED_OR:
+                t->op = BINOP::OR;
+                break;
+            case GazpreaParser::RESERVED_XOR:
+                t->op = BINOP::XOR;
+                break;
+            default:
+                throw std::runtime_error("unknown binary operator " + ctx->op->getText());
         }
 
         t->addChild(visit(ctx->expr(0)));

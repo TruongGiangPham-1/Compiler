@@ -34,7 +34,7 @@ std::shared_ptr<Type> TypeWalker::getPromotedType(const std::shared_ptr<Type> le
   return promotedType;
 }
 
-std::any TypeWalker::visitArith(std::shared_ptr<ArithNode> tree) {
+std::any TypeWalker::visitArith(std::shared_ptr<ArithOpNode> tree) {
   walk(tree->getRHS());
   walk(tree->getLHS());
 
@@ -53,7 +53,7 @@ std::any TypeWalker::visitArith(std::shared_ptr<ArithNode> tree) {
   return 0;
 }
 
-std::any TypeWalker::visitCmp(std::shared_ptr<CmpNode> tree) {
+std::any TypeWalker::visitCmp(std::shared_ptr<CmpOpNode> tree) {
   walk(tree->getRHS());
   walk(tree->getLHS());
 
