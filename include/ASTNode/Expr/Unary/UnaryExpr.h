@@ -12,3 +12,13 @@ public:
 
     std::string toString() override;
 };
+
+class UnaryArithNode : public UnaryExpr {
+public:
+    UnaryArithNode(int line) : UnaryExpr(line){}
+};
+
+class UnaryBoolNode : public UnaryExpr {
+public:
+    UnaryBoolNode(int line) : UnaryExpr(line){}
+};

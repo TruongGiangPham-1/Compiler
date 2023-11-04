@@ -19,7 +19,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
-std::any BackendWalker::visitPrint(std::shared_ptr<PrintNode> tree) {
+std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
   if (tree->getExpr()->type->getName() == "int") {
@@ -42,14 +42,14 @@ std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
 
 // Expr/Binary
 
-std::any BackendWalker::visitArith(std::shared_ptr<ArithNode> tree) {
+std::any BackendWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
 
   return codeGenerator.generateIntegerBinaryOperation(lhs, rhs, tree->op);
 }
 
-std::any BackendWalker::visitCmp(std::shared_ptr<CmpNode> tree) {
+std::any BackendWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
 

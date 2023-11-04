@@ -127,8 +127,8 @@ expr
     | expr RESERVED_BY expr                                                                             #stride
     | expr op=(LT | GT | LE | GE) expr                                                                  #cmp
     | expr op=(EQ | NEQ) expr                                                                           #cmp
-    | expr RESERVED_AND expr                                                                            #binary
-    | expr (RESERVED_OR | RESERVED_XOR) expr                                                            #binary
+    | expr op=RESERVED_AND expr                                                                         #binary
+    | expr op=(RESERVED_OR | RESERVED_XOR) expr                                                         #binary
     | expr CONCAT expr                                                                                  #concatenation
     | RESERVED_IDENTITY                                                                                 #identity
     | RESERVED_NULL                                                                                     #null

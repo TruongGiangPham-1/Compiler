@@ -46,8 +46,8 @@ set(
         ../include/ASTNode/Expr/Vector/GeneratorNode.h
         ASTNode/Expr/Vector/FilterNode.cpp
         ../include/ASTNode/Expr/Vector/FilterNode.h
-        ASTNode/PrintNode.cpp
-        ../include/ASTNode/PrintNode.h
+        ASTNode/Stream/StreamOut.cpp
+        ../include/ASTNode/Stream/StreamOut.h
         ASTWalker.cpp
         ../include/TypeWalker.h
         ../include/BackendWalker.h
@@ -64,6 +64,7 @@ set(
         ../include/ASTNode/FunctionCallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
+        ASTNode/Block/ProcedureNode.cpp
         ../include/ASTNode/Block/ProcedureNode.h
         ../include/ASTNode/Expr/NullNode.h
         ../include/ASTNode/Expr/IdentityNode.h
@@ -78,9 +79,10 @@ set(
         ../include/ASTNode/Type/MatrixTypeNode.h
         ASTNode/Type/TupleTypeNode.cpp
         ../include/ASTNode/Type/TupleTypeNode.h
-        ASTNode/Block/ProcedureNode.cpp
-        ../include/ASTNode/ArgNode.h
+        ASTNode/TypeDefNode.cpp
+        ../include/ASTNode/TypeDefNode.h
         ASTNode/ArgNode.cpp
+        ../include/ASTNode/ArgNode.h
 )
 
 # Build our executable from the source files.

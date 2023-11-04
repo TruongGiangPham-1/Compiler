@@ -4,7 +4,7 @@
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
-#include "ASTNode/PrintNode.h"
+#include "ASTNode/Stream/StreamOut.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
@@ -45,11 +45,11 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitDecl(std::dynamic_pointer_cast<DeclNode>(tree));
 
-        } else if (std::dynamic_pointer_cast<PrintNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<StreamOut>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit print" << std::endl;
 #endif // DEBUG
-            return this->visitPrint(std::dynamic_pointer_cast<PrintNode>(tree));
+            return this->visitPrint(std::dynamic_pointer_cast<StreamOut>(tree));
 
         } else if (std::dynamic_pointer_cast<TypeNode>(tree)) {
 #ifdef DEBUG
@@ -77,17 +77,17 @@ namespace gazprea {
         // ======
         // Expr/Binary
         // ======
-        } else if (std::dynamic_pointer_cast<ArithNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<BinaryArithNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Arith" << std::endl;
 #endif // DEBUG
-            return this->visitArith(std::dynamic_pointer_cast<ArithNode>(tree));
+            return this->visitArith(std::dynamic_pointer_cast<BinaryArithNode>(tree));
 
-        } else if (std::dynamic_pointer_cast<CmpNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<BinaryCmpNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Cmp" << std::endl;
 #endif // DEBUG
-            return this->visitCmp(std::dynamic_pointer_cast<CmpNode>(tree));
+            return this->visitCmp(std::dynamic_pointer_cast<BinaryCmpNode>(tree));
 
         } else if (std::dynamic_pointer_cast<IndexNode>(tree)) {
 #ifdef DEBUG
@@ -185,7 +185,7 @@ namespace gazprea {
     std::any ASTWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitPrint(std::shared_ptr<PrintNode> tree) {
+    std::any ASTWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitType(std::shared_ptr<TypeNode> tree) {
@@ -199,10 +199,10 @@ namespace gazprea {
     std::any ASTWalker::visitInt(std::shared_ptr<IntNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitArith(std::shared_ptr<ArithNode> tree) {
+    std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitCmp(std::shared_ptr<CmpNode> tree) {
+    std::any ASTWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
