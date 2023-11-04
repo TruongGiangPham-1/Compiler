@@ -1,129 +1,419 @@
 #include "Operands/BINOP.h"
+#include "BuiltinTypes/BuiltInTypes.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-void print(int i) {
-  printf("%d\n", i);
-}
-
+//#define DEBUGTUPLE
+//#define DEBUGPROMOTION
+//#define DEBUGMEMORY
 typedef struct vecStruct {
   int* base;
   int sizeOf;
 } vecStruct;
 
-void fill(vecStruct *a, int lower, int upper) {
-  memset(a->base, 0, sizeof(int) * a->sizeOf);
-  for (int i = 0 ; i < a->sizeOf ; i++) {
-    *(a->base + i) = lower + i;
+typedef struct commonType {
+  enum BuiltIn type; 
+  void* value; 
+} commonType;
+
+typedef struct tuple {
+  int size;
+  int currentSize;
+  commonType** values; // list of values
+} tuple;
+
+
+commonType* allocateCommonType(void* value, enum BuiltIn type);
+void deallocateCommonType(commonType* object);
+
+void printType(commonType *type, bool nl) {
+  switch (type->type) {
+    case INT:
+      printf("%d", *(int*)type->value);
+      break;
+    case CHAR:
+      printf("%c", *(char*)type->value);
+      break;
+    case BOOL:
+      printf("%b", *(bool*)type->value);
+      break;
+    case REAL:
+      printf("%f", *(float*)type->value);
+      break;
+    case TUPLE:
+      // {} bc we can't declare variables in switch
+      {
+        tuple *mTuple = (*(tuple**)type->value);
+        #ifdef DEBUGTUPLE
+        printf("Printing tuple %p\n", mTuple);
+        #endif
+        printf("(");
+        for (int i = 0 ; i < mTuple->size ; i++) {
+          #ifdef DEBUGTUPLE
+          printf("\nprinting tuple value at %p\n", &mTuple->values[i]);
+          #endif
+          printType(mTuple->values[i], false);
+          if (i != mTuple->size-1) printf(" ");
+        }
+        printf(")");
+      }
+      break;
+  }
+
+  if (nl) printf("\n");
+  return;
+}
+
+void printCommonType(commonType *type) {
+  printType(type, true);
+}
+
+/**
+ * Big switch case that I didn't want in the allocate common type function
+ */
+void extractAndAssignValue(void* value, commonType *dest) {
+  switch (dest->type) {
+    case INT:
+      {
+        int* newIntVal = malloc(sizeof(int));
+        *newIntVal = *(int*)value;
+        dest->value = newIntVal;
+      }
+      break;
+    case BOOL:
+      {
+        bool* newBoolVal = malloc(sizeof(bool));
+        *newBoolVal = *(bool*)value;
+        dest->value = newBoolVal;
+      }
+      break;
+    case REAL:
+      {
+        float* newFloatVal = malloc(sizeof(float));
+        *newFloatVal = *(float*)value;
+        dest->value = newFloatVal;
+      }
+      break;
+    case TUPLE:
+      {
+        dest->value = value;
+      }
+      break;
+    case CHAR: 
+      {
+        char* newCharVal = malloc(sizeof(char));
+        *newCharVal = *(char*)value;
+        dest->value = newCharVal;
+      }
+      break;
   }
 }
 
-// (residual memory)
-void zeroOut(vecStruct *a) {
-  memset(a->base, 0, sizeof(int) * a->sizeOf);
+commonType* allocateCommonType(void* value, enum BuiltIn type) {
+  commonType* newType = (commonType*)malloc(sizeof(commonType));
+  newType->type = type;
+  extractAndAssignValue(value, newType);
+
+#ifdef DEBUGMEMORY
+  printf("Allocated common type: %p\n",newType);
+#endif
+
+  return newType;
 }
 
-int getTrueVectorSize(int a) {
-  return (a > 0 ? a : 0);
+void deallocateTuple(tuple* tuple) {
+#ifdef DEBUGMEMORY
+  printf("Deallocating Tuple at %p...\n", tuple);
+  printf("=== TUPLE ===\n");
+#endif /* ifdef DEBUGMEMORY */
+
+    for (int i = 0; i < tuple->currentSize ; i++) {
+      deallocateCommonType(tuple->values[i]);
+    }
+    free(tuple->values);
+    free(tuple);
+
+#ifdef DEBUGMEMORY
+  printf("=== TUPLE ===\n");
+  printf("Tuple deallocation success!\n");
+#endif
 }
 
-void printVec(vecStruct *a) {
-  printf("[");
-  for (int i = 0 ; i < a->sizeOf ; i++) {
-    printf("%d",*(a->base + i));
-    if (i != a->sizeOf - 1) {
-      printf(" ");
+void deallocateCommonType(commonType* object) {
+  // we keep track of more object than we allocate
+  // (we don't take some branches, won't initialize variables)
+#ifdef DEBUGMEMORY
+  printf("Deallocating commonType at %p...\n", object);
+#endif /* ifdef DEBUGMEMORY */
+  if (object != NULL) {
+    switch (object->type) {
+      case TUPLE:
+      deallocateTuple(*(tuple**)object->value);
+      break;
+      default:
+      free(object->value);
     }
   }
-  printf("]\n");
+
+#ifdef DEBUGMEMORY
+  printf("Commontype deallocation success!\n");
+#endif /* ifdef DEBUGMEMORY */
 }
 
-vecStruct* allocateVector(int size) {
-  vecStruct* newVector = (vecStruct*)malloc(sizeof(vecStruct));
-  int* newList = (int*)malloc(sizeof(int) * size);
+tuple* allocateTuple(int size) {
+  tuple* newTuple = (tuple*) malloc(sizeof(tuple));
+  commonType** valueList = (commonType**) calloc(size, sizeof(commonType*));
 
-  newVector->sizeOf = size;
-  newVector->base = newList;
+  newTuple->size = size;
+  newTuple->currentSize = 0;
+  newTuple->values= valueList;
 
-  return newVector;
+#ifdef DEBUGMEMORY
+  printf("Allocated tuple at %p\n", newTuple);
+  printf("Tuple list beings at %p\n", valueList);
+#endif
+  
+  return newTuple;
+};
+
+/**
+ * Add item to our tuple, we can potentially go over bounds....
+ * but we shoulnd't due to spec, right?
+ */
+void appendTuple(tuple* tuple, commonType *value) {
+#ifdef DEBUGTUPLE
+  printf("====== Appending to tuple\n");
+  printf("Tuple currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
+#endif
+
+  // dont want the real thing, make copy
+  tuple->values[tuple->currentSize] = allocateCommonType(value->value, value->type);
+
+#ifdef DEBUGTUPLE
+  printf("appended to tuple at %p, %p\n", &tuple->values[tuple->currentSize], value);
+  printf("Tuple now holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
+  printf("====== Append complete\n"); 
+#endif /* ifdef DEBUGTUPLE */
+
+  tuple->currentSize++;
 }
 
-void deallocateVector(vecStruct* vector) {
-  // we don't allocate every vector we keep track of
-  // if we find a label that wasn't allocated, leave it so we don't blow our legs off.
-  if (vector) {
-    free(vector->base);
-    free(vector);
+commonType* boolPromotion(bool fromValue, enum BuiltIn toType) {
+#ifdef DEBUGPROMOTION
+  printf("Cast from int\n");
+#endif /* ifdef DEBUGPROMOTION */
+
+  switch (toType) {
+  default:
+  return allocateCommonType(&fromValue, BOOL);
   }
 }
 
+commonType* intPromotion(int fromValue, enum BuiltIn toType) {
+#ifdef DEBUGPROMOTION
+  printf("Promotion from int\n");
+#endif /* ifdef DEBUGPROMOTION */
 
-int getMaxSize(vecStruct *a, vecStruct *b) {
-  if (a->sizeOf > b->sizeOf) {
-    return a->sizeOf;
-  } else {
-    return b->sizeOf;
+  switch (toType) {
+    case REAL:
+#ifdef DEBUGPROMOTION
+  printf("To real\n");
+#endif /* ifdef DEBUGPROMOTION */
+    {
+      float newfloat = (float)fromValue;
+      return allocateCommonType((void*)&newfloat, REAL);
+    }
+
+    default:
+    return allocateCommonType(&fromValue, INT);
   }
 }
 
-int performBINOP(int l, int r, enum BINOP op) {
+commonType* charPromotion(char fromValue, enum BuiltIn toType) {
+#ifdef DEBUGPROMOTION
+  printf("Promotion from char\n");
+#endif /* ifdef DEBUGPROMOTION */
+
+    switch (toType) {
+    default:
+#ifdef DEBUGPROMOTION
+  printf("To char\n");
+#endif /* ifdef DEBUGPROMOTION */
+    return allocateCommonType(&fromValue, CHAR);
+  }
+}
+
+commonType* realPromotion(float fromValue, enum BuiltIn toType) {
+#ifdef DEBUGPROMOTION
+  printf("Promotion from real\n");
+#endif /* ifdef DEBUGPROMOTION */
+    switch (toType) {
+#ifdef DEBUGPROMOTION
+  printf("To real\n");
+#endif /* ifdef DEBUGPROMOTION */
+    default:
+    return allocateCommonType(&fromValue, REAL);
+  }
+}
+
+// promote and return temporary
+commonType* promotion(commonType* from, commonType* to) {
+  switch (from->type) {
+    case BOOL:
+    return boolPromotion(*(bool*)from->value, to->type);
+    case INT:
+    return intPromotion(*(int*)from->value, to->type);
+    case CHAR:
+    return charPromotion(*(char*)from->value, to->type);
+    case TUPLE:
+    // don't think we need this 
+    break;
+    case REAL:
+    return realPromotion(*(float*)from->value, to->type);
+  }
+}
+
+bool boolBINOP(bool l, bool r, enum BINOP op) {
   switch (op) {
     case ADD:
-      return l + r;
+    return l + r;
     case SUB:
-      return l - r;
+    return l - r;
     case MULT:
-      return l * r;
+    return l * r;
     case DIV:
-      return l / (r == 0 ? 1 : r);
+    return l/r;
     case EQUAL:
-      return l == r;
+    return l == r;
     case NEQUAL:
-      return l != r;
-    case GTHAN:
-      return l > r;
+    return l != r;
     case LTHAN:
-      return l < r;
+    return l < r;
+    case GTHAN:
+    return r > l;
   }
 }
 
-// this is sinful and ugly. I wish i was a better programmer.
-
-void vectorToVectorBINOP(vecStruct *a, vecStruct *b, vecStruct *result, enum BINOP op) {
-  // ternary stuff looks good tho
-  for (int i = 0; i < result->sizeOf ; i ++) {
-    result->base[i] = performBINOP((i < a->sizeOf ? a->base[i] : 0), (i < b->sizeOf ? b->base[i] : 0), op);
+int intBINOP(int l, int r, enum BINOP op) {
+  switch (op) {
+    case ADD:
+    return l + r;
+    case SUB:
+    return l - r;
+    case MULT:
+    return l * r;
+    case DIV:
+    return l/r;
+    case EQUAL:
+    return l == r;
+    case NEQUAL:
+    return l != r;
+    case LTHAN:
+    return l < r;
+    case GTHAN:
+    return r > l;
   }
 }
 
-void integerToVectorBINOP(int a, vecStruct *b, vecStruct *result, enum BINOP op) {
-  for (int i = 0; i < result->sizeOf ; i ++) {
-    result->base[i] = performBINOP(a, b->base[i], op);
+float realBINOP(float l, float r, enum BINOP op) {{}
+  switch (op) {
+    case ADD:
+    return l + r;
+    case SUB:
+    return l - r;
+    case MULT:
+    return l * r;
+    case DIV:
+    return l/r;
+    case EQUAL:
+    return l == r;
+    case NEQUAL:
+    return l != r;
+    case LTHAN:
+    return l < r;
+    case GTHAN:
+    return r > l;
   }
 }
 
-// SO CHEAP. I am angry
-int vectorToIntegerIndex(vecStruct *a, int b)  {
-  return (b < 0 || b >= a->sizeOf) ? 0 : a->base[b];
-}
-
-void vectorToIntegerBINOP(vecStruct *a, int b, vecStruct *result, enum BINOP op) {
-  for (int i = 0; i < result->sizeOf ; i ++) {
-    result->base[i] = performBINOP(vectorToIntegerIndex(a, i), b, op);
+char charBINOP(char l, char r, enum BINOP op) {
+  switch (op) {
+    case ADD:
+    return l + r;
+    case SUB:
+    return l - r;
+    case MULT:
+    return l * r;
+    case DIV:
+    return l/r;
+    case EQUAL:
+    return l == r;
+    case NEQUAL:
+    return l != r;
+    case LTHAN:
+    return l < r;
+    case GTHAN:
+    return r > l;
   }
 }
 
-void vectorToVectorIndex(vecStruct *a, vecStruct *b, vecStruct *result) {
-  for (int i = 0; i < result->sizeOf ; i ++) {
-    result->base[i] = vectorToIntegerIndex(a, vectorToIntegerIndex(b, i));
+tuple tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
+
+}
+
+commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op) {
+  commonType* promotedLeft;
+  commonType* promotedRight;
+  promotedLeft = promotion(left,right);
+  promotedRight = promotion(right,left);
+
+  printCommonType(promotedRight);
+  printCommonType(promotedLeft);
+
+  commonType* result;
+  // arbitrary, after promo they are the same. if they are not, there is something wrong
+  // I tried to do a switch chain like before but the scoping was messed up.
+  if(promotedLeft->type == BOOL) {
+
+    bool tempBool = intBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
+    result = allocateCommonType(&tempBool, BOOL);
+
+  } else if (promotedLeft->type == REAL) {
+
+    float tempFloat = realBINOP(*(float*)promotedLeft->value, *(float*)promotedRight->value, op);
+    result = allocateCommonType(&tempFloat, REAL);
+
+  } else if (promotedLeft->type == INT) {
+
+    int tempInt = intBINOP(*(int*)promotedLeft->value, *(int*)promotedRight->value, op);
+    result = allocateCommonType(&tempInt, INT);
+
+  } else if (promotedLeft->type == CHAR) {
+
+    char tempChar = charBINOP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
+    result = allocateCommonType(&tempChar, CHAR);
+
+  } else if (promotedLeft->type == TUPLE) {
+
+    tuple tempTuple = tupleBINOP(*(tuple**)promotedLeft->value, *(tuple**)promotedRight->value, op);
+    result = allocateCommonType(&tempTuple, TUPLE);
+
   }
-}
+  
+  // temporary operands
+#ifdef DEBUGMEMORY
+  printf("=== de allocating temporary operands...\n");
+#endif /* ifdef DEBUGMEMORY */
 
-void vectorStoreValueAtIndex(vecStruct *a, int index, int val) {
-    a->base[index] = val;
-}
+  deallocateCommonType(promotedLeft);
+  deallocateCommonType(promotedRight);
 
-int vectorLoadValueAtIndex(vecStruct *a, int index) {
-    return a->base[index];
+#ifdef DEBUGMEMORY
+  printf("=== complete\n");
+#endif /* ifdef DEBUGMEMORY */
+
+  return result;
 }
