@@ -77,6 +77,8 @@ set(
         ../include/ASTNode/Type/MatrixTypeNode.h
         ASTNode/Type/TupleTypeNode.cpp
         ../include/ASTNode/Type/TupleTypeNode.h
+        ASTNode/TypeDefNode.cpp
+        ../include/ASTNode/TypeDefNode.h
 )
 
 # Build our executable from the source files.

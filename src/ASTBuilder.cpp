@@ -2,6 +2,7 @@
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/DeclNode.h"
+#include "ASTNode/TypeDefNode.h"
 #include "ASTNode/Stream/StreamOut.h"
 #include "ASTNode/Expr/IDNode.h"
 #include "ASTNode/Expr/IntNode.h"
@@ -38,6 +39,18 @@ namespace gazprea {
             t->addChild(visit(statement));
         }
         return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTypedef(GazpreaParser::TypedefContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitTypedef " << ctx->ID()->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<ASTNode> t = std::make_shared<TypeDefNode>(ctx->getStart()->getLine(), sym);
+
+        t->addChild(visit(ctx->type()));
+
+        return t;
     }
 
     // STREAMS
