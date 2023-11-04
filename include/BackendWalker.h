@@ -12,8 +12,8 @@ private:
   std::any visitID(std::shared_ptr<IDNode> tree) override;
   std::any visitInt(std::shared_ptr<IntNode> tree) override;
   // Expr/Binary
-  std::any visitArith(std::shared_ptr<ArithOpNode> tree) override;
-  std::any visitCmp(std::shared_ptr<CmpOpNode> tree) override;
+  std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
+  std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;

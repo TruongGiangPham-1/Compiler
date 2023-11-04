@@ -364,7 +364,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<ArithOpNode> t = std::make_shared<ArithOpNode>(ctx->getStart()->getLine());
+        std::shared_ptr<BinaryArithNode> t = std::make_shared<BinaryArithNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::EXP:
@@ -407,7 +407,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCmp, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<CmpOpNode> t = std::make_shared<CmpOpNode>(ctx->getStart()->getLine());
+        std::shared_ptr<BinaryCmpNode> t = std::make_shared<BinaryCmpNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::LT:
@@ -445,7 +445,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitBinary, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<BoolOpNode> t = std::make_shared<BoolOpNode>(ctx->getStart()->getLine());
+        std::shared_ptr<BinaryBoolNode> t = std::make_shared<BinaryBoolNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
             case GazpreaParser::RESERVED_AND:
@@ -468,6 +468,13 @@ namespace gazprea {
         // we want to use the .op attribute, so we don't want to cast it upward when initializing
         // like in the case of most other nodes
         return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitUnary(GazpreaParser::UnaryContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitUnary, op = " << ctx->op->getText() << std::endl;
+#endif
+        return nullptr;
     }
 
 

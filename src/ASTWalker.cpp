@@ -77,17 +77,17 @@ namespace gazprea {
         // ======
         // Expr/Binary
         // ======
-        } else if (std::dynamic_pointer_cast<ArithOpNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<BinaryArithNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Arith" << std::endl;
 #endif // DEBUG
-            return this->visitArith(std::dynamic_pointer_cast<ArithOpNode>(tree));
+            return this->visitArith(std::dynamic_pointer_cast<BinaryArithNode>(tree));
 
-        } else if (std::dynamic_pointer_cast<CmpOpNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<BinaryCmpNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Cmp" << std::endl;
 #endif // DEBUG
-            return this->visitCmp(std::dynamic_pointer_cast<CmpOpNode>(tree));
+            return this->visitCmp(std::dynamic_pointer_cast<BinaryCmpNode>(tree));
 
         } else if (std::dynamic_pointer_cast<IndexNode>(tree)) {
 #ifdef DEBUG
@@ -182,10 +182,10 @@ namespace gazprea {
     std::any ASTWalker::visitInt(std::shared_ptr<IntNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitArith(std::shared_ptr<ArithOpNode> tree) {
+    std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitCmp(std::shared_ptr<CmpOpNode> tree) {
+    std::any ASTWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
