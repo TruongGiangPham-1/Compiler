@@ -18,8 +18,11 @@ set(
         SymbolTable.cpp
         ../include/SymbolTable.h
         ../include/Operands/UNARYOP.h
+
         ASTNode/Type/TypeNode.cpp
         ../include/ASTNode/Type/TypeNode.h
+        ../include/BuiltinTypes/
+
         ASTNode/AssignNode.cpp
         ../include/ASTNode/AssignNode.h
         ASTNode/DeclNode.cpp

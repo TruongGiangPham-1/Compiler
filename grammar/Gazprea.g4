@@ -225,7 +225,7 @@ INT : DIGIT+;
 
 LITERAL_BOOLEAN: RESERVED_TRUE | RESERVED_FALSE;
 LITERAL_CHARACTER: '\'' SCHAR '\'';
-LITERAL_STRING: '"' SCHAR+ '"';
+LITERAL_STRING: '"' (SCHAR+)? '"';
 LITERAL_REAL
     : INT? DOT INT EXPONENT?
     | INT DOT? EXPONENT?
@@ -240,4 +240,4 @@ WS : [ \t\r\n]+ -> skip;
 fragment
 DIGIT : [0-9];
 ALPHABET : [a-zA-Z];
-SCHAR : ('\\' [0abtnr"'\\] | .);
+SCHAR : ('\\' [0abtnr"'\\] | ~["\\\r\n]);
