@@ -377,6 +377,12 @@ namespace gazprea {
                 t->op = BINOP::ADD;
             case GazpreaParser::SUB:
                 t->op = BINOP::SUB;
+            case GazpreaParser::REM:
+                t->op = BINOP::REM;
+            case GazpreaParser::CONCAT:
+                t->op = BINOP::CONCAT;
+            case GazpreaParser::DOT_PRODUCT:
+                t->op = BINOP::DOT_PROD;
         }
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
@@ -394,16 +400,20 @@ namespace gazprea {
         std::shared_ptr<CmpNode> t = std::make_shared<CmpNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
-            case GazpreaParser::MULT:
-                t->op = BINOP::MULT;
+            case GazpreaParser::LT:
+                t->op = BINOP::LTHAN;
                 break;
-            case GazpreaParser::DIV:
-                t->op = BINOP::DIV;
+            case GazpreaParser::GT:
+                t->op = BINOP::GTHAN;
                 break;
-            case GazpreaParser::ADD:
-                t->op = BINOP::ADD;
-            case GazpreaParser::SUB:
-                t->op = BINOP::SUB;
+            case GazpreaParser::LE:
+                t->op = BINOP::LEQ;
+            case GazpreaParser::GE:
+                t->op = BINOP::GEQ;
+                case GazpreaParser::EQ:
+                t->op = BINOP::EQUAL;
+            case GazpreaParser::NEQ:
+                t->op = BINOP::NEQUAL;
         }
 
         t->addChild(visit(ctx->expr(0)));

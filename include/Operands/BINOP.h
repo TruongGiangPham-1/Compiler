@@ -1,2 +1,21 @@
 #pragma once
-enum BINOP { ADD, SUB, MULT, DIV, EQUAL, NEQUAL, GTHAN, LTHAN };
+enum BINOP {
+    // math
+    ADD,
+    SUB,
+    MULT,
+    DIV,
+    REM, // %
+    EXP, // ^
+    // cmp
+    EQUAL,
+    NEQUAL,
+    GTHAN,
+    LTHAN,
+    LEQ,
+    GEQ,
+    // vectors, strings
+    CONCAT,
+    // vectors+ matrix
+    DOT_PROD
+};
