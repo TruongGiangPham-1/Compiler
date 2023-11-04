@@ -35,10 +35,10 @@ std::string BinaryExpr::toString() {
     return "BINOP " + opStr;
 }
 
-std::shared_ptr<ASTNode> BinaryExpr::getLHS() {
-    return children[0];
+std::shared_ptr<ExprNode> BinaryExpr::getLHS() {
+    return std::dynamic_pointer_cast<ExprNode>(children[0]);
 }
 
-std::shared_ptr<ASTNode> BinaryExpr::getRHS() {
-    return children[1];
+std::shared_ptr<ExprNode> BinaryExpr::getRHS() {
+    return std::dynamic_pointer_cast<ExprNode>(children[1]);
 }

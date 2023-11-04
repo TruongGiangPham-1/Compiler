@@ -10,8 +10,8 @@ public:
     BINOP op;
 
     BinaryExpr(int line);
-    std::shared_ptr<ASTNode> getLHS();
-    std::shared_ptr<ASTNode> getRHS();
+    std::shared_ptr<ExprNode> getLHS();
+    std::shared_ptr<ExprNode> getRHS();
 
     // base toString method
     std::string toString() override;
@@ -20,14 +20,19 @@ public:
 // because these next two classes are so short, I'll keep them in this file
 // they have no overrides and no new methods
 
-class ArithNode : public BinaryExpr {
+class BinaryArithNode : public BinaryExpr {
 public:
-    ArithNode(int line) : BinaryExpr(line){}
+    BinaryArithNode(int line) : BinaryExpr(line){}
 };
 
-class CmpNode : public BinaryExpr {
+class BinaryCmpNode : public BinaryExpr {
 public:
-    CmpNode(int line) : BinaryExpr(line){}
+    BinaryCmpNode(int line) : BinaryExpr(line){}
+};
+
+class BinaryBoolNode : public BinaryExpr {
+public:
+    BinaryBoolNode(int line) : BinaryExpr(line){}
 };
 
 // given a[b], children are [a, b]

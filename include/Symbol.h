@@ -38,3 +38,4 @@ public:
     VariableSymbol(std::string name, std::shared_ptr<Type> t) : Symbol(name, t) {}
     VariableSymbol(std::string name, std::shared_ptr<Type> t, std::shared_ptr<Scope> scope) : Symbol(name, t, scope) {}
 };
+

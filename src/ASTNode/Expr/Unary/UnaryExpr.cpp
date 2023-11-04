@@ -12,9 +12,11 @@ std::string UnaryExpr::toString() {
         case UNARYOP::POSITIVE:
             opStr = "+";
             break;
-        case UNARYOP::NEGATIVE:
+        case UNARYOP::NEGATE:
             opStr = "-";
             break;
+        case UNARYOP::NOT:
+            opStr = "!";
     }
     return "UNARYOP " + opStr;
 }
