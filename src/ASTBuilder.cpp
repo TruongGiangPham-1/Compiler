@@ -474,7 +474,34 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitUnary, op = " << ctx->op->getText() << std::endl;
 #endif
-        return nullptr;
+        std::shared_ptr<UnaryExpr> t;
+
+        // code here is kinda ugly...
+        if (ctx->op->getType() == GazpreaParser::RESERVED_NOT) {
+            // boolean
+            t = std::make_shared<UnaryBoolNode>(ctx->getStart()->getLine());
+            t->op = UNARYOP::NOT;
+        } else {
+            // arithmetic
+            t = std::make_shared<UnaryArithNode>(ctx->getStart()->getLine());
+            switch (ctx->op->getType()) {
+                case GazpreaParser::ADD:
+                    t->op = UNARYOP::POSITIVE;
+                    break;
+                case GazpreaParser::SUB:
+                    t->op = UNARYOP::NEGATE;
+                    break;
+                default:
+                    throw std::runtime_error("unknown unary operator " + ctx->op->getText());
+            }
+        }
+
+        t->addChild(visit(ctx->expr()));
+
+        // casting upward to an ASTNode
+        // we want to use the .op attribute, so we don't want to cast it upward when initializing
+        // like in the case of most other nodes
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
 
