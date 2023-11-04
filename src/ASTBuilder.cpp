@@ -367,6 +367,9 @@ namespace gazprea {
         std::shared_ptr<ArithNode> t = std::make_shared<ArithNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
+            case GazpreaParser::EXP:
+                t->op = BINOP::EXP;
+                break;
             case GazpreaParser::MULT:
                 t->op = BINOP::MULT;
                 break;
@@ -375,14 +378,19 @@ namespace gazprea {
                 break;
             case GazpreaParser::ADD:
                 t->op = BINOP::ADD;
+                break;
             case GazpreaParser::SUB:
                 t->op = BINOP::SUB;
+                break;
             case GazpreaParser::REM:
                 t->op = BINOP::REM;
+                break;
             case GazpreaParser::CONCAT:
                 t->op = BINOP::CONCAT;
+                break;
             case GazpreaParser::DOT_PRODUCT:
                 t->op = BINOP::DOT_PROD;
+                break;
         }
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
@@ -408,12 +416,16 @@ namespace gazprea {
                 break;
             case GazpreaParser::LE:
                 t->op = BINOP::LEQ;
+                break;
             case GazpreaParser::GE:
                 t->op = BINOP::GEQ;
-                case GazpreaParser::EQ:
+                break;
+            case GazpreaParser::EQ:
                 t->op = BINOP::EQUAL;
+                break;
             case GazpreaParser::NEQ:
                 t->op = BINOP::NEQUAL;
+                break;
         }
 
         t->addChild(visit(ctx->expr(0)));
