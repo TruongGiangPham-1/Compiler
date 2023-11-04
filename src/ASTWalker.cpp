@@ -152,6 +152,23 @@ namespace gazprea {
             std::cout << "about to visit FunctionCallNode" << std::endl;
 #endif // DEBUG
             return this->visitFunction_call(std::dynamic_pointer_cast<FunctionCallNode>(tree));
+        } else if (std::dynamic_pointer_cast<ProcedureArgNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit procedure arg node" << std::endl;
+#endif // DEBUG
+            return this->visitProcedure_arg(std::dynamic_pointer_cast<ProcedureArgNode>(tree));
+        } else if (std::dynamic_pointer_cast<ProcedureBlockNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit procedure block node" << std::endl;
+#endif // DEBUG
+
+            return this->visitProcedureBlock(std::dynamic_pointer_cast<ProcedureBlockNode>(tree));
+        } else if (std::dynamic_pointer_cast<ProcedureForwardNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit procedure forward node" << std::endl;
+#endif // DEBUG
+            return this->visitProcedureForward(std::dynamic_pointer_cast<ProcedureForwardNode>(tree));
+
         }
 
         // NIL node
@@ -221,4 +238,17 @@ namespace gazprea {
     std::any ASTWalker::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
         return this->walkChildren(tree);
     }
+
+    std::any ASTWalker::visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
+        return this->walkChildren(tree);
+    }
+
 }

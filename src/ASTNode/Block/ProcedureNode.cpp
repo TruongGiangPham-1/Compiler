@@ -18,11 +18,11 @@ std::string ProcedureNode::toString() {
 }
 
 std::shared_ptr<ASTNode> ProcedureNode::getRetTypeNode() {
-    // TODO: if procedure has no type, then children[0] = nullptr
     if (hasReturn) {
+        assert(this->children.size() > 0);
         return this->children[0];
     } else {
-        throw CallError(1, "this procedure has no return value");
+        //throw CallError(1, "this procedure has no return value");
         return nullptr;
     }
 }

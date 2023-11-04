@@ -647,7 +647,6 @@ namespace gazprea {
         } else {
             t->hasReturn = 0;
         }
-
         for (auto arg: ctx->procedure_arg()) {
             auto argNode = std::any_cast<std::shared_ptr<ASTNode>>(arg);
             t->orderedArgs.push_back(argNode);
@@ -662,7 +661,7 @@ namespace gazprea {
          *  child[0] = typeNode
          *
          */
-        std::shared_ptr<ArgNode> t = std::make_shared<ArgNode>(ctx->ID()->getSymbol()->getLine());
+        std::shared_ptr<ProcedureArgNode> t = std::make_shared<ProcedureArgNode>(ctx->ID()->getSymbol()->getLine());
         if (ctx->qualifier()) {
             t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
         } else t->qualifier = QUALIFIER::NONE;
