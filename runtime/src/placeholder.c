@@ -1,4 +1,5 @@
 #include "Operands/BINOP.h"
+#include "Operands/UNARYOP.h"
 #include "BuiltinTypes/BuiltInTypes.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -414,6 +415,58 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 #ifdef DEBUGMEMORY
   printf("=== complete\n");
 #endif /* ifdef DEBUGMEMORY */
+
+  return result;
+}
+
+bool boolUNARYOP(bool val, enum UNARYOP op) {
+  // implement once we have UNARYOP::NOT
+  switch (op) {
+    case NOT:
+      return !val;
+    default:
+      return val;
+  }
+}
+
+int intUNARYOP(int val, enum UNARYOP op) {
+  switch (op) {
+    case NEGATE:
+      return -val;
+      // op should never be NOT, since this would have been handled in Typecheck
+    default:
+      return val;
+  }
+}
+
+float floatUNARYOP(float val, enum UNARYOP op) {
+  switch (op) {
+    case NEGATE:
+      return -val;
+    default:
+      return val;
+  }
+}
+
+commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
+  commonType* result;
+
+  if (val->type == BOOL) {
+
+    bool tempBool = boolUNARYOP(*(bool*)val->value, op);
+    result = allocateCommonType(&tempBool, BOOL);
+
+  } else if (val->type == REAL) {
+
+    float tempFloat = floatUNARYOP(*(float*)val->value, op);
+    result = allocateCommonType(&tempFloat, REAL);
+
+  } else if (val->type == INT) {
+
+    int tempInt = intUNARYOP(*(int*)val->value, op);
+    result = allocateCommonType(&tempInt, INT);
+
+  }
 
   return result;
 }
