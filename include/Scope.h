@@ -22,6 +22,7 @@ public:
 
     /** Look up name in this scope or in enclosing scope if not here */
     virtual std::shared_ptr<Symbol> resolve(const std::string &name) = 0;
+    virtual std::shared_ptr<Type> resolveType(const std::string& name) = 0;
 
     virtual std::string toString() = 0;
     virtual ~Scope() {};

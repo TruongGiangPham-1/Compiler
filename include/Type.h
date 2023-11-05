@@ -6,6 +6,8 @@
 class Type {
 public:
     TYPE typeEnum;
+
+    Type() {};
     virtual std::string getName() = 0;
     virtual ~Type() {}
 };

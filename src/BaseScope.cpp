@@ -36,3 +36,16 @@ std::string BaseScope::toString() {
     str << " }";
     return str.str();
 }
+
+void BaseScope::defineType(std::shared_ptr<Symbol> sym) {
+    this->userTypes.emplace(sym->getName(), sym);
+}
+
+std::shared_ptr<Type> BaseScope::resolveType(const std::string &typeName) {
+    auto find_s = userTypes.find(typeName);
+    if ( find_s != userTypes.end() ) return std::dynamic_pointer_cast<Type>(find_s->second);
+    // if not here, check any enclosing scope
+    if ( enclosingScope != nullptr ) return enclosingScope->resolveType(typeName);
+    return nullptr; // not found
+}
+

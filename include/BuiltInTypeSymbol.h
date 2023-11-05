@@ -10,7 +10,7 @@
 
 class BuiltInTypeSymbol : public Symbol, public Type {
 public:
-    BuiltInTypeSymbol(std::string name) : Symbol(name) {}
+    BuiltInTypeSymbol(std::string name) : Symbol(name) {};
 
     std::string getName() {
         return Symbol::getName();

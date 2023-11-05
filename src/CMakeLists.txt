@@ -93,6 +93,7 @@ set(
         ../include/ASTNode/TypeDefNode.h
         ASTNode/ArgNode.cpp
         ../include/ASTNode/ArgNode.h
+        ../include/AdvanceType.h
 )
 
 # Build our executable from the source files.

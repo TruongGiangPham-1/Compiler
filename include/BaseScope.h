@@ -8,7 +8,8 @@
 class BaseScope : public Scope {
 public:
     std::shared_ptr<Scope> enclosingScope; // nullptr if global (outermost) scope
-    std::map<std::string, std::shared_ptr<Symbol>> symbols;
+    std::map<std::string, std::shared_ptr<Symbol>> symbols;  // add non types
+    std::map<std::string,  std::shared_ptr<Symbol>> userTypes;  // mostly <string, AdvancedType*> members
 
     BaseScope(std::shared_ptr<Scope> parent) : enclosingScope(parent) {}
 
@@ -18,6 +19,10 @@ public:
     virtual void setEnclosingScope(std::shared_ptr<Scope> scope) override;
 
     virtual std::string toString() override;
+
+    // for defining user types  type  i guess only globalScope should have this method to define All builtIn types and Typedefs
+    void defineType(std::shared_ptr<Symbol>sym);
+    virtual std::shared_ptr<Type> resolveType(const std::string& typeName) override;
 };
 
 class LocalScope : public BaseScope {

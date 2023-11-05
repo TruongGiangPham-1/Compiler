@@ -12,6 +12,7 @@
 #include "CompileTimeExceptions.h"
 #include "ScopedSymbol.h"
 #include "FunctionCallTypes/FuncCallType.h"
+#include "AdvanceType.h"
 
 
 namespace gazprea {

@@ -10,13 +10,13 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     std::shared_ptr<GlobalScope> globalScope = std::make_shared<GlobalScope>();
     symTab->globalScope = globalScope;
     // push builtin type to global scope
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("integer"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("vector"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("character"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("real"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("tuple"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("matrix"));
-    globalScope->define(std::make_shared<BuiltInTypeSymbol>("boolean"));
+    globalScope->defineType(std::make_shared<AdvanceType>("integer"));
+    globalScope->defineType(std::make_shared<AdvanceType>("real"));
+    globalScope->defineType(std::make_shared<AdvanceType>("boolean"));
+    globalScope->defineType(std::make_shared<AdvanceType>("character"));
+    globalScope->defineType(std::make_shared<AdvanceType>("tuple"));
+    globalScope->defineType(std::make_shared<AdvanceType>("matrix"));
+    globalScope->defineType(std::make_shared<AdvanceType>("string"));
 
 
     currentScope = symtab->enterScope(globalScope);  // enter global scope
@@ -34,21 +34,22 @@ std::any Def::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
     // resolve type
-    std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
+    std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
 
-    assert(type);  // ensure its not nullptr  // should be builtin type
+    assert(resType);  // ensure its not nullptr  // should be builtin type
 
     walk(tree->getExprNode());
 
     // define the ID in symtable
     std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-    std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), TYPE::INTEGER);  //TODO: change TYPE to resolve type
+    std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);  //TODO: change TYPE to resolve type
+
     idSym->mlirName = mlirName;
     idSym->scope = currentScope;
 
     currentScope->define(idSym);
 
-    std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << type->getName()
+    std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << resType->getName()
               << " as mlirNmae: " << mlirName << "\n" ;
 
     tree->scope = currentScope;
