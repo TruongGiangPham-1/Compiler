@@ -21,6 +21,7 @@ statement:
     | procedureCall
     | function
     | typedef
+    | '{' block '}'
     );
 
 vardecl
