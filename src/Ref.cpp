@@ -16,8 +16,8 @@ namespace gazprea {
 
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-        auto procSym = currentScope->resolve(tree->nameSym->getName());
-        if (procSym == nullptr) {
+        auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
+        if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
             defineFunctionAndProcedure(tree->loc(), tree->nameSym, tree->orderedArgs, 0);
@@ -33,6 +33,9 @@ namespace gazprea {
             currentScope = symtab->exitScope(currentScope);  // pop local scope
             currentScope = symtab->exitScope(currentScope);  // pop method scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        } else {
+            // there was a forward declaration
+
         }
         return 0;
     }
