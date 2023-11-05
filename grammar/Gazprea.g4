@@ -1,53 +1,40 @@
 grammar Gazprea;
 
 file
-    : globalStatements* EOF
+    : block EOF
     ;
 
-globalStatements : (globalDecl | typedef | procedure | function);
-
-globalDecl
-    : RESERVED_CONST (type)? ID '=' expression ';'
+block :
+    ( assign
+    | vardecl
+    | cond
+    | loop
+    | break
+    | continue
+    | return
+    | stream
+    | call
+    | procedure
+    )* // left recursion
     ;
 
 vardecl
-    : qualifier? inferred_sized_type ID '=' expression ';'  #inferred_size
-    | qualifier? known_sized_type ID ('=' expression)? ';'  #sized
-    | qualifier ID '=' expression ';'                       #inferred_type
+    : qualifier? type ID ('=' expression)? ';'
     ;
 
 assign
-    : lvalue '=' expression ';'
-    ;
-
-lvalue
-    : ID                                            #variable
-    | tuple_index                                   #tupleVariable
-    | (ID | tuple_index) (',' (ID | tuple_index))+  #tupleUnpack
-    | ID '[' expression ']'                         #vectorIndex
-    | ID '[' expression ',' expression ']'          #matrixIndex
-    | tuple_index '[' expression ']'                #tupleVectorIndex
-    | tuple_index '[' expression ',' expression ']' #tupleMatrixIndex
-    ;
-
-non_decl
-    : assign | cond | loop | break | continue | return | stream | procedure_call
-    ;
-
-block
-    : '{' (vardecl)* (non_decl | block)* '}'
-    | non_decl
+    : expr '=' expr ';'
     ;
 
 cond
-    : RESERVED_IF '(' expression ')' block (RESERVED_ELSE RESERVED_IF '(' expression ')' block)* (RESERVED_ELSE block)?
+    : RESERVED_IF '(' expression ')' block (RESERVED_ELSE RESERVED_IF '(' expression ')' '{' block '}' )* (RESERVED_ELSE '{' block '}' )?
     ;
 
 loop
-    : RESERVED_LOOP block                                                               #infiniteLoop
-    | RESERVED_LOOP RESERVED_WHILE '(' expression ')' block                             #predicatedLoop
-    | RESERVED_LOOP ID RESERVED_IN expression (',' ID RESERVED_IN expression)* block    #iteratorLoop
-    | RESERVED_LOOP block RESERVED_WHILE '(' expression ')' ';'                         #postPredicatedLoop
+    : RESERVED_LOOP '{' block '}'                                                               #infiniteLoop
+    | RESERVED_LOOP RESERVED_WHILE '(' expression ')' '{' block '}'                             #predicatedLoop
+    | RESERVED_LOOP ID RESERVED_IN expression (',' ID RESERVED_IN expression)* '{' block '}'    #iteratorLoop
+    | RESERVED_LOOP '{' block '}' RESERVED_WHILE '(' expression ')' ';'                         #postPredicatedLoop
     ;
 
 break
@@ -62,30 +49,33 @@ return
     : RESERVED_RETURN expression? ';'
     ;
 
-procedure_arg: qualifier? type ID;
-function_arg: type ID;
+parameter: qualifier? type ID;
 
 function
-    : RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type '=' expression ';' #functionSingle
-    | RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type block              #functionBlock
-    | RESERVED_FUNCTION ID '(' (type ID (',' type ID)*)? ')' RESERVED_RETURNS type ';'                #functionForward
+    : RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '=' expression ';' #functionSingle
+    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '{' block '}'      #functionDefinition
+    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type ';'                #functionForward
     ;
+
+call
+    : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';';
 
 procedure
-    : RESERVED_PROCEDURE ID '(' (procedure_arg (',' procedure_arg)*)? ')' (RESERVED_RETURNS type)? block  #procedureBlock
-    | RESERVED_PROCEDURE ID '(' (procedure_arg (',' procedure_arg)*)? ')' (RESERVED_RETURNS type)? ';'    #procedureForward
+    : RESERVED_PROCEDURE ID '(' (parameter (',' parameter)*)? ')' (RESERVED_RETURNS type)? '{' block '}' #procedureDefinition
+    | RESERVED_PROCEDURE ID '(' (parameter (',' parameter)*)? ')' (RESERVED_RETURNS type)? ';' #procedureForward
     ;
-
 
 procedure_call
     : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';'
-    | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';' // Since in built stream_state() is a procedure defined in Gazprea
+    // syntax error if someone calls these with different arguments.
+    // | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';' // Since in built stream_state() is a procedure defined in Gazprea
     ;
 
 function_call
     : ID '(' (expression (',' expression)*)? ')' // no semicolon for functions because they always return and hence can be used as an expression
-    | (RESERVED_LENGTH | RESERVED_ROWS | RESERVED_COLUMNS | RESERVED_REVERSE | RESERVED_FORMAT) '(' expression ')'
-    | RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'
+    // I'm commenting these out because we will get syntax errors if someone calls these with different arguments,
+    //| (RESERVED_LENGTH | RESERVED_ROWS | RESERVED_COLUMNS | RESERVED_REVERSE | RESERVED_FORMAT) '(' expression ')'
+    //| RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'
     ;
 
 type: known_sized_type | inferred_sized_type;
@@ -110,16 +100,17 @@ matrix_type: built_in_type '[' expression ',' expression ']';
 tuple_type_element : tuple_allowed_type ID?;
 
 expression // root of an expression tree
-    :   expr
+    : expr
     ;
 expr
     : '(' expr ')'                                                                                      #parentheses
     | cast                                                                                              #typeCast
     | function_call                                                                                     #funcCall
     | expr '[' expr (',' expr)? ']'                                                                     #index
+    | expr DOT expr #tupleIndex
     | expr RANGE_OPERATOR expr                                                                          #range
-    | '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
-    | '[' ID RESERVED_IN expression FILTER_OPERATOR expression (',' expression)* ']'                    #filter
+    //| '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
+    //| '[' ID RESERVED_IN expression FILTER_OPERATOR expression (',' expression)* ']'                    #filter
     | <assoc=right> op=(ADD | SUB | RESERVED_NOT) expr                                                  #unary
     | <assoc=right> expr op=EXP expr                                                                    #math
     | expr op=(MULT | DIV | REM | DOT_PRODUCT) expr                                                     #math
@@ -130,6 +121,7 @@ expr
     | expr op=RESERVED_AND expr                                                                         #binary
     | expr op=(RESERVED_OR | RESERVED_XOR) expr                                                         #binary
     | expr CONCAT expr                                                                                  #concatenation
+    | ID                                                                                                #literalID
     | RESERVED_IDENTITY                                                                                 #identity
     | RESERVED_NULL                                                                                     #null
     | LITERAL_BOOLEAN                                                                                   #literalBoolean
@@ -137,11 +129,9 @@ expr
     | INT                                                                                               #literalInt
     | LITERAL_REAL                                                                                      #literalReal
     | literal_tuple                                                                                     #literalTuple
-    | tuple_index                                                                                       #tupleIndex
-    | literal_vector                                                                                    #literalVector
+    //| literal_vector                                                                                    #literalVector
     | LITERAL_STRING                                                                                    #literalString
-    | literal_matrix                                                                                    #literalMatrix
-    | ID                                                                                                #literalID
+    //| literal_matrix                                                                                    #literalMatrix
     ;
 
 literal_tuple: '(' expression (',' expression)+ ')';
@@ -150,13 +140,11 @@ literal_matrix: '[' (literal_vector (',' literal_vector)*)? ']'; // empty matric
 cast: RESERVED_AS LT known_sized_type GT '(' expression ')';
 typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
-    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';'        #outputStream
-    | ID LEFT_ARROW RESERVED_STD_INPUT ';'                  #inputStream
-    | tuple_index LEFT_ARROW RESERVED_STD_INPUT ';'         #inputStream
-    ;
-tuple_index: ID DOT (INT | ID);
+    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' ;
 
 // operators
+
+DOT: '.';
 MULT: '*';
 DIV: '/';
 ADD: '+';
@@ -169,7 +157,7 @@ REM: '%';
 EXP: '^';
 LE: '<=';
 GE: '>=';
-DOT: '.';
+
 CONCAT: '||';
 DOT_PRODUCT: '**';
 RANGE_OPERATOR: '..';
@@ -177,7 +165,6 @@ FILTER_OPERATOR: '&';
 GENERATOR_OPERATOR: '|';
 RIGHT_ARROW: '->';
 LEFT_ARROW: '<-';
-
 
 // reserved keywords
 RESERVED_AND: 'and';
@@ -222,7 +209,6 @@ RESERVED_XOR: 'xor';
 
 ID : ('_' | ALPHABET) ('_' | ALPHABET | DIGIT)*;
 INT : DIGIT+;
-
 LITERAL_BOOLEAN: RESERVED_TRUE | RESERVED_FALSE;
 LITERAL_CHARACTER: '\'' SCHAR '\'';
 LITERAL_STRING: '"' (SCHAR+)? '"';
