@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Types/TYPES.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
@@ -46,6 +47,8 @@ public:
                                              mlir::Value right, BINOP op);
 
   mlir::Value promotion(mlir::Value from, mlir::Value to);
+  mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
+  void generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal);
 
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);
@@ -97,6 +100,7 @@ protected:
   void setupPrintVec();
   void setupVectorRuntime();
   void setupCommonTypeRuntime();
+  mlir::Value translateToMLIRType(TYPE type);
   int writeLLVMIR();
 
 private:

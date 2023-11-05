@@ -1,6 +1,8 @@
 #include "llvm/ADT/APFloat.h"
 #include "BuiltinTypes/BuiltInTypes.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
+#include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_os_ostream.h"
 #include <assert.h>
@@ -12,6 +14,7 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/TypeRange.h"
+#include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
 #include "mlir/IR/Verifier.h"
@@ -53,6 +56,7 @@ void BackEnd::init() {
 }
 
 void BackEnd::functionShowcase() {
+  /*
   auto a = this->generateValue(86);
   auto b = this->generateValue('c');
   auto c = this->generateValue(3.4f);
@@ -99,6 +103,13 @@ void BackEnd::functionShowcase() {
   this->printCommonType(h);
   this->printCommonType(sub);
   this->printCommonType(eq);
+
+  */
+  auto blk = this->generateFunctionDefinition("abce", 3, true);
+  mlir::Value val;
+  this->generateEndFunctionDefinition(blk, val);
+
+  module.dump();
   // de-allocate. will break because of the tuples
   // this->deallocateObjects()
 }
@@ -383,6 +394,50 @@ void BackEnd::deallocateObjects() {
 
     builder->create<mlir::LLVM::CallOp>(loc, deallocateObject, object);
   }
+}
+// don't need the types for much, just set stuff up so we know what to cast to
+mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid) {
+    auto currentBlock = builder->getBlock();
+
+    auto intType = builder->getI32Type();
+    auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
+    auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+
+    auto commonType =
+      mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intPtrType});
+    auto commonTypeAddr = mlir::LLVM::LLVMPointerType::get(commonType);
+
+    // don't really need this for "types" since all of our types are the same.
+    // however we need the size
+    std::vector<mlir::Type> parameters;
+
+    for (int i = 0 ; i < argumentSize ; i ++) {
+      parameters.push_back(commonTypeAddr);
+    }
+
+    llvm::ArrayRef translatedList = parameters;
+
+    mlir::Type returnType;
+    // all return types are common type addresses.
+    if (isVoid) {
+      returnType = voidType;
+    } else {
+      returnType = commonTypeAddr;
+    }
+
+    auto functionType = mlir::LLVM::LLVMFunctionType::get(returnType, translatedList, false);
+
+    builder->setInsertionPointToEnd(module.getBody());
+
+    mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc, signature, functionType, ::mlir::LLVM::Linkage::Internal);
+    mlir::Block *entry = function.addEntryBlock();
+    builder->setInsertionPointToStart(entry);
+    return currentBlock;
+}
+
+void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal) {
+    builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
+    builder->setInsertionPointToEnd(returnBlock);
 }
 
 /**
