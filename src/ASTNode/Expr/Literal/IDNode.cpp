@@ -1,7 +1,5 @@
 #include "ASTNode/Expr/Literal/IDNode.h"
 
-IDNode::IDNode(int line, std::shared_ptr<Symbol> sym) : ExprNode(line), sym(sym) {}
-
 std::string IDNode::toString() {
     return "ID " + getName();
 }
