@@ -97,11 +97,15 @@ void BackEnd::functionShowcase() {
   auto h = this->performBINOP(a, c, ADD);
   auto sub = this->performBINOP(a, c, SUB);
   auto eq = this->performBINOP(a, a, EQUAL);
+  auto negate = this->performUNARYOP(a, NEGATE);
+  auto positive = this->performUNARYOP(a, POSITIVE);
 
 
   this->printCommonType(h);
   this->printCommonType(sub);
   this->printCommonType(eq);
+  this->printCommonType(negate);
+  this->printCommonType(positive);
   // de-allocate. will break because of the tuples
   // this->deallocateObjects()
 }
@@ -229,9 +233,12 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
 
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
+  auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeBINOP",
                                             commonBinopType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeUNARYOP",
+                                          commonUnaryopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printCommonType",
                                             printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "promotion",
@@ -260,6 +267,22 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
 
   std::string newLabel =
       "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
+  this->objectLabels.push_back(newLabel);
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
+
+mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
+  auto unaryopFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("performCommonTypeUNARYOP");
+  auto result = builder->create<mlir::LLVM::CallOp>(loc,
+                                                    unaryopFunc,
+                                                    mlir::ValueRange({val, generateInteger(op)})
+          ).getResult();
+
+  std::string newLabel =
+          "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
   this->objectLabels.push_back(newLabel);
   this->generateDeclaration(newLabel, result);
   this->allocatedObjects++;
@@ -469,6 +492,7 @@ mlir::Value BackEnd::generateIntegerBinaryOperation(mlir::Value left,
       builder->create<mlir::LLVM::ZExtOp>(loc, builder->getI32Type(), result);
   return result;
 }
+
 
 void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {
   this->generateInitializeGlobalVar(varName, value);
