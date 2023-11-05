@@ -4,6 +4,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "Operands/BINOP.h"
+#include "Operands/UNARYOP.h"
 #include "BuiltinTypes/BuiltInTypes.h"
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
@@ -31,6 +32,7 @@ public:
   mlir::Value generateValue(std::vector<mlir::Value> values);
 
   mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
+  mlir::Value performUNARYOP(mlir::Value value, UNARYOP op);
 
 
   mlir::Value generateValuePtr(mlir::Value value);
