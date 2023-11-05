@@ -40,7 +40,7 @@ namespace gazprea {
         // this is declare statement defined in funciton/procedure. NOT in global scope
         // resolve type
         //std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
-        TYPE type = symtab->resolveType(tree->getTypeNode());
+        std::pair typePair = symtab->resolveType(tree->getTypeNode());
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
@@ -48,13 +48,13 @@ namespace gazprea {
 
         // define the ID in symtable
         std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), type);  //TODO: change TYPE to resolve type
+        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), typePair.first);  //TODO: change TYPE to resolve type
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
 
         currentScope->define(idSym);
 
-        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << (int)idSym->type << " as mlirNmae: " << mlirName << "\n" ;
+        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << typePair.second << " as mlirNmae: " << mlirName << "\n" ;
 
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
@@ -69,7 +69,6 @@ namespace gazprea {
             assert(std::dynamic_pointer_cast<ScopedSymbol>(currentScope->getEnclosingScope()));
             referencedSymbol = currentScope->resolve(tree->sym->getName());
             tree->scope = currentScope;
-
         } else {
             // this identifier is outside of function/procedure block, so it was visited by Def pass, has scope
             referencedSymbol =  tree->scope->resolve(tree->sym->getName());
@@ -281,9 +280,13 @@ namespace gazprea {
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
             //TODO: this id symbol dont have types yet. waiting for visitType implementation
             assert(argNode);  // not null
+            assert(argNode->type);  // assert it exist
+            std::pair typeP = symtab->resolveType(argNode->type);
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+            argNode->idSym->type = typeP.first;
             std::cout << "in line " << loc
-                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
+                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
+                      "as Type" << typeP.second <<"\n";
 
             // define mlirname
             currentScope->define(argNode->idSym);  // define arg in curren scope
