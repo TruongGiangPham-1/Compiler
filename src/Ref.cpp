@@ -14,6 +14,7 @@ namespace gazprea {
         return 0;
     }
 
+
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         auto procSym = currentScope->resolve(tree->nameSym->getName());
         if (procSym == nullptr) {
@@ -36,9 +37,52 @@ namespace gazprea {
         return 0;
     }
 
+    std::any Ref::visitDecl(std::shared_ptr<DeclNode> tree) {
+        // this is declare statement defined in funciton/procedure. NOT in global scope
+        // resolve type
+        //std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
+        std::pair typePair = symtab->resolveType(tree->getTypeNode());
+        //assert(type);  // ensure its not nullptr  // should be builtin type
+        if (tree->getExprNode()) {
+            walk(tree->getExprNode());
+        }
+
+        // define the ID in symtable
+        std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
+        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), typePair.first);  //TODO: change TYPE to resolve type
+        idSym->mlirName = mlirName;
+        idSym->scope = currentScope;
+
+        currentScope->define(idSym);
+
+        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << typePair.second << " as mlirNmae: " << mlirName << "\n" ;
+
+        tree->scope = currentScope;
+        tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
+        return 0;
+    }
 
     std::any Ref::visitID(std::shared_ptr<IDNode> tree) {
-        // this ID is resolve in method scope
+        std::shared_ptr<Symbol> referencedSymbol;
+        if (tree->scope == nullptr) {
+            // this identifier is declared in a function/procedure block, so it was not visited by the the Def pass
+            // we can reoslve using scope of this function/procedure Block.  [currenScope = localScope, currentScope->enclosingScope = Function/procedure Scope
+            assert(std::dynamic_pointer_cast<ScopedSymbol>(currentScope->getEnclosingScope()));
+            referencedSymbol = currentScope->resolve(tree->sym->getName());
+            tree->scope = currentScope;
+        } else {
+            // this identifier is outside of function/procedure block, so it was visited by Def pass, has scope
+            referencedSymbol =  tree->scope->resolve(tree->sym->getName());
+        }
+        if (referencedSymbol == nullptr) {
+            std::cout << "in line " << tree->loc()
+                      << " ref null\n"; // variable not defined
+            throw SyntaxError(tree->loc(), "Undeclared variable " +  tree->sym->getName());
+        } else {
+            std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
+                      << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";
+        }
+        tree->sym = referencedSymbol;
         return 0;
     }
 
@@ -238,9 +282,13 @@ namespace gazprea {
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
             //TODO: this id symbol dont have types yet. waiting for visitType implementation
             assert(argNode);  // not null
+            assert(argNode->type);  // assert it exist
+            std::pair typeP = symtab->resolveType(argNode->type);
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+            argNode->idSym->type = typeP.first;
             std::cout << "in line " << loc
-                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
+                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
+                      "as Type" << typeP.second <<"\n";
 
             // define mlirname
             currentScope->define(argNode->idSym);  // define arg in curren scope

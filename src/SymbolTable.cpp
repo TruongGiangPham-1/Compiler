@@ -7,6 +7,7 @@
 
 #include "SymbolTable.h"
 #include "BaseScope.h"
+#include "ASTNode/Type/TypeNode.h"
 
 std::shared_ptr<Scope> SymbolTable::enterScope(std::string& name, const std::shared_ptr<Scope>& enclosingScope) {
     std::shared_ptr<Scope> newScope = std::make_shared<LocalScope>(name, enclosingScope);
@@ -27,4 +28,13 @@ std::string SymbolTable::toString() {
     }
     str << "}" << std::endl;
     return str.str();
+}
+
+std::pair<TYPE, std::string> SymbolTable::resolveType(std::shared_ptr<ASTNode> typeNode) {
+    std::shared_ptr<TypeNode> typeN = std::dynamic_pointer_cast<TypeNode>(typeNode);
+    std::cout << "Resolve Type: " << typeN->getTypeName() << std::endl;
+    if (typeN == nullptr) {
+        throw TypeError(typeNode->loc(), "cannot cast to TypeNode");
+    }
+    return std::make_pair(typeN->typeEnum, typeN->getTypeName());
 }
