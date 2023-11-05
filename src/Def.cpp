@@ -10,13 +10,13 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     std::shared_ptr<GlobalScope> globalScope = std::make_shared<GlobalScope>();
     symTab->globalScope = globalScope;
     // push builtin type to global scope
-    globalScope->defineType(std::make_shared<AdvanceType>("integer"));
-    globalScope->defineType(std::make_shared<AdvanceType>("real"));
-    globalScope->defineType(std::make_shared<AdvanceType>("boolean"));
-    globalScope->defineType(std::make_shared<AdvanceType>("character"));
-    globalScope->defineType(std::make_shared<AdvanceType>("tuple"));
-    globalScope->defineType(std::make_shared<AdvanceType>("matrix"));
-    globalScope->defineType(std::make_shared<AdvanceType>("string"));
+    globalScope->defineType(std::make_shared<AdvanceType>("integer", "integer"));
+    globalScope->defineType(std::make_shared<AdvanceType>("real", "real"));
+    globalScope->defineType(std::make_shared<AdvanceType>("boolean", "boolean"));
+    globalScope->defineType(std::make_shared<AdvanceType>("character", "character"));
+    globalScope->defineType(std::make_shared<AdvanceType>("tuple", "tuple"));
+    globalScope->defineType(std::make_shared<AdvanceType>("matrix", "matrix"));
+    globalScope->defineType(std::make_shared<AdvanceType>("string", "string"));
 
 
     currentScope = symtab->enterScope(globalScope);  // enter global scope
@@ -39,6 +39,11 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
     assert(resType);  // ensure its not nullptr  // should be builtin type
 
     walk(tree->getExprNode());
+
+    auto resolveID = currentScope->resolve(tree->getIDName());
+    if (resolveID != nullptr) {
+        throw SymbolError(tree->loc(), "redeclaration of identifier" + tree->getIDName());
+    }
 
     // define the ID in symtable
     std::string mlirName = "VAR_DEF" + std::to_string(getNextId());

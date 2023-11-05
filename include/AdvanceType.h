@@ -20,7 +20,7 @@ public:
      */
     std::vector<mlir::Value> dims;  // maybe can populate this in the backend?
 
-    AdvanceType(std::string name) : Symbol(name) {
+    AdvanceType(std::string name, std::string typeDefName) : Symbol(name), typDefName(typeDefName) {
         if (name == "integer") {
             typeEnum = TYPE::INTEGER;
         } else if (name == "real") {

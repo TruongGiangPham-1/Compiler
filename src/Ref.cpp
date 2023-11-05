@@ -262,8 +262,8 @@ namespace gazprea {
      *
      */
     void Ref::defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
-        // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
-        std::shared_ptr<Type> retType = std::make_shared<AdvanceType>("integer");
+        // TODO: resolve return type.
+        std::shared_ptr<Type> retType = std::make_shared<AdvanceType>("integer", "integer");
 
         // define function scope Symbol
         std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
