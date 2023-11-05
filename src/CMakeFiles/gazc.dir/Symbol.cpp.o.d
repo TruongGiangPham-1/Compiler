@@ -1,6 +1,7 @@
 src/CMakeFiles/gazc.dir/Symbol.cpp.o: \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/src/Symbol.cpp \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Symbol.h \
+  /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/TYPES.h \
   /Users/stanislavfedyk/llvm-project/mlir/include/mlir/IR/Value.h \
   /Users/stanislavfedyk/llvm-project/mlir/include/mlir/IR/Types.h \
   /Users/stanislavfedyk/llvm-project/mlir/include/mlir/IR/TypeSupport.h \

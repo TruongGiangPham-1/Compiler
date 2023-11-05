@@ -1054,6 +1054,7 @@ src/CMakeFiles/gazc.dir/ASTBuilder.cpp.o: \
   /Users/stanislavfedyk/llvm-project/build/tools/mlir/include/mlir/IR/BuiltinLocationAttributes.h.inc \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Scope.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Symbol.h \
+  /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/TYPES.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Type.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/QUALIFIER.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Operands/BINOP.h \
@@ -1063,7 +1064,6 @@ src/CMakeFiles/gazc.dir/ASTBuilder.cpp.o: \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/ASTNode/DeclNode.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/ASTNode/TypeDefNode.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/ASTNode/Type/TypeNode.h \
-  /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/TYPES.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/ASTNode/Stream/StreamOut.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/ASTNode/Expr/ExprNode.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/ASTNode/Expr/NullNode.h \

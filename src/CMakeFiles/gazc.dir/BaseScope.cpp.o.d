@@ -796,6 +796,7 @@ src/CMakeFiles/gazc.dir/BaseScope.cpp.o: \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/usr/include/c++/v1/__tree \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Scope.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Symbol.h \
+  /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/TYPES.h \
   /Users/stanislavfedyk/llvm-project/mlir/include/mlir/IR/Value.h \
   /Users/stanislavfedyk/llvm-project/mlir/include/mlir/IR/Types.h \
   /Users/stanislavfedyk/llvm-project/mlir/include/mlir/IR/TypeSupport.h \

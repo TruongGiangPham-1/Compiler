@@ -1051,6 +1051,7 @@ src/CMakeFiles/gazc.dir/ASTNode/ASTNode.cpp.o: \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/gen/gazprea/GazpreaParser.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Scope.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Symbol.h \
+  /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/TYPES.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Type.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Types/QUALIFIER.h \
   /Users/stanislavfedyk/415/gazprea-lord-farquaad/include/Operands/BINOP.h \
