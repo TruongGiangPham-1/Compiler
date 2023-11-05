@@ -366,7 +366,7 @@ namespace gazprea {
         int size= ctx->statement().size();
         for (auto statement : ctx->statement()) {
           std::shared_ptr<ASTNode> statementNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(statement));
-          blockNode->statements.push_back(statementNode);
+          blockNode->addChild(statementNode);
         }
 
         return std::dynamic_pointer_cast<ASTNode>(blockNode);
