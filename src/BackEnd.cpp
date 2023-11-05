@@ -97,7 +97,7 @@ void BackEnd::functionShowcase() {
   auto h = this->performBINOP(a, c, ADD);
   auto sub = this->performBINOP(a, c, SUB);
   auto eq = this->performBINOP(a, a, EQUAL);
-  auto negate = this->performUNARYOP(a, NEGATIVE);
+  auto negate = this->performUNARYOP(a, NEGATE);
   auto positive = this->performUNARYOP(a, POSITIVE);
 
 

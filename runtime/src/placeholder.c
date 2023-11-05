@@ -419,9 +419,19 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   return result;
 }
 
+bool boolUNARYOP(bool val, enum UNARYOP op) {
+  // implement once we have UNARYOP::NOT
+  switch (op) {
+    case NOT:
+      return !val;
+    default:
+      return val;
+  }
+}
+
 int intUNARYOP(int val, enum UNARYOP op) {
   switch (op) {
-    case NEGATIVE:
+    case NEGATE:
       return -val;
       // op should never be NOT, since this would have been handled in Typecheck
     default:
@@ -429,17 +439,9 @@ int intUNARYOP(int val, enum UNARYOP op) {
   }
 }
 
-bool boolUNARYOP(bool val, enum UNARYOP op) {
-  // implement once we have UNARYOP::NOT
-  switch (op) {
-    default:
-      return val;
-  }
-}
-
 float floatUNARYOP(float val, enum UNARYOP op) {
   switch (op) {
-    case NEGATIVE:
+    case NEGATE:
       return -val;
     default:
       return val;
