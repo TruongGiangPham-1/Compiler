@@ -14,6 +14,7 @@ namespace gazprea {
         return 0;
     }
 
+
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         auto procSym = currentScope->resolve(tree->nameSym->getName());
         if (procSym == nullptr) {
@@ -76,6 +77,7 @@ namespace gazprea {
         if (referencedSymbol == nullptr) {
             std::cout << "in line " << tree->loc()
                       << " ref null\n"; // variable not defined
+            throw SyntaxError(tree->loc(), "Undeclared variable " +  tree->sym->getName());
         } else {
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
                       << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";

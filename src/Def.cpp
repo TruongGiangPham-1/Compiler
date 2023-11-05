@@ -1,5 +1,6 @@
 //
 // Created by truong on 28/10/23.
+// NOTE: ALL THE DEF PASS WILL LOOK FOR GLOBAL DECLARATION / FORWARD DECLARATION
 //
 #include "../include/Def.h"
 
