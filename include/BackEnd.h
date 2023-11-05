@@ -5,9 +5,11 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "Operands/BINOP.h"
+#include "Operands/UNARYOP.h"
 #include "BuiltinTypes/BuiltInTypes.h"
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/IR/ValueRange.h"
 
 class BackEnd {
 public:
@@ -32,7 +34,8 @@ public:
   mlir::Value generateValue(std::vector<mlir::Value> values);
 
   mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
-
+  mlir::Value performUNARYOP(mlir::Value value, UNARYOP op);
+  mlir::Value generateCallNamed(std::string signature, mlir::ValueRange arguments);
 
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);
@@ -49,6 +52,7 @@ public:
   mlir::Value promotion(mlir::Value from, mlir::Value to);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
   void generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal);
+
 
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);

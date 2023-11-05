@@ -76,6 +76,9 @@ namespace gazprea {
     }
 
 
+    std::any ASTBuilder::visitParentheses(GazpreaParser::ParenthesesContext *ctx) {
+        return visit(ctx->expr());
+    }
     // ============ LITERALS ===========
 
     std::any ASTBuilder::visitLiteralID(GazpreaParser::LiteralIDContext *ctx) {
@@ -224,7 +227,7 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitUnary, op = " << ctx->op->getText() << std::endl;
 #endif
-        std::shared_ptr<UnaryExpr> t;
+        std::shared_ptr<UnaryExpr> t = std::make_shared<UnaryArithNode>(ctx->getStart()->getLine());
 
         switch (ctx->op->getType()) {
           case GazpreaParser::ADD:
@@ -268,6 +271,7 @@ namespace gazprea {
         t->addChild(visit(ctx->type()));
         if (ctx->expression()) {
             t->addChild(visit(ctx->expression()));
+
         }
 
         return std::dynamic_pointer_cast<ASTNode>(t);
@@ -393,6 +397,10 @@ namespace gazprea {
         auto argResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
 
         procedureNode->orderedArgs.push_back(argResult);
+      }
+      if (ctx->type()) {
+          // has return type
+          procedureNode->addChild(visit(ctx->type()));
       }
 
       if (ctx->block()) {

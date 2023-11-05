@@ -3,7 +3,7 @@
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
   codeGenerator.init();
-  walk(tree);
+  //walk(tree);
   codeGenerator.generate();
 }
 
