@@ -39,9 +39,6 @@ namespace gazprea {
 
     std::any Ref::visitID(std::shared_ptr<IDNode> tree) {
         // this ID is resolve in method scope
-        if () {
-
-        }
         return 0;
     }
 
