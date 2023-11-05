@@ -10,5 +10,5 @@ public:
 
     std::string toString() override;
 
-    std::vector<std::shared_ptr<ASTNode>> getStatements();
+    std::vector<std::shared_ptr<ASTNode>> statements;
 };

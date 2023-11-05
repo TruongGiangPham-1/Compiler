@@ -19,7 +19,6 @@ public:
     FunctionNode(int line, std::shared_ptr<Symbol>funcNameSym);
     std::string toString() override;
     std::shared_ptr<ASTNode> getRetTypeNode();
-
 };
 
 #endif //GAZPREABASE_FUNCTIONNODE_H

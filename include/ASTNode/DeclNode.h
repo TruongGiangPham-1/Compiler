@@ -21,5 +21,6 @@ public:
     std::shared_ptr<ASTNode> getExprNode();
     QUALIFIER getQualifier();
 
+    std::string typeString;
     std::string toString() override;
 };

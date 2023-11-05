@@ -1,5 +1,5 @@
 #pragma once
-#include "ExprNode.h"
+#include "../ExprNode.h"
 
 
 // No children, just `sym` attribute
@@ -11,4 +11,6 @@ public:
 
     std::string toString() override;
     std::string getName();
+
+    std::shared_ptr<Symbol> getVal();
 };

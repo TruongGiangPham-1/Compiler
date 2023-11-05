@@ -14,10 +14,10 @@
 #include "CompileTimeExceptions.h"
 class ProcedureNode : public ASTNode {
 public:
-    std::vector<std::shared_ptr<ASTNode>>orderedArgs;    // array of arguments's ID node
+    std::vector<std::shared_ptr<Symbol>>orderedArgs;    // array of arguments's ID node
     std::shared_ptr<Symbol> nameSym;
     int hasReturn = 0;
-    BlockNode body;
+    std::shared_ptr<BlockNode> body;
 
     ProcedureNode(int line, std::shared_ptr<Symbol>procedureNameSym);
     std::string toString() override;

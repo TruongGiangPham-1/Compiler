@@ -13,8 +13,9 @@ block :
     | continue
     | return
     | stream
-    | call
     | procedure
+    | procedureCall
+    | function
     | typedef
     )*
     ;
@@ -55,20 +56,17 @@ return
 parameter: qualifier? type ID;
 
 function
-    : RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '=' expression ';' #functionSingle
-    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '{' block '}'      #functionDefinition
-    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type ';'                #functionForward
+    : RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '=' expression ';'
+    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '{' block '}'
+    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type ';'
     ;
-
-call
-    : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';';
 
 procedure
-    : RESERVED_PROCEDURE ID '(' (parameter (',' parameter)*)? ')' (RESERVED_RETURNS type)? '{' block '}' #procedureDefinition
-    | RESERVED_PROCEDURE ID '(' (parameter (',' parameter)*)? ')' (RESERVED_RETURNS type)? ';' #procedureForward
+    : RESERVED_PROCEDURE ID '(' (parameter (',' parameter)*)? ')' (RESERVED_RETURNS type)? '{' block '}'
+    | RESERVED_PROCEDURE ID '(' (parameter (',' parameter)*)? ')' (RESERVED_RETURNS type)? ';'
     ;
 
-procedure_call
+procedureCall
     : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';'
     // syntax error if someone calls these with different arguments.
     // | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';' // Since in built stream_state() is a procedure defined in Gazprea

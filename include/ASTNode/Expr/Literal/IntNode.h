@@ -1,5 +1,5 @@
 #pragma once
-#include "ExprNode.h"
+#include "../ExprNode.h"
 
 // `val` is calculated in the first pass (Builder)
 class IntNode : public ExprNode {
