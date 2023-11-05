@@ -16,7 +16,7 @@ block :
     | call
     | procedure
     | typedef
-    )* // left recursion
+    )*
     ;
 
 vardecl
@@ -103,6 +103,7 @@ matrix_type: built_in_type '[' expression ',' expression ']';
 expression // root of an expression tree
     : expr
     ;
+
 expr
     : '(' expr ')'                                                                                      #parentheses
     | cast                                                                                              #typeCast
