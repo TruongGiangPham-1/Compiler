@@ -1,5 +1,0 @@
-
-class procedure : public callableNode {
-
-
-};
