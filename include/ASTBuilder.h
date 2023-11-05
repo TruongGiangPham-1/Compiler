@@ -52,7 +52,8 @@ namespace gazprea {
         std::any visitFile(GazpreaParser::FileContext *ctx) override;
 
         // memory
-        std::any visitVarDecl(GazpreaParser::VardeclContext *ctx);
+        std::any visitVardecl(GazpreaParser::VardeclContext *ctx) override;
+        std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
         std::any visitAssign(GazpreaParser::AssignContext *ctx) override;
 
         // typing

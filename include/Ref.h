@@ -29,7 +29,8 @@ namespace gazprea {
 
 
         // === EXPRESSION AST NODES ===
-         std::any visitID(std::shared_ptr<IDNode> tree) override;
+        std::any visitID(std::shared_ptr<IDNode> tree) override;
+        std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         // === BlOCK FUNCTION AST NODES ===
         //std::any visitBlock(std::shared_ptr<BlockNode> tree) override;

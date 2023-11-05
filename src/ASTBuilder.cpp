@@ -257,6 +257,34 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
+        std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
+        std::shared_ptr<DeclNode> t = std::make_shared<DeclNode>(ctx->getStart()->getLine(), identifierSymbol);
+        if (ctx->qualifier()) {
+            t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
+        } else {
+            t->qualifier = QUALIFIER::NONE;
+        }
+        t->addChild(visit(ctx->type()));
+        if (ctx->expression()) {
+            t->addChild(visit(ctx->expression()));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitQualifier(GazpreaParser::QualifierContext *ctx) {
+        if (ctx->RESERVED_CONST()) {
+            return QUALIFIER::CONST;
+        } else if (ctx->RESERVED_VAR()) {
+            return QUALIFIER::VAR;
+        } else {
+            std::cout << "ERROR: unknown qualifier" << ctx->getText() << std::endl;
+            throw std::runtime_error("unknown qualifier " + ctx->getText());
+        }
+    }
+
+
     std::any ASTBuilder::visitCond(GazpreaParser::CondContext *ctx) {
 #ifdef DEBUGTUPLE
         std::cout << "visitCond " << std::endl;
@@ -411,4 +439,5 @@ namespace gazprea {
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
+
 }

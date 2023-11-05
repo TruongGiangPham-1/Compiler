@@ -19,7 +19,12 @@ std::shared_ptr<ASTNode> DeclNode::getTypeNode() {
 }
 
 std::shared_ptr<ASTNode> DeclNode::getExprNode() {
-    return children[1];
+    if (children.size() == 1) {
+        // there is no expression node
+        return nullptr;
+    } else {
+        return children[1];
+    };
 }
 
 QUALIFIER DeclNode::getQualifier() {

@@ -158,10 +158,9 @@ std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     return 0;
 }
 
-//std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-//    std::cout << "def pass visit procedure\n";
-//    return 0;
-//}
+std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+    return 0;
+}
 
 
 /*
