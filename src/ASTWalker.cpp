@@ -121,6 +121,12 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitCmp(std::dynamic_pointer_cast<BinaryCmpNode>(tree));
 
+        } else if (std::dynamic_pointer_cast<UnaryArithNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit unary Arith node" << std::endl;
+#endif // DEBUG
+            return this->visitUnaryArith(std::dynamic_pointer_cast<UnaryArithNode>(tree));
+
         } else if (std::dynamic_pointer_cast<IndexNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Index" << std::endl;
@@ -130,7 +136,8 @@ namespace gazprea {
         // ======
         // Expr/Vector
         // ======
-        } else if (std::dynamic_pointer_cast<FilterNode>(tree)) {
+        }
+        else if (std::dynamic_pointer_cast<FilterNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Filter" << std::endl;
 #endif // DEBUG
@@ -284,6 +291,9 @@ namespace gazprea {
     }
 
     std::any ASTWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
         return this->walkChildren(tree);
     }
 

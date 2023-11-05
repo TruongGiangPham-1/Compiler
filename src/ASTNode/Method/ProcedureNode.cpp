@@ -15,5 +15,9 @@ std::string ProcedureNode::toString() {
 }
 
 std::shared_ptr<ASTNode> ProcedureNode::getRetTypeNode() {
-    
+    if (this->children.size() > 0) {
+        return this->children[0];
+    } else {
+        return nullptr;
+    }
 }
