@@ -6,14 +6,14 @@ private:
   BackEnd codeGenerator;
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
-  std::any visitPrint(std::shared_ptr<PrintNode> tree) override;
+  std::any visitPrint(std::shared_ptr<StreamOut> tree) override;
 
   // === EXPRESSION AST NODES ===
   std::any visitID(std::shared_ptr<IDNode> tree) override;
   std::any visitInt(std::shared_ptr<IntNode> tree) override;
   // Expr/Binary
-  std::any visitArith(std::shared_ptr<ArithNode> tree) override;
-  std::any visitCmp(std::shared_ptr<CmpNode> tree) override;
+  std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
+  std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;

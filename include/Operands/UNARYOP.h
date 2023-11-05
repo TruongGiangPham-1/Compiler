@@ -1,2 +1,7 @@
 #pragma once
-enum UNARYOP { POSITIVE, NEGATIVE };
+enum UNARYOP {
+    NEGATE, // -
+    POSITIVE, // no-op
+    // booleans
+    NOT,
+};

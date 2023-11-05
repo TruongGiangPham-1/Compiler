@@ -11,7 +11,12 @@ public:
     AssignNode(int line, std::shared_ptr<Symbol> sym);
 
     std::shared_ptr<Symbol> getID();
+
+    std::shared_ptr<ASTNode> getLValue();
     std::shared_ptr<ASTNode> getExprNode();
+
+    std::shared_ptr<ASTNode> LValue;
+    std::shared_ptr<ASTNode> ExprNode;
 
     std::string toString() override;
     std::string getIDName();

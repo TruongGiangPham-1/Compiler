@@ -18,18 +18,27 @@ set(
         SymbolTable.cpp
         ../include/SymbolTable.h
         ../include/Operands/UNARYOP.h
+        ASTNode/Type/TypeNode.cpp
+        ../include/ASTNode/Type/TypeNode.h
         ../include/BuiltinTypes/
-        ASTNode/TypeNode.cpp
-        ../include/ASTNode/TypeNode.h
+        ../include/ASTNode
         ASTNode/AssignNode.cpp
         ../include/ASTNode/AssignNode.h
         ASTNode/DeclNode.cpp
         ../include/ASTNode/DeclNode.h
         ../include/ASTNode/Expr/ExprNode.h
-        ASTNode/Expr/IDNode.cpp
-        ../include/ASTNode/Expr/IDNode.h
-        ASTNode/Expr/IntNode.cpp
-        ../include/ASTNode/Expr/IntNode.h
+        ASTNode/Expr/Literal/IDNode.cpp
+        ../include/ASTNode/Expr/Literal/IDNode.h
+        ASTNode/Expr/Literal/IntNode.cpp
+        ../include/ASTNode/Expr/Literal/IntNode.h
+        ASTNode/Expr/Literal/RealNode.cpp
+        ../include/ASTNode/Expr/Literal/RealNode.h
+        ASTNode/Expr/Literal/CharNode.cpp
+        ../include/ASTNode/Expr/Literal/CharNode.h
+        ASTNode/Expr/Literal/TupleNode.cpp
+        ../include/ASTNode/Expr/Literal/TupleNode.h
+        ASTNode/Expr/Literal/BoolNode.cpp
+        ../include/ASTNode/Expr/Literal/BoolNode.h
         ASTNode/Expr/Binary/BinaryExpr.cpp
         ../include/ASTNode/Expr/Binary/BinaryExpr.h
         ASTNode/Expr/Vector/RangeVecNode.cpp
@@ -39,22 +48,51 @@ set(
         ../include/ASTNode/Expr/Vector/BaseVectorExpr.h
         ASTNode/Block/BlockNode.cpp
         ../include/ASTNode/Block/BlockNode.h
-        ASTNode/Block/LoopNode.cpp
-        ../include/ASTNode/Block/LoopNode.h
+        ASTNode/Loop/LoopNode.cpp
+        ../include/ASTNode/Loop/LoopNode.h
         ASTNode/Block/ConditionalNode.cpp
         ../include/ASTNode/Block/ConditionalNode.h
         ASTNode/Expr/Vector/GeneratorNode.cpp
         ../include/ASTNode/Expr/Vector/GeneratorNode.h
         ASTNode/Expr/Vector/FilterNode.cpp
         ../include/ASTNode/Expr/Vector/FilterNode.h
-        ASTNode/PrintNode.cpp
-        ../include/ASTNode/PrintNode.h
+        ASTNode/Stream/StreamOut.cpp
+        ../include/ASTNode/Stream/StreamOut.h
         ASTWalker.cpp
         ../include/TypeWalker.h
         ../include/BackendWalker.h
         TypeWalker.cpp
         Def.cpp
         BackendWalker.cpp
+        ../include/customError/ErrorListener.h
+        ScopedSymbol.cpp
+        ../include/ScopedSymbol.h
+        ../include/ASTNode/Method/FunctionNode.h
+        ASTNode/Method/FunctionNode.cpp
+        ../include/Ref.h
+        Ref.cpp
+        ../include/ASTNode/FunctionCallNode.h
+        ../include/FunctionCallTypes/FuncCallType.h
+        FunctionCallTypes/FuncCallType.cpp
+        ASTNode/Method/ProcedureNode.cpp
+        ../include/ASTNode/Method/ProcedureNode.h
+        ../include/ASTNode/Expr/NullNode.h
+        ../include/ASTNode/Expr/IdentityNode.h
+        ASTNode/Expr/IdentityNode.cpp
+        ASTNode/Expr/NullNode.cpp
+        ASTNode/Type/VectorTypeNode.cpp
+        ../include/ASTNode/Type/VectorTypeNode.h
+        ../include/Types/TYPES.h
+        ASTNode/Type/StringTypeNode.cpp
+        ../include/ASTNode/Type/StringTypeNode.h
+        ASTNode/Type/MatrixTypeNode.cpp
+        ../include/ASTNode/Type/MatrixTypeNode.h
+        ASTNode/Type/TupleTypeNode.cpp
+        ../include/ASTNode/Type/TupleTypeNode.h
+        ASTNode/TypeDefNode.cpp
+        ../include/ASTNode/TypeDefNode.h
+        ASTNode/ArgNode.cpp
+        ../include/ASTNode/ArgNode.h
 )
 
 # Build our executable from the source files.
