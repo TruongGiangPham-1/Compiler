@@ -75,11 +75,8 @@ void BackEnd::functionShowcase() {
   this->printCommonType(tupl2);
   this->printCommonType(tuple);
 
-  mlir::LLVM::LLVMFuncOp promote =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
-
-  auto casted = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,b})).getResult();
-  auto castedReal = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,c})).getResult();
+  auto casted = this->promotion(a, b);
+  auto castedReal = this->promotion(a,c);
 
   this->printCommonType(tuple);
   this->printCommonType(casted);
@@ -258,6 +255,22 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
         generateInteger(op)})
       ).getResult();
 
+  std::string newLabel =
+      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
+  this->objectLabels.push_back(newLabel);
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
+
+mlir::Value BackEnd::promotion(mlir::Value left, mlir::Value right) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
+
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
   std::string newLabel =
       "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
   this->objectLabels.push_back(newLabel);
