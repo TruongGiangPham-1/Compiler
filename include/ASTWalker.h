@@ -49,9 +49,11 @@ namespace gazprea {
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
 
         // Expr/Binary
+
         virtual std::any visitArith(std::shared_ptr<BinaryArithNode> tree);
         virtual std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree);
         virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
+        virtual std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree);
         // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);
         virtual std::any visitGenerator(std::shared_ptr<GeneratorNode> tree);

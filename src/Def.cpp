@@ -72,6 +72,16 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
     return 0;
 }
 
+std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+    // define if it is forwrd declaration
+    if (tree->body) {
+
+    }  else {
+        // forward declaration method
+    }
+    return 0;
+}
+
 /*
 std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
 
@@ -159,9 +169,9 @@ std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     return 0;
 }
 
-std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-    return 0;
-}
+//std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+//    return 0;
+//}
 
 
 /*

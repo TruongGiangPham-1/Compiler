@@ -51,6 +51,8 @@ namespace gazprea {
     public:
         std::any visitFile(GazpreaParser::FileContext *ctx) override;
 
+        // ()
+        std::any visitParentheses(GazpreaParser::ParenthesesContext *ctx);
         // memory
         std::any visitVardecl(GazpreaParser::VardeclContext *ctx) override;
         std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
