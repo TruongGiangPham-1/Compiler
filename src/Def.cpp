@@ -41,7 +41,7 @@ std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
 
     // define the ID in symtable
     std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-    std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), type);
+    std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), TYPE::INTEGER);  //TODO: change TYPE to resolve type
     idSym->mlirName = mlirName;
     idSym->scope = currentScope;
 
@@ -153,6 +153,16 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
     currentScope = symtab->exitScope(currentScope);
     return 0;
 }
+
+std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
+    return 0;
+}
+
+//std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+//    std::cout << "def pass visit procedure\n";
+//    return 0;
+//}
+
 
 /*
 std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {

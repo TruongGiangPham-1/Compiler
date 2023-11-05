@@ -32,7 +32,7 @@ namespace gazprea {
          std::any visitID(std::shared_ptr<IDNode> tree) override;
 
         // === BlOCK FUNCTION AST NODES ===
-        std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
+        //std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
         std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
 

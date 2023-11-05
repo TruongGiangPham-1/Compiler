@@ -12,7 +12,7 @@ public:
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;
 
-    ScopedSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope)
+    ScopedSymbol(std::string symName, std::string scopeName, TYPE retType, std::shared_ptr<Scope> enclosingScope)
             : Symbol(symName, retType), enclosingScope(enclosingScope) {};
     // from Scope.h
     std::shared_ptr<Symbol> resolve(const std::string &name) override;
@@ -32,7 +32,7 @@ class FunctionSymbol: public ScopedSymbol {
 public:
     std::string scopeName;
     int line;
-    FunctionSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line):
+    FunctionSymbol(std::string symName, std::string scopeName, TYPE retType, std::shared_ptr<Scope> enclosingScope, int line):
             ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName), line(line) {};
 
     std::string getScopeName() override {
@@ -45,7 +45,7 @@ class ProcedureSymbol: public ScopedSymbol {
 public:
     std::string scopeName;
     int line;  // line number it was created
-    ProcedureSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line):
+    ProcedureSymbol(std::string symName, std::string scopeName, TYPE retType, std::shared_ptr<Scope> enclosingScope, int line):
     ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName), line(line) {};
     std::string getScopeName() override {
         return  scopeName;

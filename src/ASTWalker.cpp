@@ -34,6 +34,7 @@ namespace gazprea {
             std::cout << "Visiting a child" << std::endl;
 #endif
             walk(child);
+
         }
         return 0;
     }
@@ -167,6 +168,17 @@ namespace gazprea {
             std::cout << "about to visit Block" << std::endl;
 #endif // DEBUG
             return this->visitBlock(std::dynamic_pointer_cast<BlockNode>(tree));
+        } else if (std::dynamic_pointer_cast<ProcedureNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit procedure" << std::endl;
+#endif // DEBUG
+            return this->visitProcedure(std::dynamic_pointer_cast<ProcedureNode>(tree));
+        } else if (std::dynamic_pointer_cast<ArgNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit arg" << std::endl;
+#endif // DEBUG
+            return this->visitParameter(std::dynamic_pointer_cast<ArgNode>(tree));
+
         }
 
         // NIL node
@@ -245,22 +257,35 @@ namespace gazprea {
     // FUNCTION
     //
     std::any ASTWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-         for (auto arg : tree->orderedArgs) {
-          walkChildren(arg);
+        for (auto arg : tree->orderedArgs) {
+          walk(arg);
         }       
+        //return this->walkChildren(tree);
+        if (tree->body) {
+            walk(tree->body);
+        }
+        return 0;
 
-        return this->walkChildren(tree);
     }
 
     std::any ASTWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         for (auto arg : tree->orderedArgs) {
-          walkChildren(arg);
+          walk(arg);
         }
 
         return this->walkChildren(tree);
     }
 
     std::any ASTWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
+        for (auto stat: tree->statements) {
+            walk(stat);
+        }
+        return  0;
+    }
+
+    std::any ASTWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
         return this->walkChildren(tree);
     }
+
+
 }

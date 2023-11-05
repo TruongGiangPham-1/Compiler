@@ -9,6 +9,42 @@ namespace gazprea {
         currentScope = symtab->enterScope(symTab->globalScope);  // enter global scope
     }
 
+
+    std::any Ref::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        return 0;
+    }
+
+    std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+        auto procSym = currentScope->resolve(tree->nameSym->getName());
+        if (procSym == nullptr) {
+            // no forward declaration
+            // define method scope and push. define method symbol
+            defineFunctionAndProcedure(tree->loc(), tree->nameSym, tree->orderedArgs, 0);
+
+            // push a local scope for function block,  to walk childre
+            std::string sname = "procedureScope" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+
+            if (tree->body) {
+                walk(tree->body);  // ref all the symbol inside function block;
+            }
+
+            currentScope = symtab->exitScope(currentScope);  // pop local scope
+            currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        }
+        return 0;
+    }
+
+
+    std::any Ref::visitID(std::shared_ptr<IDNode> tree) {
+        // this ID is resolve in method scope
+        if () {
+
+        }
+        return 0;
+    }
+
     /*
     std::any Ref::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
         std::shared_ptr<Symbol> funcSym = currentScope->resolve(tree->funcNameSym->getName());
@@ -181,10 +217,9 @@ namespace gazprea {
      * 2. push method scope , enter it, and define arguments inside it
      *
      */
-    /*
     void Ref::defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
         // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
-        std::shared_ptr<Type> retType = std::make_shared<BuiltInTypeSymbol>("integer");  // create a random type for now
+        TYPE retType =  TYPE::INTEGER;  // make random type for now
 
         // define function scope Symbol
         std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
@@ -196,6 +231,7 @@ namespace gazprea {
             methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
                                                           fname, retType, symtab->globalScope, loc);
         }
+        std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << "\n";
         currentScope->define(methodSym);  // define methd symbol in global
         currentScope = symtab->enterScope(methodSym);
 
@@ -215,7 +251,6 @@ namespace gazprea {
         }
         //currentScope = symtab->exitScope(currentScope);
     }
-    */
 
     /*
     std::any Ref::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {

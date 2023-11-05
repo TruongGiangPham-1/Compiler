@@ -67,7 +67,8 @@ namespace gazprea {
         virtual std::any visitFunction(std::shared_ptr<FunctionNode> tree);
         // === BlOCK PROCEDURE NODES ===
         virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
-        virtual std::any visitArg(std::shared_ptr<ArgNode> tree);
+
+        virtual std::any visitParameter(std::shared_ptr<ArgNode> tree);
 
 
         // === FUNCTION CALL NODE ===
