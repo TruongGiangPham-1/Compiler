@@ -15,6 +15,7 @@ block :
     | stream
     | call
     | procedure
+    | typedef
     )* // left recursion
     ;
 
@@ -27,7 +28,9 @@ assign
     ;
 
 cond
-    : RESERVED_IF '(' expression ')' block (RESERVED_ELSE RESERVED_IF '(' expression ')' '{' block '}' )* (RESERVED_ELSE '{' block '}' )?
+    : RESERVED_IF '(' expression ')' '{' block '}'
+    (RESERVED_ELSE RESERVED_IF '(' expression ')' '{' block '}' )*
+    (RESERVED_ELSE '{' block '}' )?
     ;
 
 loop
@@ -78,26 +81,24 @@ function_call
     //| RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'
     ;
 
-type: known_sized_type | inferred_sized_type;
-tuple_allowed_type: built_in_type | vector_type | string_type | matrix_type | inferred_sized_type;
-
-known_sized_type: built_in_type | tuple_type | vector_type | string_type | matrix_type;
-inferred_sized_type
-    : built_in_type '[' MULT ']'                #vector
-    | RESERVED_STRING '[' MULT ']'              #string
-    | built_in_type '[' MULT ',' expression ']' #matrixFirst
-    | built_in_type '[' expression ',' MULT ']' #matrixSecond
-    | built_in_type '[' MULT ',' MULT ']'       #matrix
-    ;
+type
+    :'['(expression | MULT)']'                            #vectorType
+    | type'['(expression | MULT)','(expression | MULT)']' #matrixType
+    | type '('type (',' type)*')'                         #tupleType
+    | (ID | built_in_type)                                #baseType;
 
 qualifier: RESERVED_CONST | RESERVED_VAR;
-built_in_type: RESERVED_BOOLEAN | RESERVED_CHARACTER | RESERVED_INTEGER | RESERVED_REAL | ID; // ID incase of typedefs... This might be changed
-tuple_type: RESERVED_TUPLE '(' tuple_type_element (',' tuple_type_element)+ ')';
+built_in_type
+    : RESERVED_STRING
+    | RESERVED_TUPLE
+    | RESERVED_BOOLEAN
+    | RESERVED_CHARACTER
+    | RESERVED_INTEGER
+    | RESERVED_REAL;
+
 vector_type: built_in_type '[' expression ']';
 string_type: RESERVED_STRING ('[' expression ']')?;
 matrix_type: built_in_type '[' expression ',' expression ']';
-
-tuple_type_element : tuple_allowed_type ID?;
 
 expression // root of an expression tree
     : expr
@@ -107,7 +108,7 @@ expr
     | cast                                                                                              #typeCast
     | function_call                                                                                     #funcCall
     | expr '[' expr (',' expr)? ']'                                                                     #index
-    | expr DOT expr #tupleIndex
+    | expr DOT expr #tupleIndex //need to fix this. no time
     | expr RANGE_OPERATOR expr                                                                          #range
     //| '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
     //| '[' ID RESERVED_IN expression FILTER_OPERATOR expression (',' expression)* ']'                    #filter
@@ -137,7 +138,7 @@ expr
 literal_tuple: '(' expression (',' expression)+ ')';
 literal_vector: '[' (expression (',' expression)*)? ']'; // empty vectors allowed
 literal_matrix: '[' (literal_vector (',' literal_vector)*)? ']'; // empty matrices allowed
-cast: RESERVED_AS LT known_sized_type GT '(' expression ')';
+cast: RESERVED_AS LT type GT '(' expression ')';
 typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
     : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' ;
