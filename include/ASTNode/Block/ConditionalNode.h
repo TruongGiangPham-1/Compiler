@@ -5,10 +5,10 @@
 
 class ConditionalNode : public ASTNode {
 public:
-    std::vector<std::shared_ptr<ExprNode>> conditions; // could be null later on
+    std::vector<std::shared_ptr<ASTNode>> conditions; // could be null later on
     
     // possibility of multiple blocks within one node
-    std::vector<std::shared_ptr<BlockNode>> bodies;
+    std::vector<std::shared_ptr<ASTNode>> bodies;
 
     ConditionalNode(int line);
     std::string toString() override;

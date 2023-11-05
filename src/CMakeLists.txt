@@ -18,20 +18,27 @@ set(
         SymbolTable.cpp
         ../include/SymbolTable.h
         ../include/Operands/UNARYOP.h
-
         ASTNode/Type/TypeNode.cpp
         ../include/ASTNode/Type/TypeNode.h
         ../include/BuiltinTypes/
-
+        ../include/ASTNode
         ASTNode/AssignNode.cpp
         ../include/ASTNode/AssignNode.h
         ASTNode/DeclNode.cpp
         ../include/ASTNode/DeclNode.h
         ../include/ASTNode/Expr/ExprNode.h
-        ASTNode/Expr/IDNode.cpp
-        ../include/ASTNode/Expr/IDNode.h
-        ASTNode/Expr/IntNode.cpp
-        ../include/ASTNode/Expr/IntNode.h
+        ASTNode/Expr/Literal/IDNode.cpp
+        ../include/ASTNode/Expr/Literal/IDNode.h
+        ASTNode/Expr/Literal/IntNode.cpp
+        ../include/ASTNode/Expr/Literal/IntNode.h
+        ASTNode/Expr/Literal/RealNode.cpp
+        ../include/ASTNode/Expr/Literal/RealNode.h
+        ASTNode/Expr/Literal/CharNode.cpp
+        ../include/ASTNode/Expr/Literal/CharNode.h
+        ASTNode/Expr/Literal/TupleNode.cpp
+        ../include/ASTNode/Expr/Literal/TupleNode.h
+        ASTNode/Expr/Literal/BoolNode.cpp
+        ../include/ASTNode/Expr/Literal/BoolNode.h
         ASTNode/Expr/Binary/BinaryExpr.cpp
         ../include/ASTNode/Expr/Binary/BinaryExpr.h
         ASTNode/Expr/Vector/RangeVecNode.cpp
@@ -41,8 +48,8 @@ set(
         ../include/ASTNode/Expr/Vector/BaseVectorExpr.h
         ASTNode/Block/BlockNode.cpp
         ../include/ASTNode/Block/BlockNode.h
-        ASTNode/Block/LoopNode.cpp
-        ../include/ASTNode/Block/LoopNode.h
+        ASTNode/Loop/LoopNode.cpp
+        ../include/ASTNode/Loop/LoopNode.h
         ASTNode/Block/ConditionalNode.cpp
         ../include/ASTNode/Block/ConditionalNode.h
         ASTNode/Expr/Vector/GeneratorNode.cpp
@@ -60,15 +67,15 @@ set(
         ../include/customError/ErrorListener.h
         ScopedSymbol.cpp
         ../include/ScopedSymbol.h
-        ../include/ASTNode/Block/FunctionNode.h
-        ASTNode/Block/FunctionNode.cpp
+        ../include/ASTNode/Method/FunctionNode.h
+        ASTNode/Method/FunctionNode.cpp
         ../include/Ref.h
         Ref.cpp
         ../include/ASTNode/FunctionCallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
-        ASTNode/Block/ProcedureNode.cpp
-        ../include/ASTNode/Block/ProcedureNode.h
+        ASTNode/Method/ProcedureNode.cpp
+        ../include/ASTNode/Method/ProcedureNode.h
         ../include/ASTNode/Expr/NullNode.h
         ../include/ASTNode/Expr/IdentityNode.h
         ASTNode/Expr/IdentityNode.cpp

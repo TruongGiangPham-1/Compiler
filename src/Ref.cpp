@@ -9,6 +9,7 @@ namespace gazprea {
         currentScope = symtab->enterScope(symTab->globalScope);  // enter global scope
     }
 
+    /*
     std::any Ref::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
         std::shared_ptr<Symbol> funcSym = currentScope->resolve(tree->funcNameSym->getName());
         if (funcSym == nullptr) {
@@ -54,7 +55,9 @@ namespace gazprea {
         }
         return 0;
     }
+    */
 
+    /*
     std::any Ref::visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) {
         std::shared_ptr<Symbol> funcSym = currentScope->resolve(tree->funcNameSym->getName());
         if (funcSym == nullptr) {
@@ -126,10 +129,8 @@ namespace gazprea {
         return 0;
     }
     // === Procedure
-    std::any Ref::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
-        return 0; // WE SKIP
-    }
 
+    /*
     std::any Ref::visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) {
         std::shared_ptr<Symbol> procSym = currentScope->resolve(tree->nameSym->getName());
         if (procSym == nullptr) {  // case: never been declared b4
@@ -168,6 +169,7 @@ namespace gazprea {
         }
         return 0;
     }
+    */
 
     /*
      * @args:
@@ -179,6 +181,7 @@ namespace gazprea {
      * 2. push method scope , enter it, and define arguments inside it
      *
      */
+    /*
     void Ref::defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
         // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
         std::shared_ptr<Type> retType = std::make_shared<BuiltInTypeSymbol>("integer");  // create a random type for now
@@ -212,7 +215,9 @@ namespace gazprea {
         }
         //currentScope = symtab->exitScope(currentScope);
     }
+    */
 
+    /*
     std::any Ref::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
         std::shared_ptr<Symbol> sym;
         if (tree->functype == FUNCTYPE::FUNC_NORMAL) {
@@ -240,6 +245,7 @@ namespace gazprea {
         }
         return 0;
     }
+    */
 
     int Ref::getNextId() {
         (*varID) ++;

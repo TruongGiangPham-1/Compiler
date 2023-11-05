@@ -33,25 +33,25 @@ namespace gazprea {
         std::any visitID(std::shared_ptr<IDNode> tree) override;
 
         // Expr/Vector
-        std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
-        std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
+        //std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
+        //std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
 
         // === BLOCK AST NODES ===
         std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
         std::any visitLoop(std::shared_ptr<LoopNode> tree) override;
 
+        std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+        std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+
         // === BlOCK FUNCTION AST NODES ===
-        std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) override;
-        std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
-        std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
-
-        std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree) override;
-
+        //std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) override;
+        // std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
+        // std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
 
         // === BLOCK PROCEDURE AST NODES
-        std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
-        std::any visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) override;
-        std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
+        // std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
+        // std::any visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) override;
+        // std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
     };
 
 }

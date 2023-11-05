@@ -5,6 +5,10 @@ file
     ;
 
 block :
+    statement*
+    ;
+
+statement:
     ( assign
     | vardecl
     | cond
@@ -17,15 +21,14 @@ block :
     | procedureCall
     | function
     | typedef
-    )*
-    ;
+    );
 
 vardecl
     : qualifier? type ID ('=' expression)? ';'
     ;
 
 assign
-    : expr '=' expr ';'
+    : lvalue=expr '=' rvalue=expr ';'
     ;
 
 cond
@@ -72,7 +75,7 @@ procedureCall
     // | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';' // Since in built stream_state() is a procedure defined in Gazprea
     ;
 
-function_call
+functionCall
     : ID '(' (expression (',' expression)*)? ')' // no semicolon for functions because they always return and hence can be used as an expression
     // I'm commenting these out because we will get syntax errors if someone calls these with different arguments,
     //| (RESERVED_LENGTH | RESERVED_ROWS | RESERVED_COLUMNS | RESERVED_REVERSE | RESERVED_FORMAT) '(' expression ')'
@@ -83,20 +86,13 @@ type
     :'['(expression | MULT)']'                            #vectorType
     | type'['(expression | MULT)','(expression | MULT)']' #matrixType
     | type '('type (',' type)*')'                         #tupleType
-    | (ID | built_in_type)                                #baseType;
+    | typeString=(ID | BUILT_IN_TYPE) #baseType
+    ;
 
 qualifier: RESERVED_CONST | RESERVED_VAR;
-built_in_type
-    : RESERVED_STRING
-    | RESERVED_TUPLE
-    | RESERVED_BOOLEAN
-    | RESERVED_CHARACTER
-    | RESERVED_INTEGER
-    | RESERVED_REAL;
 
-vector_type: built_in_type '[' expression ']';
+
 string_type: RESERVED_STRING ('[' expression ']')?;
-matrix_type: built_in_type '[' expression ',' expression ']';
 
 expression // root of an expression tree
     : expr
@@ -105,7 +101,7 @@ expression // root of an expression tree
 expr
     : '(' expr ')'                                                                                      #parentheses
     | cast                                                                                              #typeCast
-    | function_call                                                                                     #funcCall
+    | functionCall #funcCall
     | expr '[' expr (',' expr)? ']'                                                                     #index
     | expr DOT expr #tupleIndex //need to fix this. no time
     | expr RANGE_OPERATOR expr                                                                          #range
@@ -118,8 +114,8 @@ expr
     | expr RESERVED_BY expr                                                                             #stride
     | expr op=(LT | GT | LE | GE) expr                                                                  #cmp
     | expr op=(EQ | NEQ) expr                                                                           #cmp
-    | expr op=RESERVED_AND expr                                                                         #binary
-    | expr op=(RESERVED_OR | RESERVED_XOR) expr                                                         #binary
+    | expr op=RESERVED_AND expr                                                                         #math
+    | expr op=(RESERVED_OR | RESERVED_XOR) expr                                                         #math
     | expr CONCAT expr                                                                                  #concatenation
     | ID                                                                                                #literalID
     | RESERVED_IDENTITY                                                                                 #identity
@@ -128,13 +124,12 @@ expr
     | LITERAL_CHARACTER                                                                                 #literalCharacter
     | INT                                                                                               #literalInt
     | LITERAL_REAL                                                                                      #literalReal
-    | literal_tuple                                                                                     #literalTuple
+    | '(' expr (',' expr )+ ')'                                                              #literalTuple
     //| literal_vector                                                                                    #literalVector
     | LITERAL_STRING                                                                                    #literalString
     //| literal_matrix                                                                                    #literalMatrix
     ;
 
-literal_tuple: '(' expression (',' expression)+ ')';
 literal_vector: '[' (expression (',' expression)*)? ']'; // empty vectors allowed
 literal_matrix: '[' (literal_vector (',' literal_vector)*)? ']'; // empty matrices allowed
 cast: RESERVED_AS LT type GT '(' expression ')';
@@ -143,6 +138,13 @@ stream
     : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' ;
 
 // operators
+BUILT_IN_TYPE
+    : RESERVED_STRING
+    | RESERVED_TUPLE
+    | RESERVED_BOOLEAN
+    | RESERVED_CHARACTER
+    | RESERVED_INTEGER
+    | RESERVED_REAL;
 
 DOT: '.';
 MULT: '*';

@@ -1,4 +1,4 @@
-#include "ASTNode/Block/LoopNode.h"
+#include "ASTNode/Loop/LoopNode.h"
 
 LoopNode::LoopNode(int line) : ASTNode(line) {};
 

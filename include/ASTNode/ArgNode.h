@@ -6,6 +6,7 @@
 #define GAZPREABASE_ARGNODE_H
 
 #include "ASTNode.h"
+#include "ASTNode/Type/TypeNode.h"
 #include "Symbol.h"
 #include "Types/QUALIFIER.h"
 class ArgNode: public ASTNode {
@@ -13,8 +14,9 @@ public:
     ArgNode(int line);
 
     std::shared_ptr<Symbol> idSym;
+    std::shared_ptr<ASTNode> type;
 
-    std::shared_ptr<ASTNode> getArgType();  // return child[0]
+
     std::string toString() override;
 };
 

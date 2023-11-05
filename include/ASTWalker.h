@@ -1,22 +1,26 @@
 #pragma once
 #include "ASTNode/ASTNode.h"
+#include "ASTNode/ArgNode.h"
 #include "ASTNode/AssignNode.h"
+#include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
-#include "ASTNode/Expr/IDNode.h"
-#include "ASTNode/Expr/IntNode.h"
+#include "ASTNode/Expr/Literal/IDNode.h"
+#include "ASTNode/Expr/Literal/IntNode.h"
+#include "ASTNode/Expr/Literal/RealNode.h"
+#include "ASTNode/Expr/Literal/CharNode.h"
+#include "ASTNode/Expr/Literal/TupleNode.h"
+#include "ASTNode/Method/ProcedureNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
 #include "ASTNode/Expr/Vector/GeneratorNode.h"
 #include "ASTNode/Expr/Vector/FilterNode.h"
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
-#include "ASTNode/Block/LoopNode.h"
+#include "ASTNode/Loop/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
-#include "ASTNode/Block/FunctionNode.h"
+#include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/FunctionCallNode.h"
-#include "ASTNode/ArgNode.h"
-#include "ASTNode/Block/ProcedureNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -32,11 +36,18 @@ namespace gazprea {
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
         virtual std::any visitPrint(std::shared_ptr<StreamOut> tree);
+
+        // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
 
         // === EXPRESSION AST NODES ===
         virtual std::any visitID(std::shared_ptr<IDNode> tree);
         virtual std::any visitInt(std::shared_ptr<IntNode> tree);
+        virtual std::any visitReal(std::shared_ptr<RealNode> tree);
+        virtual std::any visitTuple(std::shared_ptr<TupleNode> tree);
+        virtual std::any visitChar(std::shared_ptr<CharNode> tree);
+        virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
+
         // Expr/Binary
         virtual std::any visitArith(std::shared_ptr<BinaryArithNode> tree);
         virtual std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree);
@@ -53,16 +64,13 @@ namespace gazprea {
         virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
         virtual std::any visitLoop(std::shared_ptr<LoopNode> tree);
         // === BLOCK FUNCTION NODES ===
-        virtual std::any visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree);
-        virtual std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree);
-        virtual std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree);
+        virtual std::any visitFunction(std::shared_ptr<FunctionNode> tree);
         // === BlOCK PROCEDURE NODES ===
-        virtual std::any visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree);
-        virtual std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree);
-        virtual std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree);
-        // === FUNCTION CALL NODE ===
-        virtual std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree);
+        virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
+        virtual std::any visitArg(std::shared_ptr<ArgNode> tree);
 
+
+        // === FUNCTION CALL NODE ===
 
     };
 }

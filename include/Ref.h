@@ -20,8 +20,6 @@ namespace gazprea {
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
-        std::shared_ptr<Type> resolveType(std::shared_ptr<ASTNode> t);
-
         int getNextId();
         void defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
                                           int isFunc); //
@@ -29,20 +27,20 @@ namespace gazprea {
 
         std::shared_ptr<int> varID;
 
+
         // === EXPRESSION AST NODES ===
-        std::any visitID(std::shared_ptr<IDNode> tree) override;
+         std::any visitID(std::shared_ptr<IDNode> tree) override;
 
         // === BlOCK FUNCTION AST NODES ===
-        std::any visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) override;
-        std::any visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) override;
-
+        std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
+        std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+        std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
 
         // === Function Call ===
-        std::any visitFunction_call(std::shared_ptr<FunctionCallNode> tree) override;
-
         // === procedure
-        std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
-        std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
+        
+        //std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
+        //std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
 
     };
 }

@@ -108,7 +108,7 @@ std::any TypeWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
 }
 
 std::any TypeWalker::visitID(std::shared_ptr<IDNode> tree) {
-  tree->type = tree->sym->type;
+  // tree->type = tree->sym->type;
   return 0;
 }
 

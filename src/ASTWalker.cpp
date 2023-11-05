@@ -2,21 +2,31 @@
 
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
+#include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
-#include "ASTNode/Expr/IDNode.h"
-#include "ASTNode/Expr/IntNode.h"
+
+#include "ASTNode/Expr/Literal/IDNode.h"
+#include "ASTNode/Expr/Literal/IntNode.h"
+#include "ASTNode/Expr/Literal/RealNode.h"
+#include "ASTNode/Expr/Literal/IntNode.h"
+#include "ASTNode/Expr/Literal/TupleNode.h"
+#include "ASTNode/Expr/Literal/CharNode.h"
+
+
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
 #include "ASTNode/Expr/Vector/GeneratorNode.h"
 #include "ASTNode/Expr/Vector/FilterNode.h"
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
-#include "ASTNode/Block/LoopNode.h"
+#include "ASTNode/Loop/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 
-//#define DEBUG
+#define DEBUG
 
+
+using namespace gazprea;
 namespace gazprea {
     std::any ASTWalker::walkChildren(std::shared_ptr<ASTNode> tree) {
         for (auto child: tree->children) {
@@ -74,10 +84,31 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitInt(std::dynamic_pointer_cast<IntNode>(tree));
 
-        // ======
-        // Expr/Binary
-        // ======
-        } else if (std::dynamic_pointer_cast<BinaryArithNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<BoolNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Bool" << std::endl;
+#endif // DEBUG
+            return this->visitBool(std::dynamic_pointer_cast<BoolNode>(tree));
+
+        } else if (std::dynamic_pointer_cast<RealNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Real" << std::endl;
+#endif // DEBUG
+            return this->visitReal(std::dynamic_pointer_cast<RealNode>(tree));
+
+        } else if (std::dynamic_pointer_cast<TupleNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Tuple" << std::endl;
+#endif // DEBUG
+            return this->visitTuple(std::dynamic_pointer_cast<TupleNode>(tree));
+
+        } else if (std::dynamic_pointer_cast<CharNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Char" << std::endl;
+#endif // DEBUG
+            return this->visitInt(std::dynamic_pointer_cast<IntNode>(tree));
+
+        }else if (std::dynamic_pointer_cast<BinaryArithNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Arith" << std::endl;
 #endif // DEBUG
@@ -118,7 +149,7 @@ namespace gazprea {
         }
 
         // =================
-        // BLOCK AST NODES
+        // CONTROL NODES
         // =================
         if (std::dynamic_pointer_cast<ConditionalNode>(tree)) {
 #ifdef DEBUG
@@ -131,45 +162,10 @@ namespace gazprea {
             std::cout << "about to visit Loop" << std::endl;
 #endif // DEBUG
             return this->visitLoop(std::dynamic_pointer_cast<LoopNode>(tree));
-
-        } else if (std::dynamic_pointer_cast<FunctionForwardNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit functionForwardNode" << std::endl;
-#endif // DEBUG
-            return  this->visitFunctionForward(std::dynamic_pointer_cast<FunctionForwardNode>(tree));
-        } else if (std::dynamic_pointer_cast<FunctionSingleNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit functionSingleNode" << std::endl;
-#endif // DEBUG
-            return  this->visitFunctionSingle(std::dynamic_pointer_cast<FunctionSingleNode>(tree));
-        } else if (std::dynamic_pointer_cast<FunctionBlockNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit FunctionBlockNode" << std::endl;
-#endif // DEBUG
-            return  this->visitFunctionBlock(std::dynamic_pointer_cast<FunctionBlockNode>(tree));
-        } else if (std::dynamic_pointer_cast<FunctionCallNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit FunctionCallNode" << std::endl;
-#endif // DEBUG
-            return this->visitFunction_call(std::dynamic_pointer_cast<FunctionCallNode>(tree));
-        } else if (std::dynamic_pointer_cast<ProcedureArgNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit procedure arg node" << std::endl;
-#endif // DEBUG
-            return this->visitProcedure_arg(std::dynamic_pointer_cast<ProcedureArgNode>(tree));
-        } else if (std::dynamic_pointer_cast<ProcedureBlockNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit procedure block node" << std::endl;
-#endif // DEBUG
-
-            return this->visitProcedureBlock(std::dynamic_pointer_cast<ProcedureBlockNode>(tree));
-        } else if (std::dynamic_pointer_cast<ProcedureForwardNode>(tree)) {
-#ifdef DEBUG
-            std::cout << "about to visit procedure forward node" << std::endl;
-#endif // DEBUG
-            return this->visitProcedureForward(std::dynamic_pointer_cast<ProcedureForwardNode>(tree));
-
         } else if (std::dynamic_pointer_cast<BlockNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Block" << std::endl;
+#endif // DEBUG
             return this->visitBlock(std::dynamic_pointer_cast<BlockNode>(tree));
         }
 
@@ -201,6 +197,18 @@ namespace gazprea {
     std::any ASTWalker::visitInt(std::shared_ptr<IntNode> tree) {
         return this->walkChildren(tree);
     }
+    std::any ASTWalker::visitBool(std::shared_ptr<BoolNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitReal(std::shared_ptr<RealNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitChar(std::shared_ptr<CharNode> tree) {
+        return this->walkChildren(tree);
+    }
     std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         return this->walkChildren(tree);
     }
@@ -219,41 +227,40 @@ namespace gazprea {
     std::any ASTWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
         return this->walkChildren(tree);
     }
-
     // Block
     std::any ASTWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) {
+        for (auto conditional : tree->conditions) {
+          walkChildren(conditional);
+        }
+
+        for (auto body : tree->bodies) {
+          walkChildren(body);
+        }
+
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
         return this->walkChildren(tree);
     }
     // FUNCTION
-    std::any ASTWalker::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
-        return  this->walkChildren(tree);
-    }
-    std::any ASTWalker::visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) {
-        return  this->walkChildren(tree);
-    }
-    std::any ASTWalker::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
-        return  this->walkChildren(tree);
-    }
-    std::any ASTWalker::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
+    //
+    std::any ASTWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+         for (auto arg : tree->orderedArgs) {
+          walkChildren(arg);
+        }       
+
         return this->walkChildren(tree);
     }
 
-    std::any ASTWalker::visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) {
+    std::any ASTWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        for (auto arg : tree->orderedArgs) {
+          walkChildren(arg);
+        }
+
         return this->walkChildren(tree);
     }
 
-    std::any ASTWalker::visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) {
-        return this->walkChildren(tree);
-    }
-
-    std::any ASTWalker::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
-        return this->walkChildren(tree);
-    }
     std::any ASTWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
         return this->walkChildren(tree);
     }
-
 }

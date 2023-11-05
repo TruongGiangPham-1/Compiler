@@ -71,12 +71,8 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
     return 0;
 }
 
+/*
 std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
-    /*
-     * 1. RESOLVE THE VARIABLES IN THE <DOMAIN> 1st
-     * 2. push scope, define <DOMAINVAR> into the new scope,
-     */
-
 
     walk(tree->getVecNode());  // walk to the <domain> to resolve any ID in <domain>
 
@@ -99,13 +95,10 @@ std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
     walk(tree->getExpr());
     currentScope = symtab->exitScope(currentScope);
     return 0;
-}
+}*/
 
+/*
 std::any Def::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
-    /*
-     * 1. RESOLVE THE VARIABLES IN THE <DOMAIN> 1st
-     * 2. push scope, define <DOMAINVAR> into the new scope,
-     */
     walk(tree->getVecNode());  // walk to the <domain> to resolve any ID in <domain>
 
     // create gen/filter scope
@@ -131,15 +124,19 @@ std::any Def::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     return 0;
 }
+*/
 
 std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
-    walk(tree->condition);
-    // enter scope
+
+    for (auto condition : tree->conditions) {
+      walk(condition);
+    }
+        // enter scope
     std::string sname = "loopcond" + std::to_string(tree->loc());
     currentScope = symtab->enterScope(sname, currentScope);
 
-    for (auto &stmt: tree->getStatements()) {
-        walk(stmt);
+    for (auto body: tree->bodies) {
+        walk(body);
     }
     currentScope = symtab->exitScope(currentScope);
     return 0;
@@ -150,14 +147,14 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
     // enter scope
     std::string sname = "loopcond" + std::to_string(tree->loc());
     currentScope = symtab->enterScope(sname, currentScope);
-    for (auto &stmt: tree->getStatements()) {
-        walk(stmt);
-    }
+
+    walk(tree->body);
+    
     currentScope = symtab->exitScope(currentScope);
     return 0;
 }
 
-
+/*
 std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
     std::cout << "visiting def function forward\n";
     // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
@@ -186,25 +183,6 @@ std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
     }
 
     currentScope = symtab->exitScope(currentScope);
-    return 0;
-}
-
-std::any Def::visitFunctionBlock(std::shared_ptr<FunctionBlockNode> tree) {
-    // skip, DO NOT VISIT CHILDREN
-    return 0;
-}
-
-std::any Def::visitFunctionSingle(std::shared_ptr<FunctionSingleNode> tree) {
-    // skip, DO NOT VISIT CHILDREN
-    return 0;
-}
-
-std::any Def::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
-    // SKIP, DO NOT VISIT CHILDREN
-    return 0;
-}
-
-std::any Def::visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) {
     return 0;
 }
 
@@ -242,10 +220,8 @@ std::any Def::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) 
     currentScope = symtab->exitScope(currentScope);
     return 0;
 }
+*/
 
-std::any Def::visitProcedure_arg(std::shared_ptr<ProcedureArgNode> tree) {
-    return 0;
-}
 
 std::shared_ptr<Type> Def::resolveType(std::shared_ptr<ASTNode> t) {
     // type note

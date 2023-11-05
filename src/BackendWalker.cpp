@@ -80,9 +80,13 @@ std::any BackendWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
 std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) {
   mlir::Block *trueBlock = codeGenerator.generateBlock();
   mlir::Block *falseBlock = codeGenerator.generateBlock();
-  mlir::Value result = std::any_cast<mlir::Value>(walk(tree->condition));
 
-  codeGenerator.generateCompAndJump(trueBlock, falseBlock, result);
+  // walk all the conditions, then we have a conditional jump chain.
+  for (auto condition : tree->conditions) {
+    walk(condition);
+  }
+
+  //codeGenerator.generateCompAndJump(trueBlock, falseBlock, result);
   codeGenerator.setBuilderInsertionPoint(trueBlock);
 
   walkChildren(tree);
