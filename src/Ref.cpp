@@ -49,6 +49,10 @@ namespace gazprea {
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
         }
+        auto resolveID = currentScope->resolve(tree->getIDName());
+        if (resolveID != nullptr) {
+            throw SymbolError(tree->loc(), "redeclaration of identifier" + tree->getIDName());
+        }
 
         // define the ID in symtable
         std::string mlirName = "VAR_DEF" + std::to_string(getNextId());

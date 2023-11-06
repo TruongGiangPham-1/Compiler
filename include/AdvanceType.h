@@ -16,7 +16,6 @@ public:
     std::string typDefName;  // typedef  name?
     /*
      * vector of dimentions. if it is a Vector, dims,size() = 1, if it is a matrix, dims.size() = 2
-     *                      if it is a Tuple when dims.size() > 0
      */
     std::vector<mlir::Value> dims;  // maybe can populate this in the backend?
 
