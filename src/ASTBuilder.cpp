@@ -460,6 +460,15 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting post predicated loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PostPredicatedLoopNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIteratorLoop(GazpreaParser::IteratorLoopContext *ctx) {
