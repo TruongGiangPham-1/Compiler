@@ -33,6 +33,37 @@ namespace gazprea {
         return 0;
     }
 
+    std::any Ref::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+        walkChildren(tree);  // walk children to ref it
+        std::shared_ptr<Symbol> sym;
+        if (tree->functype == FUNCTYPE::FUNC_NORMAL) {
+            sym = currentScope->resolve(tree->funcCallName->getName());
+            assert(sym);
+            std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
+            // you can get the ordered args using  cast->orderedArgs
+            if (cast) {
+                // valid
+                // check if it is called before declaration/definition
+                if (tree->loc() < (size_t)cast->line) {
+                    throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
+                } else {
+                    std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
+                }
+                tree->scope = currentScope;
+                // reference to the function Symbol that we are calling. can get all arguments using
+                // tree->functionRef->orderedArgs
+                tree->functionRef = cast;
+            } else {
+                // function call overshaddowed by a non function declaration above || function dont exist
+                std::string errMSg = sym->getName() +  " is not a function to be called. It is undefined or overshadowed"
+                                                       "by another declaration above\n";
+                throw SymbolError(tree->loc(), errMSg);
+            }
+        }
+        return 0;
+
+    }
+
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
@@ -324,7 +355,7 @@ namespace gazprea {
             argNode->idSym->typeSym =  symtab->resolveTypeUser(argNode->type);
             std::cout << "in line " << loc
                       << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
-                      "as Type" << argNode->idSym->typeSym->getName() <<"\n";
+                      " as Type" << argNode->idSym->typeSym->getName() <<"\n";
 
             // define mlirname
             currentScope->define(argNode->idSym);  // define arg in curren scope

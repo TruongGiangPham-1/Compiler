@@ -452,5 +452,27 @@ namespace gazprea {
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
+    std::any ASTBuilder::visitFuncCall(GazpreaParser::FuncCallContext *ctx) {
+        // this is #funcCall rule in expr rule
+        return visit(ctx->functionCall());
+    }
+
+    std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting function call" << std::endl;
+#endif
+        //functionCall : ID '(' (expression (',' expression)*)? ')'
+        // TODO: how to determine if theh function is normal or not? i guess we do that in other passes when resolving name
+        std::shared_ptr<FunctionCallNode> fCall = std::make_shared<FunctionCallNode>(ctx->getStart()->getLine(), FUNCTYPE::FUNC_NORMAL);
+        std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        fCall->funcCallName = fcallName;
+        for (auto expr: ctx->expression()) {
+            fCall->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(fCall);
+
+    }
+
 
 }
