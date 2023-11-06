@@ -45,6 +45,72 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    std::any ASTBuilder::visitVectorType(GazpreaParser::VectorTypeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit VectorType" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+
+        // inner type
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+        auto t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        if (ctx->typeSize()->expression()) {
+            // size is specified
+            auto size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->typeSize()->expression()));
+            t->size = size;
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrixType(GazpreaParser::MatrixTypeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit visitMatrixType" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+
+        // inner type
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+        auto t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        if (ctx->typeSize(0)->expression()) {
+            // left size
+            auto size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->typeSize(0)->expression()));
+            t->sizeLeft = size;
+        }
+
+        if (ctx->typeSize(1)->expression()) {
+            // right size
+            auto size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->typeSize(1)->expression()));
+            t->sizeRight = size;
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTupleType(GazpreaParser::TupleTypeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit TupleType" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        auto t = std::make_shared<TupleTypeNode>(ctx->getStart()->getLine(), sym);
+
+        for (auto tupleField : ctx->tupleTypeField()) {
+            auto type = std::any_cast<std::shared_ptr<ASTNode>>(visit(tupleField->type()));
+            if (tupleField->ID()) {
+                // has name
+                std::string id = tupleField->ID()->getText();
+                t->innerTypes.push_back(std::make_pair(id, type));
+            } else {
+                // no name
+                t->innerTypes.push_back(std::make_pair("", type));
+            }
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
     // STREAMS
     std::any ASTBuilder::visitStream(GazpreaParser::StreamContext *ctx) {
 #ifdef DEBUG
