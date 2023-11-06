@@ -87,7 +87,7 @@ type
     : type '['(expression | MULT)']'                        #vectorType
     | type '['(expression | MULT)','(expression | MULT)']'  #matrixType
     | type '('type (',' type)*')'                           #tupleType
-    | typeString=(ID | BUILT_IN_TYPE) #baseType
+    | typeString=(ID | BUILT_IN_TYPE)                       #baseType
     ;
 
 qualifier: RESERVED_CONST | RESERVED_VAR;
