@@ -444,6 +444,11 @@ namespace gazprea {
 
       argNode->idSym = identifierSymbol;
       argNode->type = typeNode;
+      if (ctx->qualifier()) {
+          argNode->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
+      } else {
+          argNode->qualifier = QUALIFIER::NONE;
+      }
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
     }

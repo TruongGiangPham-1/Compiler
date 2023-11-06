@@ -34,7 +34,12 @@ namespace gazprea {
             currentScope = symtab->exitScope(currentScope);  // pop method scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
         } else {
-            // there was a forward declaration
+            if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
+                // there was a forward declaration
+                // TODO:
+            } else {
+                throw SymbolError(tree->loc(), "procedure same name as another identifier in the global scope");
+            }
 
         }
         return 0;

@@ -18,7 +18,6 @@ namespace gazprea {
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
-        std::shared_ptr<Type> resolveType(std::shared_ptr<ASTNode> t);
 
         int getNextId();
 

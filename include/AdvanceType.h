@@ -36,7 +36,8 @@ public:
         } else if (name == "string") {
             typeEnum = TYPE::STRING;
         }else {
-                throw TypeError(0, "invalid typename when creating AdvancedType object");
+               // throw TypeError(0, "invalid typename when creating AdvancedType object");
+               // custom user type
         }
     };
 
