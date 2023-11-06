@@ -38,7 +38,10 @@ namespace gazprea {
         std::shared_ptr<Symbol> sym;
         if (tree->functype == FUNCTYPE::FUNC_NORMAL) {
             sym = currentScope->resolve(tree->funcCallName->getName());
-            assert(sym);
+            if (sym == nullptr) {
+                throw SymbolError(tree->loc(), "Undefined function call  " + tree->funcCallName->getName());
+            }
+
             std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
             // you can get the ordered args using  cast->orderedArgs
             if (cast) {
@@ -103,6 +106,8 @@ namespace gazprea {
             return 0;
         }
         std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
+        if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
+
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
@@ -352,7 +357,9 @@ namespace gazprea {
 
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
 
-            argNode->idSym->typeSym =  symtab->resolveTypeUser(argNode->type);
+            auto resType = symtab->resolveTypeUser(argNode->type);
+            argNode->idSym->typeSym =  retType;
+            if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
             std::cout << "in line " << loc
                       << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
                       " as Type" << argNode->idSym->typeSym->getName() <<"\n";
