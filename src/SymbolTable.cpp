@@ -30,11 +30,14 @@ std::string SymbolTable::toString() {
     return str.str();
 }
 
-std::pair<TYPE, std::string> SymbolTable::resolveType(std::shared_ptr<ASTNode> typeNode) {
+
+
+std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> typeNode) {
     std::shared_ptr<TypeNode> typeN = std::dynamic_pointer_cast<TypeNode>(typeNode);
     std::cout << "Resolve Type: " << typeN->getTypeName() << std::endl;
     if (typeN == nullptr) {
         throw TypeError(typeNode->loc(), "cannot cast to TypeNode");
     }
-    return std::make_pair(typeN->typeEnum, typeN->getTypeName());
+    // cast this to AdvancedSymbol or builtInSymbol
+    return globalScope->resolveType(typeN->getTypeName());
 }
