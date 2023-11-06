@@ -14,7 +14,7 @@
 #include "Type.h"
 class FunctionNode : public ASTNode {
 public:
-    std::vector<std::shared_ptr<ArgNode>>orderedArgs;    // array of arguments's ID node
+    std::vector<std::shared_ptr<ASTNode>>orderedArgs;    // array of arguments's ID node
     std::shared_ptr<ASTNode> body;
     std::shared_ptr<Symbol> funcNameSym;
     FunctionNode(int line, std::shared_ptr<Symbol>funcNameSym);

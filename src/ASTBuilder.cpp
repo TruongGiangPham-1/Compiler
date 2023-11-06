@@ -484,13 +484,13 @@ namespace gazprea {
       auto funcSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto functionNode = std::make_shared<FunctionNode>(ctx->getStart()->getLine(), funcSymbol);
       for (auto arg : ctx->parameter()) {
-        auto argResult = std::any_cast<std::shared_ptr<ArgNode>>(visit(arg));
+        auto argResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
 
         functionNode->orderedArgs.push_back(argResult);
       }
 
       if (ctx->block()) {
-        auto blockResult = std::any_cast<std::shared_ptr<BlockNode>>(visit(ctx->block()));
+        auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         functionNode->body = blockResult;
       }
 

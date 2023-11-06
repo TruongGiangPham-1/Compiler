@@ -22,7 +22,6 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     //globalScope->defineType(std::make_shared<AdvanceType>("integer", "quack"));
     //globalScope->defineType(std::make_shared<AdvanceType>("quack", "burger"));
     //globalScope->defineType(std::make_shared<AdvanceType>("burger", "chicken"));
-
     currentScope = symtab->enterScope(globalScope);  // enter global scope
 }
 
@@ -37,7 +36,7 @@ std::any Def::visitAssign(std::shared_ptr<AssignNode> tree) {
 }
 
 std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
-    // resolve type
+    //// resolve type
     std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
 
     assert(resType);  // ensure its not nullptr  // should be builtin type
@@ -126,60 +125,6 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     return 0;
 }
 
-/*
-std::any Def::visitFilter(std::shared_ptr<FilterNode> tree) {
-
-    walk(tree->getVecNode());  // walk to the <domain> to resolve any ID in <domain>
-
-    // create gen/filter scope
-    std::string sname = "genfilter" + std::to_string(tree->loc());
-    currentScope = symtab->enterScope(sname, currentScope);
-    // define domainVar as in this scope
-    std::shared_ptr<VariableSymbol> domainVarSym = std::make_shared<VariableSymbol>(tree->domainVar,
-                                                                                    std::make_shared<BuiltInTypeSymbol>("int"));
-    domainVarSym->scope = currentScope;
-    domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
-    currentScope->define(domainVarSym);  // define domain var symbol in this scope
-    std::cout << "in line " << tree->loc()
-              << "domainVar=" << tree->domainVar << " defined as "
-              << domainVarSym->mlirName << std::endl;
-
-    tree->scope = currentScope;  // any resolve in this scope will find the domainVar
-    tree->domainVarSym = domainVarSym;
-
-    walk(tree->getExpr());
-    currentScope = symtab->exitScope(currentScope);
-    return 0;
-}*/
-
-/*
-std::any Def::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
-    walk(tree->getVecNode());  // walk to the <domain> to resolve any ID in <domain>
-
-    // create gen/filter scope
-    std::string sname = "genfilter" + std::to_string(tree->loc());
-    currentScope = symtab->enterScope(sname, currentScope);
-    // define domainVar as in this scope
-    std::shared_ptr<VariableSymbol> domainVarSym = std::make_shared<VariableSymbol>(tree->domainVar,
-                std::make_shared<BuiltInTypeSymbol>("int"));
-
-    domainVarSym->scope = currentScope;
-    domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
-    currentScope->define(domainVarSym);  // define domain var symbol in this scope
-    std::cout << "in line " << tree->loc()
-              << "domainVar=" << tree->domainVar << " defined as "
-              << domainVarSym->mlirName << std::endl;
-
-    tree->scope = currentScope;  // any resolve in this scope will find the domainVar
-    tree->domainVarSym = domainVarSym;
-
-    walk(tree->getExpr());
-    currentScope = symtab->exitScope(currentScope);
-
-
-    return 0;
-}
-*/
 
 std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
 
@@ -210,81 +155,13 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
 }
 
 std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
+    if (tree->body) {
+        return 0;
+    }
     return 0;
 }
 
-//std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-//    return 0;
-//}
 
-
-/*
-std::any Def::visitFunctionForward(std::shared_ptr<FunctionForwardNode> tree) {
-    std::cout << "visiting def function forward\n";
-    // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
-    std::shared_ptr<Type> retType = std::make_shared<BuiltInTypeSymbol>("integer");  // create a random type for now
-
-    // define function scope Symbol
-    std::string fname = "FuncScope" + tree->funcNameSym->getName() + std::to_string(tree->loc());
-    std::shared_ptr<FunctionSymbol> funcSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
-                                                                               fname, retType, symtab->globalScope, tree->loc());
-
-    currentScope->define(funcSym);  // define function symbol in global
-    std::cout << "in line " << tree->loc()
-              << " functionNamer= " << tree->funcNameSym->getName() << " defined in " << currentScope->getScopeName() << "\n";
-    currentScope = symtab->enterScope( funcSym);
-    // define the argument symbols
-    for (auto argIDNode: tree->orderedArgs) {
-        // define this myself, dont need mlir name because arguments are
-        auto idNode = std::dynamic_pointer_cast<IDNode>(argIDNode);
-        //TODO: this id symbol dont have types yet. waiting for visitType implementation
-        assert(idNode);  // not null
-        std::cout << "in line " << tree->loc()
-                  << " argument = " << idNode->sym->getName() << " defined in " << currentScope->getScopeName() << "\n";
-
-        currentScope->define(idNode->sym);  // define arg in curren scope
-        idNode->scope = currentScope;  // set scope to function scope
-    }
-
-    currentScope = symtab->exitScope(currentScope);
-    return 0;
-}
-
-std::any Def::visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) {
-    // define forward declaration if any
-    std::shared_ptr<Type>retType;
-    if (tree->hasReturn) {
-        retType = resolveType(tree->getRetTypeNode());
-    }
-    tree->nameSym->type = retType;  // set return type
-    // define procedure scope Symbol
-    std::string fname = "FuncScope" + tree->nameSym->getName() + std::to_string(tree->loc());
-    std::shared_ptr<ProcedureSymbol> procSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
-                                                                               fname, retType, symtab->globalScope, tree->loc());
-
-    currentScope = symtab->enterScope( procSym);
-
-    // define args
-    for (auto argIDNode: tree->orderedArgs) {
-        // define this myself, dont need mlir name because arguments are
-        auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
-        //TODO: this id symbol dont have types yet. waiting for visitType implementation
-        assert(argNode);  // not null
-
-        // TODO: weird bug where resolve is returning wrong Type here but correct Type in
-        //auto res= resolveType(argNode->getArgType());
-        //argNode->idSym->type = res;
-        std::cout << "in line " << tree->loc()
-                  << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName();
-                   //" as type " << argNode->idSym->type->getName() <<"\n";
-
-        currentScope->define(argNode->idSym);  // define arg in curren scope
-        argNode->scope = currentScope;  // set scope to function scope
-    }
-    currentScope = symtab->exitScope(currentScope);
-    return 0;
-}
-*/
 
 
 int Def::getNextId() {

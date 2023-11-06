@@ -11,6 +11,25 @@ namespace gazprea {
 
 
     std::any Ref::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        auto funcSym = currentScope->resolve(tree->funcNameSym->getName());  // try to resolve procedure name
+        if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
+            // no forward declaration
+            // define method scope and push. define method symbol
+            defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
+
+            // push a local scope for function block,  to walk childre
+            std::string sname = "functionScope" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+
+            if (tree->body) {
+                walk(tree->body);  // ref all the symbol inside function block;
+            }
+
+            currentScope = symtab->exitScope(currentScope);  // pop local scope
+            currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+
+        }
         return 0;
     }
 
@@ -49,6 +68,9 @@ namespace gazprea {
         // this is declare statement defined in funciton/procedure. NOT in global scope
         // resolve type
         //std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
+        if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
+            return 0;
+        }
         std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
@@ -275,12 +297,13 @@ namespace gazprea {
         std::shared_ptr<Type> retType = std::make_shared<AdvanceType>("integer", "integer");
 
         // define function scope Symbol
-        std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
         std::shared_ptr<ScopedSymbol> methodSym;
         if (isFunc) {
+            std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
             methodSym  = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
                                                                                        fname, retType, symtab->globalScope, loc);
         } else {
+            std::string fname = "ProcScope" + funcNameSym->getName() +std::to_string(loc);
             methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
                                                           fname, retType, symtab->globalScope, loc);
         }
