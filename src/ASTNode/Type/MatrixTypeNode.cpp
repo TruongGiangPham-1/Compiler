@@ -20,5 +20,5 @@ std::shared_ptr<ExprNode> MatrixTypeNode::getRightSize() const {
 }
 
 std::string MatrixTypeNode::toString() {
-    return "MatrixTypeNode";
+    return "MatrixTypeNode " + sym->getName() + " <" + innerType->toString() + ">";
 }
