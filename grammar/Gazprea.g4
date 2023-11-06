@@ -86,7 +86,7 @@ functionCall
 type
     : type '['(expression | MULT)']'                        #vectorType
     | type '['(expression | MULT)','(expression | MULT)']'  #matrixType
-    | type '('type (',' type)*')'                           #tupleType
+    | RESERVED_TUPLE '('type (',' type)*')'                 #tupleType
     | typeString=(ID | BUILT_IN_TYPE)                       #baseType
     ;
 
