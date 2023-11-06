@@ -84,11 +84,14 @@ functionCall
     ;
 
 type
-    : type '['(expression | MULT)']'                        #vectorType
-    | type '['(expression | MULT)','(expression | MULT)']'  #matrixType
-    | RESERVED_TUPLE '('type (',' type)*')'                 #tupleType
-    | typeString=(ID | BUILT_IN_TYPE)                       #baseType
+    : type '[' typeSize ']'                                         #vectorType
+    | type '[' typeSize ',' typeSize ']'                            #matrixType
+    | RESERVED_TUPLE '(' tupleTypeField (',' tupleTypeField)+ ')'   #tupleType
+    | typeString=(ID | BUILT_IN_TYPE)                               #baseType
     ;
+
+typeSize : expression | MULT;
+tupleTypeField : type ID?;
 
 qualifier: RESERVED_CONST | RESERVED_VAR;
 
@@ -141,7 +144,6 @@ stream
 // operators
 BUILT_IN_TYPE
     : RESERVED_STRING
-    | RESERVED_TUPLE
     | RESERVED_BOOLEAN
     | RESERVED_CHARACTER
     | RESERVED_INTEGER
