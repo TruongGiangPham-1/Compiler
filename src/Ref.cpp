@@ -16,8 +16,8 @@ namespace gazprea {
 
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-        auto procSym = currentScope->resolve(tree->nameSym->getName());
-        if (procSym == nullptr) {
+        auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
+        if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
             defineFunctionAndProcedure(tree->loc(), tree->nameSym, tree->orderedArgs, 0);
@@ -33,6 +33,14 @@ namespace gazprea {
             currentScope = symtab->exitScope(currentScope);  // pop local scope
             currentScope = symtab->exitScope(currentScope);  // pop method scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        } else {
+            if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
+                // there was a forward declaration
+                // TODO:
+            } else {
+                throw SymbolError(tree->loc(), "procedure same name as another identifier in the global scope");
+            }
+
         }
         return 0;
     }
@@ -41,21 +49,25 @@ namespace gazprea {
         // this is declare statement defined in funciton/procedure. NOT in global scope
         // resolve type
         //std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
-        std::pair typePair = symtab->resolveType(tree->getTypeNode());
+        std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
         }
+        auto resolveID = currentScope->resolve(tree->getIDName());
+        if (resolveID != nullptr) {
+            throw SymbolError(tree->loc(), "redeclaration of identifier" + tree->getIDName());
+        }
 
         // define the ID in symtable
         std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), typePair.first);  //TODO: change TYPE to resolve type
+        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
 
         currentScope->define(idSym);
 
-        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << typePair.second << " as mlirNmae: " << mlirName << "\n" ;
+        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
 
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
@@ -259,8 +271,8 @@ namespace gazprea {
      *
      */
     void Ref::defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
-        // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
-        TYPE retType =  TYPE::INTEGER;  // make random type for now
+        // TODO: resolve return type.
+        std::shared_ptr<Type> retType = std::make_shared<AdvanceType>("integer", "integer");
 
         // define function scope Symbol
         std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
@@ -283,12 +295,13 @@ namespace gazprea {
             //TODO: this id symbol dont have types yet. waiting for visitType implementation
             assert(argNode);  // not null
             assert(argNode->type);  // assert it exist
-            std::pair typeP = symtab->resolveType(argNode->type);
+
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
-            argNode->idSym->type = typeP.first;
+
+            argNode->idSym->typeSym =  symtab->resolveTypeUser(argNode->type);
             std::cout << "in line " << loc
                       << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
-                      "as Type" << typeP.second <<"\n";
+                      "as Type" << argNode->idSym->typeSym->getName() <<"\n";
 
             // define mlirname
             currentScope->define(argNode->idSym);  // define arg in curren scope
