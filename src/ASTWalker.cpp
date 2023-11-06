@@ -284,10 +284,7 @@ namespace gazprea {
     }
 
     std::any ASTWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
-        for (auto stat: tree->statements) {
-            walk(stat);
-        }
-        return  0;
+        return this->walkChildren(tree);
     }
 
     std::any ASTWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
