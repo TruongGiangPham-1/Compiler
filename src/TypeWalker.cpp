@@ -157,23 +157,9 @@ namespace gazprea {
         return nullptr;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    std::any TypeWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
+        walkChildren(tree);
+        tree->evaluatedType = tree->getExpr()->evaluatedType;
+        return nullptr;
+    }
 }
