@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include "GazpreaBaseVisitor.h"
 
 #include "ASTNode/ASTNode.h"
@@ -24,6 +25,7 @@
 
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Method/FunctionNode.h"
+#include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/Type/VectorTypeNode.h"
 #include "ASTNode/Type/StringTypeNode.h"
@@ -33,7 +35,6 @@
 #include "ASTNode/Type/TupleTypeNode.h"
 #include "ASTNode/Method/ProcedureNode.h"
 #include "Types/QUALIFIER.h"
-#include <memory>
 
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
@@ -43,8 +44,6 @@
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
 
-
-
 namespace gazprea {
 
     class ASTBuilder : public GazpreaBaseVisitor {
@@ -52,7 +51,7 @@ namespace gazprea {
         std::any visitFile(GazpreaParser::FileContext *ctx) override;
 
         // ()
-        std::any visitParentheses(GazpreaParser::ParenthesesContext *ctx);
+        std::any visitParentheses(GazpreaParser::ParenthesesContext *ctx) override;
         // memory
         std::any visitVardecl(GazpreaParser::VardeclContext *ctx) override;
         std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
@@ -85,6 +84,7 @@ namespace gazprea {
         std::any visitProcedure(GazpreaParser::ProcedureContext *ctx) override;
         std::any visitFunction(GazpreaParser::FunctionContext *ctx) override;
         std::any visitParameter(GazpreaParser::ParameterContext *ctx) override;
+        std::any visitReturn(GazpreaParser::ReturnContext *ctx) override;
 
         // control flow
         std::any visitCond(GazpreaParser::CondContext *ctx) override;

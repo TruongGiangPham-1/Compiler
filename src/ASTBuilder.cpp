@@ -448,4 +448,13 @@ namespace gazprea {
       return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
 
+    std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting return" << std::endl;
+#endif
+      auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
+
+      return std::dynamic_pointer_cast<ASTNode>(returnNode);
+    }
+
 }

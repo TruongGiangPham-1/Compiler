@@ -1,3 +1,6 @@
+#include "ASTNode/Block/BlockNode.h"
+#include "ASTNode/Expr/Literal/BoolNode.h"
+#include "ASTNode/Expr/Literal/CharNode.h"
 #include "ASTWalker.h"
 #include "BackEnd.h"
 
@@ -11,6 +14,11 @@ private:
   // === EXPRESSION AST NODES ===
   std::any visitID(std::shared_ptr<IDNode> tree) override;
   std::any visitInt(std::shared_ptr<IntNode> tree) override;
+  std::any visitReal(std::shared_ptr<RealNode> tree) override;
+  std::any visitChar(std::shared_ptr<CharNode> tree) override;
+  std::any visitBool(std::shared_ptr<BoolNode> tree) override;
+  std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
+
   // Expr/Binary
   std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
   std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
@@ -23,6 +31,11 @@ private:
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
   std::any visitLoop(std::shared_ptr<LoopNode> tree) override;
+  std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
+
+  // method definitions
+  std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+  std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
 
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};

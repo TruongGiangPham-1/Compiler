@@ -56,73 +56,6 @@ void BackEnd::init() {
   builder->setInsertionPointToStart(mainEntry);
 }
 
-void BackEnd::functionShowcase() {
-  
-  auto a = this->generateValue(86);
-  auto b = this->generateValue('c');
-  auto c = this->generateValue(3.4f);
-
-  this->printCommonType(a);
-  this->printCommonType(b);
-
-  auto mvec = std::vector<mlir::Value>();
-  mvec.push_back(a);
-  mvec.push_back(b);
-
-  auto mvec2 = std::vector<mlir::Value>();
-  mvec2.push_back(a);
-  mvec2.push_back(a);
-  mvec2.push_back(a);
-
-  auto tupl2 = this->generateValue(mvec2);
-  auto tuple = this->generateValue(mvec);
-
-  this->printCommonType(tupl2);
-  this->printCommonType(tuple);
-
-  auto casted = this->promotion(a, b);
-  auto castedReal = this->promotion(a,c);
-
-  this->printCommonType(tuple);
-  this->printCommonType(casted);
-  this->printCommonType(castedReal);
-
-  this->printCommonType(tuple);
-  this->generateDeclaration("tst", tuple);
-  this->generateDeclaration("tst3", tuple);
-  this->generateDeclaration("tst2", casted);
-
-  this->printCommonType(this->generateLoadIdentifier("tst2"));
-  this->printCommonType(this->generateLoadIdentifier("tst3"));
-  this->printCommonType(this->generateLoadIdentifier("tst"));
-
-  auto h = this->performBINOP(a, c, ADD);
-  auto sub = this->performBINOP(a, c, SUB);
-  auto eq = this->performBINOP(a, a, EQUAL);
-  auto negate = this->performUNARYOP(a, NEGATE);
-  auto positive = this->performUNARYOP(a, POSITIVE);
-
-  this->printCommonType(h);
-  this->printCommonType(sub);
-  this->printCommonType(eq);
-
-  this->generateDeclaration("var", c);
-
-  auto blk = this->generateFunctionDefinition("abce", 3, true);
-  auto v = this->generateLoadIdentifier("var");
-  this->printCommonType(v);
-  mlir::Value val;
-  this->generateEndFunctionDefinition(blk, val);
-  this->generateCallNamed("abce", {a,b,c});
-
-  module.dump();
-  this->printCommonType(negate);
-  this->printCommonType(positive);
-
-  // de-allocate. will break because of the tuples
-  // this->deallocateObjects()
-}
-
 /**
  * Finish codegen + main function.
  */
@@ -132,8 +65,6 @@ void BackEnd::generate() {
             << std::endl;
 #endif
   auto intType = builder->getI32Type();
-
-  this->functionShowcase();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
