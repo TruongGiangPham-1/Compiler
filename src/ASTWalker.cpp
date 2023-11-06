@@ -23,8 +23,7 @@
 #include "ASTNode/Loop/LoopNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 
-#define DEBUG
-
+//#define DEBUG
 
 using namespace gazprea;
 namespace gazprea {
