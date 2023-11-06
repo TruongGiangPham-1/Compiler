@@ -84,9 +84,9 @@ functionCall
     ;
 
 type
-    :'['(expression | MULT)']'                            #vectorType
-    | type'['(expression | MULT)','(expression | MULT)']' #matrixType
-    | type '('type (',' type)*')'                         #tupleType
+    : type '['(expression | MULT)']'                        #vectorType
+    | type '['(expression | MULT)','(expression | MULT)']'  #matrixType
+    | type '('type (',' type)*')'                           #tupleType
     | typeString=(ID | BUILT_IN_TYPE) #baseType
     ;
 
