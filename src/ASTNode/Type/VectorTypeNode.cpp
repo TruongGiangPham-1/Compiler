@@ -27,5 +27,5 @@ bool VectorTypeNode::isInferred() const {
 }
 
 std::string VectorTypeNode::toString() {
-    return "VectorTypeNode " + sym->getName() + " <" + innerType->toString() + ">";
+    return "VectorTypeNode [" + size->toStringTree() + "] " + innerType->toString();
 }
