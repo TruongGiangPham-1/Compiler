@@ -94,6 +94,7 @@ set(
         ASTNode/ArgNode.cpp
         ../include/ASTNode/ArgNode.h
         ../include/AdvanceType.h
+        ASTNode/Loop/InfiniteLoopNode.cpp
 )
 
 # Build our executable from the source files.

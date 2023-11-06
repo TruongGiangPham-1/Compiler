@@ -105,7 +105,7 @@ std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
   codeGenerator.generateEnterBlock(loopBeginBlock);
   codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
 
-  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->condition));
+  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
   codeGenerator.generateCompAndJump(trueBlock, falseBlock, exprResult);
 
   codeGenerator.setBuilderInsertionPoint(trueBlock);

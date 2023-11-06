@@ -1,7 +1,6 @@
 #include "ASTBuilder.h"
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/Method/FunctionNode.h"
-#include "ASTNode/Loop/PredicatedLoopNode.h"
 #include <memory>
 
 
@@ -442,6 +441,16 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitInfiniteLoop(GazpreaParser::InfiniteLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting infinite loop." << std::endl;
+#endif
+        auto loopNode = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
+
+        if (ctx->block()) {
+            loopNode->addChild(visit(ctx->block()));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(loopNode);
     }
 
     std::any ASTBuilder::visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) {
