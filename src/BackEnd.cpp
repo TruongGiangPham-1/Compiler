@@ -108,6 +108,44 @@ void BackEnd::functionShowcase() {
   this->printCommonType(positive);
   // de-allocate. will break because of the tuples
   // this->deallocateObjects()
+
+  // visual separator. Below this is conditionals
+  this->printCommonType(this->generateValue(999999999));
+
+  // generate `if (a == 1) then print(a) else if (a == 86) print(b) else print(c)`
+  // this code will be generated
+  mlir::Block *true1 = this->generateBlock();
+  mlir::Block *false1 = this->generateBlock();
+  mlir::Block *true2 = this->generateBlock();
+  mlir::Block *false2 = this->generateBlock();
+  mlir::Block *endConditional = this->generateBlock();
+
+  // if (a == 1) then print(1)
+  auto cond1 = this->performBINOP(a, this->generateValue(1), EQUAL);
+  auto cond1Bool = this->downcastToBool(cond1);
+
+  this->generateCompAndJump(true1, false1, cond1Bool);
+
+  this->setBuilderInsertionPoint(true1);
+  this->printCommonType(this->generateValue(1));
+  this->generateEnterBlock(endConditional);
+  this->setBuilderInsertionPoint(false1);
+
+  // else if (a > 50) print(2)
+  auto cond2 = this->performBINOP(a, this->generateValue(50), GTHAN);
+  auto cond2Bool = this->downcastToBool(cond2);
+  this->generateCompAndJump(true2, false2, cond2Bool);
+
+  this->setBuilderInsertionPoint(true2);
+  this->printCommonType(this->generateValue((2)));
+  this->generateEnterBlock(endConditional);
+  this->setBuilderInsertionPoint(false2);
+
+  // else print(3)
+  this->printCommonType(this->generateValue(3));
+  this->generateEnterBlock(endConditional);
+
+  this->setBuilderInsertionPoint(endConditional);
 }
 
 /**
@@ -573,9 +611,7 @@ mlir::Block *BackEnd::generateBlock() {
  */
 void BackEnd::generateCompAndJump(mlir::Block *trueBlock,
                                   mlir::Block *falseBlock, mlir::Value cmpVal) {
-  // load from addr, do icmp, and jump
-  mlir::Value zero =
-      builder->create<mlir::LLVM::ConstantOp>(loc, builder->getI32Type(), 0);
+  // jump depending on the value of cmpVal
   builder->create<mlir::LLVM::CondBrOp>(loc, cmpVal, trueBlock, falseBlock);
 }
 
@@ -602,8 +638,8 @@ mlir::Value BackEnd::generateIndexWithInteger(mlir::Value vector,
 mlir::Value BackEnd::downcastToBool(mlir::Value val) {
   auto downcastFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("commonTypeToBool");
   return builder->create<mlir::LLVM::CallOp>(loc,
-                                                    downcastFunc,
-                                                    mlir::ValueRange({val})
+                                             downcastFunc,
+                                             mlir::ValueRange({val})
   ).getResult();
 }
 
