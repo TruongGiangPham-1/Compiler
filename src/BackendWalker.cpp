@@ -19,7 +19,6 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-
   codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
@@ -102,6 +101,7 @@ std::any BackendWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
 // === BLOCK AST NODES ===
 
 std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) {
+  //TODO
   mlir::Block *trueBlock = codeGenerator.generateBlock();
   mlir::Block *falseBlock = codeGenerator.generateBlock();
 
@@ -122,6 +122,7 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 }
 
 std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
+  //TODO
   mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
   mlir::Block *trueBlock = codeGenerator.generateBlock();
   mlir::Block *falseBlock = codeGenerator.generateBlock();
@@ -141,12 +142,8 @@ std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
 }
 
 std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-  std::cout << "here " << std::endl;
-  // differnece in how these are called. functions get references, procedures
-  // values? Or the other way around w/e
-  
   if (tree->body) {
-    // for now we don't proper return values
+    // for now we don't proper return values, assume everything void
     auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name, 
         tree->orderedArgs.size(), 
         true);
@@ -155,12 +152,12 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     codeGenerator.generateEndFunctionDefinition(block, val);
   }
 
-  return walkChildren(tree);
+  return 0;
 }
 
 std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
   if (tree->body) {
-    // for now we don't proper return values
+    // for now we don't proper return values, assume everything void
     auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name, 
         tree->orderedArgs.size(), 
         true);
@@ -168,11 +165,11 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
     mlir::Value val; // void
     codeGenerator.generateEndFunctionDefinition(block, val);
   }
-  return walkChildren(tree);
+  return 0;
 }
 
 std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
-  // deallocate here later.
+  // TODO deallocate here later.
   return walkChildren(tree);
 }
 

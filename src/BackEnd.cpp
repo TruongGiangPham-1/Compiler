@@ -64,6 +64,8 @@ void BackEnd::generate() {
   std::cout << "CODEGEN FINISHED, ending main function and outputting"
             << std::endl;
 #endif
+
+
   auto intType = builder->getI32Type();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
@@ -145,12 +147,11 @@ int BackEnd::emitMain() {
 void BackEnd::setupCommonTypeRuntime() {
   auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
   auto intType = builder->getI32Type();
-  auto int64Type = builder->getI64Type();
 
   auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
 
   // mlir doesn't allow void types. we do a little hacking
-  auto voidPtrType = mlir::LLVM::LLVMPointerType::get(int64Type);
+  auto voidPtrType = mlir::LLVM::LLVMPointerType::get(intType);
 
   auto commonType =
       mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intPtrType});

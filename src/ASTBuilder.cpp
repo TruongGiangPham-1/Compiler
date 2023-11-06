@@ -363,7 +363,7 @@ namespace gazprea {
         std::cout << "Visiting block definition." << std::endl;
 #endif
         auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
-        int size= ctx->statement().size();
+
         for (auto statement : ctx->statement()) {
           std::shared_ptr<ASTNode> statementNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(statement));
           blockNode->addChild(statementNode);
