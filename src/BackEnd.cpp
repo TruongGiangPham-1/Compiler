@@ -64,8 +64,6 @@ void BackEnd::generate() {
   std::cout << "CODEGEN FINISHED, ending main function and outputting"
             << std::endl;
 #endif
-
-
   auto intType = builder->getI32Type();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
@@ -177,6 +175,7 @@ void BackEnd::setupCommonTypeRuntime() {
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
 
+  auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
@@ -188,6 +187,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                             printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "promotion",
                                             promoteCommonTypeFuncType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+                                          commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateTuple",
@@ -216,6 +217,12 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   this->generateDeclaration(newLabel, result);
   this->allocatedObjects++;
 
+  // cast the result of a comparison operation back to boolean. Originally else they are of 
+  // the dominating type (whoever won in the promotion)
+  if (op == EQUAL || op == NEQUAL || op == GTHAN || op == LTHAN || op == GEQ || op == LEQ) {
+    result = cast(result, BOOL);
+  }
+
   return result;
 }
 
@@ -224,6 +231,22 @@ mlir::Value BackEnd::promotion(mlir::Value left, mlir::Value right) {
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
 
   auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
+  std::string newLabel =
+      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
+  this->objectLabels.push_back(newLabel);
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
+
+mlir::Value BackEnd::cast(mlir::Value left, BuiltIn toType) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
+
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, this->generateInteger(toType)})).getResult();
 
   // we create a new object, have to tag it
   std::string newLabel =
@@ -311,7 +334,7 @@ mlir::Value BackEnd::generateValue(int value) {
 mlir::Value BackEnd::generateValue(bool value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI1Type(), value);
-  return this->generateCommonType(result, value);
+  return this->generateCommonType(result, BOOL);
 }
 
 mlir::Value BackEnd::generateValue(float value) {
