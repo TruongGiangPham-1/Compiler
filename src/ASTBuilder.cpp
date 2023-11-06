@@ -475,6 +475,25 @@ namespace gazprea {
 
     }
 
+    // Loop Control
+    std::any ASTBuilder::visitBreak(GazpreaParser::BreakContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting break." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<BreakNode>(ctx->getStart()->getLine());
+
+        return t;
+    }
+
+    std::any ASTBuilder::visitContinue(GazpreaParser::ContinueContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting continue." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<ContinueNode>(ctx->getStart()->getLine());
+
+        return t;
+    }
+
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure definition." << std::endl;

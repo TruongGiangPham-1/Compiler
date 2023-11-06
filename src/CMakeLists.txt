@@ -97,6 +97,10 @@ set(
         ASTNode/Loop/InfiniteLoopNode.cpp
         ASTNode/Loop/PredicatedLoopNode.cpp
         ASTNode/Loop/PostPredicatedLoopNode.cpp
+        ASTNode/BreakNode.cpp
+        ../include/ASTNode/BreakNode.h
+        ASTNode/ContinueNode.cpp
+        ../include/ASTNode/ContinueNode.h
 )
 
 # Build our executable from the source files.
