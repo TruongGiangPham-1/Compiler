@@ -93,8 +93,10 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   // now, go through the conditions and bodies and generate the code
   // the number of bodies is never less than the number of conditions
   for (int i = 0; i < tree->conditions.size(); i++) {
-    auto condResult = std::any_cast<mlir::Value>(walk(tree->conditions[i]));
-    codeGenerator.generateCompAndJump(trueBlocks[i], falseBlocks[i], condResult);
+    auto condResultVal = std::any_cast<mlir::Value>(walk(tree->conditions[i]));
+    auto condResultBool = codeGenerator.downcastToBool(condResultVal);
+
+    codeGenerator.generateCompAndJump(trueBlocks[i], falseBlocks[i], condResultBool);
 
     codeGenerator.setBuilderInsertionPoint(trueBlocks[i]);
     walk(tree->bodies[i]);

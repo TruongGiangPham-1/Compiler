@@ -470,3 +470,18 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 
   return result;
 }
+
+// https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar
+// only bool, int and char can be converted to bools
+bool commonTypeToBool(commonType* val) {
+  switch (val->type) {
+    case BOOL:
+      return *(bool*)val->value;
+    case INT:
+      // any integer not equal to zero is considered true
+      return *(int*)val->value != 0;
+    case CHAR:
+      // chars not equal to '\0' are considered true
+      return *(char*)val->value != '\0';
+  }
+}
