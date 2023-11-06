@@ -178,6 +178,9 @@ namespace gazprea {
             case GazpreaParser::RESERVED_AND:
                 t->op = BINOP::AND;
                 break;
+            case GazpreaParser::RESERVED_OR:
+                t->op = BINOP::OR;
+                break;
             default:
                 throw std::runtime_error("unknown arithmetic operator " + ctx->op->getText());
         }

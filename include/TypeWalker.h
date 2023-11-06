@@ -42,13 +42,24 @@
 namespace gazprea {
     class PromotedType {
     public:
+        std::shared_ptr<SymbolTable> symtab;
+        std::shared_ptr<Scope> currentScope;
         static std::string booleanResult[5][5]; //XOR AND NOT OR
         static std::string arithmeticResult[5][5]; //+ - / * ^ % **
         static std::string comparisonResult[5][5]; //>= <= > <
         static std::string equalityResult[5][5]; //==, !=
         static std::string promotionTable[5][5];
 
-        PromotedType();
+        const int boolIndex = 0;
+        const int charIndex = 1;
+        const int integerIndex = 2;
+        const int realIndex = 3;
+        const int tupleIndex = 4;
+
+        std::shared_ptr<Type> getType(std::string table[5][5], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
+        int getTypeIndex(const std::string type);
+
+        PromotedType(std::shared_ptr<SymbolTable> symtab);
         ~PromotedType();
     };
 
@@ -59,15 +70,6 @@ namespace gazprea {
         std::shared_ptr<Scope> currentScope;
         std::shared_ptr<PromotedType> promotedType;
 
-        const int boolIndex = 0;
-        const int charIndex = 1;
-        const int integerIndex = 2;
-        const int realIndex = 3;
-        const int tupleIndex = 4;
-
-        int getTypeIndex(const std::string type);
-        std::shared_ptr<Type> getType(std::string table[5][5], std::shared_ptr<Type> lhs, std::shared_ptr<Type> rhs, std::shared_ptr<ASTNode> t);
-
     public:
         TypeWalker(std::shared_ptr<SymbolTable> symtab, std::shared_ptr<PromotedType> promotedType);
         ~TypeWalker();
@@ -75,10 +77,10 @@ namespace gazprea {
         std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
         std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
-        std::any visitID(std::shared_ptr<IDNode> tree) override;
+        //std::any visitID(std::shared_ptr<IDNode> tree) override;
         std::any visitInt(std::shared_ptr<IntNode> tree) override;
         std::any visitReal(std::shared_ptr<RealNode> tree) override;
-        std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
+        //std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
         std::any visitChar(std::shared_ptr<CharNode> tree) override;
         std::any visitBool(std::shared_ptr<BoolNode> tree) override;
 

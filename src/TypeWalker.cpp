@@ -4,7 +4,7 @@
 
 namespace gazprea {
 
-    PromotedType::PromotedType() {}
+    PromotedType::PromotedType(std::shared_ptr<SymbolTable> symtab) : symtab(symtab), currentScope(symtab->globalScope) {}
     PromotedType::~PromotedType() {}
 
     std::string PromotedType::booleanResult[5][5] = {
@@ -54,30 +54,33 @@ namespace gazprea {
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
 
-    std::shared_ptr<Type> TypeWalker::getType(std::string table[5][5], std::shared_ptr<Type> left, std::shared_ptr<Type> right, std::shared_ptr<ASTNode> t) {
-        auto leftIndex = this->getTypeIndex(left->getName());
-        auto rightIndex = this->getTypeIndex(right->getName());
+    std::shared_ptr<Type> PromotedType::getType(std::string table[5][5], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
+        if (left->evaluatedType == nullptr || right->evaluatedType == nullptr) {
+            return nullptr;
+        }
         // TODO: identity and null handling
+        auto leftIndex = this->getTypeIndex(left->evaluatedType->getName());
+        auto rightIndex = this->getTypeIndex(right->evaluatedType->getName());
         std::string resultTypeString = table[leftIndex][rightIndex];
         if (resultTypeString.empty()) {
-            throw TypeError(t->loc(), "Cannot perform operation between " + left->getName() + " and " + right->getName());
+            throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
         }
 
-        auto resultType = std::make_shared<BuiltInTypeSymbol>(resultTypeString); // maybe need to resolve this instead?
+        auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolve(resultTypeString));
 
         #ifdef DEBUG
-                std::cout << "type promotions between " <<  left->getName() << ", " << right->getName() << "\n";
+                std::cout << "type promotions between " <<  left->evaluatedType->getName() << ", " << right->evaluatedType->getName() << "\n";
                 std::cout << "result: " <<  resultType->getName() << "\n";
         #endif
         return resultType;
     }
 
-    int TypeWalker::getTypeIndex(const std::string type) {
+    int PromotedType::getTypeIndex(const std::string type) {
         if (type == "boolean") {
             return this->boolIndex;
         } else if (type == "character") {
             return this->charIndex;
-        } else if (type == "int") {
+        } else if (type == "integer") {
             return this->integerIndex;
         } else if (type == "real") {
             return this->realIndex;
@@ -91,12 +94,78 @@ namespace gazprea {
     TypeWalker::TypeWalker(std::shared_ptr<SymbolTable> symtab, std::shared_ptr<PromotedType> promotedType) : symtab(symtab), currentScope(symtab->globalScope), promotedType(promotedType) {}
     TypeWalker::~TypeWalker() {}
 
-    std::any TypeWalker::visitID(std::shared_ptr<IDNode> tree) {
-        if (tree->sym == nullptr) {
-            throw SymbolError(tree->loc(), "Undefined Symbol " + tree->getName() + " Referenced");
-        }
-
+    std::any TypeWalker::visitInt(std::shared_ptr<IntNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("integer"));
+        return nullptr;
     }
+
+    std::any TypeWalker::visitReal(std::shared_ptr<RealNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("real"));
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitChar(std::shared_ptr<CharNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("character"));
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitBool(std::shared_ptr<BoolNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("boolean"));
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
+        walkChildren(tree);
+        auto lhsType = tree->getLHS()->evaluatedType;
+        auto rhsType = tree->getRHS()->evaluatedType;
+        auto op = tree->op;
+        switch(op) {
+            case BINOP::MULT:
+            case BINOP::DIV:
+            case BINOP::ADD:
+            case BINOP::EXP:
+            case BINOP::SUB:
+            case BINOP::REM:
+                tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
+                break;
+            case BINOP::XOR:
+            case BINOP::OR:
+            case BINOP::AND:
+                tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
+                break;
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
+        walkChildren(tree);
+        auto lhsType = tree->getLHS()->evaluatedType;
+        auto rhsType = tree->getRHS()->evaluatedType;
+        auto op = tree->op;
+        switch(op) {
+            case BINOP::LTHAN:
+            case BINOP::GTHAN:
+            case BINOP::LEQ:
+            case BINOP::GEQ:
+                tree->evaluatedType = promotedType->getType(promotedType->comparisonResult, tree->getLHS(), tree->getRHS(), tree);
+                break;
+            case BINOP::EQUAL:
+            case BINOP::NEQUAL:
+                tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
+                break;
+        }
+        return nullptr;
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 
