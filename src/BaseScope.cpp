@@ -38,7 +38,8 @@ std::string BaseScope::toString() {
 }
 
 void BaseScope::defineType(std::shared_ptr<Symbol> sym) {
-    this->userTypes.emplace(sym->getName(), sym);
+    auto cast = std::dynamic_pointer_cast<AdvanceType>(sym);
+    this->userTypes.emplace(cast->getTypDefname(), cast);
 }
 
 std::shared_ptr<Type> BaseScope::resolveType(const std::string &typeName) {

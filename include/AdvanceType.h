@@ -8,6 +8,7 @@
 #include "Symbol.h"
 #include <vector>
 #include "Types/TYPES.h"
+#include "CompileTimeExceptions.h"
 
 class AdvanceType : public Type, public Symbol{
 public:
@@ -42,6 +43,9 @@ public:
     std::string getName() {
         return Symbol::getName();
     };
+    std::string getTypDefname() {
+        return typDefName;
+    }
 };
 
 class TupleType: public AdvanceType {

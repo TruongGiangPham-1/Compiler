@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Scope.h"
+#include "AdvanceType.h"
 
 class BaseScope : public Scope {
 public:
