@@ -4,6 +4,7 @@
 
 
 // Children: [ Condition?, Body ]
+// this class should not be instantiated by itself!
 class LoopNode : public ASTNode {
 public:
     LoopNode(int line);

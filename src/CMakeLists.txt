@@ -95,6 +95,7 @@ set(
         ../include/ASTNode/ArgNode.h
         ../include/AdvanceType.h
         ASTNode/Loop/InfiniteLoopNode.cpp
+        ASTNode/Loop/PredicatedLoopNode.cpp
 )
 
 # Build our executable from the source files.

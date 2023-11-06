@@ -313,8 +313,6 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-
-
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
         std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->getText());
         std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), identifierSymbol);
@@ -438,19 +436,27 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitPredicatedLoop(GazpreaParser::PredicatedLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting predicated loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PredicatedLoopNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitInfiniteLoop(GazpreaParser::InfiniteLoopContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting infinite loop." << std::endl;
 #endif
-        auto loopNode = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
 
-        if (ctx->block()) {
-            loopNode->addChild(visit(ctx->block()));
-        }
 
-        return std::dynamic_pointer_cast<ASTNode>(loopNode);
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) {
