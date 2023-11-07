@@ -108,8 +108,8 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
     walk(tree->bodies[tree->bodies.size() - 1]);
-    codeGenerator.generateEnterBlock(endBlock);
   }
+  codeGenerator.generateEnterBlock(endBlock);
 
   codeGenerator.setBuilderInsertionPoint(endBlock);
 
