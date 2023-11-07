@@ -45,6 +45,72 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
+    std::any ASTBuilder::visitVectorType(GazpreaParser::VectorTypeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit VectorType" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+
+        // inner type
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+        auto t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        if (ctx->typeSize()->expression()) {
+            // size is specified
+            auto size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->typeSize()->expression()));
+            t->size = size;
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitMatrixType(GazpreaParser::MatrixTypeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit visitMatrixType" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+
+        // inner type
+        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+        auto t = std::make_shared<MatrixTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+
+        if (ctx->typeSize(0)->expression()) {
+            // left size
+            auto size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->typeSize(0)->expression()));
+            t->sizeLeft = size;
+        }
+
+        if (ctx->typeSize(1)->expression()) {
+            // right size
+            auto size = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->typeSize(1)->expression()));
+            t->sizeRight = size;
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTupleType(GazpreaParser::TupleTypeContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit TupleType" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
+        auto t = std::make_shared<TupleTypeNode>(ctx->getStart()->getLine(), sym);
+
+        for (auto tupleField : ctx->tupleTypeField()) {
+            auto type = std::any_cast<std::shared_ptr<ASTNode>>(visit(tupleField->type()));
+            if (tupleField->ID()) {
+                // has name
+                std::string id = tupleField->ID()->getText();
+                t->innerTypes.push_back(std::make_pair(id, type));
+            } else {
+                // no name
+                t->innerTypes.push_back(std::make_pair("", type));
+            }
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
     // STREAMS
     std::any ASTBuilder::visitStream(GazpreaParser::StreamContext *ctx) {
 #ifdef DEBUG
@@ -418,13 +484,13 @@ namespace gazprea {
       auto funcSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto functionNode = std::make_shared<FunctionNode>(ctx->getStart()->getLine(), funcSymbol);
       for (auto arg : ctx->parameter()) {
-        auto argResult = std::any_cast<std::shared_ptr<ArgNode>>(visit(arg));
+        auto argResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
 
         functionNode->orderedArgs.push_back(argResult);
       }
 
       if (ctx->block()) {
-        auto blockResult = std::any_cast<std::shared_ptr<BlockNode>>(visit(ctx->block()));
+        auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         functionNode->body = blockResult;
       }
 
@@ -444,9 +510,36 @@ namespace gazprea {
 
       argNode->idSym = identifierSymbol;
       argNode->type = typeNode;
+      if (ctx->qualifier()) {
+          argNode->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
+      } else {
+          argNode->qualifier = QUALIFIER::NONE;
+      }
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
+    std::any ASTBuilder::visitFuncCall(GazpreaParser::FuncCallContext *ctx) {
+        // this is #funcCall rule in expr rule
+        return visit(ctx->functionCall());
+    }
+
+    std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting function call" << std::endl;
+#endif
+        //functionCall : ID '(' (expression (',' expression)*)? ')'
+        // TODO: how to determine if theh function is normal or not? i guess we do that in other passes when resolving name
+        std::shared_ptr<FunctionCallNode> fCall = std::make_shared<FunctionCallNode>(ctx->getStart()->getLine(), FUNCTYPE::FUNC_NORMAL);
+        std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        fCall->funcCallName = fcallName;
+        for (auto expr: ctx->expression()) {
+            fCall->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(fCall);
+
+    }
+
 
     std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
 #ifdef DEBUG

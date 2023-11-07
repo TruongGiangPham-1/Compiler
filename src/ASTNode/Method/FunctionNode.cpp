@@ -8,7 +8,7 @@ FunctionNode::FunctionNode(int line, std::shared_ptr<Symbol>funcNameSym): ASTNod
 
 
 std::string FunctionNode::toString() {
-    return "Function";
+    return "Function " + funcNameSym->getName() + " " + body->toStringTree();
 }
 
 std::shared_ptr<ASTNode> FunctionNode::getRetTypeNode() {

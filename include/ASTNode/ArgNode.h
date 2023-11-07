@@ -13,6 +13,7 @@ class ArgNode: public ASTNode {
 public:
     ArgNode(int line);
 
+    QUALIFIER qualifier;
     std::shared_ptr<Symbol> idSym;
     std::shared_ptr<ASTNode> type;
 

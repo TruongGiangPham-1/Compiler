@@ -12,6 +12,7 @@
 #include "CompileTimeExceptions.h"
 #include "ScopedSymbol.h"
 #include "FunctionCallTypes/FuncCallType.h"
+#include "AdvanceType.h"
 
 
 namespace gazprea {
@@ -37,12 +38,14 @@ namespace gazprea {
         //std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
         std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+        std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) override;
 
         // === Function Call ===
         // === procedure
         
         //std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
         //std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
+
 
     };
 }

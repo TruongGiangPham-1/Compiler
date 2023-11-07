@@ -77,6 +77,9 @@ public:
   mlir::Block *generateLoopMiddle(mlir::Value addr);
   mlir::Block *generateBlock();
 
+  // Loop and if conditional helper - downcasting to bool
+  mlir::Value downcastToBool(mlir::Value val);
+
   // generator helper functions
   mlir::Value getVectorSize(mlir::Value vectorAddr);
   mlir::Value generateGeneratorBegin(mlir::Value domainVecAddr,
