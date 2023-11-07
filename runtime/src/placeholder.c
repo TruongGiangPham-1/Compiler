@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -47,7 +48,7 @@ void printType(commonType *type, bool nl) {
     case TUPLE:
       // {} bc we can't declare variables in switch
       {
-        tuple *mTuple = (*(tuple**)type->value);
+        tuple *mTuple = ((tuple*)type->value);
         #ifdef DEBUGTUPLE
         printf("Printing tuple %p\n", mTuple);
         #endif
@@ -100,7 +101,7 @@ void extractAndAssignValue(void* value, commonType *dest) {
       break;
     case TUPLE:
       {
-        dest->value = value;
+        dest->value = *(tuple**)value;
       }
       break;
     case CHAR: 
@@ -425,8 +426,23 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     return l != r;
     case LTHAN:
     return l < r;
+    case LEQ:
+    return l <= r;
     case GTHAN:
     return r > l;
+    case GEQ:
+    return r >= l;
+    case REM:
+    return l % r;
+    case EXP:
+    // we do a little truth table analysis
+    return !(!l & r);
+    case AND:
+    return l & r;
+    case OR:
+    return l | r;
+    case XOR:
+    return l ^ r;
   }
 }
 
@@ -446,8 +462,22 @@ int intBINOP(int l, int r, enum BINOP op) {
     return l != r;
     case LTHAN:
     return l < r;
+    case LEQ:
+    return l <= r;
     case GTHAN:
     return r > l;
+    case GEQ:
+    return r >= l;
+    case REM:
+    return l % r;
+    case EXP:
+    return pow(l,r);
+    case AND:
+    return l & r;
+    case OR:
+    return l | r;
+    case XOR:
+    return l ^ r;
   }
 }
 
@@ -465,10 +495,64 @@ float realBINOP(float l, float r, enum BINOP op) {{}
     return l == r;
     case NEQUAL:
     return l != r;
-    case LTHAN:
-    return l < r;
+    case LEQ:
+    return l <= r;
     case GTHAN:
     return r > l;
+    case GEQ:
+    return r >= l;
+    case REM:
+    return fmod(l, r);
+    case EXP:
+    return pow(l, r);
+    case AND:
+      {
+      // more memory hacking
+      // floats cannot be binop'd. Have to put their bits in an int and do it
+      uint32_t leftTemp;
+      memcpy(&leftTemp, &l, sizeof(float));
+
+      uint32_t rightTemp;
+      memcpy(&rightTemp, &r, sizeof(float));
+
+      leftTemp = leftTemp & rightTemp;
+      float result;
+
+      memcpy(&result, &leftTemp, sizeof(float));
+      return result;
+    }
+    case OR:
+    {
+      // more memory hacking
+      // floats cannot be binop'd. Have to put their bits in an int and do it
+      uint32_t leftTemp;
+      memcpy(&leftTemp, &l, sizeof(float));
+
+      uint32_t rightTemp;
+      memcpy(&rightTemp, &r, sizeof(float));
+
+      leftTemp = leftTemp | rightTemp;
+      float result;
+
+      memcpy(&result, &leftTemp, sizeof(float));
+      return result;
+    }    
+    case XOR:
+    {
+      // more memory hacking
+      // floats cannot be binop'd. Have to put their bits in an int and do it
+      uint32_t leftTemp;
+      memcpy(&leftTemp, &l, sizeof(float));
+
+      uint32_t rightTemp;
+      memcpy(&rightTemp, &r, sizeof(float));
+
+      leftTemp = leftTemp ^ rightTemp;
+      float result;
+
+      memcpy(&result, &leftTemp, sizeof(float));
+      return result;
+    }  
   }
 }
 
@@ -486,24 +570,54 @@ char charBINOP(char l, char r, enum BINOP op) {
     return l == r;
     case NEQUAL:
     return l != r;
-    case LTHAN:
-    return l < r;
+    case LEQ:
+    return l <= r;
     case GTHAN:
     return r > l;
+    case GEQ:
+    return r >= l;
+    case REM:
+    return l % r;
+    case EXP:
+    return pow(l,r);
+    case AND:
+    return l & r;
+    case OR:
+    return l | r;
+    case XOR:
+    return l ^ r;
   }
 }
 
-tuple tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
+commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op);
 
+
+commonType* tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
+  tuple *tuple = allocateTuple(l->size);
+
+  for (int i = 0 ; i < l->currentSize ; i ++) {
+    appendTuple(tuple, performCommonTypeBINOP(l->values[i], r->values[i], op));
+  }
+
+  for (int i = 0; i < tuple->size ; i++) {
+    printCommonType(tuple->values[i]);
+  }
+
+  commonType *result = allocateCommonType(&tuple, TUPLE);
+
+  return result;
 }
 
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op) {
   commonType* promotedLeft;
   commonType* promotedRight;
 
-  promotedLeft = promotion(left,right);
-  promotedRight = promotion(right,left);
-
+  // tuples treated differenly
+  if (!(left->type == TUPLE)) {
+    promotedLeft = promotion(left,right);
+    promotedRight = promotion(right,left);
+  }
+  
   commonType* result;
   // arbitrary, after promo they are the same. if they are not, there is something wrong
   // I tried to do a switch chain like before but the scoping was messed up.
@@ -527,11 +641,9 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     char tempChar = charBINOP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
     result = allocateCommonType(&tempChar, CHAR);
 
-  } else if (promotedLeft->type == TUPLE) {
-
-    tuple tempTuple = tupleBINOP(*(tuple**)promotedLeft->value, *(tuple**)promotedRight->value, op);
-    result = allocateCommonType(&tempTuple, TUPLE);
-
+  } else {
+    // tuples don't need promotions, their held items do.
+    result = tupleBINOP(*(tuple**)left->value, *(tuple**)right->value, op);
   }
   
   // temporary operands
@@ -539,8 +651,10 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   printf("=== de allocating temporary operands...\n");
 #endif /* ifdef DEBUGMEMORY */
 
-  deallocateCommonType(promotedLeft);
-  deallocateCommonType(promotedRight);
+  if (!(left->type == TUPLE)) {
+    deallocateCommonType(promotedLeft);
+    deallocateCommonType(promotedRight);
+  }
 
 #ifdef DEBUGMEMORY
   printf("=== complete\n");
