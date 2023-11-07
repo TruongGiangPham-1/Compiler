@@ -68,6 +68,11 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitType(std::dynamic_pointer_cast<TypeNode>(tree));
 
+        } else if (std::dynamic_pointer_cast<TypeDefNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit typedef " << std::endl;
+#endif // DEBUG
+            return this->visitTypedef(std::dynamic_pointer_cast<TypeDefNode>(tree));
         }
 
         // ==========
@@ -331,6 +336,8 @@ namespace gazprea {
         //return this->walkChildren(tree);
         if (tree->body) {
             walk(tree->body);
+        } else if (tree->expr) {
+            walk(tree->expr);
         }
         return 0;
 
@@ -347,6 +354,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
         return this->walkChildren(tree);
     }
 

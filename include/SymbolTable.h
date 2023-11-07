@@ -11,7 +11,7 @@ private:
     std::vector<std::shared_ptr<Scope>> scopes;
 public:
     SymbolTable() {}
-    std::shared_ptr<Scope> globalScope;
+    std::shared_ptr<GlobalScope> globalScope;
     std::shared_ptr<Scope> enterScope(std::string& name, const std::shared_ptr<Scope>& currentScope);
     std::shared_ptr<Scope> enterScope(std::shared_ptr<Scope> newScope);
 
