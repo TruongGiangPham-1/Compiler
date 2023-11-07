@@ -23,7 +23,7 @@ protected:
 public:
     std::vector<std::shared_ptr<ASTNode>> children; // normalized list of children
     std::shared_ptr<Scope> scope;                   // containing scope
-
+    std::shared_ptr<Type> evaluatedType;
     ASTNode(); // for making nil-rooted nodes
     // create node with line number
     ASTNode(int line);

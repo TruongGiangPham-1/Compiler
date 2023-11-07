@@ -15,10 +15,12 @@ std::shared_ptr<Symbol> AssignNode::getID() {
 }
 
 std::shared_ptr<ASTNode> AssignNode::getLvalue() {
-    assert(children.size() == 1);
+    assert(children.size() > 0);
     return this->children[0];
 }
 std::shared_ptr<ASTNode> AssignNode::getRvalue() {
     assert(children.size() == 2);
     return this->children[1];
 }
+
+
