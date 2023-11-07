@@ -21,6 +21,8 @@
 #include "ASTNode/Loop/IteratorLoopNode.h"
 #include "ASTNode/Loop/PostPredicatedLoopNode.h"
 #include "ASTNode/Loop/InfiniteLoopNode.h"
+#include "ASTNode/BreakNode.h"
+#include "ASTNode/ContinueNode.h"
 
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Method/FunctionNode.h"
@@ -98,6 +100,10 @@ namespace gazprea {
         std::any visitInfiniteLoop(GazpreaParser::InfiniteLoopContext *ctx) override;
         std::any visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) override;
         std::any visitIteratorLoop(GazpreaParser::IteratorLoopContext *ctx) override;
+
+        // Loop Control
+        std::any visitBreak(GazpreaParser::BreakContext *ctx) override;
+        std::any visitContinue(GazpreaParser::ContinueContext *ctx) override;
 
         std::any visitStream(GazpreaParser::StreamContext *ctx) override;
 

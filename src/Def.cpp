@@ -143,12 +143,12 @@ std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
 }
 
 std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
-    walk(tree->condition);
+    walk(tree->getCondition());
     // enter scope
     std::string sname = "loopcond" + std::to_string(tree->loc());
     currentScope = symtab->enterScope(sname, currentScope);
 
-    walk(tree->body);
+    walk(tree->getBody());
     
     currentScope = symtab->exitScope(currentScope);
     return 0;
