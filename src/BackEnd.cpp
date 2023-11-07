@@ -158,7 +158,7 @@ void BackEnd::generate() {
 #endif
   auto intType = builder->getI32Type();
 
-  this->functionShowcase();
+//  this->functionShowcase();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
@@ -183,6 +183,7 @@ int BackEnd::writeLLVMIR() {
       mlir::translateModuleToLLVMIR(module, llvmContext);
   if (!llvmModule) {
     std::cerr << "Failed to translate to LLVM IR" << std::endl;
+    module->dump();
     return -1;
   }
 
@@ -613,6 +614,24 @@ void BackEnd::generateCompAndJump(mlir::Block *trueBlock,
                                   mlir::Block *falseBlock, mlir::Value cmpVal) {
   // jump depending on the value of cmpVal
   builder->create<mlir::LLVM::CondBrOp>(loc, cmpVal, trueBlock, falseBlock);
+}
+
+/*
+ * Unconditionally jumps to block if `ifJump` is true
+ * this is useful for ending a loop or if statement body
+ *
+ * This is because you cannot unconditionally jump to the endBlock
+ * if there is a break/continue statement in the body, as then there might
+ * be two unconditional jumps in a row
+ * This breaks some MLIR rule about basic blocks so we will get an error
+ *
+ * also returns the new boolean value of ifJump
+ */
+bool BackEnd::conditionalJumpToBlock(mlir::Block *block, bool ifJump) {
+    if (ifJump) {
+        this->generateEnterBlock(block);
+    }
+    return false;
 }
 
 void BackEnd::setBuilderInsertionPoint(

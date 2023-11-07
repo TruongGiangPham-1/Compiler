@@ -65,6 +65,7 @@ public:
       mlir::Block *block); // set insertion point for non shared ptr
   void generateEnterBlock(
       mlir::Block *block); // set insertion point for non shared Ptr
+  bool conditionalJumpToBlock(mlir::Block *block, bool ifJump); // (statically) conditionally jump to a block
   mlir::Block *generateLoopBegin();
   mlir::Block *generateLoopMiddle(mlir::Value addr);
   mlir::Block *generateBlock();

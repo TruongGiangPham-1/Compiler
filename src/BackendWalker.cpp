@@ -100,16 +100,19 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
     codeGenerator.setBuilderInsertionPoint(trueBlocks[i]);
     walk(tree->bodies[i]);
+    codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
 
-    codeGenerator.generateEnterBlock(endBlock);
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
   // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
     walk(tree->bodies[tree->bodies.size() - 1]);
+    codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+    this->earlyReturn = false;
+  } else {
+    codeGenerator.generateEnterBlock(endBlock);
   }
-  codeGenerator.generateEnterBlock(endBlock);
 
   codeGenerator.setBuilderInsertionPoint(endBlock);
 
@@ -126,7 +129,8 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopBody);
+  codeGenerator.conditionalJumpToBlock(loopBody, !earlyReturn);
+  this->earlyReturn = false;
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -152,7 +156,8 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // body of loop
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopCheck);
+  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
+  this->earlyReturn = false;
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -173,7 +178,8 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopCheck);
+  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
+  this->earlyReturn = false;
 
   // conditional
   codeGenerator.setBuilderInsertionPoint(loopCheck);
@@ -195,6 +201,7 @@ std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
 
     auto loopExit = this->loopBlocks.back().second;
     codeGenerator.generateEnterBlock(loopExit);
+    this->earlyReturn = true;
 
     return 0;
 }
@@ -206,6 +213,7 @@ std::any BackendWalker::visitContinue(std::shared_ptr<ContinueNode> tree) {
 
     auto loopBody = this->loopBlocks.back().first;
     codeGenerator.generateEnterBlock(loopBody);
+    this->earlyReturn = true;
 
     return 0;
 }
