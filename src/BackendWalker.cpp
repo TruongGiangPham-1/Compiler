@@ -8,7 +8,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 }
 
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
-  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
 
   codeGenerator.generateAssignment(tree->sym->mlirName, val);
 
