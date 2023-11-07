@@ -186,6 +186,7 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         false);
     walk(tree->body);
 
+
     codeGenerator.generateEndFunctionDefinition(block);
   }
   return 0;
@@ -200,9 +201,6 @@ std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree
   }
 
   auto result = codeGenerator.generateCallNamed(tree->funcCallName->name, arguments);
-
-  result.dump();
-
   return result;
 }
 
