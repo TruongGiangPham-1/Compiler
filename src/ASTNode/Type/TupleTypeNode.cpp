@@ -31,7 +31,7 @@ std::shared_ptr<TypeNode> TupleTypeNode::findType(const std::string& id) {
 }
 
 std::string TupleTypeNode::toString() {
-    std::string str = "TupleTypeNode " + sym->getName() + " (";
+    std::string str = "TupleTypeNode (";
     for (const auto& node : innerTypes) {
         if (!node.first.empty()) {
             str += node.first + ": ";

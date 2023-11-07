@@ -315,7 +315,7 @@ int intBINOP(int l, int r, enum BINOP op) {
     case LTHAN:
     return l < r;
     case GTHAN:
-    return r > l;
+    return l > r;
   }
 }
 
@@ -336,7 +336,7 @@ float realBINOP(float l, float r, enum BINOP op) {{}
     case LTHAN:
     return l < r;
     case GTHAN:
-    return r > l;
+    return l > r;
   }
 }
 
@@ -357,7 +357,7 @@ char charBINOP(char l, char r, enum BINOP op) {
     case LTHAN:
     return l < r;
     case GTHAN:
-    return r > l;
+    return l > r;
   }
 }
 
@@ -469,4 +469,26 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
   }
 
   return result;
+}
+
+// https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar
+// only bool, int and char can be downcast to bools
+bool commonTypeToBool(commonType* val) {
+  switch (val->type) {
+    case BOOL:
+      return *(bool*)val->value;
+    case INT: {
+        // any integer not equal to zero is considered true
+        int tmpInt = *(int*)val->value;
+//        printf("tmpInt: %d != 0 = %d\n", tmpInt, tmpInt != 0);
+        return tmpInt != 0;
+    }
+    case CHAR:
+    {
+        char tmpChar = *(char*)val->value;
+//        printf("tmpChar: %c != \\0 = %d\n", tmpChar, tmpChar != '\0');
+        // chars not equal to '\0' are considered true
+        return tmpChar != '\0';
+    }
+  }
 }

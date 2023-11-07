@@ -167,9 +167,29 @@ namespace gazprea {
 
         } else if (std::dynamic_pointer_cast<LoopNode>(tree)) {
 #ifdef DEBUG
-            std::cout << "about to visit Loop" << std::endl;
+            std::cout << "about to visit Infinite Loop" << std::endl;
 #endif // DEBUG
-            return this->visitLoop(std::dynamic_pointer_cast<LoopNode>(tree));
+            return this->visitInfiniteLoop(std::dynamic_pointer_cast<InfiniteLoopNode>(tree));
+        } else if (std::dynamic_pointer_cast<PredicatedLoopNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Predicated Loop" << std::endl;
+#endif // DEBUG
+            return this->visitPredicatedLoop(std::dynamic_pointer_cast<PredicatedLoopNode>(tree));
+        } else if (std::dynamic_pointer_cast<PostPredicatedLoopNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Post Predicated Loop" << std::endl;
+#endif // DEBUG
+            return this->visitPostPredicatedLoop(std::dynamic_pointer_cast<PostPredicatedLoopNode>(tree));
+        } else if (std::dynamic_pointer_cast<BreakNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Break" << std::endl;
+#endif // DEBUG
+            return this->visitBreak(std::dynamic_pointer_cast<BreakNode>(tree));
+        } else if (std::dynamic_pointer_cast<ContinueNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit Continue" << std::endl;
+#endif // DEBUG
+            return this->visitContinue(std::dynamic_pointer_cast<ContinueNode>(tree));
         } else if (std::dynamic_pointer_cast<BlockNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Block" << std::endl;
@@ -186,6 +206,17 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitParameter(std::dynamic_pointer_cast<ArgNode>(tree));
 
+        } else if (std::dynamic_pointer_cast<FunctionNode>(tree))  {
+#ifdef DEBUG
+            std::cout << "about to visit function" << std::endl;
+#endif // DEBUG
+            return this->visitFunction(std::dynamic_pointer_cast<FunctionNode>(tree));
+
+        } else if (std::dynamic_pointer_cast<FunctionCallNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit function call" << std::endl;
+#endif // DEBUG
+            return this->visitFunctionCall(std::dynamic_pointer_cast<FunctionCallNode>(tree));
         }
 
         // NIL node
@@ -258,8 +289,25 @@ namespace gazprea {
 
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
+
+    std::any ASTWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
         return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
+        return 0;
+    }
+
+    std::any ASTWalker::visitContinue(std::shared_ptr<ContinueNode> tree) {
+        return 0;
     }
     // FUNCTION
     //
@@ -280,7 +328,12 @@ namespace gazprea {
           walk(arg);
         }
 
-        return this->walkChildren(tree);
+        //return this->walkChildren(tree);
+        if (tree->body) {
+            walk(tree->body);
+        }
+        return 0;
+
     }
 
     std::any ASTWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
@@ -291,6 +344,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
         return this->walkChildren(tree);
     }
 

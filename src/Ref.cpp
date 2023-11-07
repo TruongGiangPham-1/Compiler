@@ -11,13 +11,66 @@ namespace gazprea {
 
 
     std::any Ref::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        auto funcSym = currentScope->resolve(tree->funcNameSym->getName());  // try to resolve procedure name
+        if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
+            // no forward declaration
+            // define method scope and push. define method symbol
+            defineFunctionAndProcedure(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
+
+            // push a local scope for function block,  to walk childre
+            std::string sname = "functionScope" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+
+            if (tree->body) {
+                walk(tree->body);  // ref all the symbol inside function block;
+            }
+
+            currentScope = symtab->exitScope(currentScope);  // pop local scope
+            currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+
+        }
         return 0;
+    }
+
+    std::any Ref::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+        walkChildren(tree);  // walk children to ref it
+        std::shared_ptr<Symbol> sym;
+        if (tree->functype == FUNCTYPE::FUNC_NORMAL) {
+            sym = currentScope->resolve(tree->funcCallName->getName());
+            if (sym == nullptr) {
+                throw SymbolError(tree->loc(), "Undefined function call  " + tree->funcCallName->getName());
+            }
+
+            std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
+            // you can get the ordered args using  cast->orderedArgs
+            if (cast) {
+                // valid
+                // check if it is called before declaration/definition
+                if (tree->loc() < (size_t)cast->line) {
+                    throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
+                } else {
+                    std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
+                }
+                tree->scope = currentScope;
+                // reference to the function Symbol that we are calling. can get all arguments using
+                // tree->functionRef->orderedArgs
+                tree->functionRef = cast;
+            } else {
+                // function call overshaddowed by a non function declaration above || function dont exist
+                std::string errMSg = sym->getName() +  " is not a function to be called. It is undefined or overshadowed"
+                                                       "by another declaration above\n";
+                throw SymbolError(tree->loc(), errMSg);
+            }
+        }
+        return 0;
+
     }
 
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-        auto procSym = currentScope->resolve(tree->nameSym->getName());
-        if (procSym == nullptr) {
+        auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
+        if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
             defineFunctionAndProcedure(tree->loc(), tree->nameSym, tree->orderedArgs, 0);
@@ -33,6 +86,14 @@ namespace gazprea {
             currentScope = symtab->exitScope(currentScope);  // pop local scope
             currentScope = symtab->exitScope(currentScope);  // pop method scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        } else {
+            if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
+                // there was a forward declaration
+                // TODO:
+            } else {
+                throw SymbolError(tree->loc(), "procedure same name as another identifier in the global scope");
+            }
+
         }
         return 0;
     }
@@ -41,21 +102,30 @@ namespace gazprea {
         // this is declare statement defined in funciton/procedure. NOT in global scope
         // resolve type
         //std::shared_ptr<Type> type = resolveType(tree->getTypeNode());
-        std::pair typePair = symtab->resolveType(tree->getTypeNode());
+        if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
+            return 0;
+        }
+        std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
+        if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
+
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
         }
+        auto resolveID = currentScope->resolve(tree->getIDName());
+        if (resolveID != nullptr) {
+            throw SymbolError(tree->loc(), "redeclaration of identifier" + tree->getIDName());
+        }
 
         // define the ID in symtable
         std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), typePair.first);  //TODO: change TYPE to resolve type
+        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
 
         currentScope->define(idSym);
 
-        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << typePair.second << " as mlirNmae: " << mlirName << "\n" ;
+        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
 
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
@@ -80,7 +150,11 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "Undeclared variable " +  tree->sym->getName());
         } else {
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-                      << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";
+                      << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName();
+            if (std::dynamic_pointer_cast<ScopedSymbol>(referencedSymbol->scope)) {
+                std::cout << " index of param=" << referencedSymbol->index ;
+            }
+            std::cout << "\n";
         }
         tree->sym = referencedSymbol;
         return 0;
@@ -259,16 +333,17 @@ namespace gazprea {
      *
      */
     void Ref::defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
-        // TODO: resolve type. cant resolve type yet since ASTBuilder havent updated visitType
-        TYPE retType =  TYPE::INTEGER;  // make random type for now
+        // TODO: resolve return type.
+        std::shared_ptr<Type> retType = std::make_shared<AdvanceType>("integer", "integer");
 
         // define function scope Symbol
-        std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
         std::shared_ptr<ScopedSymbol> methodSym;
         if (isFunc) {
+            std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
             methodSym  = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
                                                                                        fname, retType, symtab->globalScope, loc);
         } else {
+            std::string fname = "ProcScope" + funcNameSym->getName() +std::to_string(loc);
             methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
                                                           fname, retType, symtab->globalScope, loc);
         }
@@ -277,20 +352,27 @@ namespace gazprea {
         currentScope = symtab->enterScope(methodSym);
 
         // define the argument symbols
+        int index= 1;
         for (auto &argIDNode: orderedArgs) {
             // define this myself, dont need mlir name because arguments are
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
             //TODO: this id symbol dont have types yet. waiting for visitType implementation
             assert(argNode);  // not null
             assert(argNode->type);  // assert it exist
-            std::pair typeP = symtab->resolveType(argNode->type);
+
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
-            argNode->idSym->type = typeP.first;
+
+            auto resType = symtab->resolveTypeUser(argNode->type);
+            argNode->idSym->typeSym =  retType;
+            if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
             std::cout << "in line " << loc
                       << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
-                      "as Type" << typeP.second <<"\n";
+                      " as Type" << argNode->idSym->typeSym->getName() <<"\n";
 
             // define mlirname
+            argNode->idSym->scope = currentScope;
+            argNode->idSym->index = index;
+            index ++;
             currentScope->define(argNode->idSym);  // define arg in curren scope
             argNode->scope = currentScope;  // set scope to function scope
         }

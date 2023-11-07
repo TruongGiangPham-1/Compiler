@@ -10,6 +10,7 @@
 #include "BuiltInTypeSymbol.h"
 #include "CompileTimeExceptions.h"
 #include "ScopedSymbol.h"
+#include "AdvanceType.h"
 
 namespace gazprea {
     class Def : public ASTWalker {
@@ -17,7 +18,6 @@ namespace gazprea {
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
-        std::shared_ptr<Type> resolveType(std::shared_ptr<ASTNode> t);
 
         int getNextId();
 
@@ -43,6 +43,7 @@ namespace gazprea {
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
 
         std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+        std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) override;
         //std::any visitBlock(std::shared_ptr<BlockNode>tree) override;
 
         // === BlOCK FUNCTION AST NODES ===
