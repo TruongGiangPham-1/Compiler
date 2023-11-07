@@ -19,7 +19,7 @@ std::shared_ptr<ASTNode> AssignNode::getLvalue() {
     return this->children[0];
 }
 std::shared_ptr<ASTNode> AssignNode::getRvalue() {
-    assert(children.size() == 2);
+    assert(children.size() > 1);
     return this->children[1];
 }
 
