@@ -66,10 +66,11 @@ namespace gazprea {
             throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
         }
 
-        auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolve(resultTypeString));
+        auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
 
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getName() << ", " << right->evaluatedType->getName() << "\n";
+                assert(resultType);
                 std::cout << "result: " <<  resultType->getName() << "\n";
         #endif
         return resultType;
@@ -95,22 +96,22 @@ namespace gazprea {
     TypeWalker::~TypeWalker() {}
 
     std::any TypeWalker::visitInt(std::shared_ptr<IntNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("integer"));
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("integer"));
         return nullptr;
     }
 
     std::any TypeWalker::visitReal(std::shared_ptr<RealNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("real"));
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("real"));
         return nullptr;
     }
 
     std::any TypeWalker::visitChar(std::shared_ptr<CharNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("character"));
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("character"));
         return nullptr;
     }
 
     std::any TypeWalker::visitBool(std::shared_ptr<BoolNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolve("boolean"));
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("boolean"));
         return nullptr;
     }
 
