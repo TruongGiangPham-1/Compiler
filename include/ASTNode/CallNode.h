@@ -18,7 +18,7 @@ public:
     std::shared_ptr<Symbol> CallName;  // only used for calling user defined function
     std::shared_ptr<ScopedSymbol> MethodRef;  // symbol to the function/procedure definition that it is calling
 
-    CallNode(int loc): ASTNode(loc) {};
+    CallNode(int loc): ExprNode(loc) {};
 
 
     std::string toString() override {
