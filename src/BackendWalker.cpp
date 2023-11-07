@@ -131,6 +131,8 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   // loop exit
   this->loopBlocks.pop_back();
   codeGenerator.setBuilderInsertionPoint(loopExit);
+
+  return 0;
 }
 
 std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
@@ -155,6 +157,8 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // loop exit
   this->loopBlocks.pop_back();
   codeGenerator.setBuilderInsertionPoint(loopExit);
+
+  return 0;
 }
 
 std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
@@ -180,6 +184,8 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   // loop exit
   this->loopBlocks.pop_back();
   codeGenerator.setBuilderInsertionPoint(loopExit);
+
+  return 0;
 }
 
 std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
