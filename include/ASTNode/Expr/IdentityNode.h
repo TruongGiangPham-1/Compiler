@@ -2,11 +2,9 @@
 #include "ExprNode.h"
 
 // `val` is calculated in the first pass (Builder)
-class IntNode : public ExprNode {
+class IdentityNode : public ExprNode {
 public:
-    int val;
-
-    IntNode(int line, int val);
+    IdentityNode(int line);
 
     std::string toString() override;
     int getVal();

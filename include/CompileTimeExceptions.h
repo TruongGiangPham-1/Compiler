@@ -1,6 +1,8 @@
 #ifndef GAZPREABASE_INCLUDE_COMPILETIMEEXCEPTIONS_H_
 #define GAZPREABASE_INCLUDE_COMPILETIMEEXCEPTIONS_H_
-
+#include <string>
+#include <iostream>
+#include <sstream>
 class CompileTimeException : public std::exception {
 protected:
     std::string msg;

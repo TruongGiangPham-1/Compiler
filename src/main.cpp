@@ -13,6 +13,8 @@
 #include "TypeWalker.h"
 #include "BackendWalker.h"
 #include "Def.h"
+#include "Ref.h"
+#include "../include/customError/ErrorListener.h"
 
 #include <iostream>
 #include <fstream>
@@ -31,6 +33,9 @@ int main(int argc, char **argv) {
   antlr4::CommonTokenStream tokens(&lexer);
   gazprea::GazpreaParser parser(&tokens);
 
+  parser.removeErrorListeners();
+  parser.addErrorListener(new ErrorListener());
+
   std::ofstream out(argv[2]);
 
   // Get the root of the parse tree. Use your base rule name.
@@ -44,13 +49,21 @@ int main(int argc, char **argv) {
   std::cout << ast->toStringTree() << std::endl;
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 
-  
+  std::cout << "\n\n=== DEF PASS\n";
+  int mlirID = 1;
+  std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
-  gazprea::Def def(symbolTable);
+  gazprea::Def def(symbolTable, mlirIDptr);
   def.walk(ast);
 
-  TypeWalker types;
-  types.walk(ast);
+  std::cout << "\n\n=== REF PASS\n";
+  gazprea::Ref ref(symbolTable, mlirIDptr);
+  ref.walk(ast);
+
+  //Type Check
+  auto promotionTypes = std::make_shared<gazprea::PromotedType>(symbolTable);
+  gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
+  typeWalker.walk(ast);
 
   BackendWalker backend(out);
   backend.generateCode(ast);

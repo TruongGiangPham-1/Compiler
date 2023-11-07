@@ -1,6 +1,4 @@
-#include "ASTNode/Expr/IntNode.h"
-
-IntNode::IntNode(int line, int val) : ExprNode(line), val(val) {}
+#include "ASTNode/Expr/Literal/IntNode.h"
 
 std::string IntNode::toString() {
     return "INT " + std::to_string(val);

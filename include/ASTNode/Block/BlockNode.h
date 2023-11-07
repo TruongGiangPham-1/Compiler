@@ -9,6 +9,4 @@ public:
     BlockNode(int line);
 
     std::string toString() override;
-
-    std::vector<std::shared_ptr<ASTNode>> getStatements();
 };

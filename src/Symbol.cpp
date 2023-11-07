@@ -1,15 +1,15 @@
 #include "Symbol.h"
 #include "ASTNode/ASTNode.h"
 
-Symbol::Symbol(std::string name) : name(name), type(nullptr) {}
-Symbol::Symbol(std::string name, std::shared_ptr<Type> type) : name(name), type(type) {}
-Symbol::Symbol(std::string name, std::shared_ptr<Type> type, std::shared_ptr<Scope> scope) : name(name), type(type), scope(scope) {}
+Symbol::Symbol(std::string name) : name(name), typeSym(nullptr) {}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type) : name(name), typeSym(type) {}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type  , std::shared_ptr<Scope> scope) : name(name), typeSym(type), scope(scope) {}
 
 
 std::string Symbol::getName() { return name; }
 
 std::string Symbol::toString() {
-    if (type != nullptr) return '<' + getName() + ":" + type->getName() + '>';
+    //if (type != nullptr) return '<' + getName() + ":" + type->getName() + '>';
     return getName();
 }
 

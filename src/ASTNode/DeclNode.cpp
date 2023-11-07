@@ -1,4 +1,3 @@
-#pragma once
 #include "ASTNode/DeclNode.h"
 
 DeclNode::DeclNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {}
@@ -20,5 +19,14 @@ std::shared_ptr<ASTNode> DeclNode::getTypeNode() {
 }
 
 std::shared_ptr<ASTNode> DeclNode::getExprNode() {
-    return children[1];
+    if (children.size() == 1) {
+        // there is no expression node
+        return nullptr;
+    } else {
+        return children[1];
+    };
+}
+
+QUALIFIER DeclNode::getQualifier() {
+    return qualifier;
 }

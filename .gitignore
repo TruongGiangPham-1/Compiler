@@ -10,6 +10,8 @@ cmake-build*/
 
 # Ignore build files
 build/
+CMakeFiles/
+gazc
 
 # Ignore macOS files
 .DS_STORE
