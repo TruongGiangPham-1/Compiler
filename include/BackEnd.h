@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Types/TYPES.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
@@ -8,6 +9,7 @@
 #include "BuiltinTypes/BuiltInTypes.h"
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/IR/ValueRange.h"
 
 class BackEnd {
 public:
@@ -33,7 +35,7 @@ public:
 
   mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
   mlir::Value performUNARYOP(mlir::Value value, UNARYOP op);
-
+  mlir::Value generateCallNamed(std::string signature, std::vector<mlir::Value> arguments);
 
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);
@@ -47,8 +49,14 @@ public:
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);
 
+  mlir::Value promotion(mlir::Value from, mlir::Value to);
+  mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
+  void generateEndFunctionDefinition(mlir::Block* returnBlock);
+  void generateReturn(mlir::Value returnVal);
+
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
+  mlir::Value generateLoadArgument(size_t index);
 
   void generateDeclaration(std::string varName, mlir::Value value);
   void generateAssignment(std::string varName, mlir::Value value);
@@ -99,11 +107,13 @@ protected:
   void setupPrintVec();
   void setupVectorRuntime();
   void setupCommonTypeRuntime();
+  mlir::Value translateToMLIRType(TYPE type);
   int writeLLVMIR();
 
 private:
   std::vector<std::string> vectorLabels;
   std::vector<std::string> objectLabels;
+  std::vector<mlir::LLVM::LLVMFuncOp> functionContext;
 
   unsigned int allocatedVectors = 0;
   unsigned int allocatedObjects = 0;

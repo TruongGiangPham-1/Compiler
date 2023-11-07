@@ -201,7 +201,8 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[0]);
+        // TODO. fix the index at 1.
+        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -429,7 +430,7 @@ namespace gazprea {
         std::cout << "Visiting block definition." << std::endl;
 #endif
         auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
-        int size= ctx->statement().size();
+
         for (auto statement : ctx->statement()) {
           std::shared_ptr<ASTNode> statementNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(statement));
           blockNode->addChild(statementNode);
@@ -611,5 +612,16 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(pCallNode);
     }
 
+
+    std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting return" << std::endl;
+#endif
+      auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
+
+      returnNode->returnExpr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+      return std::dynamic_pointer_cast<ASTNode>(returnNode);
+    }
 
 }
