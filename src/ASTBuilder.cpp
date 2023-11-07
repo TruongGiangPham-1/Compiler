@@ -243,6 +243,9 @@ namespace gazprea {
             case GazpreaParser::RESERVED_AND:
                 t->op = BINOP::AND;
                 break;
+            case GazpreaParser::RESERVED_OR:
+                t->op = BINOP::OR;
+                break;
             default:
                 throw std::runtime_error("unknown arithmetic operator " + ctx->op->getText());
         }
@@ -516,6 +519,11 @@ namespace gazprea {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         procedureNode->body = blockResult;
       }
+      if (ctx->RESERVED_RETURNS()) {
+          // has return
+          procedureNode->addChild(visit(ctx->type()));
+
+      }
 
       return std::dynamic_pointer_cast<ASTNode>(procedureNode);
     }
@@ -535,6 +543,13 @@ namespace gazprea {
       if (ctx->block()) {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         functionNode->body = blockResult;
+      }
+      if (ctx->expression()) {
+          auto expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+          functionNode->expr = expr;
+      }
+      if (ctx->RESERVED_RETURNS()) {
+          functionNode->addChild(visit(ctx->type()));
       }
 
       return std::dynamic_pointer_cast<ASTNode>(functionNode);

@@ -60,8 +60,10 @@ int main(int argc, char **argv) {
   gazprea::Ref ref(symbolTable, mlirIDptr);
   ref.walk(ast);
 
-  //  TypeWalker types;
-  //types.walk(ast);
+  //Type Check
+  auto promotionTypes = std::make_shared<gazprea::PromotedType>(symbolTable);
+  gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
+  typeWalker.walk(ast);
 
   BackendWalker backend(out);
   backend.generateCode(ast);

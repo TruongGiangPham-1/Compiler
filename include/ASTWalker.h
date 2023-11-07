@@ -27,6 +27,7 @@
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/TypeDefNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -45,6 +46,7 @@ namespace gazprea {
 
         // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
+        virtual std::any visitTypedef(std::shared_ptr<TypeDefNode> tree);
 
         // === EXPRESSION AST NODES ===
         virtual std::any visitID(std::shared_ptr<IDNode> tree);

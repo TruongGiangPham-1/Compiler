@@ -31,6 +31,8 @@ namespace gazprea {
 
         // === EXPRESSION AST NODES ===
         std::any visitID(std::shared_ptr<IDNode> tree) override;
+        // === TYPE
+        std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
 
         // Expr/Vector
         //std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
@@ -38,11 +40,11 @@ namespace gazprea {
 
         // === BLOCK AST NODES ===
         std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
+
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
         std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
         std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) override;
         //std::any visitBlock(std::shared_ptr<BlockNode>tree) override;
     };
-
 }
 #endif //GAZPREABASE_DEF_H

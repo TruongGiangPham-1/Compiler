@@ -27,57 +27,21 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
 
 
 std::any Def::visitAssign(std::shared_ptr<AssignNode> tree) {
-    //std::shared_ptr<Symbol> sym = currentScope->resolve(tree->getIDName());
-    //tree->scope = currentScope;
-    //tree->sym->scope = currentScope;
-    //tree->sym->mlirName = sym->mlirName;
-    //walkChildren(tree);
     return 0;
 }
 
 std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
-    // resolve type
-    std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
-
-    assert(resType);  // ensure its not nullptr  // should be builtin type
-
-    walk(tree->getExprNode());
-
-    auto resolveID = currentScope->resolve(tree->getIDName());
-    if (resolveID != nullptr) {
-        throw SymbolError(tree->loc(), "redeclaration of identifier" + tree->getIDName());
-    }
-
-    // define the ID in symtable
-    std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-    std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);  //TODO: change TYPE to resolve type
-
-    idSym->mlirName = mlirName;
-    idSym->scope = currentScope;
-
-    currentScope->define(idSym);
-
-    std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << resType->getName()
-              << " as mlirNmae: " << mlirName << "\n" ;
-
-    tree->scope = currentScope;
-    tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
     return 0;
 }
 
 std::any Def::visitID(std::shared_ptr<IDNode> tree) {
-    // only resolves and add scope information in AST for ref pass
-    std::shared_ptr<Symbol> referencedSymbol = currentScope->resolve(tree->sym->getName());
-    //if (referencedSymbol == nullptr) {
-    //    std::cout << "in line " << tree->loc()
-    //              << " ref null\n"; // variable not defined
-    //} else {
-    //    std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-    //              << "  ref " << referencedSymbol->mlirName << " Type is " << referencedSymbol->type->getName()
-    //              << std::endl;
-    //}
-    tree->sym = referencedSymbol;
-    tree->scope = currentScope;
+    return 0;
+}
+
+std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
+    //  typdef type id;
+    // define type def mapping
+    symtab->globalScope->defineType(std::make_shared<AdvanceType>(tree->getType()->getTypeName(), tree->getName()));
     return 0;
 }
 
@@ -106,7 +70,6 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         for (auto argAST: tree->orderedArgs) {
             // define this myself, dont need mlir name because arguments are
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argAST);
-            //TODO: this id symbol dont have types yet. waiting for visitType implementation
             assert(argNode);  // not null
             assert(argNode->type);
             auto res= symtab->resolveTypeUser(argNode->type);
@@ -141,22 +104,9 @@ std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
     currentScope = symtab->exitScope(currentScope);
     return 0;
 }
-/*
-std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
-    walk(tree->getCondition());
-    // enter scope
-    std::string sname = "loopcond" + std::to_string(tree->loc());
-    currentScope = symtab->enterScope(sname, currentScope);
-
-    walk(tree->getBody());
-    
-    currentScope = symtab->exitScope(currentScope);
-    return 0;
-}
-*/
 
 std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
-    if (tree->body) {
+    if (tree->body || tree->expr) {  // we skip all function definition in def pass
         return 0;
     } else {
         // TOODO: forward functino decl
