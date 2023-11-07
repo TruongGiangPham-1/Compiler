@@ -3,7 +3,7 @@
 AssignNode::AssignNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {};
 
 std::string AssignNode::toString() {
-    return "assign " + getIDName() + " = " + getExprNode()->toString();
+    return "assign " + getLvalue()->toString() + " = " + getRvalue()->toString();
 }
 
 std::string AssignNode::getIDName() {
@@ -14,12 +14,13 @@ std::shared_ptr<Symbol> AssignNode::getID() {
     return sym;
 }
 
-std::shared_ptr<ASTNode> AssignNode::getExprNode() {
-    return children[1];
+std::shared_ptr<ASTNode> AssignNode::getLvalue() {
+    assert(children.size() > 0);
+    return this->children[0];
 }
-
-std::shared_ptr<ASTNode> AssignNode::getLValue() {
-    return children[0];
+std::shared_ptr<ASTNode> AssignNode::getRvalue() {
+    assert(children.size() == 2);
+    return this->children[1];
 }
 
 
