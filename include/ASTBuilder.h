@@ -60,6 +60,9 @@ namespace gazprea {
         // typing
         std::any visitBaseType(GazpreaParser::BaseTypeContext *ctx) override;
         std::any visitTypedef(GazpreaParser::TypedefContext *ctx) override;
+        std::any visitVectorType(GazpreaParser::VectorTypeContext *ctx) override;
+        std::any visitMatrixType(GazpreaParser::MatrixTypeContext *ctx) override;
+        std::any visitTupleType(GazpreaParser::TupleTypeContext *ctx) override;
 
         std::any visitBlock(GazpreaParser::BlockContext *ctx) override;
 

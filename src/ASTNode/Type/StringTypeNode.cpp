@@ -21,5 +21,5 @@ bool StringTypeNode::isInferred() const {
 }
 
 std::string StringTypeNode::toString() {
-    return "StringTypeNode " + sym->getName();
+    return "StringTypeNode [" + size->toStringTree() + "]";
 }
