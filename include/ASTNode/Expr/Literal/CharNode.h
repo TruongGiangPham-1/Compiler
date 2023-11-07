@@ -6,7 +6,7 @@ class CharNode : public ExprNode {
 public:
     char val;
 
-    CharNode(int line, int val) : ExprNode(line), val(val) {};
+    CharNode(int line, char val) : ExprNode(line), val(val) {};
 
     std::string toString() override;
     char getVal();

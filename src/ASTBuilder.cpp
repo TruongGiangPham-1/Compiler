@@ -201,7 +201,8 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[0]);
+        // TODO. fix the index at 1.
+        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -429,7 +430,7 @@ namespace gazprea {
         std::cout << "Visiting block definition." << std::endl;
 #endif
         auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
-        int size= ctx->statement().size();
+
         for (auto statement : ctx->statement()) {
           std::shared_ptr<ASTNode> statementNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(statement));
           blockNode->addChild(statementNode);
@@ -586,16 +587,40 @@ namespace gazprea {
 #endif
         //functionCall : ID '(' (expression (',' expression)*)? ')'
         // TODO: how to determine if theh function is normal or not? i guess we do that in other passes when resolving name
-        std::shared_ptr<FunctionCallNode> fCall = std::make_shared<FunctionCallNode>(ctx->getStart()->getLine(), FUNCTYPE::FUNC_NORMAL);
+        std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
         std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
 
-        fCall->funcCallName = fcallName;
+        callNode->CallName = fcallName;
         for (auto expr: ctx->expression()) {
-            fCall->addChild(visit(expr));
+            callNode->addChild(visit(expr));
         }
-        return std::dynamic_pointer_cast<ASTNode>(fCall);
+        return std::dynamic_pointer_cast<ASTNode>(callNode);
 
     }
+    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting procedure call" << std::endl;
+#endif
+        std::shared_ptr<CallNode> pCallNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> pcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
 
+        pCallNode->CallName = pcallName;
+        for (auto expr: ctx->expression()) {
+            pCallNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(pCallNode);
+    }
+
+
+    std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting return" << std::endl;
+#endif
+      auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
+
+      returnNode->returnExpr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
+      return std::dynamic_pointer_cast<ASTNode>(returnNode);
+    }
 
 }

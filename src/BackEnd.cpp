@@ -1,6 +1,9 @@
 #include "llvm/ADT/APFloat.h"
 #include "BuiltinTypes/BuiltInTypes.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_os_ostream.h"
 #include <assert.h>
@@ -12,6 +15,7 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/TypeRange.h"
+#include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
 #include "mlir/IR/Verifier.h"
@@ -52,102 +56,6 @@ void BackEnd::init() {
   builder->setInsertionPointToStart(mainEntry);
 }
 
-void BackEnd::functionShowcase() {
-  auto a = this->generateValue(86);
-  auto b = this->generateValue('c');
-  auto c = this->generateValue(3.4f);
-
-  this->printCommonType(a);
-  this->printCommonType(b);
-
-  auto mvec = std::vector<mlir::Value>();
-  mvec.push_back(a);
-  mvec.push_back(b);
-
-  auto mvec2 = std::vector<mlir::Value>();
-  mvec2.push_back(a);
-  mvec2.push_back(a);
-  mvec2.push_back(a);
-
-  auto tupl2 = this->generateValue(mvec2);
-  auto tuple = this->generateValue(mvec);
-
-  this->printCommonType(tupl2);
-  this->printCommonType(tuple);
-
-  mlir::LLVM::LLVMFuncOp promote =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
-
-  auto casted = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,b})).getResult();
-  auto castedReal = builder->create<mlir::LLVM::CallOp>(loc, promote, mlir::ValueRange({a,c})).getResult();
-
-  this->printCommonType(tuple);
-  this->printCommonType(casted);
-  this->printCommonType(castedReal);
-
-  this->printCommonType(tuple);
-  this->generateDeclaration("tst", tuple);
-  this->generateDeclaration("tst3", tuple);
-  this->generateDeclaration("tst2", casted);
-
-  this->printCommonType(this->generateLoadIdentifier("tst2"));
-  this->printCommonType(this->generateLoadIdentifier("tst3"));
-  this->printCommonType(this->generateLoadIdentifier("tst"));
-
-  auto h = this->performBINOP(a, c, ADD);
-  auto sub = this->performBINOP(a, c, SUB);
-  auto eq = this->performBINOP(a, a, EQUAL);
-  auto negate = this->performUNARYOP(a, NEGATE);
-  auto positive = this->performUNARYOP(a, POSITIVE);
-
-
-  this->printCommonType(h);
-  this->printCommonType(sub);
-  this->printCommonType(eq);
-  this->printCommonType(negate);
-  this->printCommonType(positive);
-  // de-allocate. will break because of the tuples
-  // this->deallocateObjects()
-
-  // visual separator. Below this is conditionals
-  this->printCommonType(this->generateValue(999999999));
-
-  // generate `if (a == 1) then print(a) else if (a == 86) print(b) else print(c)`
-  // this code will be generated
-  mlir::Block *true1 = this->generateBlock();
-  mlir::Block *false1 = this->generateBlock();
-  mlir::Block *true2 = this->generateBlock();
-  mlir::Block *false2 = this->generateBlock();
-  mlir::Block *endConditional = this->generateBlock();
-
-  // if (a == 1) then print(1)
-  auto cond1 = this->performBINOP(a, this->generateValue(1), EQUAL);
-  auto cond1Bool = this->downcastToBool(cond1);
-
-  this->generateCompAndJump(true1, false1, cond1Bool);
-
-  this->setBuilderInsertionPoint(true1);
-  this->printCommonType(this->generateValue(1));
-  this->generateEnterBlock(endConditional);
-  this->setBuilderInsertionPoint(false1);
-
-  // else if (a > 50) print(2)
-  auto cond2 = this->performBINOP(a, this->generateValue(50), GTHAN);
-  auto cond2Bool = this->downcastToBool(cond2);
-  this->generateCompAndJump(true2, false2, cond2Bool);
-
-  this->setBuilderInsertionPoint(true2);
-  this->printCommonType(this->generateValue((2)));
-  this->generateEnterBlock(endConditional);
-  this->setBuilderInsertionPoint(false2);
-
-  // else print(3)
-  this->printCommonType(this->generateValue(3));
-  this->generateEnterBlock(endConditional);
-
-  this->setBuilderInsertionPoint(endConditional);
-}
-
 /**
  * Finish codegen + main function.
  */
@@ -157,8 +65,6 @@ void BackEnd::generate() {
             << std::endl;
 #endif
   auto intType = builder->getI32Type();
-
-//  this->functionShowcase();
 
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
@@ -183,7 +89,6 @@ int BackEnd::writeLLVMIR() {
       mlir::translateModuleToLLVMIR(module, llvmContext);
   if (!llvmModule) {
     std::cerr << "Failed to translate to LLVM IR" << std::endl;
-    module->dump();
     return -1;
   }
 
@@ -241,12 +146,11 @@ void BackEnd::setupCommonTypeRuntime() {
   auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
   auto boolType = builder->getI1Type();
   auto intType = builder->getI32Type();
-  auto int64Type = builder->getI64Type();
 
   auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
 
   // mlir doesn't allow void types. we do a little hacking
-  auto voidPtrType = mlir::LLVM::LLVMPointerType::get(int64Type);
+  auto voidPtrType = mlir::LLVM::LLVMPointerType::get(intType);
 
   auto commonType =
       mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intPtrType});
@@ -315,6 +219,22 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   return result;
 }
 
+mlir::Value BackEnd::promotion(mlir::Value left, mlir::Value right) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
+
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
+  std::string newLabel =
+      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
+  this->objectLabels.push_back(newLabel);
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
+
 mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
   auto unaryopFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("performCommonTypeUNARYOP");
   auto result = builder->create<mlir::LLVM::CallOp>(loc,
@@ -331,6 +251,13 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
   return result;
 }
 
+
+mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
+  mlir::ArrayRef mlirArguments = arguments;
+  mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(signature);
+
+  return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
+}
 
 // === === === Printing === === ===
 
@@ -434,6 +361,54 @@ void BackEnd::deallocateObjects() {
 
     builder->create<mlir::LLVM::CallOp>(loc, deallocateObject, object);
   }
+}
+// don't need the types for much, just set stuff up so we know what to cast to
+mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid) {
+    auto currentBlock = builder->getBlock();
+
+    auto intType = builder->getI32Type();
+    auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
+    auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+
+    auto commonType =
+      mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intPtrType});
+    auto commonTypeAddr = mlir::LLVM::LLVMPointerType::get(commonType);
+
+    // don't really need this for "types" since all of our types are the same.
+    // however we need the size
+    std::vector<mlir::Type> parameters;
+
+    for (int i = 0 ; i < argumentSize ; i ++) {
+      parameters.push_back(commonTypeAddr);
+    }
+
+    llvm::ArrayRef translatedList = parameters;
+
+    mlir::Type returnType;
+    // all return types are common type addresses.
+    if (isVoid) {
+      returnType = voidType;
+    } else {
+      returnType = commonTypeAddr;
+    }
+
+    auto functionType = mlir::LLVM::LLVMFunctionType::get(returnType, translatedList, false);
+
+    builder->setInsertionPointToStart(module.getBody());
+
+    mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc, signature, functionType, ::mlir::LLVM::Linkage::Internal);
+    mlir::Block *entry = function.addEntryBlock();
+    builder->setInsertionPointToStart(entry);
+
+    return currentBlock;
+}
+
+void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
+    builder->setInsertionPointToEnd(returnBlock);
+}
+
+void BackEnd::generateReturn(mlir::Value returnVal) {
+  builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
 }
 
 /**
@@ -577,6 +552,11 @@ mlir::Value BackEnd::generateLoadIdentifier(std::string varName) {
   mlir::Value globalPtr = this->generateLoadIdentifierPtr(varName);
   mlir::Value value = builder->create<mlir::LLVM::LoadOp>(loc, globalPtr);
   return value;
+}
+
+mlir::Value BackEnd::generateLoadArgument(size_t index) {
+  auto val = builder->getBlock()->getArguments().vec()[index];
+  return val;
 }
 /*
  * used to store the comparison result to an address so we can load it later in

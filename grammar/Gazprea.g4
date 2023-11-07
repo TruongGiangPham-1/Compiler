@@ -29,7 +29,7 @@ vardecl
     ;
 
 assign
-    : lvalue=expr '=' rvalue=expr ';'
+    : lvalue=expression '=' rvalue=expression ';'
     ;
 
 cond
@@ -105,9 +105,9 @@ expression // root of an expression tree
 expr
     : '(' expr ')'                                                                                      #parentheses
     | cast                                                                                              #typeCast
-    | functionCall #funcCall
+    | functionCall                                                                                      #funcCall
     | expr '[' expr (',' expr)? ']'                                                                     #index
-    | expr DOT expr #tupleIndex //need to fix this. no time
+    | ID DOT (INT | ID)                                                                                 #tupleIndex //need to fix this. no time
     | expr RANGE_OPERATOR expr                                                                          #range
     //| '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
     //| '[' ID RESERVED_IN expression FILTER_OPERATOR expression (',' expression)* ']'                    #filter
@@ -124,18 +124,24 @@ expr
     | ID                                                                                                #literalID
     | RESERVED_IDENTITY                                                                                 #identity
     | RESERVED_NULL                                                                                     #null
-    | LITERAL_BOOLEAN                                                                                   #literalBoolean
+    | (RESERVED_FALSE| RESERVED_TRUE)                                                        #literalBoolean
     | LITERAL_CHARACTER                                                                                 #literalCharacter
     | INT                                                                                               #literalInt
-    | LITERAL_REAL                                                                                      #literalReal
-    | '(' expr (',' expr )+ ')'                                                              #literalTuple
+    | literal_real                                                                                      #literalReal
+    | '(' expr (',' expr )+ ')'                                                                         #literalTuple
     //| literal_vector                                                                                    #literalVector
     | LITERAL_STRING                                                                                    #literalString
     //| literal_matrix                                                                                    #literalMatrix
     ;
 
+
 literal_vector: '[' (expression (',' expression)*)? ']'; // empty vectors allowed
 literal_matrix: '[' (literal_vector (',' literal_vector)*)? ']'; // empty matrices allowed
+literal_real
+    : INT DOT INT EXPONENT?
+    | DOT INT EXPONENT?
+    | INT DOT? EXPONENT?
+    ;
 cast: RESERVED_AS LT type GT '(' expression ')';
 typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
@@ -148,6 +154,13 @@ BUILT_IN_TYPE
     | RESERVED_CHARACTER
     | RESERVED_INTEGER
     | RESERVED_REAL;
+
+
+INT : DIGIT+;
+LITERAL_BOOLEAN: RESERVED_TRUE | RESERVED_FALSE;
+LITERAL_CHARACTER: '\'' SCHAR '\'';
+LITERAL_STRING: '"' (SCHAR+)? '"';
+EXPONENT: ('e' | 'E') (SUB | ADD)? INT;
 
 DOT: '.';
 MULT: '*';
@@ -213,15 +226,6 @@ RESERVED_WHILE: 'while';
 RESERVED_XOR: 'xor';
 
 ID : ('_' | ALPHABET) ('_' | ALPHABET | DIGIT)*;
-INT : DIGIT+;
-LITERAL_BOOLEAN: RESERVED_TRUE | RESERVED_FALSE;
-LITERAL_CHARACTER: '\'' SCHAR '\'';
-LITERAL_STRING: '"' (SCHAR+)? '"';
-LITERAL_REAL
-    : INT? DOT INT EXPONENT?
-    | INT DOT? EXPONENT?
-    ;
-EXPONENT: ('e' | 'E') (SUB | ADD)? INT;
 
 // Skip comments & whitespace
 BLOCK_COMMENT : '/*' .*? '*/' -> skip ;

@@ -114,7 +114,7 @@ std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     }
     return 0;
 }
-std::any Def::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+std::any Def::visitCall(std::shared_ptr<CallNode> tree) {
     // SKIP in def pass
     return 0;
 }

@@ -3,6 +3,7 @@
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
+#include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
@@ -24,7 +25,7 @@
 #include "ASTNode/ContinueNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Method/FunctionNode.h"
-#include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/CallNode.h"
 #include "ASTNode/TypeDefNode.h"
 
 namespace gazprea {
@@ -78,12 +79,11 @@ namespace gazprea {
 
         // === BLOCK FUNCTION NODES ===
         virtual std::any visitFunction(std::shared_ptr<FunctionNode> tree);
-        virtual std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree);
+        virtual std::any visitCall(std::shared_ptr<CallNode> tree);
         // === BlOCK PROCEDURE NODES ===
         virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
+        virtual std::any visitReturn(std::shared_ptr<ReturnNode> tree);
         virtual std::any visitParameter(std::shared_ptr<ArgNode> tree);
-
-
         // === FUNCTION CALL NODE ===
 
     };

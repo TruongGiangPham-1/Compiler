@@ -1,9 +1,11 @@
 #include "BackendWalker.h"
+#include "mlir/IR/Value.h"
 #include <stdexcept>
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
   codeGenerator.init();
-  walk(tree);
+  walkChildren(tree);
+  //codeGenerator.deallocateObjects();
   codeGenerator.generate();
 }
 
@@ -17,10 +19,10 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-
   codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
+
 std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
@@ -31,12 +33,38 @@ std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
 
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
-  return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  // might be arg
+  if (tree->sym->index >= 0) {
+    return codeGenerator.generateLoadArgument(tree->sym->index);
+  } else {
+    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
 }
 
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
-  auto result = codeGenerator.generateValue(tree->getVal());
-  return result;
+  return codeGenerator.generateValue(tree->getVal());
+}
+
+std::any BackendWalker::visitReal(std::shared_ptr<RealNode> tree) {
+  return codeGenerator.generateValue(tree->getVal());
+}
+
+std::any BackendWalker::visitChar(std::shared_ptr<CharNode> tree) {
+  return codeGenerator.generateValue(tree->getVal());
+}
+
+std::any BackendWalker::visitBool(std::shared_ptr<BoolNode> tree) {
+  return codeGenerator.generateValue(tree->getVal());
+}
+
+std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
+  std::vector<mlir::Value> values;
+
+  for (auto node : tree->getVal()) {
+    values.push_back(std::any_cast<mlir::Value>(walk(node)));
+  }
+
+  return codeGenerator.generateValue(values);
 }
 
 // Expr/Binary
@@ -215,6 +243,54 @@ std::any BackendWalker::visitContinue(std::shared_ptr<ContinueNode> tree) {
     this->earlyReturn = true;
 
     return 0;
+}
+
+std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+  if (tree->body) {
+    // for now we don't proper return values, assume everything void
+    auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name,
+        tree->orderedArgs.size(),
+        true);
+    walk(tree->body);
+    codeGenerator.generateEndFunctionDefinition(block);
+  }
+
+  return 0;
+}
+
+std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
+  if (tree->body) {
+
+    auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name,
+        tree->orderedArgs.size(),
+        false);
+    walk(tree->body);
+
+
+    codeGenerator.generateEndFunctionDefinition(block);
+  }
+  return 0;
+}
+
+std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
+  std::vector<mlir::Value> arguments;
+
+  for (auto argument : tree->children) {
+    arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
+  }
+
+  auto result = codeGenerator.generateCallNamed(tree->CallName->name, arguments);
+  return result;
+}
+
+std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
+  return 0;
+}
+
+std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
+  // TODO deallocate here later.
+  return walkChildren(tree);
 }
 
 //std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
