@@ -118,14 +118,64 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
 std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
   auto loopBody = codeGenerator.generateBlock(); // start of loop
-  auto loopExit =  codeGenerator.generateBlock(); // the rest of the program
+  auto loopExit = codeGenerator.generateBlock(); // the rest of the program
 
   this->loopBlocks.push_back(std::make_pair(loopBody, loopExit));
 
   // body of loop
+  codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
   codeGenerator.generateEnterBlock(loopBody);
+
+  // loop exit
+  this->loopBlocks.pop_back();
+  codeGenerator.setBuilderInsertionPoint(loopExit);
+}
+
+std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+  auto loopCheck = codeGenerator.generateBlock(); // check
+  auto loopBody= codeGenerator.generateBlock(); // body
+  auto loopExit = codeGenerator.generateBlock(); // the rest of the program
+
+  this->loopBlocks.push_back(std::make_pair(loopCheck, loopBody));
+
+  // check conditional
+  codeGenerator.generateEnterBlock(loopCheck);
+  codeGenerator.setBuilderInsertionPoint(loopCheck);
+  auto condResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
+  auto condBool = codeGenerator.downcastToBool(condResult);
+  codeGenerator.generateCompAndJump(loopBody, loopExit, condBool);
+
+  // body of loop
+  codeGenerator.setBuilderInsertionPoint(loopBody);
+  walk(tree->getBody());
+  codeGenerator.generateEnterBlock(loopCheck);
+
+  // loop exit
+  this->loopBlocks.pop_back();
+  codeGenerator.setBuilderInsertionPoint(loopExit);
+}
+
+std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+  // check goes after the body
+  auto loopBody = codeGenerator.generateBlock();
+  auto loopCheck = codeGenerator.generateBlock();
+  auto loopExit = codeGenerator.generateBlock();
+
+  this->loopBlocks.push_back(std::make_pair(loopBody, loopCheck));
+
+  // body of loop
+  codeGenerator.generateEnterBlock(loopBody);
+  codeGenerator.setBuilderInsertionPoint(loopBody);
+  walk(tree->getBody());
+  codeGenerator.generateEnterBlock(loopCheck);
+
+  // conditional
+  codeGenerator.setBuilderInsertionPoint(loopCheck);
+  auto condResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
+  auto condBool = codeGenerator.downcastToBool(condResult);
+  codeGenerator.generateCompAndJump(loopBody, loopExit, condBool);
 
   // loop exit
   this->loopBlocks.pop_back();
