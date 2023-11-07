@@ -35,7 +35,10 @@ private:
 
   // method definitions
   std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+  std::any visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) override;
+
   std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+  std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) override;
 
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};

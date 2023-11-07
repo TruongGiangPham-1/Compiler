@@ -254,9 +254,11 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
 }
 
 
-mlir::Value BackEnd::generateCallNamed(std::string signature, mlir::ValueRange arguments) {
+mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
+  mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(signature);
-  return builder->create<mlir::LLVM::CallOp>(loc, function, arguments).getResult();
+
+  auto val = builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 }
 
 // === === === Printing === === ===
@@ -548,6 +550,11 @@ mlir::Value BackEnd::generateLoadIdentifier(std::string varName) {
   mlir::Value globalPtr = this->generateLoadIdentifierPtr(varName);
   mlir::Value value = builder->create<mlir::LLVM::LoadOp>(loc, globalPtr);
   return value;
+}
+
+mlir::Value BackEnd::generateLoadArgument(size_t index) {
+  auto val = builder->getBlock()->getArguments().vec()[index];
+  return val;
 }
 /*
  * used to store the comparison result to an address so we can load it later in

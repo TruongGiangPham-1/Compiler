@@ -34,8 +34,8 @@
 #include "ASTNode/FunctionCallNode.h"
 #include "ASTNode/Type/TupleTypeNode.h"
 #include "ASTNode/Method/ProcedureNode.h"
+#include "ASTNode/Method/ProcedureCallNode.h"
 #include "Types/QUALIFIER.h"
-
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
@@ -88,6 +88,8 @@ namespace gazprea {
         std::any visitFunction(GazpreaParser::FunctionContext *ctx) override;
         std::any visitParameter(GazpreaParser::ParameterContext *ctx) override;
         std::any visitReturn(GazpreaParser::ReturnContext *ctx) override;
+
+        std::any visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) override;
         std::any visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) override;  // this is functioncall rule
         std::any visitFuncCall(GazpreaParser::FuncCallContext *ctx) override;   // this is #funcCall label in expr
 

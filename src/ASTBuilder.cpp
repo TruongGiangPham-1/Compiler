@@ -523,6 +523,21 @@ namespace gazprea {
         return visit(ctx->functionCall());
     }
 
+    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting procedure call" << std::endl;
+#endif
+        std::shared_ptr<ProcedureCallNode> fCall = std::make_shared<ProcedureCallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> pcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        fCall->procCallName = pcallName;
+        for (auto expr: ctx->expression()) {
+            fCall->addChild(visit(expr));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(fCall);
+    }
+
     std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting function call" << std::endl;

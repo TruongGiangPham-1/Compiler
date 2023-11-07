@@ -35,7 +35,7 @@ public:
 
   mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
   mlir::Value performUNARYOP(mlir::Value value, UNARYOP op);
-  mlir::Value generateCallNamed(std::string signature, mlir::ValueRange arguments);
+  mlir::Value generateCallNamed(std::string signature, std::vector<mlir::Value> arguments);
 
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);
@@ -57,6 +57,7 @@ public:
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
+  mlir::Value generateLoadArgument(size_t index);
 
   void generateDeclaration(std::string varName, mlir::Value value);
   void generateAssignment(std::string varName, mlir::Value value);
@@ -113,6 +114,7 @@ protected:
 private:
   std::vector<std::string> vectorLabels;
   std::vector<std::string> objectLabels;
+  std::vector<mlir::LLVM::LLVMFuncOp> functionContext;
 
   unsigned int allocatedVectors = 0;
   unsigned int allocatedObjects = 0;

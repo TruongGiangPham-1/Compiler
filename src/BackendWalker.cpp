@@ -1,4 +1,5 @@
 #include "BackendWalker.h"
+#include "ASTNode/Method/ProcedureCallNode.h"
 #include "mlir/IR/Value.h"
 #include <stdexcept>
 
@@ -33,7 +34,12 @@ std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
 
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
-  return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  // might be arg
+  if (tree->sym->index >= 0) {
+    return codeGenerator.generateLoadArgument(tree->sym->index);
+  } else {
+    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
 }
 
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
@@ -183,6 +189,24 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
     mlir::Value val; // void
     codeGenerator.generateEndFunctionDefinition(block, val);
   }
+  return 0;
+}
+
+std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+  std::vector<mlir::Value> arguments;
+
+  for (auto argument : tree->children) {
+    arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
+  }
+  
+  auto result = codeGenerator.generateCallNamed(tree->funcCallName->name, arguments);
+  result.dump();
+
+  return result;
+}
+
+std::any BackendWalker::visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) {
+  // TODO
   return 0;
 }
 

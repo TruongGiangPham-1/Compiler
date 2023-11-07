@@ -3,6 +3,7 @@
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
+#include "ASTNode/Method/ProcedureCallNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
@@ -196,6 +197,11 @@ namespace gazprea {
             std::cout << "about to visit function call" << std::endl;
 #endif // DEBUG
             return this->visitFunctionCall(std::dynamic_pointer_cast<FunctionCallNode>(tree));
+        } else if (std::dynamic_pointer_cast<ProcedureCallNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit procedure call" << std::endl;
+#endif // DEBUG
+            return this->visitProcedureCall(std::dynamic_pointer_cast<ProcedureCallNode>(tree));
         }
 
         // NIL node
@@ -309,6 +315,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) {
         return this->walkChildren(tree);
     }
 
