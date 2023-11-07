@@ -38,7 +38,6 @@ namespace gazprea {
 
         // === BLOCK AST NODES ===
         std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
-        std::any visitLoop(std::shared_ptr<LoopNode> tree) override;
 
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
 

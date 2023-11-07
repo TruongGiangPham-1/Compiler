@@ -331,6 +331,8 @@ namespace gazprea {
         //return this->walkChildren(tree);
         if (tree->body) {
             walk(tree->body);
+        } else if (tree->expr) {
+            walk(tree->expr);
         }
         return 0;
 

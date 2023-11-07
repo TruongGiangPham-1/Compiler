@@ -536,6 +536,10 @@ namespace gazprea {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         functionNode->body = blockResult;
       }
+      if (ctx->expression()) {
+          auto expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+          functionNode->expr = expr;
+      }
 
       return std::dynamic_pointer_cast<ASTNode>(functionNode);
     }

@@ -46,6 +46,8 @@ namespace gazprea {
         //std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
         //std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
 
+        // Loop
+        std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
 
     };
 }

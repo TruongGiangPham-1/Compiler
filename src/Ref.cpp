@@ -23,6 +23,11 @@ namespace gazprea {
 
             if (tree->body) {
                 walk(tree->body);  // ref all the symbol inside function block;
+            } else if (tree->expr) {
+                walk(tree->expr);
+            } else {
+                // we should never reach here
+                throw SymbolError(tree->loc(), "weird this is the most important thing");
             }
 
             currentScope = symtab->exitScope(currentScope);  // pop local scope
@@ -408,6 +413,9 @@ namespace gazprea {
         return 0;
     }
     */
+    std::any Ref::visitConditional(std::shared_ptr <ConditionalNode> tree) {
+        return 0;
+    }
 
     int Ref::getNextId() {
         (*varID) ++;

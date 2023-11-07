@@ -106,7 +106,6 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         for (auto argAST: tree->orderedArgs) {
             // define this myself, dont need mlir name because arguments are
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argAST);
-            //TODO: this id symbol dont have types yet. waiting for visitType implementation
             assert(argNode);  // not null
             assert(argNode->type);
             auto res= symtab->resolveTypeUser(argNode->type);
@@ -142,20 +141,8 @@ std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
     return 0;
 }
 
-std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
-    walk(tree->getCondition());
-    // enter scope
-    std::string sname = "loopcond" + std::to_string(tree->loc());
-    currentScope = symtab->enterScope(sname, currentScope);
-
-    walk(tree->getBody());
-    
-    currentScope = symtab->exitScope(currentScope);
-    return 0;
-}
-
 std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
-    if (tree->body) {
+    if (tree->body || tree->expr) {  // we skip all function definition in def pass
         return 0;
     } else {
         // TOODO: forward functino decl
