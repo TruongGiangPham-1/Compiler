@@ -51,7 +51,9 @@ public:
 
   mlir::Value promotion(mlir::Value from, mlir::Value to);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
-  void generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal);
+  void generateEndFunctionDefinition(mlir::Block* returnBlock);
+  void generateReturn(mlir::Value returnVal);
+
 
 
 

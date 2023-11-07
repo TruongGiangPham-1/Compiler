@@ -6,7 +6,7 @@
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
   codeGenerator.init();
   walkChildren(tree);
-  codeGenerator.deallocateObjects();
+  //codeGenerator.deallocateObjects();
   codeGenerator.generate();
 }
 
@@ -172,8 +172,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(), 
         true);
     walk(tree->body);
-    mlir::Value val; // void
-    codeGenerator.generateEndFunctionDefinition(block, val);
+    codeGenerator.generateEndFunctionDefinition(block);
   }
 
   return 0;
@@ -181,25 +180,27 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
 
 std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
   if (tree->body) {
-    // for now we don't proper return values, assume everything void
+
     auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name, 
         tree->orderedArgs.size(), 
-        true);
+        false);
     walk(tree->body);
-    mlir::Value val; // void
-    codeGenerator.generateEndFunctionDefinition(block, val);
+
+    codeGenerator.generateEndFunctionDefinition(block);
   }
   return 0;
 }
 
 std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
   std::vector<mlir::Value> arguments;
+  std::cout << "here" << std::endl;
 
   for (auto argument : tree->children) {
     arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
   }
-  
+
   auto result = codeGenerator.generateCallNamed(tree->funcCallName->name, arguments);
+
   result.dump();
 
   return result;
@@ -207,6 +208,11 @@ std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree
 
 std::any BackendWalker::visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) {
   // TODO
+  return 0;
+}
+
+std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
   return 0;
 }
 

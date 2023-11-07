@@ -258,7 +258,7 @@ mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(signature);
 
-  auto val = builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
+  return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 }
 
 // === === === Printing === === ===
@@ -396,17 +396,21 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
 
     auto functionType = mlir::LLVM::LLVMFunctionType::get(returnType, translatedList, false);
 
-    builder->setInsertionPointToEnd(module.getBody());
+    builder->setInsertionPointToStart(module.getBody());
 
     mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc, signature, functionType, ::mlir::LLVM::Linkage::Internal);
     mlir::Block *entry = function.addEntryBlock();
     builder->setInsertionPointToStart(entry);
+
     return currentBlock;
 }
 
-void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal) {
-    builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
+void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
     builder->setInsertionPointToEnd(returnBlock);
+}
+
+void BackEnd::generateReturn(mlir::Value returnVal) {
+  builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
 }
 
 /**

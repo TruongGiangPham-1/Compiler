@@ -562,6 +562,8 @@ namespace gazprea {
 #endif
       auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
 
+      returnNode->returnExpr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+
       return std::dynamic_pointer_cast<ASTNode>(returnNode);
     }
 

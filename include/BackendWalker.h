@@ -40,6 +40,8 @@ private:
   std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
   std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) override;
 
+  std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
+
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};
   void generateCode(std::shared_ptr<ASTNode> tree);

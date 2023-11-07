@@ -4,6 +4,7 @@
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Method/ProcedureCallNode.h"
+#include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
@@ -72,10 +73,8 @@ namespace gazprea {
         // === BlOCK PROCEDURE NODES ===
         virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
         virtual std::any visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree);
-
+        virtual std::any visitReturn(std::shared_ptr<ReturnNode> tree);
         virtual std::any visitParameter(std::shared_ptr<ArgNode> tree);
-
-
         // === FUNCTION CALL NODE ===
 
     };
