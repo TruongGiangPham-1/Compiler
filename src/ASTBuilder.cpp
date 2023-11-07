@@ -456,7 +456,6 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
 
-
         t->addChild(visit(ctx->block()));
 
         return t;
