@@ -328,6 +328,7 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+        walk(tree->getReturnExpr());
         return this->walkChildren(tree);
     }
 }
