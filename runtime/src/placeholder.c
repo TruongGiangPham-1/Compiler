@@ -480,7 +480,7 @@ int intBINOP(int l, int r, enum BINOP op) {
   }
 }
 
-float realBINOP(float l, float r, enum BINOP op) {{}
+float realBINOP(float l, float r, enum BINOP op) {
   switch (op) {
     case ADD:
     return l + r;
