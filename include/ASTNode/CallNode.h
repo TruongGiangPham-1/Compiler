@@ -12,7 +12,7 @@
 
 // Since there isn't much to decouple, I decided to just inherit from ASTNode
 
-class CallNode: public ASTNode {
+class CallNode: public ExprNode {
 public:
     //FUNCTYPE functype;
     std::shared_ptr<Symbol> CallName;  // only used for calling user defined function
