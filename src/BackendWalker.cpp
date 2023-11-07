@@ -116,6 +116,44 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   return 0;
 }
 
+std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
+  auto loopBody = codeGenerator.generateBlock(); // start of loop
+  auto loopExit =  codeGenerator.generateBlock(); // the rest of the program
+
+  this->loopBlocks.push_back(std::make_pair(loopBody, loopExit));
+
+  // body of loop
+  codeGenerator.setBuilderInsertionPoint(loopBody);
+  walk(tree->getBody());
+  codeGenerator.generateEnterBlock(loopBody);
+
+  // loop exit
+  this->loopBlocks.pop_back();
+  codeGenerator.setBuilderInsertionPoint(loopExit);
+}
+
+std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
+    if (this->loopBlocks.empty()) {
+        throw std::runtime_error("Break statement outside of loop");
+    }
+
+    auto loopExit = this->loopBlocks.back().second;
+    codeGenerator.generateEnterBlock(loopExit);
+
+    return 0;
+}
+
+std::any BackendWalker::visitContinue(std::shared_ptr<ContinueNode> tree) {
+    if (this->loopBlocks.empty()) {
+        throw std::runtime_error("Continue statement outside of loop");
+    }
+
+    auto loopBody = this->loopBlocks.back().first;
+    codeGenerator.generateEnterBlock(loopBody);
+
+    return 0;
+}
+
 //std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
 //  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
 //  mlir::Block *trueBlock = codeGenerator.generateBlock();
