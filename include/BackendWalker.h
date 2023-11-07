@@ -30,7 +30,6 @@ private:
 
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
-  std::any visitLoop(std::shared_ptr<LoopNode> tree) override;
   std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
 
   // method definitions

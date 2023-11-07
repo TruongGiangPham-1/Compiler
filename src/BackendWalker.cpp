@@ -11,7 +11,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 }
 
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
-  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
 
   codeGenerator.generateAssignment(tree->sym->mlirName, val);
 
@@ -145,26 +145,6 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   return 0;
 }
 
-std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
-  //TODO
-  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
-  mlir::Block *trueBlock = codeGenerator.generateBlock();
-  mlir::Block *falseBlock = codeGenerator.generateBlock();
-
-  codeGenerator.generateEnterBlock(loopBeginBlock);
-  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
-
-  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->condition));
-  codeGenerator.generateCompAndJump(trueBlock, falseBlock, exprResult);
-
-  codeGenerator.setBuilderInsertionPoint(trueBlock);
-  walkChildren(tree);
-
-  codeGenerator.generateEnterBlock(loopBeginBlock);
-  codeGenerator.setBuilderInsertionPoint(falseBlock);
-  return 0;
-}
-
 std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
   if (tree->body) {
     // for now we don't proper return values, assume everything void
@@ -204,7 +184,6 @@ std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree
 }
 
 std::any BackendWalker::visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) {
-  // TODO
   return 0;
 }
 
@@ -218,4 +197,22 @@ std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   return walkChildren(tree);
 }
 
-
+//std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
+//  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+//  mlir::Block *trueBlock = codeGenerator.generateBlock();
+//  mlir::Block *falseBlock = codeGenerator.generateBlock();
+//
+//  codeGenerator.generateEnterBlock(loopBeginBlock);
+//  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+//
+//  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
+//  codeGenerator.generateCompAndJump(trueBlock, falseBlock, exprResult);
+//
+//  codeGenerator.setBuilderInsertionPoint(trueBlock);
+//  walkChildren(tree);
+//
+//  codeGenerator.generateEnterBlock(loopBeginBlock);
+//  codeGenerator.setBuilderInsertionPoint(falseBlock);
+//  return 0;
+//}
+//

@@ -1,7 +1,6 @@
 #include "ASTBuilder.h"
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/Method/FunctionNode.h"
-#include "ASTNode/Loop/PredicatedLoopNode.h"
 #include <memory>
 
 
@@ -314,8 +313,6 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-
-
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
         std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->getText());
         std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), identifierSymbol);
@@ -439,16 +436,62 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitPredicatedLoop(GazpreaParser::PredicatedLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting predicated loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PredicatedLoopNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitInfiniteLoop(GazpreaParser::InfiniteLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting infinite loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
+
+
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting post predicated loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PostPredicatedLoopNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIteratorLoop(GazpreaParser::IteratorLoopContext *ctx) {
 
+    }
+
+    // Loop Control
+    std::any ASTBuilder::visitBreak(GazpreaParser::BreakContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting break." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<BreakNode>(ctx->getStart()->getLine());
+
+        return t;
+    }
+
+    std::any ASTBuilder::visitContinue(GazpreaParser::ContinueContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting continue." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<ContinueNode>(ctx->getStart()->getLine());
+
+        return t;
     }
 
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {
