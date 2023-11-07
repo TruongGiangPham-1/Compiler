@@ -7,10 +7,11 @@ gen/
 # Ignore CLion files
 cmake-build*/
 .idea/
-./src/gazc
 
 # Ignore build files
 build/
+CMakeFiles/
+gazc
 
 # Ignore macOS files
 .DS_STORE
