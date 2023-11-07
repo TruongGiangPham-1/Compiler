@@ -38,6 +38,13 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
     return 0;
 }
 
+std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
+    //  typdef type id;
+    // define type def mapping
+    symtab->globalScope->defineType(std::make_shared<AdvanceType>(tree->getType()->getTypeName(), tree->getName()));
+    return 0;
+}
+
 std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     // define if it is forwrd declaration
     if (tree->body) {
