@@ -3,7 +3,6 @@
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
-#include "ASTNode/Method/ProcedureCallNode.h"
 #include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
@@ -359,9 +358,6 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitCall(std::shared_ptr<CallNode> tree) {
-        return this->walkChildren(tree);
-    }
-    std::any ASTWalker::visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
