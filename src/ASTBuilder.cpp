@@ -1,7 +1,6 @@
 #include "ASTBuilder.h"
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/Method/FunctionNode.h"
-#include "ASTNode/Loop/PredicatedLoopNode.h"
 #include <memory>
 
 
@@ -202,7 +201,8 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[0]);
+        // TODO. fix the index at 1.
+        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -243,6 +243,9 @@ namespace gazprea {
                 break;
             case GazpreaParser::RESERVED_AND:
                 t->op = BINOP::AND;
+                break;
+            case GazpreaParser::RESERVED_OR:
+                t->op = BINOP::OR;
                 break;
             default:
                 throw std::runtime_error("unknown arithmetic operator " + ctx->op->getText());
@@ -313,8 +316,6 @@ namespace gazprea {
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
-
-
 
     std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
         std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->getText());
@@ -439,16 +440,62 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitPredicatedLoop(GazpreaParser::PredicatedLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting predicated loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PredicatedLoopNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitInfiniteLoop(GazpreaParser::InfiniteLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting infinite loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
+
+
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting post predicated loop." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<PostPredicatedLoopNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+        t->addChild(visit(ctx->block()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIteratorLoop(GazpreaParser::IteratorLoopContext *ctx) {
 
+    }
+
+    // Loop Control
+    std::any ASTBuilder::visitBreak(GazpreaParser::BreakContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting break." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<BreakNode>(ctx->getStart()->getLine());
+
+        return t;
+    }
+
+    std::any ASTBuilder::visitContinue(GazpreaParser::ContinueContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting continue." << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<ContinueNode>(ctx->getStart()->getLine());
+
+        return t;
     }
 
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {
@@ -473,6 +520,11 @@ namespace gazprea {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         procedureNode->body = blockResult;
       }
+      if (ctx->RESERVED_RETURNS()) {
+          // has return
+          procedureNode->addChild(visit(ctx->type()));
+
+      }
 
       return std::dynamic_pointer_cast<ASTNode>(procedureNode);
     }
@@ -492,6 +544,13 @@ namespace gazprea {
       if (ctx->block()) {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         functionNode->body = blockResult;
+      }
+      if (ctx->expression()) {
+          auto expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+          functionNode->expr = expr;
+      }
+      if (ctx->RESERVED_RETURNS()) {
+          functionNode->addChild(visit(ctx->type()));
       }
 
       return std::dynamic_pointer_cast<ASTNode>(functionNode);
@@ -518,12 +577,49 @@ namespace gazprea {
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
+    std::any ASTBuilder::visitFuncCall(GazpreaParser::FuncCallContext *ctx) {
+        // this is #funcCall rule in expr rule
+        return visit(ctx->functionCall());
+    }
+
+    std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting function call" << std::endl;
+#endif
+        //functionCall : ID '(' (expression (',' expression)*)? ')'
+        // TODO: how to determine if theh function is normal or not? i guess we do that in other passes when resolving name
+        std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        callNode->CallName = fcallName;
+        for (auto expr: ctx->expression()) {
+            callNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(callNode);
+
+    }
+    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting procedure call" << std::endl;
+#endif
+        std::shared_ptr<CallNode> pCallNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> pcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        pCallNode->CallName = pcallName;
+        for (auto expr: ctx->expression()) {
+            pCallNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(pCallNode);
+    }
+
 
     std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting return" << std::endl;
 #endif
       auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
+
+      returnNode->returnExpr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
 
       return std::dynamic_pointer_cast<ASTNode>(returnNode);
     }

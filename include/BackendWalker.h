@@ -30,12 +30,16 @@ private:
 
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
-  std::any visitLoop(std::shared_ptr<LoopNode> tree) override;
   std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
 
   // method definitions
   std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+
   std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+
+  std::any visitCall(std::shared_ptr<CallNode> tree) override;
+
+  std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
 
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};

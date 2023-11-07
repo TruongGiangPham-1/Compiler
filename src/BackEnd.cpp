@@ -143,6 +143,7 @@ int BackEnd::emitMain() {
 
 void BackEnd::setupCommonTypeRuntime() {
   auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+  auto boolType = builder->getI1Type();
   auto intType = builder->getI32Type();
 
   auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
@@ -187,6 +188,7 @@ void BackEnd::setupCommonTypeRuntime() {
                                             appendTupleType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
 }
 
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
@@ -249,9 +251,11 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
 }
 
 
-mlir::Value BackEnd::generateCallNamed(std::string signature, mlir::ValueRange arguments) {
+mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
+  mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(signature);
-  return builder->create<mlir::LLVM::CallOp>(loc, function, arguments).getResult();
+
+  return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 }
 
 // === === === Printing === === ===
@@ -389,17 +393,21 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
 
     auto functionType = mlir::LLVM::LLVMFunctionType::get(returnType, translatedList, false);
 
-    builder->setInsertionPointToEnd(module.getBody());
+    builder->setInsertionPointToStart(module.getBody());
 
     mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc, signature, functionType, ::mlir::LLVM::Linkage::Internal);
     mlir::Block *entry = function.addEntryBlock();
     builder->setInsertionPointToStart(entry);
+
     return currentBlock;
 }
 
-void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal) {
-    builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
+void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
     builder->setInsertionPointToEnd(returnBlock);
+}
+
+void BackEnd::generateReturn(mlir::Value returnVal) {
+  builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
 }
 
 /**
@@ -544,6 +552,11 @@ mlir::Value BackEnd::generateLoadIdentifier(std::string varName) {
   mlir::Value value = builder->create<mlir::LLVM::LoadOp>(loc, globalPtr);
   return value;
 }
+
+mlir::Value BackEnd::generateLoadArgument(size_t index) {
+  auto val = builder->getBlock()->getArguments().vec()[index];
+  return val;
+}
 /*
  * used to store the comparison result to an address so we can load it later in
  * an another block for looping
@@ -573,14 +586,13 @@ mlir::Block *BackEnd::generateBlock() {
   return newBlock;
 }
 
+/*
+ * Jumps to the true block or false block, depending on the value of `cmpVal`
+ */
 void BackEnd::generateCompAndJump(mlir::Block *trueBlock,
-                                  mlir::Block *falseBlock, mlir::Value addr) {
-  // load from addr, do icmp, and jump
-  mlir::Value zero =
-      builder->create<mlir::LLVM::ConstantOp>(loc, builder->getI32Type(), 0);
-  mlir::Value cmpResult = builder->create<mlir::LLVM::ICmpOp>(
-      loc, builder->getI1Type(), mlir::LLVM::ICmpPredicate::ne, addr, zero);
-  builder->create<mlir::LLVM::CondBrOp>(loc, cmpResult, trueBlock, falseBlock);
+                                  mlir::Block *falseBlock, mlir::Value cmpVal) {
+  // jump depending on the value of cmpVal
+  builder->create<mlir::LLVM::CondBrOp>(loc, cmpVal, trueBlock, falseBlock);
 }
 
 void BackEnd::setBuilderInsertionPoint(
@@ -597,6 +609,18 @@ mlir::Value BackEnd::generateIndexWithInteger(mlir::Value vector,
       ->create<mlir::LLVM::CallOp>(loc, vectorToIntegerIndex,
                                    mlir::ValueRange({vector, index}))
       .getResult();
+}
+
+/*
+ * Given an MLIR Value of a commonType,
+ * returns an MLIR value of the downcasted boolean value as an i1 type
+ */
+mlir::Value BackEnd::downcastToBool(mlir::Value val) {
+  auto downcastFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("commonTypeToBool");
+  return builder->create<mlir::LLVM::CallOp>(loc,
+                                             downcastFunc,
+                                             mlir::ValueRange({val})
+  ).getResult();
 }
 
 /*

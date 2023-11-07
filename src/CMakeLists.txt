@@ -71,7 +71,7 @@ set(
         ASTNode/Method/FunctionNode.cpp
         ../include/Ref.h
         Ref.cpp
-        ../include/ASTNode/FunctionCallNode.h
+        ../include/ASTNode/CallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
         ASTNode/Method/ProcedureNode.cpp
@@ -94,6 +94,13 @@ set(
         ASTNode/ArgNode.cpp
         ../include/ASTNode/ArgNode.h
         ../include/AdvanceType.h
+        ASTNode/Loop/InfiniteLoopNode.cpp
+        ASTNode/Loop/PredicatedLoopNode.cpp
+        ASTNode/Loop/PostPredicatedLoopNode.cpp
+        ASTNode/BreakNode.cpp
+        ../include/ASTNode/BreakNode.h
+        ASTNode/ContinueNode.cpp
+        ../include/ASTNode/ContinueNode.h
 )
 
 # Build our executable from the source files.

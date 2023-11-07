@@ -35,7 +35,7 @@ public:
 
   mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
   mlir::Value performUNARYOP(mlir::Value value, UNARYOP op);
-  mlir::Value generateCallNamed(std::string signature, mlir::ValueRange arguments);
+  mlir::Value generateCallNamed(std::string signature, std::vector<mlir::Value> arguments);
 
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);
@@ -51,10 +51,13 @@ public:
 
   mlir::Value cast(mlir::Value from, BuiltIn toType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
-  void generateEndFunctionDefinition(mlir::Block* returnBlock, mlir::Value returnVal);
+
+  void generateEndFunctionDefinition(mlir::Block* returnBlock);
+  void generateReturn(mlir::Value returnVal);
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
+  mlir::Value generateLoadArgument(size_t index);
 
   void generateDeclaration(std::string varName, mlir::Value value);
   void generateAssignment(std::string varName, mlir::Value value);
@@ -74,6 +77,9 @@ public:
   mlir::Block *generateLoopBegin();
   mlir::Block *generateLoopMiddle(mlir::Value addr);
   mlir::Block *generateBlock();
+
+  // Loop and if conditional helper - downcasting to bool
+  mlir::Value downcastToBool(mlir::Value val);
 
   // generator helper functions
   mlir::Value getVectorSize(mlir::Value vectorAddr);
@@ -108,6 +114,7 @@ protected:
 private:
   std::vector<std::string> vectorLabels;
   std::vector<std::string> objectLabels;
+  std::vector<mlir::LLVM::LLVMFuncOp> functionContext;
 
   unsigned int allocatedVectors = 0;
   unsigned int allocatedObjects = 0;

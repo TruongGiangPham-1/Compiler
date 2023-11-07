@@ -3,6 +3,7 @@
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/AssignNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
+#include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
@@ -17,10 +18,15 @@
 #include "ASTNode/Expr/Vector/GeneratorNode.h"
 #include "ASTNode/Expr/Vector/FilterNode.h"
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
-#include "ASTNode/Loop/LoopNode.h"
+#include "ASTNode/Loop/PredicatedLoopNode.h"
+#include "ASTNode/Loop/PostPredicatedLoopNode.h"
+#include "ASTNode/Loop/InfiniteLoopNode.h"
+#include "ASTNode/BreakNode.h"
+#include "ASTNode/ContinueNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Method/FunctionNode.h"
-#include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/CallNode.h"
+#include "ASTNode/TypeDefNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -39,6 +45,7 @@ namespace gazprea {
 
         // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
+        virtual std::any visitTypedef(std::shared_ptr<TypeDefNode> tree);
 
         // === EXPRESSION AST NODES ===
         virtual std::any visitID(std::shared_ptr<IDNode> tree);
@@ -64,15 +71,19 @@ namespace gazprea {
         virtual std::any visitBlock(std::shared_ptr<BlockNode>tree);
         // === BLOCK AST NODES ===
         virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
-        virtual std::any visitLoop(std::shared_ptr<LoopNode> tree);
+        virtual std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
+        virtual std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
+        virtual std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
+        virtual std::any visitBreak(std::shared_ptr<BreakNode> tree);
+        virtual std::any visitContinue(std::shared_ptr<ContinueNode> tree);
+
         // === BLOCK FUNCTION NODES ===
         virtual std::any visitFunction(std::shared_ptr<FunctionNode> tree);
+        virtual std::any visitCall(std::shared_ptr<CallNode> tree);
         // === BlOCK PROCEDURE NODES ===
         virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
-
+        virtual std::any visitReturn(std::shared_ptr<ReturnNode> tree);
         virtual std::any visitParameter(std::shared_ptr<ArgNode> tree);
-
-
         // === FUNCTION CALL NODE ===
 
     };

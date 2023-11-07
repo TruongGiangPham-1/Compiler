@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 
+#include "ScopedSymbol.h"
 #include "BaseScope.h"
 
 std::shared_ptr<Symbol> BaseScope::resolve(const std::string &name) {
@@ -9,7 +10,6 @@ std::shared_ptr<Symbol> BaseScope::resolve(const std::string &name) {
     if ( find_s != symbols.end() ) return find_s->second;
     // if not here, check any enclosing scope
     if ( enclosingScope != nullptr ) return enclosingScope->resolve(name);
-
     return nullptr; // not found
 }
 

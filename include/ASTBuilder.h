@@ -22,6 +22,8 @@
 #include "ASTNode/Loop/IteratorLoopNode.h"
 #include "ASTNode/Loop/PostPredicatedLoopNode.h"
 #include "ASTNode/Loop/InfiniteLoopNode.h"
+#include "ASTNode/BreakNode.h"
+#include "ASTNode/ContinueNode.h"
 
 #include "ASTNode/Block/ConditionalNode.h"
 #include "ASTNode/Method/FunctionNode.h"
@@ -31,11 +33,10 @@
 #include "ASTNode/Type/StringTypeNode.h"
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "FunctionCallTypes/FuncCallType.h"
-#include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/CallNode.h"
 #include "ASTNode/Type/TupleTypeNode.h"
 #include "ASTNode/Method/ProcedureNode.h"
 #include "Types/QUALIFIER.h"
-
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
@@ -89,6 +90,10 @@ namespace gazprea {
         std::any visitParameter(GazpreaParser::ParameterContext *ctx) override;
         std::any visitReturn(GazpreaParser::ReturnContext *ctx) override;
 
+        std::any visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) override;
+        std::any visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) override;  // this is functioncall rule
+        std::any visitFuncCall(GazpreaParser::FuncCallContext *ctx) override;   // this is #funcCall label in expr
+
         // control flow
         std::any visitCond(GazpreaParser::CondContext *ctx) override;
 
@@ -96,6 +101,10 @@ namespace gazprea {
         std::any visitInfiniteLoop(GazpreaParser::InfiniteLoopContext *ctx) override;
         std::any visitPostPredicatedLoop(GazpreaParser::PostPredicatedLoopContext *ctx) override;
         std::any visitIteratorLoop(GazpreaParser::IteratorLoopContext *ctx) override;
+
+        // Loop Control
+        std::any visitBreak(GazpreaParser::BreakContext *ctx) override;
+        std::any visitContinue(GazpreaParser::ContinueContext *ctx) override;
 
         std::any visitStream(GazpreaParser::StreamContext *ctx) override;
 

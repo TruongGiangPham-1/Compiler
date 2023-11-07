@@ -5,12 +5,12 @@
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
   codeGenerator.init();
   walkChildren(tree);
-  codeGenerator.deallocateObjects();
+  //codeGenerator.deallocateObjects();
   codeGenerator.generate();
 }
 
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
-  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
 
   codeGenerator.generateAssignment(tree->sym->mlirName, val);
 
@@ -33,7 +33,12 @@ std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
 
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
-  return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  // might be arg
+  if (tree->sym->index >= 0) {
+    return codeGenerator.generateLoadArgument(tree->sym->index);
+  } else {
+    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
 }
 
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
@@ -101,43 +106,41 @@ std::any BackendWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
 // === BLOCK AST NODES ===
 
 std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) {
-  //TODO
-  mlir::Block *trueBlock = codeGenerator.generateBlock();
-  mlir::Block *falseBlock = codeGenerator.generateBlock();
+  // create all our block ahead of time
+  // for each condition, we need a true and a false mlir::Block.
+  // these go at the beginning and end of each if statement's body, respectively
+  // finally, we need an end mlir::Block placed at the end of all conditions
+  std::vector<mlir::Block *> trueBlocks;
+  std::vector<mlir::Block *> falseBlocks;
+  for (int i = 0; i < tree->conditions.size(); i++) {
+    trueBlocks.push_back(codeGenerator.generateBlock());
+    falseBlocks.push_back(codeGenerator.generateBlock());
+  }
+  mlir::Block *endBlock = codeGenerator.generateBlock();
 
-  // walk all the conditions, then we have a conditional jump chain.
-  for (auto condition : tree->conditions) {
-    walk(condition);
+  // now, go through the conditions and bodies and generate the code
+  // the number of bodies is never less than the number of conditions
+  for (int i = 0; i < tree->conditions.size(); i++) {
+    auto condResultVal = std::any_cast<mlir::Value>(walk(tree->conditions[i]));
+    auto condResultBool = codeGenerator.downcastToBool(condResultVal);
+
+    codeGenerator.generateCompAndJump(trueBlocks[i], falseBlocks[i], condResultBool);
+
+    codeGenerator.setBuilderInsertionPoint(trueBlocks[i]);
+    walk(tree->bodies[i]);
+
+    codeGenerator.generateEnterBlock(endBlock);
+    codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
-  //codeGenerator.generateCompAndJump(trueBlock, falseBlock, result);
-  codeGenerator.setBuilderInsertionPoint(trueBlock);
+  // if there is an "else" clause, we will have one more "body" node
+  if (tree->bodies.size() > tree->conditions.size()) {
+    walk(tree->bodies[tree->bodies.size() - 1]);
+    codeGenerator.generateEnterBlock(endBlock);
+  }
 
-  walkChildren(tree);
+  codeGenerator.setBuilderInsertionPoint(endBlock);
 
-  codeGenerator.generateEnterBlock(falseBlock);
-  codeGenerator.setBuilderInsertionPoint(falseBlock);
-
-  return 0;
-}
-
-std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
-  //TODO
-  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
-  mlir::Block *trueBlock = codeGenerator.generateBlock();
-  mlir::Block *falseBlock = codeGenerator.generateBlock();
-
-  codeGenerator.generateEnterBlock(loopBeginBlock);
-  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
-
-  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->condition));
-  codeGenerator.generateCompAndJump(trueBlock, falseBlock, exprResult);
-
-  codeGenerator.setBuilderInsertionPoint(trueBlock);
-  walkChildren(tree);
-
-  codeGenerator.generateEnterBlock(loopBeginBlock);
-  codeGenerator.setBuilderInsertionPoint(falseBlock);
   return 0;
 }
 
@@ -148,8 +151,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(), 
         true);
     walk(tree->body);
-    mlir::Value val; // void
-    codeGenerator.generateEndFunctionDefinition(block, val);
+    codeGenerator.generateEndFunctionDefinition(block);
   }
 
   return 0;
@@ -157,14 +159,31 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
 
 std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
   if (tree->body) {
-    // for now we don't proper return values, assume everything void
+
     auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name, 
         tree->orderedArgs.size(), 
-        true);
+        false);
     walk(tree->body);
-    mlir::Value val; // void
-    codeGenerator.generateEndFunctionDefinition(block, val);
+
+
+    codeGenerator.generateEndFunctionDefinition(block);
   }
+  return 0;
+}
+
+std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
+  std::vector<mlir::Value> arguments;
+
+  for (auto argument : tree->children) {
+    arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
+  }
+
+  auto result = codeGenerator.generateCallNamed(tree->CallName->name, arguments);
+  return result;
+}
+
+std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
   return 0;
 }
 
@@ -173,4 +192,22 @@ std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   return walkChildren(tree);
 }
 
-
+//std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
+//  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+//  mlir::Block *trueBlock = codeGenerator.generateBlock();
+//  mlir::Block *falseBlock = codeGenerator.generateBlock();
+//
+//  codeGenerator.generateEnterBlock(loopBeginBlock);
+//  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+//
+//  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
+//  codeGenerator.generateCompAndJump(trueBlock, falseBlock, exprResult);
+//
+//  codeGenerator.setBuilderInsertionPoint(trueBlock);
+//  walkChildren(tree);
+//
+//  codeGenerator.generateEnterBlock(loopBeginBlock);
+//  codeGenerator.setBuilderInsertionPoint(falseBlock);
+//  return 0;
+//}
+//
