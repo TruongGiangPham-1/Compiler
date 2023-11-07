@@ -29,7 +29,8 @@ jobs:
           script: |
             cd ${{ vars.DIR }}
             git fetch --all && git reset --hard origin/${{ env.BRANCH_NAME }}
-            cd ${{ vars.DIR }}/build 
+            mkdir -p ${{ vars.DIR }}/build
+            cd ${{ vars.DIR }}/build
             cmake .. && make
             cd ${{ vars.DIR }}
             tester .github/ci-tests/CSMachineConfig.json --timeout 2
