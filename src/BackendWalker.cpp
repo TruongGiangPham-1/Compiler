@@ -172,19 +172,15 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
   return 0;
 }
 
-std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
   std::vector<mlir::Value> arguments;
 
   for (auto argument : tree->children) {
     arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
   }
 
-  auto result = codeGenerator.generateCallNamed(tree->funcCallName->name, arguments);
+  auto result = codeGenerator.generateCallNamed(tree->CallName->name, arguments);
   return result;
-}
-
-std::any BackendWalker::visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) {
-  return 0;
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {

@@ -33,7 +33,7 @@
 #include "ASTNode/Type/StringTypeNode.h"
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "FunctionCallTypes/FuncCallType.h"
-#include "ASTNode/FunctionCallNode.h"
+#include "ASTNode/CallNode.h"
 #include "ASTNode/Type/TupleTypeNode.h"
 #include "ASTNode/Method/ProcedureNode.h"
 #include "ASTNode/Method/ProcedureCallNode.h"

@@ -34,10 +34,10 @@ private:
 
   // method definitions
   std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
-  std::any visitProcedureCall(std::shared_ptr<ProcedureCallNode> tree) override;
 
   std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
-  std::any visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) override;
+
+  std::any visitCall(std::shared_ptr<CallNode> tree) override;
 
   std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
 
