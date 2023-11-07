@@ -194,7 +194,6 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
 
 std::any BackendWalker::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
   std::vector<mlir::Value> arguments;
-  std::cout << "here" << std::endl;
 
   for (auto argument : tree->children) {
     arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
