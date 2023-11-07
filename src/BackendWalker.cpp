@@ -184,7 +184,7 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
 
 std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
     if (this->loopBlocks.empty()) {
-        throw std::runtime_error("Break statement outside of loop");
+        throw StatementError(tree->loc(), "Break statement outside of loop");
     }
 
     auto loopExit = this->loopBlocks.back().second;
@@ -195,7 +195,7 @@ std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
 
 std::any BackendWalker::visitContinue(std::shared_ptr<ContinueNode> tree) {
     if (this->loopBlocks.empty()) {
-        throw std::runtime_error("Continue statement outside of loop");
+        throw StatementError(tree->loc(), "Continue statement outside of loop");
     }
 
     auto loopBody = this->loopBlocks.back().first;
