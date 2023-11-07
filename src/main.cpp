@@ -63,8 +63,8 @@ int main(int argc, char **argv) {
   //  TypeWalker types;
   //types.walk(ast);
 
-  //BackendWalker backend(out);
-  //backend.generateCode(ast);
+  BackendWalker backend(out);
+  backend.generateCode(ast);
 
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);
