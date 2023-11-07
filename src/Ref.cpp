@@ -15,7 +15,10 @@ namespace gazprea {
         if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
-            defineFunctionAndProcedureArgs(tree->loc(), tree->funcNameSym, tree->orderedArgs, 1);
+            auto reType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            if (reType == nullptr) throw TypeError(tree->loc(), "cannot resolve function return type");
+
+            defineFunctionAndProcedureArgs(tree->loc(), tree->funcNameSym, tree->orderedArgs, reType,  1);
 
             // push a local scope for function block,  to walk childre
             std::string sname = "functionScope" + std::to_string(tree->loc());
@@ -78,7 +81,12 @@ namespace gazprea {
         if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
-            defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, 0);
+            std::shared_ptr<Type> retType = nullptr;
+            if (tree->getRetTypeNode()) {
+               retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+                if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
+            }
+            defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, retType , 0);
 
             // push a local scope for function block,  to walk childre
             std::string sname = "procedureScope" + std::to_string(tree->loc());
@@ -263,10 +271,8 @@ namespace gazprea {
      * 2. push method scope , enter it, and define arguments inside it
      *
      */
-    void Ref::defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs, int isFunc) {
+    void Ref::defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs,std::shared_ptr<Type> retType , int isFunc) {
         // TODO: resolve return type.
-        std::shared_ptr<Type> retType = std::make_shared<AdvanceType>("integer", "integer");
-
         // define function scope Symbol
         std::shared_ptr<ScopedSymbol> methodSym;
         if (isFunc) {
@@ -278,7 +284,13 @@ namespace gazprea {
             methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
                                                           fname, retType, symtab->globalScope, loc);
         }
-        std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << "\n";
+        methodSym->typeSym = retType;
+        if (retType) {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+        } else {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
+        }
+
         currentScope->define(methodSym);  // define methd symbol in global
         currentScope = symtab->enterScope(methodSym);
 
