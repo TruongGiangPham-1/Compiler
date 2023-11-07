@@ -494,6 +494,8 @@ float realBINOP(float l, float r, enum BINOP op) {{}
     return l == r;
     case NEQUAL:
     return l != r;
+    case LTHAN:
+    return l < r;
     case LEQ:
     return l <= r;
     case GTHAN:
@@ -569,6 +571,8 @@ char charBINOP(char l, char r, enum BINOP op) {
     return l == r;
     case NEQUAL:
     return l != r;
+    case LTHAN:
+    return l < r;
     case LEQ:
     return l <= r;
     case GTHAN:
