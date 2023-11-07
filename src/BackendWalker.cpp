@@ -129,8 +129,8 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
 
   // loop exit
-  this->loopBlocks.pop_back();
   codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
 
   return 0;
 }
@@ -140,7 +140,7 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   auto loopBody= codeGenerator.generateBlock(); // body
   auto loopExit = codeGenerator.generateBlock(); // the rest of the program
 
-  this->loopBlocks.push_back(std::make_pair(loopCheck, loopBody));
+  this->loopBlocks.push_back(std::make_pair(loopCheck, loopExit));
 
   // check conditional
   codeGenerator.generateEnterBlock(loopCheck);
@@ -155,8 +155,8 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   codeGenerator.generateEnterBlock(loopCheck);
 
   // loop exit
-  this->loopBlocks.pop_back();
   codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
 
   return 0;
 }
@@ -167,7 +167,7 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   auto loopCheck = codeGenerator.generateBlock();
   auto loopExit = codeGenerator.generateBlock();
 
-  this->loopBlocks.push_back(std::make_pair(loopBody, loopCheck));
+  this->loopBlocks.push_back(std::make_pair(loopBody, loopExit));
 
   // body of loop
   codeGenerator.generateEnterBlock(loopBody);
@@ -182,8 +182,8 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateCompAndJump(loopBody, loopExit, condBool);
 
   // loop exit
-  this->loopBlocks.pop_back();
   codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
 
   return 0;
 }
