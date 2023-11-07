@@ -165,7 +165,7 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitConditional(std::dynamic_pointer_cast<ConditionalNode>(tree));
 
-        } else if (std::dynamic_pointer_cast<LoopNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<InfiniteLoopNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Infinite Loop" << std::endl;
 #endif // DEBUG
