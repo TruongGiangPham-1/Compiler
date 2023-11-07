@@ -54,9 +54,6 @@ public:
   void generateEndFunctionDefinition(mlir::Block* returnBlock);
   void generateReturn(mlir::Value returnVal);
 
-
-
-
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
   mlir::Value generateLoadArgument(size_t index);
