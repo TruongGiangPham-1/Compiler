@@ -65,7 +65,6 @@ void BackEnd::generate() {
             << std::endl;
 #endif
   auto intType = builder->getI32Type();
-
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
   builder->create<mlir::LLVM::ReturnOp>(loc, zero);
@@ -160,21 +159,14 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intType, mlir::LLVM::LLVMPointerType::get(commonTypeAddr)});
   auto tupleTypeAddr = mlir::LLVM::LLVMPointerType::get(tupleType);
 
-
   auto printType = mlir::LLVM::LLVMFunctionType::get(
       voidType, {commonTypeAddr});
-
-  auto promoteCommonTypeFuncType = mlir::LLVM::LLVMFunctionType::get(
-      commonTypeAddr, {commonTypeAddr, commonTypeAddr});
-
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
   auto allocateTupleType = mlir::LLVM::LLVMFunctionType::get(tupleTypeAddr, {intType});
   auto appendTupleType = mlir::LLVM::LLVMFunctionType::get(intType, {tupleTypeAddr, commonTypeAddr});
-
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
-
   auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
@@ -185,8 +177,6 @@ void BackEnd::setupCommonTypeRuntime() {
                                           commonUnaryopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printCommonType",
                                             printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "promotion",
-                                            promoteCommonTypeFuncType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
@@ -222,22 +212,6 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   if (op == EQUAL || op == NEQUAL || op == GTHAN || op == LTHAN || op == GEQ || op == LEQ) {
     result = cast(result, BOOL);
   }
-
-  return result;
-}
-
-mlir::Value BackEnd::promotion(mlir::Value left, mlir::Value right) {
-  mlir::LLVM::LLVMFuncOp promotionFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
-
-  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
-
-  // we create a new object, have to tag it
-  std::string newLabel =
-      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
-  this->objectLabels.push_back(newLabel);
-  this->generateDeclaration(newLabel, result);
-  this->allocatedObjects++;
 
   return result;
 }

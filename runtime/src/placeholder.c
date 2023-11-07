@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 //#define DEBUGTUPLE
-#define DEBUGPROMOTION
+//#define DEBUGPROMOTION
 //#define DEBUGMEMORY
 typedef struct vecStruct {
   int* base;
@@ -307,7 +307,7 @@ commonType* realCast(float fromValue, enum BuiltIn toType) {
     case INT:
     {
       int tempInt = (int)fromValue;
-      return allocateCommonType(&fromValue, INT);
+      return allocateCommonType(&tempInt, INT);
     }
     case REAL:
     {
@@ -318,7 +318,6 @@ commonType* realCast(float fromValue, enum BuiltIn toType) {
       return NULL;
     }
     case TUPLE:
-    // cannot cast to tuple
     return NULL;
   }
 }
@@ -599,10 +598,6 @@ commonType* tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
     appendTuple(tuple, performCommonTypeBINOP(l->values[i], r->values[i], op));
   }
 
-  for (int i = 0; i < tuple->size ; i++) {
-    printCommonType(tuple->values[i]);
-  }
-
   commonType *result = allocateCommonType(&tuple, TUPLE);
 
   return result;
@@ -643,7 +638,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
   } else {
     // tuples don't need promotions, their held items do.
-    result = tupleBINOP(*(tuple**)left->value, *(tuple**)right->value, op);
+    result = tupleBINOP((tuple*)left->value, (tuple*)right->value, op);
   }
   
   // temporary operands
