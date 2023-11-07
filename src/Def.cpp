@@ -27,16 +27,16 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
 
 
 std::any Def::visitAssign(std::shared_ptr<AssignNode> tree) {
-    std::shared_ptr<Symbol> sym = currentScope->resolve(tree->getIDName());
-    tree->scope = currentScope;
-    tree->sym->scope = currentScope;
-    tree->sym->mlirName = sym->mlirName;
-    walkChildren(tree);
+    //std::shared_ptr<Symbol> sym = currentScope->resolve(tree->getIDName());
+    //tree->scope = currentScope;
+    //tree->sym->scope = currentScope;
+    //tree->sym->mlirName = sym->mlirName;
+    //walkChildren(tree);
     return 0;
 }
 
 std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
-    //// resolve type
+    // resolve type
     std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
 
     assert(resType);  // ensure its not nullptr  // should be builtin type

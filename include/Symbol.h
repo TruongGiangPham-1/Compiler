@@ -20,6 +20,8 @@ public:
     QUALIFIER qualifier;
     TYPE type;
     std::shared_ptr<Type> typeSym;  // cast to advancedType!
+    //
+    int index = -1;
 
     mlir::Value mlirAddr;
     std::string mlirName;

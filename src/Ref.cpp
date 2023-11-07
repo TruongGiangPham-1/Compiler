@@ -150,7 +150,11 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "Undeclared variable " +  tree->sym->getName());
         } else {
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-                      << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName() << "\n";
+                      << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName();
+            if (std::dynamic_pointer_cast<ScopedSymbol>(referencedSymbol->scope)) {
+                std::cout << " index of param=" << referencedSymbol->index ;
+            }
+            std::cout << "\n";
         }
         tree->sym = referencedSymbol;
         return 0;
@@ -348,6 +352,7 @@ namespace gazprea {
         currentScope = symtab->enterScope(methodSym);
 
         // define the argument symbols
+        int index= 1;
         for (auto &argIDNode: orderedArgs) {
             // define this myself, dont need mlir name because arguments are
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
@@ -365,6 +370,9 @@ namespace gazprea {
                       " as Type" << argNode->idSym->typeSym->getName() <<"\n";
 
             // define mlirname
+            argNode->idSym->scope = currentScope;
+            argNode->idSym->index = index;
+            index ++;
             currentScope->define(argNode->idSym);  // define arg in curren scope
             argNode->scope = currentScope;  // set scope to function scope
         }
