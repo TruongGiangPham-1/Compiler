@@ -88,6 +88,8 @@ namespace gazprea {
         std::any visitProcedure(GazpreaParser::ProcedureContext *ctx) override;
         std::any visitFunction(GazpreaParser::FunctionContext *ctx) override;
         std::any visitParameter(GazpreaParser::ParameterContext *ctx) override;
+        std::any visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) override;  // this is functioncall rule
+        std::any visitFuncCall(GazpreaParser::FuncCallContext *ctx) override;   // this is #funcCall label in expr
 
         // control flow
         std::any visitCond(GazpreaParser::CondContext *ctx) override;
