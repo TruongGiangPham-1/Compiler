@@ -584,15 +584,28 @@ namespace gazprea {
 #endif
         //functionCall : ID '(' (expression (',' expression)*)? ')'
         // TODO: how to determine if theh function is normal or not? i guess we do that in other passes when resolving name
-        std::shared_ptr<FunctionCallNode> fCall = std::make_shared<FunctionCallNode>(ctx->getStart()->getLine(), FUNCTYPE::FUNC_NORMAL);
+        std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
         std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
 
-        fCall->funcCallName = fcallName;
+        callNode->CallName = fcallName;
         for (auto expr: ctx->expression()) {
-            fCall->addChild(visit(expr));
+            callNode->addChild(visit(expr));
         }
-        return std::dynamic_pointer_cast<ASTNode>(fCall);
+        return std::dynamic_pointer_cast<ASTNode>(callNode);
 
+    }
+    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting procedure call" << std::endl;
+#endif
+        std::shared_ptr<CallNode> pCallNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> pcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+
+        pCallNode->CallName = pcallName;
+        for (auto expr: ctx->expression()) {
+            pCallNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(pCallNode);
     }
 
 

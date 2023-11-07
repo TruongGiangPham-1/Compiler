@@ -71,7 +71,7 @@ set(
         ASTNode/Method/FunctionNode.cpp
         ../include/Ref.h
         Ref.cpp
-        ../include/ASTNode/FunctionCallNode.h
+        ../include/ASTNode/CallNode.h
         ../include/FunctionCallTypes/FuncCallType.h
         FunctionCallTypes/FuncCallType.cpp
         ASTNode/Method/ProcedureNode.cpp
