@@ -108,6 +108,44 @@ void BackEnd::functionShowcase() {
   this->printCommonType(positive);
   // de-allocate. will break because of the tuples
   // this->deallocateObjects()
+
+  // visual separator. Below this is conditionals
+  this->printCommonType(this->generateValue(999999999));
+
+  // generate `if (a == 1) then print(a) else if (a == 86) print(b) else print(c)`
+  // this code will be generated
+  mlir::Block *true1 = this->generateBlock();
+  mlir::Block *false1 = this->generateBlock();
+  mlir::Block *true2 = this->generateBlock();
+  mlir::Block *false2 = this->generateBlock();
+  mlir::Block *endConditional = this->generateBlock();
+
+  // if (a == 1) then print(1)
+  auto cond1 = this->performBINOP(a, this->generateValue(1), EQUAL);
+  auto cond1Bool = this->downcastToBool(cond1);
+
+  this->generateCompAndJump(true1, false1, cond1Bool);
+
+  this->setBuilderInsertionPoint(true1);
+  this->printCommonType(this->generateValue(1));
+  this->generateEnterBlock(endConditional);
+  this->setBuilderInsertionPoint(false1);
+
+  // else if (a > 50) print(2)
+  auto cond2 = this->performBINOP(a, this->generateValue(50), GTHAN);
+  auto cond2Bool = this->downcastToBool(cond2);
+  this->generateCompAndJump(true2, false2, cond2Bool);
+
+  this->setBuilderInsertionPoint(true2);
+  this->printCommonType(this->generateValue((2)));
+  this->generateEnterBlock(endConditional);
+  this->setBuilderInsertionPoint(false2);
+
+  // else print(3)
+  this->printCommonType(this->generateValue(3));
+  this->generateEnterBlock(endConditional);
+
+  this->setBuilderInsertionPoint(endConditional);
 }
 
 /**
@@ -200,6 +238,7 @@ int BackEnd::emitMain() {
 
 void BackEnd::setupCommonTypeRuntime() {
   auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+  auto boolType = builder->getI1Type();
   auto intType = builder->getI32Type();
   auto int64Type = builder->getI64Type();
 
@@ -251,6 +290,7 @@ void BackEnd::setupCommonTypeRuntime() {
                                             appendTupleType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
 }
 
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
@@ -566,14 +606,13 @@ mlir::Block *BackEnd::generateBlock() {
   return newBlock;
 }
 
+/*
+ * Jumps to the true block or false block, depending on the value of `cmpVal`
+ */
 void BackEnd::generateCompAndJump(mlir::Block *trueBlock,
-                                  mlir::Block *falseBlock, mlir::Value addr) {
-  // load from addr, do icmp, and jump
-  mlir::Value zero =
-      builder->create<mlir::LLVM::ConstantOp>(loc, builder->getI32Type(), 0);
-  mlir::Value cmpResult = builder->create<mlir::LLVM::ICmpOp>(
-      loc, builder->getI1Type(), mlir::LLVM::ICmpPredicate::ne, addr, zero);
-  builder->create<mlir::LLVM::CondBrOp>(loc, cmpResult, trueBlock, falseBlock);
+                                  mlir::Block *falseBlock, mlir::Value cmpVal) {
+  // jump depending on the value of cmpVal
+  builder->create<mlir::LLVM::CondBrOp>(loc, cmpVal, trueBlock, falseBlock);
 }
 
 void BackEnd::setBuilderInsertionPoint(
@@ -590,6 +629,18 @@ mlir::Value BackEnd::generateIndexWithInteger(mlir::Value vector,
       ->create<mlir::LLVM::CallOp>(loc, vectorToIntegerIndex,
                                    mlir::ValueRange({vector, index}))
       .getResult();
+}
+
+/*
+ * Given an MLIR Value of a commonType,
+ * returns an MLIR value of the downcasted boolean value as an i1 type
+ */
+mlir::Value BackEnd::downcastToBool(mlir::Value val) {
+  auto downcastFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("commonTypeToBool");
+  return builder->create<mlir::LLVM::CallOp>(loc,
+                                             downcastFunc,
+                                             mlir::ValueRange({val})
+  ).getResult();
 }
 
 /*

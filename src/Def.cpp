@@ -157,7 +157,13 @@ std::any Def::visitLoop(std::shared_ptr<LoopNode> tree) {
 std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     if (tree->body) {
         return 0;
+    } else {
+        // TOODO: forward functino decl
     }
+    return 0;
+}
+std::any Def::visitFunctionCall(std::shared_ptr<FunctionCallNode> tree) {
+    // SKIP in def pass
     return 0;
 }
 
