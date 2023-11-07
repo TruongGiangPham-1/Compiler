@@ -162,4 +162,12 @@ namespace gazprea {
         tree->evaluatedType = tree->getExpr()->evaluatedType;
         return nullptr;
     }
+
+    std::any TypeWalker::visitID(std::shared_ptr<IDNode> tree) {
+        if(tree->sym == nullptr) {
+            throw SymbolError(tree->loc(), "Unidentified Symbol referenced!");
+        }
+        tree->evaluatedType = tree->sym->typeSym;
+        return nullptr;
+    }
 }

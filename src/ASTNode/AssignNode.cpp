@@ -15,5 +15,11 @@ std::shared_ptr<Symbol> AssignNode::getID() {
 }
 
 std::shared_ptr<ASTNode> AssignNode::getExprNode() {
+    return children[1];
+}
+
+std::shared_ptr<ASTNode> AssignNode::getLValue() {
     return children[0];
 }
+
+
