@@ -12,11 +12,9 @@ public:
 
     std::shared_ptr<Symbol> getID();
 
-    std::shared_ptr<ASTNode> getLValue();
-    std::shared_ptr<ASTNode> getExprNode();
+    std::shared_ptr<ASTNode> getLvalue();
+    std::shared_ptr<ASTNode> getRvalue();
 
-    std::shared_ptr<ASTNode> LValue;
-    std::shared_ptr<ASTNode> ExprNode;
 
     std::string toString() override;
     std::string getIDName();
