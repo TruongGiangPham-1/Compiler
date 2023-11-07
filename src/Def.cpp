@@ -27,57 +27,14 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
 
 
 std::any Def::visitAssign(std::shared_ptr<AssignNode> tree) {
-    //std::shared_ptr<Symbol> sym = currentScope->resolve(tree->getIDName());
-    //tree->scope = currentScope;
-    //tree->sym->scope = currentScope;
-    //tree->sym->mlirName = sym->mlirName;
-    //walkChildren(tree);
     return 0;
 }
 
 std::any Def::visitDecl(std::shared_ptr<DeclNode> tree) {
-    // resolve type
-    std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
-
-    assert(resType);  // ensure its not nullptr  // should be builtin type
-
-    walk(tree->getExprNode());
-
-    auto resolveID = currentScope->resolve(tree->getIDName());
-    if (resolveID != nullptr) {
-        throw SymbolError(tree->loc(), "redeclaration of identifier" + tree->getIDName());
-    }
-
-    // define the ID in symtable
-    std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-    std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);  //TODO: change TYPE to resolve type
-
-    idSym->mlirName = mlirName;
-    idSym->scope = currentScope;
-
-    currentScope->define(idSym);
-
-    std::cout << "line " << tree->loc() << " defined symbol " << idSym->name << " as type " << resType->getName()
-              << " as mlirNmae: " << mlirName << "\n" ;
-
-    tree->scope = currentScope;
-    tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
     return 0;
 }
 
 std::any Def::visitID(std::shared_ptr<IDNode> tree) {
-    // only resolves and add scope information in AST for ref pass
-    std::shared_ptr<Symbol> referencedSymbol = currentScope->resolve(tree->sym->getName());
-    //if (referencedSymbol == nullptr) {
-    //    std::cout << "in line " << tree->loc()
-    //              << " ref null\n"; // variable not defined
-    //} else {
-    //    std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
-    //              << "  ref " << referencedSymbol->mlirName << " Type is " << referencedSymbol->type->getName()
-    //              << std::endl;
-    //}
-    tree->sym = referencedSymbol;
-    tree->scope = currentScope;
     return 0;
 }
 

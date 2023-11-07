@@ -22,7 +22,7 @@ namespace gazprea {
         std::shared_ptr<Scope> currentScope;
 
         int getNextId();
-        void defineFunctionAndProcedure(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
+        void defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
                                           int isFunc); //
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
