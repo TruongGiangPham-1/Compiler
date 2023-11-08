@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 //#define DEBUGTUPLE
-//#define DEBUGPROMOTION
+#define DEBUGTYPES
 //#define DEBUGMEMORY
 typedef struct vecStruct {
   int* base;
@@ -153,7 +153,7 @@ void deallocateCommonType(commonType* object) {
   if (object != NULL) {
     switch (object->type) {
       case TUPLE:
-      deallocateTuple(*(tuple**)object->value);
+      deallocateTuple((tuple*)object->value);
       break;
       default:
       free(object->value);
@@ -204,9 +204,9 @@ void appendTuple(tuple* tuple, commonType *value) {
 }
 
 commonType* boolCast(bool fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Cast from bool\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
   switch (toType) {
     case BOOL:
     {
@@ -227,15 +227,18 @@ commonType* boolCast(bool fromValue, enum BuiltIn toType) {
       char tempChar = fromValue;
       return allocateCommonType(&tempChar, CHAR);
     }
-    case TUPLE:
-    // we will never have typles here
+    default:
+  #ifdef DEBUGTYPES
+    printf("Cast fail!\n");
+  #endif /* ifdef DEBUGTYPES */
+    return NULL;
   }
 }
 
 commonType* intCast(int fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Cast from int\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
 
   switch (toType) {
     case BOOL:
@@ -257,16 +260,18 @@ commonType* intCast(int fromValue, enum BuiltIn toType) {
       char tempChar =  ((unsigned int) fromValue) % 256;
       return allocateCommonType(&tempChar, CHAR);
     }
-    case TUPLE:
-    // cannot cast to tuple
+    default:
+  #ifdef DEBUGTYPES
+    printf("Cast fail!\n");
+  #endif /* ifdef DEBUGTYPES */
     return NULL;
   }
 }
 
 commonType* charCast(char fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Cast from char\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
 
   switch (toType) {
     case BOOL:
@@ -288,107 +293,169 @@ commonType* charCast(char fromValue, enum BuiltIn toType) {
     {
       return allocateCommonType(&fromValue, CHAR);
     }
-    case TUPLE:
-    // cannot cast to tuple
+    default:
+  #ifdef DEBUGTYPES
+    printf("Cast fail!\n");
+  #endif /* ifdef DEBUGTYPES */
     return NULL;
   }
 }
 
 commonType* realCast(float fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Cast from real\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
 
   switch (toType) {
-    case BOOL:
-    {
-      return NULL;
-    }
     case INT:
     {
+  #ifdef DEBUGTYPES
+    printf("To int!\n");
+  #endif /* ifdef DEBUGTYPES */
       int tempInt = (int)fromValue;
       return allocateCommonType(&tempInt, INT);
     }
     case REAL:
     {
+  #ifdef DEBUGTYPES
+    printf("To real!\n");
+  #endif /* ifdef DEBUGTYPES */
       return allocateCommonType(&fromValue, REAL);
     }
-    case CHAR:
-    {
+    default:
+  #ifdef DEBUGTYPES
+    printf("Cast fail!\n");
+  #endif /* ifdef DEBUGTYPES */
       return NULL;
-    }
-    case TUPLE:
-    return NULL;
   }
 }
 
 commonType* cast(commonType* from, enum BuiltIn toType) {
+#ifdef DEBUGTYPES
+    printf("Choosing appropriate case...\n");
+#endif /* ifdef DEBUGTYPES */
+
   switch (from->type) {
     case BOOL:
+#ifdef DEBUGTYPES
+    printf("Bool!\n");
+#endif /* ifdef DEBUGTYPES */
     return boolCast(*(bool*)from->value, toType);
+
     case INT:
+#ifdef DEBUGTYPES
+    printf("Int!\n");
+#endif /* ifdef DEBUGTYPES */
     return intCast(*(int*)from->value, toType);
+
     case CHAR:
+#ifdef DEBUGTYPES
+    printf("Char!\n");
+#endif /* ifdef DEBUGTYPES */
     return charCast(*(char*)from->value, toType);
-    case TUPLE:
-    // don't think we need this 
+
     break;
     case REAL:
+#ifdef DEBUGTYPES
+    printf("Real!\n");
+#endif /* ifdef DEBUGTYPES */
+
     return realCast(*(float*)from->value, toType);
+    default:
+
+#ifdef DEBUGTYPES
+    printf("Error! Uncastable type!");
+#endif /* ifdef DEBUGTYPES */
+    return NULL;
   }
 }
 
 commonType* boolPromotion(commonType* fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
-  printf("Cast from int\n");
-#endif /* ifdef DEBUGPROMOTION */
+#ifdef DEBUGTYPES
+  printf("Promotion from bool\n");
+#endif /* ifdef DEBUGTYPES */
 
   switch (toType) {
-  default:
+  case BOOL:
+#ifdef DEBUGTYPES
+  printf("To bool!\n");
+#endif /* ifdef DEBUGTYPES */
   return cast(fromValue, BOOL);
+
+  default:
+#ifdef DEBUGTYPES
+  printf("Error! Promotion not possible\n");
+#endif /* ifdef DEBUGTYPES */
+  return NULL;
   }
 }
 
 commonType* intPromotion(commonType* fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Promotion from int\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
 
   switch (toType) {
     case REAL:
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("To real\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
     return cast(fromValue, REAL);
-    default:
+
+    case INT:
+#ifdef DEBUGTYPES
+  printf("To int\n");
+#endif /* ifdef DEBUGTYPES */
     return cast(fromValue, INT);
+
+    default:
+#ifdef DEBUGTYPES
+  printf("Error! Promotion not possible\n");
+#endif /* ifdef DEBUGTYPES */
+    return NULL;
   }
 }
 
 commonType* charPromotion(commonType* fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Promotion from char\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
 
     switch (toType) {
-    default:
-#ifdef DEBUGPROMOTION
-  printf("To char\n");
-#endif /* ifdef DEBUGPROMOTION */
+    case CHAR:
+#ifdef DEBUGTYPES
+    printf("To char\n");
+#endif /* ifdef DEBUGTYPES */
     return cast(fromValue, CHAR);
+
+    default:
+#ifdef DEBUGTYPES
+    printf("Error! Promotion not possible\n");
+#endif /* ifdef DEBUGTYPES */
+    return NULL;
   }
 }
 
 commonType* realPromotion(commonType* fromValue, enum BuiltIn toType) {
-#ifdef DEBUGPROMOTION
+#ifdef DEBUGTYPES
   printf("Promotion from real\n");
-#endif /* ifdef DEBUGPROMOTION */
+#endif /* ifdef DEBUGTYPES */
     switch (toType) {
-#ifdef DEBUGPROMOTION
+    case REAL:
+#ifdef DEBUGTYPES
   printf("To real\n");
-#endif /* ifdef DEBUGPROMOTION */
-    default:
+#endif /* ifdef DEBUGTYPES */
     return cast(fromValue, REAL);
+    case INT:
+#ifdef DEBUGTYPES
+  printf("To real\n");
+#endif /* ifdef DEBUGTYPES */
+    return cast(fromValue, REAL);
+    default:
+#ifdef DEBUGTYPES
+  printf("Error! Promotion not possible\n");
+#endif /* ifdef DEBUGTYPES */
+    return NULL;
   }
 }
 
@@ -405,7 +472,7 @@ commonType* promotion(commonType* from, commonType* to) {
     // don't think we need this 
     break;
     case REAL:
-    return realPromotion(from->value, to->type);
+    return realPromotion(from, to->type);
   }
 }
 
@@ -622,7 +689,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   // I tried to do a switch chain like before but the scoping was messed up.
   if(promotedLeft->type == BOOL) {
 
-    bool tempBool = intBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
+    bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
     result = allocateCommonType(&tempBool, BOOL);
 
   } else if (promotedLeft->type == REAL) {
