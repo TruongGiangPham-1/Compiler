@@ -319,7 +319,7 @@ namespace gazprea {
         currentScope = symtab->enterScope(methodSym);
 
         // define the argument symbols
-        int index= 1;
+        int index = 0;
         for (auto &argIDNode: orderedArgs) {
             // define this myself, dont need mlir name because arguments are
             auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);

@@ -371,9 +371,6 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   promotedLeft = promotion(left,right);
   promotedRight = promotion(right,left);
 
-  printCommonType(promotedRight);
-  printCommonType(promotedLeft);
-
   commonType* result;
   // arbitrary, after promo they are the same. if they are not, there is something wrong
   // I tried to do a switch chain like before but the scoping was messed up.
