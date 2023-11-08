@@ -12,29 +12,32 @@
 
 class AdvanceType : public Type, public Symbol{
 public:
-    TYPE typeEnum;   // maybe identify
-    std::string name;  // user type name?
+    /*
+     * Typedef integer int;
+     * name = integer
+     * typedef name = int;
+     */
     std::string typDefName;  // typedef  name?
     /*
      * vector of dimentions. if it is a Vector, dims,size() = 1, if it is a matrix, dims.size() = 2
      */
     std::vector<mlir::Value> dims;  // maybe can populate this in the backend?
 
+    AdvanceType(std::string name) : Symbol(name), typDefName(name) {};
+    // at Def.cpp push <integer, integer>
     AdvanceType(std::string name, std::string typeDefName) : Symbol(name), typDefName(typeDefName) {
         if (name == "integer") {
-            typeEnum = TYPE::INTEGER;
+            baseTypeEnum = TYPE::INTEGER;
         } else if (name == "real") {
-            typeEnum = TYPE::REAL;
+            baseTypeEnum = TYPE::REAL;
         } else if (name == "boolean") {
-            typeEnum = TYPE::BOOLEAN;
+            baseTypeEnum = TYPE::BOOLEAN;
         } else if (name == "character") {
-            typeEnum = TYPE::CHAR;
+            baseTypeEnum = TYPE::CHAR;
         } else if (name == "tuple") {
-            typeEnum = TYPE::TUPLE;
-        } else if (name == "matrix" ) {
-            typeEnum = TYPE::MATRIX;
+            baseTypeEnum = TYPE::TUPLE;
         } else if (name == "string") {
-            typeEnum = TYPE::STRING;
+            baseTypeEnum = TYPE::STRING;
         }else {
                // throw TypeError(0, "invalid typename when creating AdvancedType object");
                // custom user type
@@ -49,8 +52,9 @@ public:
     }
 };
 
-class TupleType: public AdvanceType {
+class TupleType: public Type, public Symbol{
     // as stan and josh discussed, add maybe have vector<TypeNode>?
+
 };
 
 #endif //GAZPREABASE_ADVANCETYPE_H

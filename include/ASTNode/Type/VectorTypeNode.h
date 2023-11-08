@@ -33,5 +33,9 @@ public:
      */
     bool isInferred() const;
 
+    std::string getTypeName() {
+        return sym->getName();
+    };
+
     std::string toString() override;
 };
