@@ -64,6 +64,9 @@ void BackEnd::generate() {
   std::cout << "CODEGEN FINISHED, ending main function and outputting"
             << std::endl;
 #endif
+  std::vector<mlir::Value> mainArgs;
+  this->generateCallNamed("main", mainArgs);
+
   auto intType = builder->getI32Type();
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
@@ -209,7 +212,6 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   this->generateDeclaration(newLabel, result);
   this->allocatedObjects++;
 
-
   return result;
 }
 
@@ -248,7 +250,7 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
 
 mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
   mlir::ArrayRef mlirArguments = arguments;
-  mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(signature);
+  mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("__"+signature);
 
   return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 }
@@ -388,9 +390,11 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
 
     auto functionType = mlir::LLVM::LLVMFunctionType::get(returnType, translatedList, false);
 
-    builder->setInsertionPointToStart(module.getBody());
 
-    mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc, signature, functionType, ::mlir::LLVM::Linkage::Internal);
+    builder->setInsertionPointToStart(module.getBody());
+    // sneaky naming trick
+    mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc,"__"+signature, functionType, ::mlir::LLVM::Linkage::External, true);
+
     mlir::Block *entry = function.addEntryBlock();
     builder->setInsertionPointToStart(entry);
 
@@ -513,7 +517,7 @@ void BackEnd::generateAssignment(std::string varName, mlir::Value value) {
   mlir::LLVM::GlobalOp global;
 
   if (!(global = module.lookupSymbol<mlir::LLVM::GlobalOp>(varName))) {
-    llvm::errs() << "Referencing undefined variable";
+    llvm::errs() << "Referencing undefined variable " << varName;
     return;
   }
 
