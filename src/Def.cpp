@@ -44,9 +44,7 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
 }
 
 std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
-    //  typdef type id;
     // define type def mapping
-   // symtab->globalScope->defineType(std::make_shared<AdvanceType>(tree->getType()->getTypeName(), tree->getName()));
     std::string typdefToString = tree->getName();
     symtab->defineTypeDef(tree->getType(), typdefToString, getNextId());
     return 0;
@@ -60,36 +58,30 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     }  else {
         // forward declaration method
         std::shared_ptr<Type>retType;
-        if (tree->hasReturn) {
+        if (tree->getRetTypeNode()) {  // has return
             retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            if (retType == nullptr) throw TypeError(tree->loc(), "cannot verify types");
         }
-        tree->nameSym->typeSym = retType;  // set return type
-        // define procedure scope Symbol
-        std::string fname = "ProcedureScope" + tree->nameSym->getName() + std::to_string(tree->loc());
-        std::shared_ptr<ProcedureSymbol> procSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
-                                                                                     fname, retType, symtab->globalScope, tree->loc());
+        std::string scopeName= "procScope" + tree->nameSym->getName() +std::to_string(tree->loc());
+        std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
+                                                          scopeName, retType, symtab->globalScope, tree->loc());
 
-        currentScope->define(procSym);  // define methd symbol in global
-        std::cout << "defined method " << procSym->getName() << " in scope " << currentScope->getScopeName() << "\n";
-        currentScope = symtab->enterScope( procSym);
-
-        // define args
-        for (auto argAST: tree->orderedArgs) {
-            // define this myself, dont need mlir name because arguments are
-            auto argNode = std::dynamic_pointer_cast<ArgNode>(argAST);
-            assert(argNode);  // not null
-            assert(argNode->type);
-            auto res= symtab->resolveTypeUser(argNode->type);
-            if (res == nullptr) throw TypeError(tree->loc(), "unknown type ");
-            argNode->idSym->typeSym = res;
-            std::cout << "in line " << tree->loc()
-                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName()
-                      << " as type " << argNode->idSym->typeSym->getName() <<"\n";
-
-            currentScope->define(argNode->idSym);  // define arg in curren scope
-            argNode->scope = currentScope;  // set scope to function scope
+        methodSym->typeSym = retType;
+        if (retType) {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+        } else {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
         }
-        currentScope = symtab->exitScope(currentScope);
+
+        // Here I am just adding argument symbol to the list of 'forwardDeclArgs' so that my Ref pass will be able to take this list and compare it with
+        // method definition's arg for type check etc
+        for (auto arg: tree->orderedArgs) {
+            // define arg symbols
+            methodSym->forwardDeclArgs.push_back(arg);
+        }
+        currentScope->define(methodSym);  // define methd symbol in global
+//        defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, retType , 0);
+//        currentScope = symtab->exitScope(currentScope);  // exit the argument scope
         assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // make sure we back to global scope
     }
     return 0;
@@ -126,6 +118,66 @@ std::any Def::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 
+    /*
+     * @args:
+     *      loc: line number
+     *      funcNameSym = symbol of function/procedure name
+     *      orderedArgs = list of function/prcedure arguments
+     *      isFunc? 1: 0    // 1 to define function, 0 to define procedure
+     * 1.defines function name in global
+     * 2. push method scope , enter it, and define arguments inside it
+     *
+     */
+    void Def::defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol>funcNameSym, std::vector<std::shared_ptr<ASTNode>> orderedArgs,std::shared_ptr<Type> retType , int isFunc) {
+        // TODO: resolve return type.
+        // define function scope Symbol
+        std::shared_ptr<ScopedSymbol> methodSym;
+        if (isFunc) {
+            std::string fname = "FuncScope" + funcNameSym->getName() +std::to_string(loc);
+            methodSym  = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
+                                                          fname, retType, symtab->globalScope, loc);
+        } else {
+            std::string fname = "ProcScope" + funcNameSym->getName() +std::to_string(loc);
+            methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
+                                                          fname, retType, symtab->globalScope, loc);
+        }
+        methodSym->typeSym = retType;
+        if (retType) {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+        } else {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
+        }
+
+        currentScope->define(methodSym);  // define methd symbol in global
+        currentScope = symtab->enterScope(methodSym);
+
+        // define the argument symbols
+        int index = 0;
+        for (auto &argIDNode: orderedArgs) {
+            // define this myself, dont need mlir name because arguments are
+            auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
+            //TODO: this id symbol dont have types yet. waiting for visitType implementation
+            assert(argNode);  // not null
+            assert(argNode->type);  // assert it exist
+
+            argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+
+            auto resType = symtab->resolveTypeUser(argNode->type);
+            argNode->idSym->typeSym =  retType;
+            if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
+            std::cout << "in line " << loc
+                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
+                      " as Type " << argNode->idSym->typeSym->getName() <<" as mlirname=" << argNode->idSym->mlirName  <<"\n";
+
+            // define mlirname
+            argNode->idSym->scope = currentScope;
+            argNode->idSym->index = index;
+            index ++;
+            currentScope->define(argNode->idSym);  // define arg in curren scope
+            argNode->scope = currentScope;  // set scope to function scope
+        }
+        //currentScope = symtab->exitScope(currentScope);
+    }
 
 
 int Def::getNextId() {

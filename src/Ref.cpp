@@ -100,6 +100,8 @@ namespace gazprea {
 
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+        if (tree->body == nullptr) return 0;  // forward declaration node, we skip
+
         auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
         if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
@@ -125,7 +127,71 @@ namespace gazprea {
         } else {
             if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
                 // there was a forward declaration
+                auto procSymCast = std::dynamic_pointer_cast<ProcedureSymbol>(procSym);
                 // TODO:
+                std::cout << "resolved procedure definition " << procSym->getName() << " at line: " << tree->loc() << " at scope "
+                    << currentScope->getScopeName()<< std::endl;
+
+                std::shared_ptr<Type> retType = nullptr;
+                if (tree->getRetTypeNode()) {
+                    retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+                    if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
+                }
+                //TODO: iterate through all the ordered arguments of this function definition, and check if all the types in arguments are the same
+                // as the type of arguments in declaration. Raise error if types are mismatching
+
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+                currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
+
+                if (tree->orderedArgs.size() != procSymCast->forwardDeclArgs.size()) throw DefinitionError(tree->loc(), "argument mismatch between forward decl and definition");
+                int index = 0;  // argument index for stan
+                for (int i = 0; i < tree->orderedArgs.size(); i++) {
+                    auto argNodeDef = std::dynamic_pointer_cast<ArgNode>(tree->orderedArgs[i]);  // argnode[i] for this method definiton
+                    auto argNodeFw = std::dynamic_pointer_cast<ArgNode>(procSymCast->forwardDeclArgs[i]);  // argnode[i] for forward decl
+
+                    assert(argNodeDef->type); assert(argNodeFw->type);
+
+                    auto argNodeDefType = symtab->resolveTypeUser(argNodeDef->type);
+                    auto argNodeFwType = symtab->resolveTypeUser(argNodeFw->type);
+                    if (argNodeDefType == nullptr  || argNodeFwType == nullptr) {  // case: we could not resolve either
+                        throw TypeError(tree->loc(), "cannot resolve type");
+                    }
+                    if (argNodeDefType->baseTypeEnum != argNodeFwType->baseTypeEnum){  // TODO: tuple check
+                        throw TypeError(tree->loc(), "type mismatch between forward decl and definitino");
+                    } else if (argNodeFwType->baseTypeEnum == TYPE::TUPLE && argNodeDefType->baseTypeEnum == TYPE::TUPLE) {
+                        // iterate thru each tuple child and compare type
+                        for (int j = 0;  j < argNodeFwType->tupleChildType.size(); j++) {
+                            if (argNodeFwType->tupleChildType[i]->baseTypeEnum != argNodeDefType->tupleChildType[i]->baseTypeEnum) {
+                                throw TypeError(tree->loc(), "type mismatch between tuples");
+                            }
+                        }
+
+                    }
+                    // add arguments to the methdd scope  and walk tree
+                    // define mlirname
+                    index ++;
+                    argNodeDef->idSym->index = index;
+                    argNodeDef->idSym->typeSym = argNodeDefType;
+                    argNodeDef->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+                    argNodeDef->scope = currentScope;  // set scope to function scope
+                    std::cout << "in line " << tree->loc()
+                              << " argument = " << argNodeDef->idSym->getName() << " defined in " << currentScope->getScopeName() <<
+                              " as Type " << argNodeDef->idSym->typeSym->getName() <<" as mlirname=" << argNodeDef->idSym->mlirName  <<"\n";
+
+                    currentScope->define(argNodeDef->idSym);  // define arg in curren scope
+                    assert(std::dynamic_pointer_cast<GlobalScope>(currentScope->getEnclosingScope()));
+                }
+
+                // push local scope for body
+                std::string sname = "procScope" + std::to_string(tree->loc());
+                currentScope = symtab->enterScope(sname, currentScope);
+
+                if (tree->body) {
+                    walk(tree->body);  // ref all the symbol inside function block;
+                }
+                currentScope = symtab->exitScope(currentScope);  // pop local scope
+                currentScope = symtab->exitScope(currentScope);  // pop method scope
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
             } else {
                 throw SymbolError(tree->loc(), "procedure same name as another identifier in the global scope");
             }
