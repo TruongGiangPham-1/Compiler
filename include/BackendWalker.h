@@ -9,7 +9,7 @@ private:
   BackEnd codeGenerator;
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
-  std::any visitPrint(std::shared_ptr<StreamOut> tree) override;
+  std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
 
   // === EXPRESSION AST NODES ===
   std::any visitID(std::shared_ptr<IDNode> tree) override;

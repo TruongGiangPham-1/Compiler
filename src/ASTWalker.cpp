@@ -60,7 +60,7 @@ namespace gazprea {
 #ifdef DEBUG
             std::cout << "about to visit print" << std::endl;
 #endif // DEBUG
-            return this->visitPrint(std::dynamic_pointer_cast<StreamOut>(tree));
+            return this->visitStreamOut(std::dynamic_pointer_cast<StreamOut>(tree));
 
         } else if (std::dynamic_pointer_cast<TypeNode>(tree)) {
 #ifdef DEBUG
@@ -243,7 +243,7 @@ namespace gazprea {
     std::any ASTWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
+    std::any ASTWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitType(std::shared_ptr<TypeNode> tree) {

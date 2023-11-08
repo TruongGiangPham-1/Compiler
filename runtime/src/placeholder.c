@@ -51,7 +51,8 @@ void printType(commonType *type, bool nl) {
       printf("%d", *(int*)type->value);
       break;
     case CHAR:
-      printf("%c", *(char*)type->value);
+      //printf("%c", *(char*)type->value);
+      printf("%c", '\n');
       break;
     case BOOL:
       printf("%s", *(bool*)type->value ? "true" : "false");
@@ -85,6 +86,10 @@ void printType(commonType *type, bool nl) {
 
 void printCommonType(commonType *type) {
   printType(type, true);
+}
+
+void streamOut(commonType *type) {
+  printType(type, false);
 }
 
 /**

@@ -23,10 +23,10 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   return 0;
 }
 
-std::any BackendWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
+std::any BackendWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
-  this->codeGenerator.printCommonType(val);
+  this->codeGenerator.streamOut(val);
 
   return 0;
 }

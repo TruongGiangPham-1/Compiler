@@ -41,7 +41,7 @@ namespace gazprea {
         // === TOP LEVEL AST NODES ===
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
-        virtual std::any visitPrint(std::shared_ptr<StreamOut> tree);
+        virtual std::any visitStreamOut(std::shared_ptr<StreamOut> tree);
 
         // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);

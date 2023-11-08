@@ -201,10 +201,20 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        // TODO. fix the index at 1.
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+        if (charContent[0] == '/') {
+            auto escapedChar = CharNode::parseEscape(charContent[1]);
+            if (escapedChar.has_value()) {
+                auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), escapedChar.value());
+                return std::dynamic_pointer_cast<ASTNode>(t);
+            } else {
+                throw SyntaxError(ctx->getStart()->getLine(), "invalid escape sequence in character literal " + ctx->getText());
+            }
+        } else {
+            // normal char
+            auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
+            return std::dynamic_pointer_cast<ASTNode>(t);
+        }
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
