@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 //#define DEBUGTUPLE
-#define DEBUGTYPES
+//#define DEBUGTYPES
 //#define DEBUGMEMORY
 typedef struct vecStruct {
   int* base;
@@ -364,7 +364,7 @@ commonType* cast(commonType* from, enum BuiltIn toType) {
     default:
 
 #ifdef DEBUGTYPES
-    printf("Error! Uncastable type!");
+    printf("Error! Uncastable type!\n");
 #endif /* ifdef DEBUGTYPES */
     return NULL;
   }
