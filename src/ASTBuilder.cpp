@@ -1,6 +1,8 @@
 #include "ASTBuilder.h"
 #include "ASTNode/ArgNode.h"
+#include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Method/FunctionNode.h"
+#include "ASTNode/Type/TypeNode.h"
 #include <memory>
 
 
@@ -30,6 +32,20 @@ namespace gazprea {
         std::shared_ptr<ASTNode> t = std::make_shared<TypeDefNode>(ctx->getStart()->getLine(), sym);
 
         t->addChild(visit(ctx->type()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitCast(GazpreaParser::CastContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit Typecast" << std::endl;
+#endif
+        std::shared_ptr<CastNode> t = std::make_shared<CastNode>(ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> toType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+        std::shared_ptr<ASTNode> expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+        
+        t->addChild(toType);
+        t->addChild(expr);
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }

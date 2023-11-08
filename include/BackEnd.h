@@ -6,8 +6,6 @@
 #include "mlir/IR/MLIRContext.h"
 #include "Operands/BINOP.h"
 #include "Operands/UNARYOP.h"
-#include "BuiltinTypes/BuiltInTypes.h"
-
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/ValueRange.h"
 

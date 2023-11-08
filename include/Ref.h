@@ -8,7 +8,6 @@
 
 #include "ASTWalker.h"
 #include "SymbolTable.h"
-#include "BuiltInTypeSymbol.h"
 #include "CompileTimeExceptions.h"
 #include "ScopedSymbol.h"
 #include "FunctionCallTypes/FuncCallType.h"

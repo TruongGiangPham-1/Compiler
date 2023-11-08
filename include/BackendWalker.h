@@ -23,6 +23,7 @@ private:
   std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
   std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+  std::any visitCast(std::shared_ptr<CastNode> tree) override;
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
   std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;

@@ -1,6 +1,6 @@
 #include "Operands/BINOP.h"
 #include "Operands/UNARYOP.h"
-#include "BuiltinTypes/BuiltInTypes.h"
+#include "Types/TYPES.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +16,7 @@ typedef struct vecStruct {
 } vecStruct;
 
 typedef struct commonType {
-  enum BuiltIn type; 
+  enum TYPE type; 
   void* value; 
 } commonType;
 
@@ -27,18 +27,18 @@ typedef struct tuple {
 } tuple;
 
 
-commonType* allocateCommonType(void* value, enum BuiltIn type);
+commonType* allocateCommonType(void* value, enum TYPE type);
 void deallocateCommonType(commonType* object);
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
-    case INT:
+    case INTEGER:
       printf("%d", *(int*)type->value);
       break;
     case CHAR:
       printf("%c", *(char*)type->value);
       break;
-    case BOOL:
+    case BOOLEAN:
       printf("%b", *(bool*)type->value);
       break;
     case REAL:
@@ -77,14 +77,14 @@ void printCommonType(commonType *type) {
  */
 void extractAndAssignValue(void* value, commonType *dest) {
   switch (dest->type) {
-    case INT:
+    case INTEGER:
       {
         int* newIntVal = malloc(sizeof(int));
         *newIntVal = *(int*)value;
         dest->value = newIntVal;
       }
       break;
-    case BOOL:
+    case BOOLEAN:
       {
         bool* newBoolVal = malloc(sizeof(bool));
         *newBoolVal = *(bool*)value;
@@ -113,7 +113,7 @@ void extractAndAssignValue(void* value, commonType *dest) {
   }
 }
 
-commonType* allocateCommonType(void* value, enum BuiltIn type) {
+commonType* allocateCommonType(void* value, enum TYPE type) {
   commonType* newType = (commonType*)malloc(sizeof(commonType));
   newType->type = type;
   extractAndAssignValue(value, newType);
@@ -202,18 +202,18 @@ void appendTuple(tuple* tuple, commonType *value) {
   tuple->currentSize++;
 }
 
-commonType* boolPromotion(bool fromValue, enum BuiltIn toType) {
+commonType* boolPromotion(bool fromValue, enum TYPE toType) {
 #ifdef DEBUGPROMOTION
   printf("Cast from int\n");
 #endif /* ifdef DEBUGPROMOTION */
 
   switch (toType) {
   default:
-  return allocateCommonType(&fromValue, BOOL);
+  return allocateCommonType(&fromValue, BOOLEAN);
   }
 }
 
-commonType* intPromotion(int fromValue, enum BuiltIn toType) {
+commonType* intPromotion(int fromValue, enum TYPE toType) {
 #ifdef DEBUGPROMOTION
   printf("Promotion from int\n");
 #endif /* ifdef DEBUGPROMOTION */
@@ -229,11 +229,11 @@ commonType* intPromotion(int fromValue, enum BuiltIn toType) {
     }
 
     default:
-    return allocateCommonType(&fromValue, INT);
+    return allocateCommonType(&fromValue, INTEGER);
   }
 }
 
-commonType* charPromotion(char fromValue, enum BuiltIn toType) {
+commonType* charPromotion(char fromValue, enum TYPE toType) {
 #ifdef DEBUGPROMOTION
   printf("Promotion from char\n");
 #endif /* ifdef DEBUGPROMOTION */
@@ -247,7 +247,7 @@ commonType* charPromotion(char fromValue, enum BuiltIn toType) {
   }
 }
 
-commonType* realPromotion(float fromValue, enum BuiltIn toType) {
+commonType* realPromotion(float fromValue, enum TYPE toType) {
 #ifdef DEBUGPROMOTION
   printf("Promotion from real\n");
 #endif /* ifdef DEBUGPROMOTION */
@@ -263,9 +263,9 @@ commonType* realPromotion(float fromValue, enum BuiltIn toType) {
 // promote and return temporary
 commonType* promotion(commonType* from, commonType* to) {
   switch (from->type) {
-    case BOOL:
+    case BOOLEAN:
     return boolPromotion(*(bool*)from->value, to->type);
-    case INT:
+    case INTEGER:
     return intPromotion(*(int*)from->value, to->type);
     case CHAR:
     return charPromotion(*(char*)from->value, to->type);
@@ -374,20 +374,20 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   commonType* result;
   // arbitrary, after promo they are the same. if they are not, there is something wrong
   // I tried to do a switch chain like before but the scoping was messed up.
-  if(promotedLeft->type == BOOL) {
+  if(promotedLeft->type == BOOLEAN) {
 
     bool tempBool = intBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
-    result = allocateCommonType(&tempBool, BOOL);
+    result = allocateCommonType(&tempBool, BOOLEAN);
 
   } else if (promotedLeft->type == REAL) {
 
     float tempFloat = realBINOP(*(float*)promotedLeft->value, *(float*)promotedRight->value, op);
     result = allocateCommonType(&tempFloat, REAL);
 
-  } else if (promotedLeft->type == INT) {
+  } else if (promotedLeft->type == INTEGER) {
 
     int tempInt = intBINOP(*(int*)promotedLeft->value, *(int*)promotedRight->value, op);
-    result = allocateCommonType(&tempInt, INT);
+    result = allocateCommonType(&tempInt, INTEGER);
 
   } else if (promotedLeft->type == CHAR) {
 
@@ -448,20 +448,20 @@ float floatUNARYOP(float val, enum UNARYOP op) {
 commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
   commonType* result;
 
-  if (val->type == BOOL) {
+  if (val->type == BOOLEAN) {
 
     bool tempBool = boolUNARYOP(*(bool*)val->value, op);
-    result = allocateCommonType(&tempBool, BOOL);
+    result = allocateCommonType(&tempBool, BOOLEAN);
 
   } else if (val->type == REAL) {
 
     float tempFloat = floatUNARYOP(*(float*)val->value, op);
     result = allocateCommonType(&tempFloat, REAL);
 
-  } else if (val->type == INT) {
+  } else if (val->type == INTEGER) {
 
     int tempInt = intUNARYOP(*(int*)val->value, op);
-    result = allocateCommonType(&tempInt, INT);
+    result = allocateCommonType(&tempInt, INTEGER);
 
   }
 
@@ -472,9 +472,9 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 // only bool, int and char can be downcast to bools
 bool commonTypeToBool(commonType* val) {
   switch (val->type) {
-    case BOOL:
+    case BOOLEAN:
       return *(bool*)val->value;
-    case INT: {
+    case INTEGER: {
         // any integer not equal to zero is considered true
         int tmpInt = *(int*)val->value;
 //        printf("tmpInt: %d != 0 = %d\n", tmpInt, tmpInt != 0);
