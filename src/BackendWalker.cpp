@@ -163,7 +163,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     // for now we don't proper return values, assume everything void
     auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name, 
         tree->orderedArgs.size(), 
-        true);
+        false);
     walk(tree->body);
     codeGenerator.generateEndFunctionDefinition(block);
   }

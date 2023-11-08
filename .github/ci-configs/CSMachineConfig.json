@@ -1,0 +1,35 @@
+{
+  "inDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/tests/input",
+  "outDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/tests/output",
+  "testedExecutablePaths": {
+    "lord-farquaad": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/bin/gazc"
+  },
+  "runtimes": {
+    "lord-farquaad": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/bin/libgazrt.so"
+  },
+  "toolchains": {
+    "gazprea": [
+      {
+        "stepName": "gazc",
+        "executablePath": "$EXE",
+        "arguments": [
+          "$INPUT",
+          "$OUTPUT"
+        ],
+        "output": "gazc.ll",
+        "allowError": true
+      },
+      {
+        "stepName": "lli",
+        "executablePath": "/cshome/cmput415/415-resources/llvm-project/build/bin/lli",
+        "arguments": [
+          "$INPUT"
+        ],
+        "output": "-",
+        "usesRuntime": true,
+        "usesInStr": true,
+        "allowError": true
+      }
+    ]
+  }
+}
