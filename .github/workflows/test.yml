@@ -33,6 +33,6 @@ jobs:
             cd ${{ vars.DIR }}/build
             cmake .. && make
             cd ${{ vars.DIR }}
-            tester .github/ci-tests/CSMachineConfig.json --timeout 2
-            tester .github/ci-tests/InternalTestsCSMachineConfig.json --timeout 2
+            tester .github/ci-configs/CSMachineConfig.json --timeout 2
+            tester .github/ci-configs/InternalTestsCSMachineConfig.json --timeout 2
             git clean -f -d
