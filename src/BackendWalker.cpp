@@ -11,9 +11,18 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
+  auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
 
-  codeGenerator.generateAssignment(tree->sym->mlirName, val);
+  if (exprList->children.size() == 1) {
+    if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
+      auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+      auto k = lvalue->sym->mlirName;
+      codeGenerator.generateAssignment(lvalue->sym->mlirName, val);
 
+    }
+    // TODO: validate for tuple index
+  }
+  // TODO: else tuple unpacking
   return 0;
 }
 

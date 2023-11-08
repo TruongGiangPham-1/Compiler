@@ -317,15 +317,24 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
-        std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->getText());
-        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), identifierSymbol);
+    std::any ASTBuilder::visitLvalue(GazpreaParser::LvalueContext *ctx) {
+        std::shared_ptr<ExprListNode> t = std::make_shared<ExprListNode>(ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            t->addChild(visit(expr));
+        }
 
-        t->addChild(visit(ctx->lvalue));
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
+        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->lvalue()));
         t->addChild(visit(ctx->rvalue));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
+
 
     std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
         std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
