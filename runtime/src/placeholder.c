@@ -1,4 +1,5 @@
 #include "Operands/BINOP.h"
+
 #include "Operands/UNARYOP.h"
 #include "BuiltinTypes/BuiltInTypes.h"
 #include <stdint.h>
@@ -8,6 +9,19 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+bool isCOMP(enum BINOP op) {
+  switch (op) {
+    case EQUAL:
+    case NEQUAL:
+    case GTHAN:
+    case LTHAN:
+    case GEQ:
+    case LEQ:
+    return true;
+    default:
+    return false;
+  }
+}
 //#define DEBUGTUPLE
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
@@ -470,6 +484,7 @@ commonType* promotion(commonType* from, commonType* to) {
     return charPromotion(from, to->type);
     case TUPLE:
     // don't think we need this 
+    return NULL;
     break;
     case REAL:
     return realPromotion(from, to->type);
@@ -522,6 +537,24 @@ int intBINOP(int l, int r, enum BINOP op) {
     return l * r;
     case DIV:
     return l/r;
+    case REM:
+    return l % r;
+    case EXP:
+    return pow(l,r);
+    case AND:
+    return l & r;
+    case OR:
+    return l | r;
+    case XOR:
+    return l ^ r;
+    default:
+    // should never be here
+    return NULL;
+  }
+}
+
+bool intCOMP(int l, int r, enum BINOP op) {
+  switch (op) {
     case EQUAL:
     return l == r;
     case NEQUAL:
@@ -533,17 +566,10 @@ int intBINOP(int l, int r, enum BINOP op) {
     case GTHAN:
     return l > r;
     case GEQ:
-    return r >= l;
-    case REM:
-    return l % r;
-    case EXP:
-    return pow(l,r);
-    case AND:
-    return l & r;
-    case OR:
-    return l | r;
-    case XOR:
-    return l ^ r;
+    return l >= r;
+    default:
+    // should never be here
+    return NULL;
   }
 }
 
@@ -557,18 +583,6 @@ float realBINOP(float l, float r, enum BINOP op) {
     return l * r;
     case DIV:
     return l/r;
-    case EQUAL:
-    return l == r;
-    case NEQUAL:
-    return l != r;
-    case LTHAN:
-    return l < r;
-    case LEQ:
-    return l <= r;
-    case GTHAN:
-    return l > r;
-    case GEQ:
-    return r >= l;
     case REM:
     return fmod(l, r);
     case EXP:
@@ -620,7 +634,28 @@ float realBINOP(float l, float r, enum BINOP op) {
 
       memcpy(&result, &leftTemp, sizeof(float));
       return result;
-    }  
+    }
+    default:
+    return 0;
+  }
+}
+
+bool realCOMP(float l, float r, enum BINOP op) {
+  switch (op) {
+    case EQUAL:
+    return l == r;
+    case NEQUAL:
+    return l != r;
+    case LTHAN:
+    return l < r;
+    case LEQ:
+    return l <= r;
+    case GTHAN:
+    return l > r;
+    case GEQ:
+    return l >= r;
+    default:
+    return NULL;
   }
 }
 
@@ -634,6 +669,23 @@ char charBINOP(char l, char r, enum BINOP op) {
     return l * r;
     case DIV:
     return l/r;
+    case REM:
+    return l % r;
+    case EXP:
+    return pow(l,r);
+    case AND:
+    return l & r;
+    case OR:
+    return l | r;
+    case XOR:
+    return l ^ r;
+    default:
+    return NULL;
+  }
+}
+
+bool charCOMP(char l, char r, enum BINOP op) {
+  switch (op) {
     case EQUAL:
     return l == r;
     case NEQUAL:
@@ -645,17 +697,9 @@ char charBINOP(char l, char r, enum BINOP op) {
     case GTHAN:
     return l > r;
     case GEQ:
-    return r >= l;
-    case REM:
-    return l % r;
-    case EXP:
-    return pow(l,r);
-    case AND:
-    return l & r;
-    case OR:
-    return l | r;
-    case XOR:
-    return l ^ r;
+    return l >= r;
+    default:
+    return NULL;
   }
 }
 
@@ -666,10 +710,27 @@ commonType* tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
   tuple *tuple = allocateTuple(l->size);
 
   for (int i = 0 ; i < l->currentSize ; i ++) {
-    appendTuple(tuple, performCommonTypeBINOP(l->values[i], r->values[i], op));
+    appendTuple(tuple, performCommonTypeBINOP(l->values[i], r->values[i], op)); 
   }
 
   commonType *result = allocateCommonType(&tuple, TUPLE);
+
+  return result;
+}
+
+commonType* tupleCOMP(tuple* l, tuple* r, enum BINOP op) {
+  tuple *tuple = allocateTuple(l->size);
+
+  bool compResult = true;
+
+  for (int i = 0 ; i < l->currentSize ; i ++) {
+    commonType* result = performCommonTypeBINOP(l->values[i], r->values[i], op); 
+    if (! *(bool*)result->value) {
+      compResult = false;
+    }
+  }
+
+  commonType *result = allocateCommonType(&compResult, BOOL);
 
   return result;
 }
@@ -685,32 +746,60 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   }
   
   commonType* result;
-  // arbitrary, after promo they are the same. if they are not, there is something wrong
-  // I tried to do a switch chain like before but the scoping was messed up.
-  if(promotedLeft->type == BOOL) {
 
-    bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
-    result = allocateCommonType(&tempBool, BOOL);
+  // god is dead and i have killed him
+  if (!isCOMP(op)) {
+    if(promotedLeft->type == BOOL) {
 
-  } else if (promotedLeft->type == REAL) {
+      bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
+      result = allocateCommonType(&tempBool, BOOL);
 
-    float tempFloat = realBINOP(*(float*)promotedLeft->value, *(float*)promotedRight->value, op);
-    result = allocateCommonType(&tempFloat, REAL);
+    } else if (promotedLeft->type == REAL) {
 
-  } else if (promotedLeft->type == INT) {
+      float tempFloat = realBINOP(*(float*)promotedLeft->value, *(float*)promotedRight->value, op);
+      result = allocateCommonType(&tempFloat, REAL);
 
-    int tempInt = intBINOP(*(int*)promotedLeft->value, *(int*)promotedRight->value, op);
-    result = allocateCommonType(&tempInt, INT);
+    } else if (promotedLeft->type == INT) {
 
-  } else if (promotedLeft->type == CHAR) {
+      int tempInt = intBINOP(*(int*)promotedLeft->value, *(int*)promotedRight->value, op);
+      result = allocateCommonType(&tempInt, INT);
 
-    char tempChar = charBINOP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
-    result = allocateCommonType(&tempChar, CHAR);
+    } else if (promotedLeft->type == CHAR) {
 
+      char tempChar = charBINOP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
+      result = allocateCommonType(&tempChar, CHAR);
+
+    } else {
+      // tuples don't need promotions, their held items do.
+      result = tupleBINOP((tuple*)left->value, (tuple*)right->value, op);
+    }
   } else {
-    // tuples don't need promotions, their held items do.
-    result = tupleBINOP((tuple*)left->value, (tuple*)right->value, op);
+    if(promotedLeft->type == BOOL) {
+
+      bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
+      result = allocateCommonType(&tempBool, BOOL);
+
+    } else if (promotedLeft->type == REAL) {
+
+      bool tempFloat = realCOMP(*(float*)promotedLeft->value, *(float*)promotedRight->value, op);
+      result = allocateCommonType(&tempFloat, BOOL);
+
+    } else if (promotedLeft->type == INT) {
+      bool tempInt = intCOMP(*(int*)promotedLeft->value, *(int*)promotedRight->value, op);
+      result = allocateCommonType(&tempInt, BOOL);
+
+    } else if (promotedLeft->type == CHAR) {
+
+      bool tempChar = charCOMP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
+      result = allocateCommonType(&tempChar, BOOL);
+
+    } else {
+      // tuples don't need promotions, their held items do.
+      result = tupleCOMP((tuple*)left->value, (tuple*)right->value, op);
+    }
+
   }
+    
   
   // temporary operands
 #ifdef DEBUGMEMORY
@@ -802,3 +891,6 @@ bool commonTypeToBool(commonType* val) {
     }
   }
 }
+
+
+

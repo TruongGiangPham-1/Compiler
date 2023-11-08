@@ -209,11 +209,6 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   this->generateDeclaration(newLabel, result);
   this->allocatedObjects++;
 
-  // cast the result of a comparison operation back to boolean. Originally else they are of 
-  // the dominating type (whoever won in the promotion)
-  if (op == EQUAL || op == NEQUAL || op == GTHAN || op == LTHAN || op == GEQ || op == LEQ) {
-    result = cast(result, BOOL);
-  }
 
   return result;
 }
