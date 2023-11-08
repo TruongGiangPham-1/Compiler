@@ -5,6 +5,7 @@
 
 #include "CompileTimeExceptions.h"
 #include "BaseScope.h"
+#include "ASTNode/Type/TypeNode.h"
 
 class SymbolTable {
 private:
