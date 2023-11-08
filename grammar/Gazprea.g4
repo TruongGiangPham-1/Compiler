@@ -29,7 +29,11 @@ vardecl
     ;
 
 assign
-    : lvalue=expression '=' rvalue=expression ';'
+    : lvalue '=' rvalue=expression ';'
+    ;
+
+lvalue
+    : expression (',' expression)*
     ;
 
 cond
