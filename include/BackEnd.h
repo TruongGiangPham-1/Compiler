@@ -49,8 +49,9 @@ public:
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);
 
-  mlir::Value promotion(mlir::Value from, mlir::Value to);
+  mlir::Value cast(mlir::Value from, BuiltIn toType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
+
   void generateEndFunctionDefinition(mlir::Block* returnBlock);
   void generateReturn(mlir::Value returnVal);
 
