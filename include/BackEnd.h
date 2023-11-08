@@ -101,7 +101,9 @@ public:
   void generateUpdateDomainVar(mlir::Value domainVecAddr, mlir::Value indexAddr,
                                std::string domainVar);
   // --------------------------------------------------
-  mlir::LLVM::LLVMFuncOp mainFunc;
+  // global scope is functionStack[0]
+  // current scope is functionStack.back()
+  std::vector<mlir::LLVM::LLVMFuncOp> functionStack;
   mlir::Block *mainEntry;
 
 protected:

@@ -50,7 +50,8 @@ void BackEnd::init() {
   auto intType = builder->getI32Type();
   auto mainType = mlir::LLVM::LLVMFunctionType::get(intType, {}, false);
 
-  mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
+  auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
+  functionStack.push_back(mainFunc);
 
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
@@ -75,6 +76,7 @@ void BackEnd::generate() {
   if (mlir::failed(mlir::verify(
           module))) { // trying to verify will complain about some issue that
                       // did not exist when I dump it in visitLoop()
+                      module->dump();
     module.emitError("module failed to verify");
   }
   int result = this->writeLLVMIR();
@@ -394,15 +396,18 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
     builder->setInsertionPointToStart(module.getBody());
     // sneaky naming trick
     mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc,"__"+signature, functionType, ::mlir::LLVM::Linkage::External, true);
+    functionStack.push_back(function);
 
     mlir::Block *entry = function.addEntryBlock();
     builder->setInsertionPointToStart(entry);
+
 
     return currentBlock;
 }
 
 void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
     builder->setInsertionPointToEnd(returnBlock);
+    functionStack.pop_back();
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {
@@ -581,7 +586,8 @@ void BackEnd::generateEnterBlock(mlir::Block *block) {
 }
 
 mlir::Block *BackEnd::generateBlock() {
-  mlir::Block *newBlock = mainFunc.addBlock();
+  auto currFunc = functionStack.back();
+  mlir::Block *newBlock = currFunc.addBlock();
   return newBlock;
 }
 
