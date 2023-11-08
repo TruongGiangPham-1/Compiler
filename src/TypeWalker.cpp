@@ -195,13 +195,16 @@ namespace gazprea {
             // TODO else tupleIndex
 
             if (rhsType != nullptr) {
-
                 if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
                     return nullptr;
                 // TODO tuple handling and identity, null handling
                 if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
-                    tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
+
+                    if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
+                        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
+                    else
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;
                 }
                 // TODO else tupleIndex
             }
