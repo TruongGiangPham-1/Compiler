@@ -1,6 +1,6 @@
 {
-  "inDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/tests/input",
-  "outDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/tests/output",
+  "inDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/internal_tests/input",
+  "outDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/internal_tests/output",
   "testedExecutablePaths": {
     "lord-farquaad": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/bin/gazc"
   },
@@ -8,15 +8,16 @@
     "lord-farquaad": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/bin/libgazrt.so"
   },
   "toolchains": {
-    "vcalc": [
+    "gazprea": [
       {
-        "stepName": "vcalc",
+        "stepName": "gazc",
         "executablePath": "$EXE",
         "arguments": [
           "$INPUT",
           "$OUTPUT"
         ],
-        "output": "vcalc.ll"
+        "output": "gazc.ll",
+        "allowError": true
       },
       {
         "stepName": "lli",
@@ -26,7 +27,8 @@
         ],
         "output": "-",
         "usesRuntime": true,
-        "usesInStr": true
+        "usesInStr": true,
+        "allowError": true
       }
     ]
   }
