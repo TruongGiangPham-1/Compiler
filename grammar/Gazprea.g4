@@ -145,7 +145,9 @@ literal_real
 cast: RESERVED_AS LT type GT '(' expression ')';
 typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
-    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' ;
+    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' #streamIn
+    | expression LEFT_ARROW RESERVED_STD_INPUT ';' #streamOut
+    ;
 
 // operators
 BUILT_IN_TYPE

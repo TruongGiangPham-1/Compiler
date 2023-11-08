@@ -111,7 +111,7 @@ namespace gazprea {
     }
 
     // STREAMS
-    std::any ASTBuilder::visitStream(GazpreaParser::StreamContext *ctx) {
+    std::any ASTBuilder::visitStreamIn(GazpreaParser::StreamInContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitOutputStream" << std::endl;
 #endif

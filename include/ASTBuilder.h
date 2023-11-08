@@ -106,7 +106,8 @@ namespace gazprea {
         std::any visitBreak(GazpreaParser::BreakContext *ctx) override;
         std::any visitContinue(GazpreaParser::ContinueContext *ctx) override;
 
-        std::any visitStream(GazpreaParser::StreamContext *ctx) override;
+        std::any visitStreamIn(GazpreaParser::StreamInContext *ctx) override;
+        // std::any visitStreamOut(GazpreaParser::StreamOutContext *ctx) override;
 
         std::any visitRange(GazpreaParser::RangeContext *ctx) override;
         //std::any visitGenerator(GazpreaParser::GeneratorContext *ctx) override;
