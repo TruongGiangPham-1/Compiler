@@ -128,7 +128,7 @@ expr
     | ID                                                                                                #literalID
     | RESERVED_IDENTITY                                                                                 #identity
     | RESERVED_NULL                                                                                     #null
-    | (RESERVED_FALSE| RESERVED_TRUE)                                                        #literalBoolean
+    | LITERAL_BOOLEAN                                                                                   #literalBoolean
     | LITERAL_CHARACTER                                                                                 #literalCharacter
     | INT                                                                                               #literalInt
     | literal_real                                                                                      #literalReal

@@ -85,6 +85,11 @@ std::any BackendWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
   return codeGenerator.performBINOP(lhs, rhs, tree->op);
 }
 
+std::any BackendWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
+  auto expr = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+  return codeGenerator.performUNARYOP(expr, tree->op);
+}
+
 std::any BackendWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));

@@ -47,6 +47,10 @@ namespace gazprea {
         // Loop
         std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
 
+
+        // miscaleous function
+        void printTupleType(std::shared_ptr<Type> ty);
+
     };
 }
 #endif //GAZPREABASE_REF_H
