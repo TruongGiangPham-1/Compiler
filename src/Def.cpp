@@ -10,13 +10,18 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     std::shared_ptr<GlobalScope> globalScope = std::make_shared<GlobalScope>();
     symTab->globalScope = globalScope;
     // push builtin type to global scope
-    globalScope->defineType(std::make_shared<AdvanceType>("integer", "integer"));
-    globalScope->defineType(std::make_shared<AdvanceType>("real", "real"));
-    globalScope->defineType(std::make_shared<AdvanceType>("boolean", "boolean"));
-    globalScope->defineType(std::make_shared<AdvanceType>("character", "character"));
-    globalScope->defineType(std::make_shared<AdvanceType>("tuple", "tuple"));
-    globalScope->defineType(std::make_shared<AdvanceType>("matrix", "matrix"));
-    globalScope->defineType(std::make_shared<AdvanceType>("string", "string"));
+    /*
+     * populates the global scope with the mapping
+     *    {baseType str, baseType Obj}
+     *
+     */
+    globalScope->defineType(std::make_shared<AdvanceType>("integer"));
+    globalScope->defineType(std::make_shared<AdvanceType>("real"));
+    globalScope->defineType(std::make_shared<AdvanceType>("boolean"));
+    globalScope->defineType(std::make_shared<AdvanceType>("character"));
+    globalScope->defineType(std::make_shared<AdvanceType>("tuple"));
+    globalScope->defineType(std::make_shared<AdvanceType>("string"));
+
 
     // simulate typdef  resolveType will walk up the type chain
     //globalScope->defineType(std::make_shared<AdvanceType>("integer", "quack"));
@@ -41,7 +46,9 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
 std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
     //  typdef type id;
     // define type def mapping
-    symtab->globalScope->defineType(std::make_shared<AdvanceType>(tree->getType()->getTypeName(), tree->getName()));
+   // symtab->globalScope->defineType(std::make_shared<AdvanceType>(tree->getType()->getTypeName(), tree->getName()));
+    std::string typdefToString = tree->getName();
+    symtab->defineTypeDef(tree->getType(), typdefToString, getNextId());
     return 0;
 }
 

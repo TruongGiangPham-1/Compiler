@@ -9,6 +9,18 @@ namespace gazprea {
         currentScope = symtab->enterScope(symTab->globalScope);  // enter global scope
     }
 
+    void Ref::printTupleType(std::shared_ptr<Type> ty) {
+        if (ty->baseTypeEnum == TYPE::TUPLE) {
+            std::cout << "printinting tupleType ====\n";
+            // print type of each child
+            for (auto c: ty->tupleChildType) {
+                std::cout << c->getName() << "\n";
+            }
+            std::cout << "finish printinting tupleType ====\n";
+        } else {
+        }
+    }
+
 
     std::any Ref::visitFunction(std::shared_ptr<FunctionNode> tree) {
         auto funcSym = currentScope->resolve(tree->funcNameSym->getName());  // try to resolve procedure name
@@ -151,6 +163,7 @@ namespace gazprea {
         currentScope->define(idSym);
 
         std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
+        printTupleType(resType);
 
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
