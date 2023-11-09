@@ -48,9 +48,9 @@ int main(int argc, char **argv) {
 #endif
   gazprea::ASTBuilder builder;
   auto ast = std::any_cast<std::shared_ptr<ASTNode>>(builder.visit(tree));
-
-  std::cout << ast->toStringTree() << std::endl;
 #ifdef DEBUG
+  std::cout << ast->toStringTree() << std::endl;
+
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 
   std::cout << "\n\n=== DEF PASS\n";
