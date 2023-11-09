@@ -148,13 +148,14 @@ namespace gazprea {
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
         //}
-        std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
-        if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
 
-        //assert(type);  // ensure its not nullptr  // should be builtin type
-        if (tree->getExprNode()) {
-            walk(tree->getExprNode());
+        if (!tree->getTypeNode()) {
+            if (!tree->getExprNode()) {
+                // TODO: or if exprNode is identity or null
+                throw SyntaxError(tree->loc(), "Inferred declaration is missing expression.");
+            }
         }
+
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
             throw SymbolError(tree->loc(), "redeclaration of identifier " + tree->getIDName());
@@ -162,17 +163,34 @@ namespace gazprea {
 
         // define the ID in symtable
         std::string mlirName = "VAR_DEF" + std::to_string(getNextId());
-        std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
+
+        std::shared_ptr<VariableSymbol> idSym;
+        if (tree->getTypeNode()) {
+            std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
+            if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
+            idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
+#ifdef DEBUG
+            std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
+            printTupleType(resType);
+#endif
+        }
+        //assert(type);  // ensure its not nullptr  // should be builtin type
+        if (tree->getExprNode()) {
+            walk(tree->getExprNode());
+            std::shared_ptr<Type> resType = std::dynamic_pointer_cast<ExprNode>(tree->getExprNode())->type;
+            if (!tree->getTypeNode()) {
+                 idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
+            }
+#ifdef DEBUG
+            std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
+            printTupleType(resType);
+#endif
+        }
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
         idSym->qualifier = tree->qualifier;
 
         currentScope->define(idSym);
-#ifdef DEBUG
-        std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
-#endif
-        printTupleType(resType);
-
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
         return 0;

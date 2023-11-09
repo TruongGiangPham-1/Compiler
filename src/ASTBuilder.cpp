@@ -381,7 +381,8 @@ namespace gazprea {
         } else {
             t->qualifier = QUALIFIER::VAR;
         }
-        t->addChild(visit(ctx->type()));
+        if (ctx->type())
+            t->addChild(visit(ctx->type()));
         if (ctx->expression()) {
             t->addChild(visit(ctx->expression()));
 
