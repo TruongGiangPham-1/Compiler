@@ -127,7 +127,7 @@ namespace gazprea {
     }
 
     // STREAMS
-    std::any ASTBuilder::visitStream(GazpreaParser::StreamContext *ctx) {
+    std::any ASTBuilder::visitStreamOut(GazpreaParser::StreamOutContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitOutputStream" << std::endl;
 #endif
@@ -135,7 +135,18 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expression()));
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        return t;
+    }
+
+    std::any ASTBuilder::visitStreamIn(GazpreaParser::StreamInContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitInputStream" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<StreamIn>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
@@ -217,10 +228,20 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        // TODO. fix the index at 1.
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+        if (charContent[0] == '\\') {
+            auto escapedChar = CharNode::parseEscape(charContent[1]);
+            if (escapedChar.has_value()) {
+                auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), escapedChar.value());
+                return std::dynamic_pointer_cast<ASTNode>(t);
+            } else {
+                throw SyntaxError(ctx->getStart()->getLine(), "invalid escape sequence in character literal " + ctx->getText());
+            }
+        } else {
+            // normal char
+            auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
+            return std::dynamic_pointer_cast<ASTNode>(t);
+        }
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {

@@ -80,7 +80,9 @@ int main(int argc, char **argv) {
       return 1;
   }
 
-
+#ifdef DEBUG
+  std::cout << "\n\n=== TYPECHECK PASS\n";
+#endif
   //Type Check
   auto promotionTypes = std::make_shared<gazprea::PromotedType>(symbolTable);
   gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
@@ -92,7 +94,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-
+#ifdef DEBUG
+  std::cout << "\n\n=== CODEGEN\n";
+#endif
   BackendWalker backend(out);
   backend.generateCode(ast);
 

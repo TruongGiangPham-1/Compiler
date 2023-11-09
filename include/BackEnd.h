@@ -18,6 +18,8 @@ public:
   void print(mlir::Value value);
   void printVec(mlir::Value value);
   void printCommonType(mlir::Value value);
+  void streamOut(mlir::Value value);
+  void streamIn(mlir::Value value);
 
   mlir::Value generateInteger(int value);
   mlir::Value generateValue(int value);
