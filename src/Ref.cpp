@@ -165,6 +165,7 @@ namespace gazprea {
         std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
+        idSym->qualifier = tree->qualifier;
 
         currentScope->define(idSym);
 #ifdef DEBUG

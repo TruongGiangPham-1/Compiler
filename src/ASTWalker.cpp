@@ -11,9 +11,9 @@
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
-#include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/TupleNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
+#include "ASTNode/Expr/ExprListNode.h"
 
 
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
@@ -78,6 +78,13 @@ namespace gazprea {
         // ==========
         // EXPRESSION AST NODES
         // ==========
+        else if (std::dynamic_pointer_cast<ExprListNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit expression list " << std::endl;
+#endif // DEBUG
+            return this->visitExpressionList(std::dynamic_pointer_cast<ExprListNode>(tree));
+        }
+
         else if (std::dynamic_pointer_cast<IDNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit ID" << std::endl;
@@ -251,6 +258,9 @@ namespace gazprea {
     }
 
     // Expr
+    std::any ASTWalker::visitExpressionList(std::shared_ptr<ExprListNode> tree) {
+        return this->walkChildren(tree);
+    }
     std::any ASTWalker::visitID(std::shared_ptr<IDNode> tree) {
         return this->walkChildren(tree);
     }

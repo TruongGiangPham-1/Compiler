@@ -40,7 +40,7 @@ namespace gazprea {
         TypeWalker(std::shared_ptr<SymbolTable> symtab, std::shared_ptr<PromotedType> promotedType);
         ~TypeWalker();
 
-        //std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
+        std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
         //std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         std::any visitID(std::shared_ptr<IDNode> tree) override;

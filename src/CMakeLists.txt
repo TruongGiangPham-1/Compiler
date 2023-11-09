@@ -101,6 +101,8 @@ set(
         ../include/ASTNode/BreakNode.h
         ASTNode/ContinueNode.cpp
         ../include/ASTNode/ContinueNode.h
+        ../include/ASTNode/Expr/ExprListNode.h
+        ASTNode/Expr/ExprListNode.cpp
 )
 
 # Build our executable from the source files.

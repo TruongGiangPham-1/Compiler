@@ -48,9 +48,9 @@ int main(int argc, char **argv) {
 #endif
   gazprea::ASTBuilder builder;
   auto ast = std::any_cast<std::shared_ptr<ASTNode>>(builder.visit(tree));
-
-  std::cout << ast->toStringTree() << std::endl;
 #ifdef DEBUG
+  std::cout << ast->toStringTree() << std::endl;
+
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 
   std::cout << "\n\n=== DEF PASS\n";
@@ -59,18 +59,39 @@ int main(int argc, char **argv) {
   std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
   gazprea::Def def(symbolTable, mlirIDptr);
-  def.walk(ast);
+  try {
+      def.walk(ast);
+  }
+  catch (CompileTimeException& e) {
+      std::cerr << e.what();
+      return 1;
+  }
+
 
 #ifdef DEBUG
   std::cout << "\n\n=== REF PASS\n";
 #endif
   gazprea::Ref ref(symbolTable, mlirIDptr);
-  ref.walk(ast);
+  try {
+      ref.walk(ast);
+  }
+  catch (CompileTimeException& e) {
+      std::cerr << e.what();
+      return 1;
+  }
+
 
   //Type Check
   auto promotionTypes = std::make_shared<gazprea::PromotedType>(symbolTable);
   gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
-  typeWalker.walk(ast);
+    try {
+        typeWalker.walk(ast);
+    }
+    catch (CompileTimeException& e) {
+        std::cerr << e.what();
+        return 1;
+    }
+
 
   BackendWalker backend(out);
   backend.generateCode(ast);
