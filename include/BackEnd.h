@@ -59,6 +59,8 @@ public:
 
   void generateDeclaration(std::string varName, mlir::Value value);
   void generateAssignment(std::string varName, mlir::Value value);
+  void generateAssignment(mlir::Value ptr, mlir::Value value);
+
   void generateInitializeGlobalVar(std::string varName, mlir::Value value);
   void deallocateVectors();
   void deallocateObjects();

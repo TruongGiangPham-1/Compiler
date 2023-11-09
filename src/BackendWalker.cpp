@@ -2,6 +2,7 @@
 #include "ASTNode/Expr/CastNode.h"
 #include "Types/TYPES.h"
 #include "mlir/IR/Value.h"
+#include <memory>
 #include <stdexcept>
 //#define DEBUG;
 
@@ -23,7 +24,9 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
     if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
       auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
       auto k = lvalue->sym->mlirName;
-      codeGenerator.generateAssignment(lvalue->sym->mlirName, val);
+      auto castedVal = codeGenerator.cast(val, lvalue->sym->type);
+
+      codeGenerator.generateAssignment(lvalue->sym->mlirName, castedVal);
 
     }
     // TODO: validate for tuple index
@@ -34,7 +37,12 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
+
+  auto typenode = std::dynamic_pointer_cast<TypeNode>(tree->getTypeNode());
+
+  auto castedVal = codeGenerator.cast(val, typenode->sym->type);
+
+  codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
   return 0;
 }
 

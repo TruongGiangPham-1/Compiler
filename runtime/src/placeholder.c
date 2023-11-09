@@ -1,5 +1,4 @@
 #include "Operands/BINOP.h"
-
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
 #include <stdint.h>
@@ -44,6 +43,8 @@ typedef struct tuple {
 
 commonType* allocateCommonType(void* value, enum TYPE type);
 void deallocateCommonType(commonType* object);
+tuple* copyTuple(tuple* object);
+
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
@@ -127,6 +128,11 @@ void extractAndAssignValue(void* value, commonType *dest) {
       break;
   }
 }
+commonType* copyCommonType(commonType* copyFrom);
+
+void assignByReference(commonType* dest, commonType* from) {
+  dest->value = copyCommonType(from);
+}
 
 commonType* allocateCommonType(void* value, enum TYPE type) {
   commonType* newType = (commonType*)malloc(sizeof(commonType));
@@ -138,6 +144,15 @@ commonType* allocateCommonType(void* value, enum TYPE type) {
 #endif
 
   return newType;
+}
+
+commonType* copyCommonType(commonType* copyFrom) {
+  if (copyFrom->type == TUPLE) {
+    tuple* copiedTuple = copyTuple((tuple*)copyFrom->value);
+    return allocateCommonType(copiedTuple, TUPLE);
+  } else {
+    return allocateCommonType(copyFrom->value, copyFrom->type);
+  }
 }
 
 void deallocateTuple(tuple* tuple) {
@@ -157,6 +172,8 @@ void deallocateTuple(tuple* tuple) {
   printf("Tuple deallocation success!\n");
 #endif
 }
+
+
 
 void deallocateCommonType(commonType* object) {
   // we keep track of more object than we allocate
@@ -215,6 +232,17 @@ void appendTuple(tuple* tuple, commonType *value) {
 #endif /* ifdef DEBUGTUPLE */
 
   tuple->currentSize++;
+}
+
+tuple* copyTuple(tuple* copyFrom) {
+  tuple* copiedTo = allocateTuple(copyFrom->size);
+
+  for (int i = 0 ; i < copyFrom->size ; i ++) {
+    commonType* newVal = allocateCommonType(copyFrom->values[i]->value, copyFrom->values[i]->type);
+    appendTuple(copiedTo, newVal);
+  }
+
+  return copiedTo;
 }
 
 commonType* boolCast(bool fromValue, enum TYPE toType) {

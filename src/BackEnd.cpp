@@ -174,9 +174,12 @@ void BackEnd::setupCommonTypeRuntime() {
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
   auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
+  auto commonReferenceAssign = mlir::LLVM::LLVMFunctionType::get(voidType, {commonTypeAddr, commonTypeAddr});
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "assignByReference",
+                                            commonReferenceAssign);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeBINOP",
                                             commonBinopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeUNARYOP",
@@ -516,6 +519,17 @@ mlir::Value BackEnd::generateIntegerBinaryOperation(mlir::Value left,
 void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {
   this->generateInitializeGlobalVar(varName, value);
   this->generateAssignment(varName, value);
+}
+
+/*
+ * Generate an assignment to a ptr
+ */
+void BackEnd::generateAssignment(mlir::Value ptr, mlir::Value value) {
+  auto assignFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("assignByReference");
+
+  builder->create<mlir::LLVM::CallOp>(loc, 
+      assignFunc, 
+      mlir::ValueRange({ptr, value}));
 }
 
 void BackEnd::generateAssignment(std::string varName, mlir::Value value) {
