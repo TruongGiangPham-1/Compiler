@@ -1,5 +1,5 @@
 #include "llvm/ADT/APFloat.h"
-#include "BuiltinTypes/BuiltInTypes.h"
+#include "Types/TYPES.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
@@ -220,7 +220,7 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   return result;
 }
 
-mlir::Value BackEnd::cast(mlir::Value left, BuiltIn toType) {
+mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
 
@@ -327,13 +327,13 @@ mlir::Value BackEnd::generateValue(int value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI32Type(), value);
   
-  return this->generateCommonType(result, INT);
+  return this->generateCommonType(result, INTEGER);
 }
 
 mlir::Value BackEnd::generateValue(bool value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI1Type(), value);
-  return this->generateCommonType(result, BOOL);
+  return this->generateCommonType(result, BOOLEAN);
 }
 
 mlir::Value BackEnd::generateValue(float value) {

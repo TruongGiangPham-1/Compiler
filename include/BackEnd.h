@@ -6,8 +6,6 @@
 #include "mlir/IR/MLIRContext.h"
 #include "Operands/BINOP.h"
 #include "Operands/UNARYOP.h"
-#include "BuiltinTypes/BuiltInTypes.h"
-
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/ValueRange.h"
 
@@ -51,7 +49,7 @@ public:
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);
 
-  mlir::Value cast(mlir::Value from, BuiltIn toType);
+  mlir::Value cast(mlir::Value from, TYPE toType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
   void generateEndFunctionDefinition(mlir::Block* returnBlock);

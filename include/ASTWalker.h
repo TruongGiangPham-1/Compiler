@@ -2,6 +2,7 @@
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/AssignNode.h"
+#include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
@@ -64,6 +65,7 @@ namespace gazprea {
         virtual std::any visitArith(std::shared_ptr<BinaryArithNode> tree);
         virtual std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree);
         virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
+        virtual std::any visitCast(std::shared_ptr<CastNode> tree);
         virtual std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree);
         // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);
