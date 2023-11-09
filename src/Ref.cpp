@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-//#define DEBUG
+#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int> mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -87,13 +87,18 @@ namespace gazprea {
 
                 if (tree->body) {
                     walk(tree->body);  // ref all the symbol inside function block;
+                } else if (tree->expr) {
+                    walk(tree->expr);
                 }
                 currentScope = symtab->exitScope(currentScope);  // pop local scope
                 currentScope = symtab->exitScope(currentScope);  // pop method scope
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
 
                 // swap here?  // swap if line number is greater than prototypes
+                auto find = this->funcProtypeList.find(funcSym->getName());
+                if (find == nullptr) return 0;  // there was forward declaration but the prototype appear after this defintino
                 auto protoType = this->funcProtypeList.find(funcSym->getName())->second;
+
                 if (protoType->loc() < tree->loc()) {
 #ifdef DEBUG
                     std::cout << "swapping prototype and function definition\n";
@@ -168,7 +173,6 @@ namespace gazprea {
         return 0;
 
     }
-
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         if (tree->body == nullptr) {

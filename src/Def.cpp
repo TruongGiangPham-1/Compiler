@@ -3,7 +3,7 @@
 // NOTE: ALL THE DEF PASS WILL LOOK FOR GLOBAL DECLARATION / FORWARD DECLARATION
 //
 #include "../include/Def.h"
-//#define DEBUG
+#define DEBUG
 namespace gazprea {
 Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symtab(symTab), varID(mlirID) {
 
@@ -112,7 +112,34 @@ std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     if (tree->body || tree->expr) {  // we skip all function definition in def pass
         return 0;
     } else {
-        // TOODO: forward functino decl
+        // forward declaration method
+        // I will just define the symbol
+        std::shared_ptr<Type>retType;
+        if (tree->getRetTypeNode()) {  // has return
+            retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            if (retType == nullptr) throw TypeError(tree->loc(), "cannot verify types");
+        }
+        std::string scopeName= "funcScope" + tree->funcNameSym->getName() +std::to_string(tree->loc());
+        std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
+                                                                                    scopeName, retType, symtab->globalScope, tree->loc());
+        methodSym->typeSym = retType;
+#ifdef DEBUG
+        if (retType) {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+        } else {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
+        }
+#endif
+        // Here I am just adding argument nodes to the list of 'forwardDeclArgs' so that my Ref pass will be able to take this list and compare it with
+        // method definition's arg for type check etc
+        for (auto arg: tree->orderedArgs) {
+            // define arg symbols
+            methodSym->forwardDeclArgs.push_back(arg);
+        }
+        currentScope->define(methodSym);  // define methd symbol in global
+//        defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, retType , 0);
+//        currentScope = symtab->exitScope(currentScope);  // exit the argument scope
+        assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // make sure we back to global scope
     }
     return 0;
 }
