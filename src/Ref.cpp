@@ -431,11 +431,11 @@ namespace gazprea {
             // TYPECHECK ---------------------------------------
             // add arguments to the methdd scope  and walk tree
             // define mlirname
-            index++;
             argNodeDef->idSym->index = index;
             argNodeDef->idSym->typeSym = argNodeDefType;
             argNodeDef->idSym->mlirName = "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
             argNodeDef->scope = currentScope;  // set scope to function scope
+            index++;
 #ifdef DEBUG
             std::cout << "in line " << loc
                       << " argument = " << argNodeDef->idSym->getName() << " defined in "
