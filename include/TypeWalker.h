@@ -41,7 +41,7 @@ namespace gazprea {
         ~TypeWalker();
 
         std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
-        //std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
+        std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         std::any visitID(std::shared_ptr<IDNode> tree) override;
         std::any visitInt(std::shared_ptr<IntNode> tree) override;
@@ -53,5 +53,11 @@ namespace gazprea {
         std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
+
+        // streams
+        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+
+        std::string typeEnumToString(TYPE t);
     };
 }
