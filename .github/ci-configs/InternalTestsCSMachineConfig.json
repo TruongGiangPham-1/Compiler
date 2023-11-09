@@ -1,6 +1,7 @@
 {
   "inDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/internal_tests/input",
   "outDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/internal_tests/output",
+  "inStrDir": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/internal_tests/input-stream",
   "testedExecutablePaths": {
     "lord-farquaad": "/cshome/jnji/code/cmput415/gha/gazprea-lord-farquaad/bin/gazc"
   },
