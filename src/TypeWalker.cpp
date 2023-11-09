@@ -1,5 +1,4 @@
 #include "TypeWalker.h"
-#include "BuiltInTypeSymbol.h"
 //#define DEBUG
 
 namespace gazprea {
@@ -249,5 +248,66 @@ namespace gazprea {
         }
         //TODO tuple unpack / assignment
         return nullptr;
+    }
+
+    std::any TypeWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
+        // streamOut supports the following types:
+        // - char, integer, real, boolean
+        // - vector, string, matrix (part 2)
+        // basically, NOT tuples
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+        walkChildren(tree);
+        auto exprType = tree->getExpr()->evaluatedType;
+        if (exprType != nullptr) {
+            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+                throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
+            }
+        } else {
+            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
+        // streamIn supports reading into the following types:
+        // - char, integer, real, boolean
+        // NOT any other types
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN};
+        walkChildren(tree);
+        auto exprType = tree->getExpr()->evaluatedType;
+        if (exprType != nullptr) {
+            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+                throw TypeError(tree->loc(), "Cannot stream in a " + typeEnumToString(exprType->baseTypeEnum));
+            }
+        } else {
+            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+        }
+
+        // todo (maybe?) check if stream is valid l-value
+        return nullptr;
+    }
+
+    std::string TypeWalker::typeEnumToString(TYPE t) {
+        switch (t) {
+            case TYPE::BOOLEAN:
+                return "boolean";
+            case TYPE::CHAR:
+                return "character";
+            case TYPE::INTEGER:
+                return "integer";
+            case TYPE::REAL:
+                return "real";
+            case TYPE::STRING:
+                return "string";
+            case TYPE::VECTOR:
+                return "vector";
+            case TYPE::MATRIX:
+                return "matrix";
+            case TYPE::TUPLE:
+                return "tuple";
+            case TYPE::NONE:
+                return "none";
+        }
+
     }
 }

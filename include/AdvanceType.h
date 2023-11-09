@@ -11,21 +11,8 @@
 #include "CompileTimeExceptions.h"
 
 class AdvanceType : public Type, public Symbol{
-public:
-    /*
-     * Typedef integer int;
-     * name = integer
-     * typedef name = int;
-     */
-    std::string typDefName;  // typedef  name?
-    /*
-     * vector of dimentions. if it is a Vector, dims,size() = 1, if it is a matrix, dims.size() = 2
-     */
-    std::vector<mlir::Value> dims;  // maybe can populate this in the backend?
-
-    AdvanceType(std::string name) : Symbol(name), typDefName(name) {};
-    // at Def.cpp push <integer, integer>
-    AdvanceType(std::string name, std::string typeDefName) : Symbol(name), typDefName(typeDefName) {
+private:
+    void parseBaseTypeEnum(std::string name) {
         if (name == "integer") {
             baseTypeEnum = TYPE::INTEGER;
         } else if (name == "real") {
@@ -38,10 +25,30 @@ public:
             baseTypeEnum = TYPE::TUPLE;
         } else if (name == "string") {
             baseTypeEnum = TYPE::STRING;
-        }else {
-               // throw TypeError(0, "invalid typename when creating AdvancedType object");
-               // custom user type
+        } else {
+            // throw TypeError(0, "invalid typename when creating AdvancedType object");
+            // custom user type
         }
+    }
+public:
+    /*
+     * Typedef integer int;
+     * name = integer
+     * typedef name = int;
+     */
+    std::string typDefName;  // typedef  name?
+    /*
+     * vector of dimentions. if it is a Vector, dims,size() = 1, if it is a matrix, dims.size() = 2
+     */
+    std::vector<mlir::Value> dims;  // maybe can populate this in the backend?
+
+    AdvanceType(std::string name) : Symbol(name), typDefName(name) {
+        parseBaseTypeEnum(name);
+    }
+
+    // at Def.cpp push <integer, integer>
+    AdvanceType(std::string name, std::string typeDefName) : Symbol(name), typDefName(typeDefName) {
+        parseBaseTypeEnum(name);
     };
 
     std::string getName() {

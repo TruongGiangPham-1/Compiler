@@ -1,5 +1,5 @@
 #include "llvm/ADT/APFloat.h"
-#include "BuiltinTypes/BuiltInTypes.h"
+#include "Types/TYPES.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
@@ -183,6 +183,9 @@ void BackEnd::setupCommonTypeRuntime() {
                                           commonUnaryopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printCommonType",
                                             printType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamOut",
+                                          printType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
@@ -217,7 +220,7 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   return result;
 }
 
-mlir::Value BackEnd::cast(mlir::Value left, BuiltIn toType) {
+mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
 
@@ -267,6 +270,25 @@ void BackEnd::printCommonType(mlir::Value value) {
   builder->create<mlir::LLVM::CallOp>(loc, printVecFunc, value);
 }
 
+/*
+ * Functions like printCommonType, but follows the rules for streamOut
+ * Such as, no trailing whitespace
+ */
+void BackEnd::streamOut(mlir::Value value) {
+  mlir::LLVM::LLVMFuncOp streamOutFunc =
+          module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamOut");
+  builder->create<mlir::LLVM::CallOp>(loc, streamOutFunc, value);
+}
+
+/*
+ * Reads from stdin (based on the type of the value) and assigns
+ */
+void BackEnd::streamIn(mlir::Value value) {
+    mlir::LLVM::LLVMFuncOp streamInFunc =
+            module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamIn");
+    builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, value);
+}
+
 // === === === TYPEs === === === 
 
 /*
@@ -305,13 +327,13 @@ mlir::Value BackEnd::generateValue(int value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI32Type(), value);
   
-  return this->generateCommonType(result, INT);
+  return this->generateCommonType(result, INTEGER);
 }
 
 mlir::Value BackEnd::generateValue(bool value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI1Type(), value);
-  return this->generateCommonType(result, BOOL);
+  return this->generateCommonType(result, BOOLEAN);
 }
 
 mlir::Value BackEnd::generateValue(float value) {

@@ -2,6 +2,7 @@
 
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/AssignNode.h"
+#include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
@@ -60,7 +61,12 @@ namespace gazprea {
 #ifdef DEBUG
             std::cout << "about to visit print" << std::endl;
 #endif // DEBUG
-            return this->visitPrint(std::dynamic_pointer_cast<StreamOut>(tree));
+            return this->visitStreamOut(std::dynamic_pointer_cast<StreamOut>(tree));
+        } else if (std::dynamic_pointer_cast<StreamIn>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit read" << std::endl;
+#endif // DEBUG
+            return this->visitStreamIn(std::dynamic_pointer_cast<StreamIn>(tree));
 
         } else if (std::dynamic_pointer_cast<TypeNode>(tree)) {
 #ifdef DEBUG
@@ -138,6 +144,12 @@ namespace gazprea {
             std::cout << "about to visit unary Arith node" << std::endl;
 #endif // DEBUG
             return this->visitUnaryArith(std::dynamic_pointer_cast<UnaryArithNode>(tree));
+
+        } else if (std::dynamic_pointer_cast<CastNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit cast node" << std::endl;
+#endif // DEBUG
+            return this->visitCast(std::dynamic_pointer_cast<CastNode>(tree));
 
         } else if (std::dynamic_pointer_cast<IndexNode>(tree)) {
 #ifdef DEBUG
@@ -250,7 +262,11 @@ namespace gazprea {
     std::any ASTWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
+    std::any ASTWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitType(std::shared_ptr<TypeNode> tree) {
@@ -375,6 +391,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitCast(std::shared_ptr<CastNode> tree) {
         return this->walkChildren(tree);
     }
 }
