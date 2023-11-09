@@ -1,5 +1,5 @@
 #include "TypeWalker.h"
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
 
