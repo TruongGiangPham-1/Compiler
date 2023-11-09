@@ -40,11 +40,11 @@ private:
 
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
-    std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
-    std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
-    std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
-    std::any visitBreak(std::shared_ptr<BreakNode> tree);
-    std::any visitContinue(std::shared_ptr<ContinueNode> tree);
+  std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
+  std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
+  std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
+  std::any visitBreak(std::shared_ptr<BreakNode> tree) override;
+  std::any visitContinue(std::shared_ptr<ContinueNode> tree) override;
 
   std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
 
