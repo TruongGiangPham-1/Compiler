@@ -25,6 +25,15 @@ namespace gazprea {
 
 
     std::any Ref::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        if (tree->body == nullptr && tree->expr == nullptr) {  // this is a function prototype
+            if (this->funcProtypeList.find(tree->funcNameSym->getName()) == this->funcProtypeList.end()) {
+                // first time seeing this prototype in the file
+                this->funcProtypeList.emplace(tree->funcNameSym->getName(), tree);
+            } else {
+                throw SymbolError(tree->loc(), "redeclaration of prootype method");
+            }
+            return 0;  // forward declaration node, we skip
+        }
         auto funcSym = currentScope->resolve(tree->funcNameSym->getName());  // try to resolve procedure name
         if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
@@ -51,6 +60,63 @@ namespace gazprea {
             currentScope = symtab->exitScope(currentScope);  // pop method scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
 
+        } else {
+            if (std::dynamic_pointer_cast<FunctionSymbol>(funcSym)) {
+                // there was a forward declaration
+                auto funcSymCast = std::dynamic_pointer_cast<FunctionSymbol>(funcSym);
+#ifdef DEBUG
+                std::cout << "resolved function definition " << funcSym->getName() << " at line: " << tree->loc()
+                          << " at scope "
+                          << currentScope->getScopeName() << std::endl;
+#endif DEBUG
+
+                std::shared_ptr<Type> retType = nullptr;
+                if (tree->getRetTypeNode()) {
+                    retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+                    if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve functin return type");
+                }
+
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+                currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
+
+                defineForwardFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType, 0);
+
+                // push local scope for body
+                std::string sname = "funcScope" + std::to_string(tree->loc());
+                currentScope = symtab->enterScope(sname, currentScope);
+
+                if (tree->body) {
+                    walk(tree->body);  // ref all the symbol inside function block;
+                }
+                currentScope = symtab->exitScope(currentScope);  // pop local scope
+                currentScope = symtab->exitScope(currentScope);  // pop method scope
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+
+                // swap here?  // swap if line number is greater than prototypes
+                auto protoType = this->funcProtypeList.find(funcSym->getName())->second;
+                if (protoType->loc() < tree->loc()) {
+#ifdef DEBUG
+                    std::cout << "swapping prototype and function definition\n";
+#endif DEBUG
+                    // swap the prototype
+                    if (tree->body) {
+                        auto tempArg = protoType->orderedArgs;
+                        protoType->orderedArgs = tree->orderedArgs;
+                        tree->orderedArgs = tempArg;
+                        protoType->body = tree->body;
+                        tree->body = nullptr;
+                    } else {
+                        assert(tree->expr);
+                        auto tempArg = protoType->orderedArgs;
+                        protoType->orderedArgs = tree->orderedArgs;
+                        tree->orderedArgs = tempArg;
+                        protoType->expr = tree->expr;
+                        tree->expr = nullptr;
+                    }
+                }
+            } else {
+                throw SymbolError(tree->loc(), "function same name as another identifier in the global scope");
+            }
         }
         return 0;
     }
