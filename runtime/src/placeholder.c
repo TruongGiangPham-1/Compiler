@@ -91,6 +91,35 @@ void streamOut(commonType *type) {
   printType(type, false);
 }
 
+void streamIn(commonType *type) {
+  switch (type->type) {
+    case INT:
+//      printf("Enter an int: ");
+      scanf("%d", (int*)type->value);
+      break;
+    case CHAR:
+//      printf("Enter a char: ");
+      scanf("%c", (char*)type->value);
+      break;
+    case BOOL: {
+//      printf("Enter a boolean value (T/F): ");
+      // scan char. If it's T, true, else false
+      char temp;
+      scanf("%c", &temp);
+      if (temp == 'T') {
+        *(bool*)type->value = true;
+      } else {
+        *(bool *) type->value = false;
+      }
+      break;
+    }
+    case REAL:
+//      printf("Enter a real: ");
+      scanf("%f", (float*)type->value);
+      break;
+  }
+}
+
 /**
  * Big switch case that I didn't want in the allocate common type function
  */
