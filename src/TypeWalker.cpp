@@ -1,6 +1,6 @@
 #include "TypeWalker.h"
 #include "BuiltInTypeSymbol.h"
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
 
@@ -70,9 +70,9 @@ namespace gazprea {
 
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getName() << ", " << right->evaluatedType->getName() << "\n";
-                assert(resultType);
                 std::cout << "result: " <<  resultType->getName() << "\n";
         #endif
+        assert(resultType);
         return resultType;
     }
 
