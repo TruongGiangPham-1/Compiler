@@ -21,7 +21,7 @@ bool isCOMP(enum BINOP op) {
     return false;
   }
 }
-//#define DEBUGTUPLE
+#define DEBUGTUPLE
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 typedef struct vecStruct {
@@ -43,7 +43,7 @@ typedef struct tuple {
 
 commonType* allocateCommonType(void* value, enum TYPE type);
 void deallocateCommonType(commonType* object);
-tuple* copyTuple(tuple* object);
+tuple* copyTuple(tuple* copyFrom);
 
 
 void printType(commonType *type, bool nl) {
@@ -148,9 +148,11 @@ commonType* allocateCommonType(void* value, enum TYPE type) {
 
 commonType* copyCommonType(commonType* copyFrom) {
   if (copyFrom->type == TUPLE) {
+    printf("\n\ncopying a tuple");
     tuple* copiedTuple = copyTuple((tuple*)copyFrom->value);
-    return allocateCommonType(copiedTuple, TUPLE);
+    return allocateCommonType(&copiedTuple, TUPLE);
   } else {
+    printf("\n\ncopying a regular type");
     return allocateCommonType(copyFrom->value, copyFrom->type);
   }
 }
@@ -238,7 +240,7 @@ tuple* copyTuple(tuple* copyFrom) {
   tuple* copiedTo = allocateTuple(copyFrom->size);
 
   for (int i = 0 ; i < copyFrom->size ; i ++) {
-    commonType* newVal = allocateCommonType(copyFrom->values[i]->value, copyFrom->values[i]->type);
+    commonType* newVal = copyCommonType(copyFrom->values[i]);
     appendTuple(copiedTo, newVal);
   }
 

@@ -524,7 +524,8 @@ void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {
 /*
  * Generate an assignment to a ptr
  */
-void BackEnd::generateAssignment(mlir::Value ptr, mlir::Value value) {
+void BackEnd::generateAssignment(mlir::Value ptr, mlir::Value value) 
+{
   auto assignFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("assignByReference");
 
   builder->create<mlir::LLVM::CallOp>(loc, 
