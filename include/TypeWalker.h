@@ -41,7 +41,7 @@ namespace gazprea {
         ~TypeWalker();
 
         std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
-        //std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
+        std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         std::any visitID(std::shared_ptr<IDNode> tree) override;
         std::any visitInt(std::shared_ptr<IntNode> tree) override;

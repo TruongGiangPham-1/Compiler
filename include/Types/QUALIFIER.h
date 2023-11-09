@@ -1,2 +1,2 @@
 #pragma once
-enum QUALIFIER { CONST, VAR, NONE };
+enum QUALIFIER { CONST, VAR };
