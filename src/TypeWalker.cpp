@@ -1,6 +1,6 @@
 #include "TypeWalker.h"
 #include "BuiltInTypeSymbol.h"
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
 
