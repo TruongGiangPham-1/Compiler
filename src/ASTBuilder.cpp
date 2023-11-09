@@ -202,7 +202,7 @@ namespace gazprea {
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
         std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
-        if (charContent[0] == '/') {
+        if (charContent[0] == '\\') {
             auto escapedChar = CharNode::parseEscape(charContent[1]);
             if (escapedChar.has_value()) {
                 auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), escapedChar.value());
