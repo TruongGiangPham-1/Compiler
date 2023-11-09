@@ -111,7 +111,7 @@ namespace gazprea {
     }
 
     // STREAMS
-    std::any ASTBuilder::visitStreamIn(GazpreaParser::StreamInContext *ctx) {
+    std::any ASTBuilder::visitStreamOut(GazpreaParser::StreamOutContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitOutputStream" << std::endl;
 #endif
@@ -119,7 +119,18 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expression()));
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        return t;
+    }
+
+    std::any ASTBuilder::visitStreamIn(GazpreaParser::StreamInContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitInputStream" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<StreamIn>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
