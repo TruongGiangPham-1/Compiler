@@ -8,6 +8,7 @@ procedure main() returns integer {
   } else {
     4 -> std_output;
   }
+  '\n' -> std_output;
 
   return 0;
 }
