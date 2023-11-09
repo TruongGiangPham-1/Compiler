@@ -47,8 +47,9 @@ public:
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);
 
-  mlir::Value promotion(mlir::Value from, mlir::Value to);
+  mlir::Value cast(mlir::Value from, TYPE toType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
+
   void generateEndFunctionDefinition(mlir::Block* returnBlock);
   void generateReturn(mlir::Value returnVal);
 
@@ -71,6 +72,7 @@ public:
       mlir::Block *block); // set insertion point for non shared ptr
   void generateEnterBlock(
       mlir::Block *block); // set insertion point for non shared Ptr
+  bool conditionalJumpToBlock(mlir::Block *block, bool ifJump); // (statically) conditionally jump to a block
   mlir::Block *generateLoopBegin();
   mlir::Block *generateLoopMiddle(mlir::Value addr);
   mlir::Block *generateBlock();
@@ -97,7 +99,9 @@ public:
   void generateUpdateDomainVar(mlir::Value domainVecAddr, mlir::Value indexAddr,
                                std::string domainVar);
   // --------------------------------------------------
-  mlir::LLVM::LLVMFuncOp mainFunc;
+  // global scope is functionStack[0]
+  // current scope is functionStack.back()
+  std::vector<mlir::LLVM::LLVMFuncOp> functionStack;
   mlir::Block *mainEntry;
 
 protected:

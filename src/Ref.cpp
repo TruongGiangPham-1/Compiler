@@ -2,11 +2,25 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-
+//#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
         currentScope = symtab->enterScope(symTab->globalScope);  // enter global scope
+    }
+
+    void Ref::printTupleType(std::shared_ptr<Type> ty) {
+        if (ty->baseTypeEnum == TYPE::TUPLE) {
+#ifdef DEBUG
+            std::cout << "printinting tupleType ====\n";
+            // print type of each child
+            for (auto c: ty->tupleChildType) {
+                std::cout << c->getName() << "\n";
+            }
+            std::cout << "finish printinting tupleType ====\n";
+#endif
+        } else {
+        }
     }
 
 
@@ -55,7 +69,9 @@ namespace gazprea {
             if (tree->loc() < (size_t)cast->line) {
                 throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
             } else {
+#ifdef DEBUG
                 std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
+#endif
             }
             tree->scope = currentScope;
             // reference to the function Symbol that we are calling. can get all arguments using
@@ -68,7 +84,9 @@ namespace gazprea {
             if (tree->loc() < (size_t)cast->line) {
                 throw SymbolError(tree->loc(), "procedure " + cast->getName() + " not defined at this point");
             } else {
+#ifdef DEBUG
                 std::cout << "line: " << tree->loc() << " ref procedure call " << sym->getName() << "\n";
+#endif
             }
             tree->scope = currentScope;
             // reference to the function Symbol that we are calling. can get all arguments using
@@ -147,10 +165,13 @@ namespace gazprea {
         std::shared_ptr<VariableSymbol> idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
+        idSym->qualifier = tree->qualifier;
 
         currentScope->define(idSym);
-
+#ifdef DEBUG
         std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
+#endif
+        printTupleType(resType);
 
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
@@ -165,16 +186,20 @@ namespace gazprea {
         tree->sym = referencedSymbol;
 
         if (referencedSymbol == nullptr) {
+#ifdef DEBUG
             std::cout << "in line " << tree->loc()
                       << " ref null\n"; // variable not defined
+#endif
             throw SyntaxError(tree->loc(), "Undeclared variable " +  tree->sym->getName());
         } else {
+#ifdef DEBUG
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
                       << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName();
             if (std::dynamic_pointer_cast<ScopedSymbol>(referencedSymbol->scope)) {
                 std::cout << " index of param=" << referencedSymbol->index ;
             }
             std::cout << "\n";
+#endif
         }
         return 0;
     }
@@ -297,9 +322,13 @@ namespace gazprea {
         }
         methodSym->typeSym = retType;
         if (retType) {
+#ifdef DEBUG
             std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+#endif
         } else {
+#ifdef DEBUG
             std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
+#endif
         }
 
         currentScope->define(methodSym);  // define methd symbol in global
@@ -319,9 +348,11 @@ namespace gazprea {
             auto resType = symtab->resolveTypeUser(argNode->type);
             argNode->idSym->typeSym =  retType;
             if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
+#ifdef DEBUG
             std::cout << "in line " << loc
                       << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName() <<
                       " as Type " << argNode->idSym->typeSym->getName() <<" as mlirname=" << argNode->idSym->mlirName  <<"\n";
+#endif
 
             // define mlirname
             argNode->idSym->scope = currentScope;

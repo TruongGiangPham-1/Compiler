@@ -1,0 +1,38 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lab-machine-tests:
+    concurrency: lab-machine # ensure this doesn't run concurrently
+    name: 🖥 Lab Machine
+    runs-on: self-hosted
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Execute SSH Commands
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true # error if there are any other errs
+          script: |
+            cd ${{ vars.DIR }}
+            git fetch --all && git reset --hard origin/${{ env.BRANCH_NAME }}
+            mkdir -p ${{ vars.DIR }}/build
+            cd ${{ vars.DIR }}/build
+            cmake .. && make
+            cd ${{ vars.DIR }}
+            tester .github/ci-configs/CSMachineConfig.json --timeout 2
+            tester .github/ci-configs/InternalTestsCSMachineConfig.json --timeout 2
+            git clean -f -d

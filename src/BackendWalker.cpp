@@ -13,9 +13,18 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
+  auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
 
-  codeGenerator.generateAssignment(tree->sym->mlirName, val);
+  if (exprList->children.size() == 1) {
+    if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
+      auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+      auto k = lvalue->sym->mlirName;
+      codeGenerator.generateAssignment(lvalue->sym->mlirName, val);
 
+    }
+    // TODO: validate for tuple index
+  }
+  // TODO: else tuple unpacking
   return 0;
 }
 
@@ -82,6 +91,11 @@ std::any BackendWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
   return codeGenerator.performBINOP(lhs, rhs, tree->op);
 }
 
+std::any BackendWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
+  auto expr = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+  return codeGenerator.performUNARYOP(expr, tree->op);
+}
+
 std::any BackendWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
@@ -134,28 +148,129 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
     codeGenerator.setBuilderInsertionPoint(trueBlocks[i]);
     walk(tree->bodies[i]);
+    codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+    this->earlyReturn = false;
 
-    codeGenerator.generateEnterBlock(endBlock);
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
   // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
     walk(tree->bodies[tree->bodies.size() - 1]);
-    codeGenerator.generateEnterBlock(endBlock);
   }
 
+  codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+  this->earlyReturn = false;
   codeGenerator.setBuilderInsertionPoint(endBlock);
 
   return 0;
 }
 
+std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
+  auto loopBody = codeGenerator.generateBlock(); // start of loop
+  auto loopExit = codeGenerator.generateBlock(); // the rest of the program
+
+  this->loopBlocks.push_back(std::make_pair(loopBody, loopExit));
+
+  // body of loop
+  codeGenerator.generateEnterBlock(loopBody);
+  codeGenerator.setBuilderInsertionPoint(loopBody);
+  walk(tree->getBody());
+  codeGenerator.conditionalJumpToBlock(loopBody, !earlyReturn);
+  this->earlyReturn = false;
+
+  // loop exit
+  codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
+
+  return 0;
+}
+
+std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+  auto loopCheck = codeGenerator.generateBlock(); // check
+  auto loopBody= codeGenerator.generateBlock(); // body
+  auto loopExit = codeGenerator.generateBlock(); // the rest of the program
+
+  this->loopBlocks.push_back(std::make_pair(loopCheck, loopExit));
+
+  // check conditional
+  codeGenerator.generateEnterBlock(loopCheck);
+  codeGenerator.setBuilderInsertionPoint(loopCheck);
+  auto condResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
+  auto condBool = codeGenerator.downcastToBool(condResult);
+  codeGenerator.generateCompAndJump(loopBody, loopExit, condBool);
+
+  // body of loop
+  codeGenerator.setBuilderInsertionPoint(loopBody);
+  walk(tree->getBody());
+  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
+  this->earlyReturn = false;
+
+  // loop exit
+  codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
+
+  return 0;
+}
+
+std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+  // check goes after the body
+  auto loopBody = codeGenerator.generateBlock();
+  auto loopCheck = codeGenerator.generateBlock();
+  auto loopExit = codeGenerator.generateBlock();
+
+  this->loopBlocks.push_back(std::make_pair(loopBody, loopExit));
+
+  // body of loop
+  codeGenerator.generateEnterBlock(loopBody);
+  codeGenerator.setBuilderInsertionPoint(loopBody);
+  walk(tree->getBody());
+  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
+  this->earlyReturn = false;
+
+  // conditional
+  codeGenerator.setBuilderInsertionPoint(loopCheck);
+  auto condResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
+  auto condBool = codeGenerator.downcastToBool(condResult);
+  codeGenerator.generateCompAndJump(loopBody, loopExit, condBool);
+
+  // loop exit
+  codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
+
+  return 0;
+}
+
+std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
+    if (this->loopBlocks.empty()) {
+        throw StatementError(tree->loc(), "Break statement outside of loop");
+    }
+
+    auto loopExit = this->loopBlocks.back().second;
+    codeGenerator.generateEnterBlock(loopExit);
+    this->earlyReturn = true;
+
+    return 0;
+}
+
+std::any BackendWalker::visitContinue(std::shared_ptr<ContinueNode> tree) {
+    if (this->loopBlocks.empty()) {
+        throw StatementError(tree->loc(), "Continue statement outside of loop");
+    }
+
+    auto loopBody = this->loopBlocks.back().first;
+    codeGenerator.generateEnterBlock(loopBody);
+    this->earlyReturn = true;
+
+    return 0;
+}
+
 std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
   if (tree->body) {
     // for now we don't proper return values, assume everything void
-    auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name, 
-        tree->orderedArgs.size(), 
-        true);
+    auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name,
+        tree->orderedArgs.size(),
+        false);
     walk(tree->body);
     codeGenerator.generateEndFunctionDefinition(block);
   }
@@ -166,8 +281,8 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
 std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
   if (tree->body) {
 
-    auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name, 
-        tree->orderedArgs.size(), 
+    auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name,
+        tree->orderedArgs.size(),
         false);
     walk(tree->body);
 

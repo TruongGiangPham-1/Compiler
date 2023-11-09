@@ -62,16 +62,21 @@ namespace gazprea {
         auto rightIndex = this->getTypeIndex(right->evaluatedType->getName());
         std::string resultTypeString = table[leftIndex][rightIndex];
         if (resultTypeString.empty()) {
-            throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
+            if (table == promotionTable) {
+                throw TypeError(t->loc(), "Cannot implicitly promote " + left->evaluatedType->getName() + " to " + right->evaluatedType->getName());
+            }
+            else {
+                throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
+            }
         }
 
         auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
 
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getName() << ", " << right->evaluatedType->getName() << "\n";
-                assert(resultType);
                 std::cout << "result: " <<  resultType->getName() << "\n";
         #endif
+        assert(resultType);
         return resultType;
     }
 
@@ -168,6 +173,41 @@ namespace gazprea {
             throw SymbolError(tree->loc(), "Unidentified Symbol referenced!");
         }
         tree->evaluatedType = tree->sym->typeSym;
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
+        walkChildren(tree);
+        auto rhsType = tree->getRvalue()->evaluatedType;
+        auto lhsCount = tree->getLvalue()->children.size();
+        auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
+
+        if (lhsCount == 1) {
+            if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
+                auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+                auto symbol = lvalue->sym;
+                if (symbol != nullptr and symbol->qualifier == QUALIFIER::CONST) {
+                    throw AssignError(tree->loc(), "Cannot assign to const");
+                }
+            }
+            // TODO else tupleIndex
+
+            if (rhsType != nullptr) {
+                if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
+                    return nullptr;
+                // TODO tuple handling and identity, null handling
+                if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
+                    auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+
+                    if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
+                        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
+                    else
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;
+                }
+                // TODO else tupleIndex
+            }
+        }
+        //TODO tuple unpack / assignment
         return nullptr;
     }
 }

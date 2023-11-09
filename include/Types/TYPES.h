@@ -15,4 +15,5 @@ enum TYPE{
     VECTOR,
     MATRIX,
     TUPLE,
+    NONE
 };

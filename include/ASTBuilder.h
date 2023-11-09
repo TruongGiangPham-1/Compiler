@@ -16,6 +16,7 @@
 #include "ASTNode/Expr/Vector/GeneratorNode.h"
 #include "ASTNode/Expr/Vector/FilterNode.h"
 #include "ASTNode/Expr/Unary/UnaryExpr.h"
+#include "ASTNode/Expr/ExprListNode.h"
 
 #include "ASTNode/Loop/LoopNode.h"
 #include "ASTNode/Loop/PredicatedLoopNode.h"
@@ -57,6 +58,7 @@ namespace gazprea {
         std::any visitVardecl(GazpreaParser::VardeclContext *ctx) override;
         std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
         std::any visitAssign(GazpreaParser::AssignContext *ctx) override;
+        std::any visitLvalue(GazpreaParser::LvalueContext *ctx) override;
 
         // typing
         std::any visitBaseType(GazpreaParser::BaseTypeContext *ctx) override;

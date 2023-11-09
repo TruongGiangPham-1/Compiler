@@ -37,7 +37,7 @@
 #include "Operands/BINOP.h"
 #include "BackEnd.h"
 
-#define DEBUG
+//#define DEBUG
 
 /**
  *  Set up main function
@@ -50,7 +50,8 @@ void BackEnd::init() {
   auto intType = builder->getI32Type();
   auto mainType = mlir::LLVM::LLVMFunctionType::get(intType, {}, false);
 
-  mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
+  auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
+  functionStack.push_back(mainFunc);
 
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
@@ -64,10 +65,10 @@ void BackEnd::generate() {
   std::cout << "CODEGEN FINISHED, ending main function and outputting"
             << std::endl;
 #endif
-
+  std::vector<mlir::Value> mainArgs;
+  this->generateCallNamed("main", mainArgs);
 
   auto intType = builder->getI32Type();
-
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
   builder->create<mlir::LLVM::ReturnOp>(loc, zero);
@@ -75,6 +76,7 @@ void BackEnd::generate() {
   if (mlir::failed(mlir::verify(
           module))) { // trying to verify will complain about some issue that
                       // did not exist when I dump it in visitLoop()
+                      module->dump();
     module.emitError("module failed to verify");
   }
   int result = this->writeLLVMIR();
@@ -95,7 +97,7 @@ int BackEnd::writeLLVMIR() {
   }
 
   llvm::verifyModule(*llvmModule, &llvm::errs());
-
+#ifdef DEBUG
   std::cout << "==============================================================="
                "=================\n";
   std::cout << "LLVM IR\n";
@@ -103,7 +105,7 @@ int BackEnd::writeLLVMIR() {
   llvmModule->dump();
   std::cout << "==============================================================="
                "=================\n";
-
+#endif
   // print LLVM IR to file
   llvm::raw_os_ostream output(this->out);
   output << *llvmModule;
@@ -163,21 +165,15 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intType, mlir::LLVM::LLVMPointerType::get(commonTypeAddr)});
   auto tupleTypeAddr = mlir::LLVM::LLVMPointerType::get(tupleType);
 
-
   auto printType = mlir::LLVM::LLVMFunctionType::get(
       voidType, {commonTypeAddr});
-
-  auto promoteCommonTypeFuncType = mlir::LLVM::LLVMFunctionType::get(
-      commonTypeAddr, {commonTypeAddr, commonTypeAddr});
-
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
   auto allocateTupleType = mlir::LLVM::LLVMFunctionType::get(tupleTypeAddr, {intType});
   auto appendTupleType = mlir::LLVM::LLVMFunctionType::get(intType, {tupleTypeAddr, commonTypeAddr});
-
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
-
+  auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
@@ -187,8 +183,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                           commonUnaryopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "printCommonType",
                                             printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "promotion",
-                                            promoteCommonTypeFuncType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+                                          commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateTuple",
@@ -221,11 +217,11 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   return result;
 }
 
-mlir::Value BackEnd::promotion(mlir::Value left, mlir::Value right) {
+mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
 
-  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, this->generateInteger(toType)})).getResult();
 
   // we create a new object, have to tag it
   std::string newLabel =
@@ -256,7 +252,7 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
 
 mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
   mlir::ArrayRef mlirArguments = arguments;
-  mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(signature);
+  mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("__"+signature);
 
   return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 }
@@ -396,17 +392,22 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
 
     auto functionType = mlir::LLVM::LLVMFunctionType::get(returnType, translatedList, false);
 
-    builder->setInsertionPointToStart(module.getBody());
 
-    mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc, signature, functionType, ::mlir::LLVM::Linkage::Internal);
+    builder->setInsertionPointToStart(module.getBody());
+    // sneaky naming trick
+    mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc,"__"+signature, functionType, ::mlir::LLVM::Linkage::External, true);
+    functionStack.push_back(function);
+
     mlir::Block *entry = function.addEntryBlock();
     builder->setInsertionPointToStart(entry);
+
 
     return currentBlock;
 }
 
 void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
     builder->setInsertionPointToEnd(returnBlock);
+    functionStack.pop_back();
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {
@@ -521,7 +522,7 @@ void BackEnd::generateAssignment(std::string varName, mlir::Value value) {
   mlir::LLVM::GlobalOp global;
 
   if (!(global = module.lookupSymbol<mlir::LLVM::GlobalOp>(varName))) {
-    llvm::errs() << "Referencing undefined variable";
+    llvm::errs() << "Referencing undefined variable " << varName;
     return;
   }
 
@@ -585,7 +586,8 @@ void BackEnd::generateEnterBlock(mlir::Block *block) {
 }
 
 mlir::Block *BackEnd::generateBlock() {
-  mlir::Block *newBlock = mainFunc.addBlock();
+  auto currFunc = functionStack.back();
+  mlir::Block *newBlock = currFunc.addBlock();
   return newBlock;
 }
 
@@ -596,6 +598,24 @@ void BackEnd::generateCompAndJump(mlir::Block *trueBlock,
                                   mlir::Block *falseBlock, mlir::Value cmpVal) {
   // jump depending on the value of cmpVal
   builder->create<mlir::LLVM::CondBrOp>(loc, cmpVal, trueBlock, falseBlock);
+}
+
+/*
+ * Unconditionally jumps to block if `ifJump` is true
+ * this is useful for ending a loop or if statement body
+ *
+ * This is because you cannot unconditionally jump to the endBlock
+ * if there is a break/continue statement in the body, as then there might
+ * be two unconditional jumps in a row
+ * This breaks some MLIR rule about basic blocks so we will get an error
+ *
+ * also returns the new boolean value of ifJump
+ */
+bool BackEnd::conditionalJumpToBlock(mlir::Block *block, bool ifJump) {
+    if (ifJump) {
+        this->generateEnterBlock(block);
+    }
+    return false;
 }
 
 void BackEnd::setBuilderInsertionPoint(
