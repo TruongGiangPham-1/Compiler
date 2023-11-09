@@ -7,6 +7,7 @@
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
+#include "ASTNode/Stream/StreamIn.h"
 #include "ASTNode/Expr/ExprListNode.h"
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
@@ -43,6 +44,7 @@ namespace gazprea {
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
         virtual std::any visitStreamOut(std::shared_ptr<StreamOut> tree);
+        virtual std::any visitStreamIn(std::shared_ptr<StreamIn> tree);
 
         // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
