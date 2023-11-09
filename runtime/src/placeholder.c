@@ -51,8 +51,7 @@ void printType(commonType *type, bool nl) {
       printf("%d", *(int*)type->value);
       break;
     case CHAR:
-      //printf("%c", *(char*)type->value);
-      printf("%c", '\n');
+      printf("%c", *(char*)type->value);
       break;
     case BOOL:
       printf("%s", *(bool*)type->value ? "true" : "false");
