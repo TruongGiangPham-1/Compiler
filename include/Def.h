@@ -21,8 +21,7 @@ namespace gazprea {
         int getNextId();
 
         Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID);
-        void defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
-                                            std::shared_ptr<Type> retType ,int isFunc); //
+
 
         std::shared_ptr<int> varID;
 
