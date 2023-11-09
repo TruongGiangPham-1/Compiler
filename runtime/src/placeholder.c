@@ -21,7 +21,7 @@ bool isCOMP(enum BINOP op) {
     return false;
   }
 }
-#define DEBUGTUPLE
+//#define DEBUGTUPLE
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 typedef struct vecStruct {
