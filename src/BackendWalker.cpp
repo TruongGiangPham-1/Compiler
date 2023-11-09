@@ -1,8 +1,14 @@
 #include "BackendWalker.h"
+#include "ASTNode/Expr/CastNode.h"
+#include "Types/TYPES.h"
 #include "mlir/IR/Value.h"
 #include <stdexcept>
+//#define DEBUG;
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
+#ifdef DEBUG
+  std::cout << "CODE GENERATION\n";
+#endif 
   codeGenerator.init();
   walkChildren(tree);
   //codeGenerator.deallocateObjects();
@@ -77,6 +83,12 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
 }
 
 // Expr/Binary
+std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
+  auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+  auto type = tree->getType()->typeEnum;
+
+  return codeGenerator.cast(val, type);
+}
 
 std::any BackendWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
   auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));

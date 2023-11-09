@@ -85,6 +85,7 @@ namespace gazprea {
         std::any visitIdentity(GazpreaParser::IdentityContext *ctx) override;
         std::any visitNull(GazpreaParser::NullContext *ctx) override;
         std::any visitIndex(GazpreaParser::IndexContext *ctx) override;
+        std::any visitCast(GazpreaParser::CastContext *ctx) override;
 
         // functions
         std::any visitProcedure(GazpreaParser::ProcedureContext *ctx) override;

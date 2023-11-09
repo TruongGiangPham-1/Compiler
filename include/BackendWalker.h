@@ -32,6 +32,7 @@ private:
   std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+  std::any visitCast(std::shared_ptr<CastNode> tree) override;
 
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
@@ -40,11 +41,11 @@ private:
 
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
-    std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
-    std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
-    std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
-    std::any visitBreak(std::shared_ptr<BreakNode> tree);
-    std::any visitContinue(std::shared_ptr<ContinueNode> tree);
+  std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
+  std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
+  std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
+  std::any visitBreak(std::shared_ptr<BreakNode> tree) override;
+  std::any visitContinue(std::shared_ptr<ContinueNode> tree) override;
 
   std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
 

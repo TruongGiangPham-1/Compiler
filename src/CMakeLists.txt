@@ -6,7 +6,6 @@ set(
         ../include/Symbol.h
         ../include/Type.h
         ../include/Scope.h
-        ../include/BuiltInTypeSymbol.h
         BaseScope.cpp
         ../include/BaseScope.h
         ASTNode/ASTNode.cpp
