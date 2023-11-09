@@ -171,12 +171,15 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
   auto allocateTupleType = mlir::LLVM::LLVMFunctionType::get(tupleTypeAddr, {intType});
   auto appendTupleType = mlir::LLVM::LLVMFunctionType::get(intType, {tupleTypeAddr, commonTypeAddr});
+  auto indexCommonType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
   auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "indexCommonType",
+                                            indexCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeBINOP",
                                             commonBinopType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeUNARYOP",
@@ -215,6 +218,13 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
   this->allocatedObjects++;
 
   return result;
+}
+
+mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("indexCommonType");
+
+  return builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({indexee, this->generateInteger(indexor)})).getResult();
 }
 
 mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
