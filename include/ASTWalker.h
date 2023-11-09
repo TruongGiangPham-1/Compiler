@@ -7,6 +7,7 @@
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
+#include "ASTNode/Expr/ExprListNode.h"
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
@@ -48,6 +49,7 @@ namespace gazprea {
         virtual std::any visitTypedef(std::shared_ptr<TypeDefNode> tree);
 
         // === EXPRESSION AST NODES ===
+        virtual std::any visitExpressionList(std::shared_ptr<ExprListNode> tree);
         virtual std::any visitID(std::shared_ptr<IDNode> tree);
         virtual std::any visitInt(std::shared_ptr<IntNode> tree);
         virtual std::any visitReal(std::shared_ptr<RealNode> tree);

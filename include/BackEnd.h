@@ -75,6 +75,7 @@ public:
       mlir::Block *block); // set insertion point for non shared ptr
   void generateEnterBlock(
       mlir::Block *block); // set insertion point for non shared Ptr
+  bool conditionalJumpToBlock(mlir::Block *block, bool ifJump); // (statically) conditionally jump to a block
   mlir::Block *generateLoopBegin();
   mlir::Block *generateLoopMiddle(mlir::Value addr);
   mlir::Block *generateBlock();
@@ -101,7 +102,9 @@ public:
   void generateUpdateDomainVar(mlir::Value domainVecAddr, mlir::Value indexAddr,
                                std::string domainVar);
   // --------------------------------------------------
-  mlir::LLVM::LLVMFuncOp mainFunc;
+  // global scope is functionStack[0]
+  // current scope is functionStack.back()
+  std::vector<mlir::LLVM::LLVMFuncOp> functionStack;
   mlir::Block *mainEntry;
 
 protected:

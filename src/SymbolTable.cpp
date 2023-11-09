@@ -12,7 +12,7 @@
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTNode/Type/StringTypeNode.h"
 #include "ASTNode/Type/TupleTypeNode.h"
-
+//#define DEBUG
 std::shared_ptr<Scope> SymbolTable::enterScope(std::string& name, const std::shared_ptr<Scope>& enclosingScope) {
     std::shared_ptr<Scope> newScope = std::make_shared<LocalScope>(name, enclosingScope);
     scopes.push_back(newScope);
@@ -50,7 +50,9 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         // TODO: FORGOT VECTOR IS NOT IN PART 1,
         // resolve innertyp
         auto typeN = std::dynamic_pointer_cast<VectorTypeNode>(typeNode);
+#ifdef DEBUG
         std::cout << "Resolve Type: " << typeN->getTypeName() << std::endl;
+#endif
         auto innerTypeN = std::dynamic_pointer_cast<TypeNode>(typeN->innerType);
         assert(typeN);
         auto innerTypeRes = globalScope->resolveType(innerTypeN->getTypeName());

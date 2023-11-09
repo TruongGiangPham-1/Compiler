@@ -3,7 +3,7 @@
 // NOTE: ALL THE DEF PASS WILL LOOK FOR GLOBAL DECLARATION / FORWARD DECLARATION
 //
 #include "../include/Def.h"
-
+//#define DEBUG
 namespace gazprea {
 Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symtab(symTab), varID(mlirID) {
 
@@ -70,7 +70,9 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
                                                                                      fname, retType, symtab->globalScope, tree->loc());
 
         currentScope->define(procSym);  // define methd symbol in global
+#ifdef DEBUG
         std::cout << "defined method " << procSym->getName() << " in scope " << currentScope->getScopeName() << "\n";
+#endif
         currentScope = symtab->enterScope( procSym);
 
         // define args
@@ -82,10 +84,11 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
             auto res= symtab->resolveTypeUser(argNode->type);
             if (res == nullptr) throw TypeError(tree->loc(), "unknown type ");
             argNode->idSym->typeSym = res;
+#ifdef DEBUG
             std::cout << "in line " << tree->loc()
                       << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName()
                       << " as type " << argNode->idSym->typeSym->getName() <<"\n";
-
+#endif
             currentScope->define(argNode->idSym);  // define arg in curren scope
             argNode->scope = currentScope;  // set scope to function scope
         }
@@ -111,6 +114,7 @@ std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
     currentScope = symtab->exitScope(currentScope);
     return 0;
 }
+
 
 std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     if (tree->body || tree->expr) {  // we skip all function definition in def pass

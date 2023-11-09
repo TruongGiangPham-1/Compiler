@@ -4,7 +4,7 @@
 #include <memory>
 
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
@@ -327,15 +327,24 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
-        std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->getText());
-        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), identifierSymbol);
+    std::any ASTBuilder::visitLvalue(GazpreaParser::LvalueContext *ctx) {
+        std::shared_ptr<ExprListNode> t = std::make_shared<ExprListNode>(ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            t->addChild(visit(expr));
+        }
 
-        t->addChild(visit(ctx->lvalue));
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
+        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->lvalue()));
         t->addChild(visit(ctx->rvalue));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
+
 
     std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
         std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
@@ -360,7 +369,9 @@ namespace gazprea {
         } else if (ctx->RESERVED_VAR()) {
             return QUALIFIER::VAR;
         } else {
+#ifdef DEBUG
             std::cout << "ERROR: unknown qualifier" << ctx->getText() << std::endl;
+#endif
             throw std::runtime_error("unknown qualifier " + ctx->getText());
         }
     }
@@ -467,7 +478,6 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
 
-
         t->addChild(visit(ctx->block()));
 
         return t;
@@ -511,8 +521,8 @@ namespace gazprea {
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure definition." << std::endl;
+        std::cout << ctx->ID()->getText();
 #endif
-      std:: cout << ctx->ID()->getText();
       auto procSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto procedureNode = std::make_shared<ProcedureNode>(ctx->getStart()->getLine(), procSymbol);
 

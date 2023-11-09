@@ -37,7 +37,7 @@
 #include "Operands/BINOP.h"
 #include "BackEnd.h"
 
-#define DEBUG
+//#define DEBUG
 
 /**
  *  Set up main function
@@ -50,7 +50,8 @@ void BackEnd::init() {
   auto intType = builder->getI32Type();
   auto mainType = mlir::LLVM::LLVMFunctionType::get(intType, {}, false);
 
-  mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
+  auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
+  functionStack.push_back(mainFunc);
 
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
@@ -75,6 +76,7 @@ void BackEnd::generate() {
   if (mlir::failed(mlir::verify(
           module))) { // trying to verify will complain about some issue that
                       // did not exist when I dump it in visitLoop()
+                      module->dump();
     module.emitError("module failed to verify");
   }
   int result = this->writeLLVMIR();
@@ -95,7 +97,7 @@ int BackEnd::writeLLVMIR() {
   }
 
   llvm::verifyModule(*llvmModule, &llvm::errs());
-
+#ifdef DEBUG
   std::cout << "==============================================================="
                "=================\n";
   std::cout << "LLVM IR\n";
@@ -103,7 +105,7 @@ int BackEnd::writeLLVMIR() {
   llvmModule->dump();
   std::cout << "==============================================================="
                "=================\n";
-
+#endif
   // print LLVM IR to file
   llvm::raw_os_ostream output(this->out);
   output << *llvmModule;
@@ -406,15 +408,18 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
     builder->setInsertionPointToStart(module.getBody());
     // sneaky naming trick
     mlir::LLVM::LLVMFuncOp function = builder->create<mlir::LLVM::LLVMFuncOp>(loc,"__"+signature, functionType, ::mlir::LLVM::Linkage::External, true);
+    functionStack.push_back(function);
 
     mlir::Block *entry = function.addEntryBlock();
     builder->setInsertionPointToStart(entry);
+
 
     return currentBlock;
 }
 
 void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
     builder->setInsertionPointToEnd(returnBlock);
+    functionStack.pop_back();
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {
@@ -593,7 +598,8 @@ void BackEnd::generateEnterBlock(mlir::Block *block) {
 }
 
 mlir::Block *BackEnd::generateBlock() {
-  mlir::Block *newBlock = mainFunc.addBlock();
+  auto currFunc = functionStack.back();
+  mlir::Block *newBlock = currFunc.addBlock();
   return newBlock;
 }
 
@@ -604,6 +610,24 @@ void BackEnd::generateCompAndJump(mlir::Block *trueBlock,
                                   mlir::Block *falseBlock, mlir::Value cmpVal) {
   // jump depending on the value of cmpVal
   builder->create<mlir::LLVM::CondBrOp>(loc, cmpVal, trueBlock, falseBlock);
+}
+
+/*
+ * Unconditionally jumps to block if `ifJump` is true
+ * this is useful for ending a loop or if statement body
+ *
+ * This is because you cannot unconditionally jump to the endBlock
+ * if there is a break/continue statement in the body, as then there might
+ * be two unconditional jumps in a row
+ * This breaks some MLIR rule about basic blocks so we will get an error
+ *
+ * also returns the new boolean value of ifJump
+ */
+bool BackEnd::conditionalJumpToBlock(mlir::Block *block, bool ifJump) {
+    if (ifJump) {
+        this->generateEnterBlock(block);
+    }
+    return false;
 }
 
 void BackEnd::setBuilderInsertionPoint(
