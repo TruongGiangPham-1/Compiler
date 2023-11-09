@@ -119,6 +119,24 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
+        for (auto expr: tree->val) {
+            walk(expr);
+        }
+        auto size = tree->val.size();
+
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>("_");
+        auto tupleType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("tuple"));
+
+        for (auto tupleVal : tree->val) {
+            auto childType = tupleVal->evaluatedType;
+            tupleType->tupleChildType.push_back(childType);
+        }
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(tupleType);
+        return nullptr;
+    }
+
+
     std::any TypeWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         walkChildren(tree);
         auto lhsType = tree->getLHS()->evaluatedType;
