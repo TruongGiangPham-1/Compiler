@@ -101,8 +101,6 @@ set(
         ../include/ASTNode/BreakNode.h
         ASTNode/ContinueNode.cpp
         ../include/ASTNode/ContinueNode.h
-        ../include/Swap.h
-        Swap.cpp
 )
 
 # Build our executable from the source files.

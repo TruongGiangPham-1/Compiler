@@ -14,7 +14,6 @@
 #include "BackendWalker.h"
 #include "Def.h"
 #include "Ref.h"
-#include "Swap.h"
 #include "../include/customError/ErrorListener.h"
 
 #include <iostream>
@@ -56,9 +55,7 @@ int main(int argc, char **argv) {
 
   std::cout << "\n\n=== DEF PASS\n";
 #endif
-  //std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>> prototypMap;
-  //gazprea::Swap swap(prototypMap);
-  //swap.walk(ast);
+
 
   int mlirID = 1;
   std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
