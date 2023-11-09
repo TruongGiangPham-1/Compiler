@@ -592,6 +592,7 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     // we do a little truth table analysis
     return !(!l & r);
     case AND:
@@ -617,6 +618,7 @@ int intBINOP(int l, int r, enum BINOP op) {
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l,r);
     case AND:
     return l & r;
@@ -664,6 +666,7 @@ float realBINOP(float l, float r, enum BINOP op) {
     case REM:
     return fmod(l, r);
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l, r);
     case AND:
       {
@@ -751,6 +754,7 @@ char charBINOP(char l, char r, enum BINOP op) {
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l,r);
     case AND:
     return l & r;
