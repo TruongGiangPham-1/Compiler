@@ -6,9 +6,6 @@
 
 class BackendWalker : private gazprea::ASTWalker {
 private:
-  bool collectingArguments = false;
-  // hack
-  std::vector<std::string> argumentLabels;
   BackEnd codeGenerator;
 
   // if we are inside a loop, we want to track the start and end blocks

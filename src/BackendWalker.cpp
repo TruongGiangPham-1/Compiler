@@ -34,9 +34,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 
   auto typenode = std::dynamic_pointer_cast<TypeNode>(tree->getTypeNode());
 
-  auto castedVal = codeGenerator.cast(val, typenode->sym->type);
-
-  codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
+  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
 
