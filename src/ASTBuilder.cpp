@@ -349,7 +349,7 @@ namespace gazprea {
         if (ctx->qualifier()) {
             t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
         } else {
-            t->qualifier = QUALIFIER::NONE;
+            t->qualifier = QUALIFIER::VAR;
         }
         t->addChild(visit(ctx->type()));
         if (ctx->expression()) {
@@ -588,7 +588,7 @@ namespace gazprea {
       if (ctx->qualifier()) {
           argNode->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
       } else {
-          argNode->qualifier = QUALIFIER::NONE;
+          argNode->qualifier = QUALIFIER::VAR;
       }
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
