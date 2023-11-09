@@ -25,6 +25,10 @@ namespace gazprea {
 
 
     std::any Ref::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        /*
+         * whenever we see a functin prototype, we add them to this map.
+         * so that in if the definition is lower in the file than the prototype, we swap!
+         */
         if (tree->body == nullptr && tree->expr == nullptr) {  // this is a function prototype
             if (this->funcProtypeList.find(tree->funcNameSym->getName()) == this->funcProtypeList.end()) {
                 // first time seeing this prototype in the file
@@ -77,6 +81,9 @@ namespace gazprea {
                 }
 
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+                // IMPORTANT: update the line number of the method symbol to be one highest
+                funcSymCast->line = tree->loc() < funcSymCast->line ? tree->loc(): funcSymCast->line;
+                //
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
                 defineForwardFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
@@ -175,6 +182,10 @@ namespace gazprea {
     }
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+        /*
+         * whenever we see a prototype prototype, we add them to this map.
+         * so that in if the definition is lower in the file than the prototype, we swap!
+         */
         if (tree->body == nullptr) {
             if (this->procProtypeList.find(tree->nameSym->getName()) == this->procProtypeList.end()) {
                 // first time seeing this prototype in the file
@@ -209,6 +220,7 @@ namespace gazprea {
             currentScope = symtab->exitScope(currentScope);  // pop method scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
         } else {
+            // case there is a forrward declaration
             if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
                 // there was a forward declaration(method prototype)
                 auto procSymCast = std::dynamic_pointer_cast<ProcedureSymbol>(procSym);
@@ -221,7 +233,9 @@ namespace gazprea {
                     retType = symtab->resolveTypeUser(tree->getRetTypeNode());
                     if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
                 }
-
+                // IMPORTANT: update the line number of the method symbol to be one highest
+                procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
+                //
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
 
@@ -238,7 +252,9 @@ namespace gazprea {
                 currentScope = symtab->exitScope(currentScope);  // pop method scope
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
 
-                // swap here?  // swap if line number is greater than prototypes
+                // swap here?  // swap if line number is greater than prototypes =======================================
+                auto find = this->procProtypeList.find(procSym->getName());
+                if (find == nullptr) return 0;  // this definition is higher in the file then forward declaration so we dont need to swap
                 auto protoType = this->procProtypeList.find(procSym->getName())->second;
                 if (protoType->loc() < tree->loc()) {
 #ifdef DEBUG
