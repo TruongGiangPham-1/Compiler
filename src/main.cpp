@@ -20,7 +20,7 @@
 #include <iostream>
 #include <fstream>
 
-//#define DEBUG
+#define DEBUG
 int main(int argc, char **argv) {
   if (argc < 3) {
     std::cout << "Missing required argument.\n"
@@ -56,9 +56,9 @@ int main(int argc, char **argv) {
 
   std::cout << "\n\n=== DEF PASS\n";
 #endif
-  std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>> prototypMap;
-  gazprea::Swap swap(prototypMap);
-  swap.walk(ast);
+  //std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>> prototypMap;
+  //gazprea::Swap swap(prototypMap);
+  //swap.walk(ast);
 
   int mlirID = 1;
   std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
@@ -77,8 +77,14 @@ int main(int argc, char **argv) {
   gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
   typeWalker.walk(ast);
 
+#ifdef DEBUG
+    std::cout << "\n\n=== BACKEND PASS\n";
+#endif
   BackendWalker backend(out);
   backend.generateCode(ast);
+#ifdef DEBUG
+    std::cout << "\n\n=== BACKEND END\n";
+#endif
 
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);

@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-//#define DEBUG
+#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -106,7 +106,16 @@ namespace gazprea {
 
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-        if (tree->body == nullptr) return 0;  // forward declaration node, we skip
+        if (tree->body == nullptr){
+            if (this->procProtypeList.find(tree->nameSym->getName()) == this->procProtypeList.end()) {
+                // first time seeing this prototype in the file
+                this->procProtypeList.emplace(tree->nameSym->getName(), tree);
+            } else {
+                throw SymbolError(tree->loc(), "redeclaration of prootype method");
+            }
+            return 0;  // forward declaration node, we skip
+        }
+
 
         auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
         if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
@@ -159,6 +168,7 @@ namespace gazprea {
 
                     auto argNodeDefType = symtab->resolveTypeUser(argNodeDef->type);
                     auto argNodeFwType = symtab->resolveTypeUser(argNodeFw->type);
+                    // TYPECHECK ---------------------------------------
                     if (argNodeDefType == nullptr  || argNodeFwType == nullptr) {  // case: we could not resolve either
                         throw TypeError(tree->loc(), "cannot resolve type");
                     }
@@ -171,8 +181,8 @@ namespace gazprea {
                                 throw TypeError(tree->loc(), "type mismatch between tuples");
                             }
                         }
-
                     }
+                    // TYPECHECK ---------------------------------------
                     // add arguments to the methdd scope  and walk tree
                     // define mlirname
                     index ++;
@@ -198,6 +208,19 @@ namespace gazprea {
                 currentScope = symtab->exitScope(currentScope);  // pop local scope
                 currentScope = symtab->exitScope(currentScope);  // pop method scope
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+
+                // swap here?  // swap if line number is greater than prototypes
+                auto protoType = this->procProtypeList.find(procSym->getName())->second;
+                if (protoType->loc() < tree->loc()) {
+                    std::cout << "swapping\n";
+                    // swap
+                    auto tempArg = protoType->orderedArgs;
+                    protoType->orderedArgs = tree->orderedArgs;
+                    tree->orderedArgs = tempArg;
+                    protoType->body = tree->body;
+                    tree->body = nullptr;
+                }
+
             } else {
                 throw SymbolError(tree->loc(), "procedure same name as another identifier in the global scope");
             }
@@ -336,35 +359,52 @@ namespace gazprea {
         //currentScope = symtab->exitScope(currentScope);
     }
 
-    /*
-    std::any Ref::visitFunction_call(std::shared_ptr<FunctionCallNode> tree) {
-        std::shared_ptr<Symbol> sym;
-        if (tree->functype == FUNCTYPE::FUNC_NORMAL) {
-            sym = currentScope->resolve(tree->funcCallName->getName());
-            assert(sym);
-            std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
-            if (cast) {
-                // valid
-                // check if it is called before declaration/definition
-                if (tree->loc() < (size_t)cast->line) {
+    void Ref::defineFowardFunctionAndProcedureArgs(int loc, ) {
+        assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
 
-                   throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
+        if (tree->orderedArgs.size() != procSymCast->forwardDeclArgs.size()) throw DefinitionError(tree->loc(), "argument mismatch between forward decl and definition");
+        int index = 0;  // argument index for stan
+        for (int i = 0; i < tree->orderedArgs.size(); i++) {
+            auto argNodeDef = std::dynamic_pointer_cast<ArgNode>(tree->orderedArgs[i]);  // argnode[i] for this method definiton
+            auto argNodeFw = std::dynamic_pointer_cast<ArgNode>(procSymCast->forwardDeclArgs[i]);  // argnode[i] for forward decl
 
-                } else {
+            assert(argNodeDef->type); assert(argNodeFw->type);
 
-                    std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
-
-                }
-            } else {
-                // function call overshaddowed by a non function declaration above || function dont exist
-                std::string errMSg = sym->getName() +  " is not a function to be called. It is undefined or overshadowed"
-                                                       "by another declaration above\n";
-                throw SymbolError(tree->loc(), errMSg);
+            auto argNodeDefType = symtab->resolveTypeUser(argNodeDef->type);
+            auto argNodeFwType = symtab->resolveTypeUser(argNodeFw->type);
+            // TYPECHECK ---------------------------------------
+            if (argNodeDefType == nullptr  || argNodeFwType == nullptr) {  // case: we could not resolve either
+                throw TypeError(tree->loc(), "cannot resolve type");
             }
+            if (argNodeDefType->baseTypeEnum != argNodeFwType->baseTypeEnum){  // TODO: tuple check
+                throw TypeError(tree->loc(), "type mismatch between forward decl and definitino");
+            } else if (argNodeFwType->baseTypeEnum == TYPE::TUPLE && argNodeDefType->baseTypeEnum == TYPE::TUPLE) {
+                // iterate thru each tuple child and compare type
+                for (int j = 0;  j < argNodeFwType->tupleChildType.size(); j++) {
+                    if (argNodeFwType->tupleChildType[i]->baseTypeEnum != argNodeDefType->tupleChildType[i]->baseTypeEnum) {
+                        throw TypeError(tree->loc(), "type mismatch between tuples");
+                    }
+                }
+            }
+            // TYPECHECK ---------------------------------------
+            // add arguments to the methdd scope  and walk tree
+            // define mlirname
+            index ++;
+            argNodeDef->idSym->index = index;
+            argNodeDef->idSym->typeSym = argNodeDefType;
+            argNodeDef->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+            argNodeDef->scope = currentScope;  // set scope to function scope
+            std::cout << "in line " << tree->loc()
+                      << " argument = " << argNodeDef->idSym->getName() << " defined in " << currentScope->getScopeName() <<
+                      " as Type " << argNodeDef->idSym->typeSym->getName() <<" as mlirname=" << argNodeDef->idSym->mlirName  <<"\n";
+
+            currentScope->define(argNodeDef->idSym);  // define arg in curren scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope->getEnclosingScope()));
         }
-        return 0;
     }
-    */
+
+
     std::any Ref::visitConditional(std::shared_ptr <ConditionalNode> tree) {
         return 0;
     }

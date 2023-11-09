@@ -18,12 +18,18 @@
 namespace gazprea {
     class Ref: public ASTWalker {
     public:
+        std::unordered_map<std::string, std::shared_ptr<FunctionNode>> funcProtypeList;  // map forwad declared function prototype  for swapping
+        std::unordered_map<std::string, std::shared_ptr<ProcedureNode>> procProtypeList;  // map forwad declared function prototype for swapping
+
+
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
         int getNextId();
         void defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
                                           std::shared_ptr<Type> retType ,int isFunc); //
+        void defineForwardFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
+                                            std::shared_ptr<Type> retType ,int isFunc); //
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;

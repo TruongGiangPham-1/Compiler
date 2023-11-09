@@ -17,11 +17,7 @@ namespace gazprea {
     public:
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
-        std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>>prototype;
 
-        std::unordered_map<std::string, std::shared_ptr<ASTNode>> forwardDeclFuncBody;
-        std::unordered_map<std::string, std::shared_ptr<ASTNode>> forwardDeclProcBody;
-        void setPrototype(std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>>&prototype);
         int getNextId();
 
         Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID);
