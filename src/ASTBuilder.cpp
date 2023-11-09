@@ -1,6 +1,8 @@
 #include "ASTBuilder.h"
 #include "ASTNode/ArgNode.h"
+#include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Method/FunctionNode.h"
+#include "ASTNode/Type/TypeNode.h"
 #include <memory>
 
 
@@ -30,6 +32,20 @@ namespace gazprea {
         std::shared_ptr<ASTNode> t = std::make_shared<TypeDefNode>(ctx->getStart()->getLine(), sym);
 
         t->addChild(visit(ctx->type()));
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitCast(GazpreaParser::CastContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visit Typecast" << std::endl;
+#endif
+        std::shared_ptr<CastNode> t = std::make_shared<CastNode>(ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> toType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+        std::shared_ptr<ASTNode> expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
+        
+        t->addChild(toType);
+        t->addChild(expr);
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -111,7 +127,7 @@ namespace gazprea {
     }
 
     // STREAMS
-    std::any ASTBuilder::visitStream(GazpreaParser::StreamContext *ctx) {
+    std::any ASTBuilder::visitStreamOut(GazpreaParser::StreamOutContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitOutputStream" << std::endl;
 #endif
@@ -119,7 +135,18 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expression()));
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        return t;
+    }
+
+    std::any ASTBuilder::visitStreamIn(GazpreaParser::StreamInContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitInputStream" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<StreamIn>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
@@ -201,10 +228,20 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        // TODO. fix the index at 1.
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+        if (charContent[0] == '\\') {
+            auto escapedChar = CharNode::parseEscape(charContent[1]);
+            if (escapedChar.has_value()) {
+                auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), escapedChar.value());
+                return std::dynamic_pointer_cast<ASTNode>(t);
+            } else {
+                throw SyntaxError(ctx->getStart()->getLine(), "invalid escape sequence in character literal " + ctx->getText());
+            }
+        } else {
+            // normal char
+            auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
+            return std::dynamic_pointer_cast<ASTNode>(t);
+        }
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
@@ -317,15 +354,24 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
-        std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->getText());
-        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine(), identifierSymbol);
+    std::any ASTBuilder::visitLvalue(GazpreaParser::LvalueContext *ctx) {
+        std::shared_ptr<ExprListNode> t = std::make_shared<ExprListNode>(ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            t->addChild(visit(expr));
+        }
 
-        t->addChild(visit(ctx->lvalue));
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitAssign(GazpreaParser::AssignContext *ctx) {
+        std::shared_ptr<AssignNode> t = std::make_shared<AssignNode>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->lvalue()));
         t->addChild(visit(ctx->rvalue));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
+
 
     std::any ASTBuilder::visitVardecl(GazpreaParser::VardeclContext *ctx) {
         std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
@@ -333,7 +379,7 @@ namespace gazprea {
         if (ctx->qualifier()) {
             t->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
         } else {
-            t->qualifier = QUALIFIER::NONE;
+            t->qualifier = QUALIFIER::VAR;
         }
         t->addChild(visit(ctx->type()));
         if (ctx->expression()) {
@@ -459,7 +505,6 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
 
-
         t->addChild(visit(ctx->block()));
 
         return t;
@@ -503,8 +548,8 @@ namespace gazprea {
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure definition." << std::endl;
+        std::cout << ctx->ID()->getText();
 #endif
-      std:: cout << ctx->ID()->getText();
       auto procSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto procedureNode = std::make_shared<ProcedureNode>(ctx->getStart()->getLine(), procSymbol);
 
@@ -569,7 +614,7 @@ namespace gazprea {
       if (ctx->qualifier()) {
           argNode->qualifier = std::any_cast<QUALIFIER>(visit(ctx->qualifier()));
       } else {
-          argNode->qualifier = QUALIFIER::NONE;
+          argNode->qualifier = QUALIFIER::CONST;
       }
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);

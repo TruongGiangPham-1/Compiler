@@ -7,9 +7,18 @@
 class BackendWalker : private gazprea::ASTWalker {
 private:
   BackEnd codeGenerator;
+
+  // if we are inside a loop, we want to track the start and end blocks
+  // this is so we can know where to jump to when we encounter a break or continue
+  std::vector<std::pair<mlir::Block *, mlir::Block *>> loopBlocks;
+  // if we encounter a break, we have an early return
+  // this boolean is true when we are inside a loop and we encounter a break
+  bool earlyReturn = false;
+
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
-  std::any visitPrint(std::shared_ptr<StreamOut> tree) override;
+  std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+  std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
 
   // === EXPRESSION AST NODES ===
   std::any visitID(std::shared_ptr<IDNode> tree) override;
@@ -24,6 +33,7 @@ private:
   std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+  std::any visitCast(std::shared_ptr<CastNode> tree) override;
 
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
@@ -32,6 +42,12 @@ private:
 
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
+  std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
+  std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
+  std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
+  std::any visitBreak(std::shared_ptr<BreakNode> tree) override;
+  std::any visitContinue(std::shared_ptr<ContinueNode> tree) override;
+
   std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
 
   // method definitions

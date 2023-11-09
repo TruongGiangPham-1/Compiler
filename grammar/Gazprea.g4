@@ -29,7 +29,11 @@ vardecl
     ;
 
 assign
-    : lvalue=expression '=' rvalue=expression ';'
+    : lvalue '=' rvalue=expression ';'
+    ;
+
+lvalue
+    : expression (',' expression)*
     ;
 
 cond
@@ -145,7 +149,9 @@ literal_real
 cast: RESERVED_AS LT type GT '(' expression ')';
 typedef: RESERVED_TYPEDEF type ID ';'; // inferred types allowed in typedefs
 stream
-    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' ;
+    : expression RIGHT_ARROW RESERVED_STD_OUTPUT ';' #streamOut
+    | expression LEFT_ARROW RESERVED_STD_INPUT ';' #streamIn
+    ;
 
 // operators
 BUILT_IN_TYPE

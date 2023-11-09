@@ -6,7 +6,6 @@ set(
         ../include/Symbol.h
         ../include/Type.h
         ../include/Scope.h
-        ../include/BuiltInTypeSymbol.h
         BaseScope.cpp
         ../include/BaseScope.h
         ASTNode/ASTNode.cpp
@@ -101,6 +100,10 @@ set(
         ../include/ASTNode/BreakNode.h
         ASTNode/ContinueNode.cpp
         ../include/ASTNode/ContinueNode.h
+        ../include/ASTNode/Expr/ExprListNode.h
+        ASTNode/Expr/ExprListNode.cpp
+        ASTNode/Stream/StreamIn.cpp
+        ../include/ASTNode/Stream/StreamIn.h
 )
 
 # Build our executable from the source files.

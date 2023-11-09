@@ -1,5 +1,4 @@
 #include "TypeWalker.h"
-#include "BuiltInTypeSymbol.h"
 //#define DEBUG
 
 namespace gazprea {
@@ -63,7 +62,12 @@ namespace gazprea {
         auto rightIndex = this->getTypeIndex(right->evaluatedType->getName());
         std::string resultTypeString = table[leftIndex][rightIndex];
         if (resultTypeString.empty()) {
-            throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
+            if (table == promotionTable) {
+                throw TypeError(t->loc(), "Cannot implicitly promote " + left->evaluatedType->getName() + " to " + right->evaluatedType->getName());
+            }
+            else {
+                throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
+            }
         }
 
         auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
@@ -170,5 +174,101 @@ namespace gazprea {
         }
         tree->evaluatedType = tree->sym->typeSym;
         return nullptr;
+    }
+
+    std::any TypeWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
+        walkChildren(tree);
+        auto rhsType = tree->getRvalue()->evaluatedType;
+        auto lhsCount = tree->getLvalue()->children.size();
+        auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
+
+        if (lhsCount == 1) {
+            if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
+                auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+                auto symbol = lvalue->sym;
+                if (symbol != nullptr and symbol->qualifier == QUALIFIER::CONST) {
+                    throw AssignError(tree->loc(), "Cannot assign to const");
+                }
+            }
+            // TODO else tupleIndex
+
+            if (rhsType != nullptr) {
+                if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
+                    return nullptr;
+                // TODO tuple handling and identity, null handling
+                if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
+                    auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+
+                    if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
+                        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
+                    else
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;
+                }
+                // TODO else tupleIndex
+            }
+        }
+        //TODO tuple unpack / assignment
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
+        // streamOut supports the following types:
+        // - char, integer, real, boolean
+        // - vector, string, matrix (part 2)
+        // basically, NOT tuples
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+        walkChildren(tree);
+        auto exprType = tree->getExpr()->evaluatedType;
+        if (exprType != nullptr) {
+            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+                throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
+            }
+        } else {
+            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
+        // streamIn supports reading into the following types:
+        // - char, integer, real, boolean
+        // NOT any other types
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN};
+        walkChildren(tree);
+        auto exprType = tree->getExpr()->evaluatedType;
+        if (exprType != nullptr) {
+            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+                throw TypeError(tree->loc(), "Cannot stream in a " + typeEnumToString(exprType->baseTypeEnum));
+            }
+        } else {
+            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+        }
+
+        // todo (maybe?) check if stream is valid l-value
+        return nullptr;
+    }
+
+    std::string TypeWalker::typeEnumToString(TYPE t) {
+        switch (t) {
+            case TYPE::BOOLEAN:
+                return "boolean";
+            case TYPE::CHAR:
+                return "character";
+            case TYPE::INTEGER:
+                return "integer";
+            case TYPE::REAL:
+                return "real";
+            case TYPE::STRING:
+                return "string";
+            case TYPE::VECTOR:
+                return "vector";
+            case TYPE::MATRIX:
+                return "matrix";
+            case TYPE::TUPLE:
+                return "tuple";
+            case TYPE::NONE:
+                return "none";
+        }
+
     }
 }

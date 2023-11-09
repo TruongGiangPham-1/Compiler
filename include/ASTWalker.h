@@ -2,11 +2,14 @@
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/ArgNode.h"
 #include "ASTNode/AssignNode.h"
+#include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
+#include "ASTNode/Stream/StreamIn.h"
+#include "ASTNode/Expr/ExprListNode.h"
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
@@ -41,13 +44,15 @@ namespace gazprea {
         // === TOP LEVEL AST NODES ===
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
-        virtual std::any visitPrint(std::shared_ptr<StreamOut> tree);
+        virtual std::any visitStreamOut(std::shared_ptr<StreamOut> tree);
+        virtual std::any visitStreamIn(std::shared_ptr<StreamIn> tree);
 
         // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
         virtual std::any visitTypedef(std::shared_ptr<TypeDefNode> tree);
 
         // === EXPRESSION AST NODES ===
+        virtual std::any visitExpressionList(std::shared_ptr<ExprListNode> tree);
         virtual std::any visitID(std::shared_ptr<IDNode> tree);
         virtual std::any visitInt(std::shared_ptr<IntNode> tree);
         virtual std::any visitReal(std::shared_ptr<RealNode> tree);
@@ -60,6 +65,7 @@ namespace gazprea {
         virtual std::any visitArith(std::shared_ptr<BinaryArithNode> tree);
         virtual std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree);
         virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
+        virtual std::any visitCast(std::shared_ptr<CastNode> tree);
         virtual std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree);
         // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);

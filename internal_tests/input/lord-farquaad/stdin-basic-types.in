@@ -1,0 +1,14 @@
+procedure main() returns integer {
+  boolean b = true;
+  integer i = 0;
+  real r = 0.0;
+
+  b <- std_input;
+  i <- std_input;
+  r <- std_input;
+
+  b -> std_output; '\n' -> std_output;
+  i -> std_output; '\n' -> std_output;
+  r -> std_output; '\n' -> std_output;
+  return 0;
+}
