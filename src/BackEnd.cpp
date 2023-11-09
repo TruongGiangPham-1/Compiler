@@ -37,7 +37,7 @@
 #include "Operands/BINOP.h"
 #include "BackEnd.h"
 
-#define DEBUG
+//#define DEBUG
 
 /**
  *  Set up main function
@@ -95,7 +95,7 @@ int BackEnd::writeLLVMIR() {
   }
 
   llvm::verifyModule(*llvmModule, &llvm::errs());
-
+#ifdef DEBUG
   std::cout << "==============================================================="
                "=================\n";
   std::cout << "LLVM IR\n";
@@ -103,7 +103,7 @@ int BackEnd::writeLLVMIR() {
   llvmModule->dump();
   std::cout << "==============================================================="
                "=================\n";
-
+#endif
   // print LLVM IR to file
   llvm::raw_os_ostream output(this->out);
   output << *llvmModule;
