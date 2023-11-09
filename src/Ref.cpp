@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-#define DEBUG
+//#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int> mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -79,7 +79,7 @@ namespace gazprea {
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
-                defineForwardFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType, 0);
+                defineForwardFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
 
                 // push local scope for body
                 std::string sname = "funcScope" + std::to_string(tree->loc());
@@ -206,7 +206,7 @@ namespace gazprea {
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
         } else {
             if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
-                // there was a forward declaration
+                // there was a forward declaration(method prototype)
                 auto procSymCast = std::dynamic_pointer_cast<ProcedureSymbol>(procSym);
                 std::cout << "resolved procedure definition " << procSym->getName() << " at line: " << tree->loc()
                           << " at scope "
@@ -221,7 +221,7 @@ namespace gazprea {
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
 
-                defineForwardFunctionAndProcedureArgs(tree->loc(), procSymCast, tree->orderedArgs, retType, 0);
+                defineForwardFunctionAndProcedureArgs(tree->loc(), procSymCast, tree->orderedArgs, retType);
 
                 // push local scope for body
                 std::string sname = "procScope" + std::to_string(tree->loc());
@@ -391,9 +391,13 @@ namespace gazprea {
         //currentScope = symtab->exitScope(currentScope);
     }
 
+    /*
+     * we populate the argument of the method symbol and type check between the parameters of  method definition and
+     * method prototype arguments
+     */
     void Ref::defineForwardFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym,
                                                     std::vector<std::shared_ptr<ASTNode>> orderedArgs,
-                                                    std::shared_ptr<Type> retType, int isFunc) {
+                                                    std::shared_ptr<Type> retType) {
 
         assert(std::dynamic_pointer_cast<ScopedSymbol>(currentScope));
         methodSym->typeSym = retType;
@@ -401,6 +405,7 @@ namespace gazprea {
         if (orderedArgs.size() != methodSym->forwardDeclArgs.size())
             throw DefinitionError(loc, "argument mismatch between forward decl and definition");
         int index = 0;  // argument index for stan
+        //
         for (int i = 0; i < orderedArgs.size(); i++) {
             auto argNodeDef = std::dynamic_pointer_cast<ArgNode>(
                     orderedArgs[i]);  // argnode[i] for this method definiton
@@ -440,7 +445,7 @@ namespace gazprea {
 
         /*
          * make sure the types are the same between 2 parameters
-         *
+         * TODO: check for const
          */
     void Ref::parametersTypeCheck(std::shared_ptr<Type> type1, std::shared_ptr<Type> type2, int loc) {
         // TYPECHECK ---------------------------------------
