@@ -1,5 +1,6 @@
 #include "TypeWalker.h"
 //#define DEBUG
+// #define SKIP_STREAMOUT_TYPECHECK
 
 namespace gazprea {
 
@@ -272,7 +273,13 @@ namespace gazprea {
         // - vector, string, matrix (part 2)
         // basically, NOT tuples
         std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+
         walkChildren(tree);
+
+#ifdef SKIP_STREAMOUT_TYPECHECK
+        return nullptr;
+#endif // SKIP_STREAMOUT_TYPECHECK
+
         auto exprType = tree->getExpr()->evaluatedType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
