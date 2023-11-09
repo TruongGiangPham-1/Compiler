@@ -188,7 +188,6 @@ namespace gazprea {
                 auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
                 auto symbol = lvalue->sym;
                 if (symbol != nullptr and symbol->qualifier == QUALIFIER::CONST) {
-                    std::cout<<symbol->qualifier<<std::endl;
                     throw AssignError(tree->loc(), "Cannot assign to const");
                 }
             }

@@ -512,8 +512,8 @@ namespace gazprea {
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure definition." << std::endl;
+        std::cout << ctx->ID()->getText();
 #endif
-      std:: cout << ctx->ID()->getText();
       auto procSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto procedureNode = std::make_shared<ProcedureNode>(ctx->getStart()->getLine(), procSymbol);
 
