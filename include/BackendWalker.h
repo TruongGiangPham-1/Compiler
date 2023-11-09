@@ -7,6 +7,14 @@
 class BackendWalker : private gazprea::ASTWalker {
 private:
   BackEnd codeGenerator;
+
+  // if we are inside a loop, we want to track the start and end blocks
+  // this is so we can know where to jump to when we encounter a break or continue
+  std::vector<std::pair<mlir::Block *, mlir::Block *>> loopBlocks;
+  // if we encounter a break, we have an early return
+  // this boolean is true when we are inside a loop and we encounter a break
+  bool earlyReturn = false;
+
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
   std::any visitPrint(std::shared_ptr<StreamOut> tree) override;
@@ -32,6 +40,12 @@ private:
 
   // === BLOCK AST NODES ===
   std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
+    std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
+    std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
+    std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
+    std::any visitBreak(std::shared_ptr<BreakNode> tree);
+    std::any visitContinue(std::shared_ptr<ContinueNode> tree);
+
   std::any visitBlock(std::shared_ptr<BlockNode> tree) override;
 
   // method definitions
