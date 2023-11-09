@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <string>
+
 // different types for our TypeNode
 // mainly just for the Typecheck passes to figure out which type we can cast to
 
@@ -16,4 +19,16 @@ enum class TYPE{
     MATRIX,
     TUPLE,
     NONE
+};
+
+inline std::map<TYPE, std::string> type_to_string = {
+    {TYPE::INTEGER, "integer"},
+    {TYPE::REAL, "real"},
+    {TYPE::BOOLEAN, "boolean"},
+    {TYPE::CHAR, "char"},
+    {TYPE::STRING, "string"},
+    {TYPE::VECTOR, "vector"},
+    {TYPE::MATRIX, "matrix"},
+    {TYPE::TUPLE, "tuple"},
+    {TYPE::NONE, "none"}
 };

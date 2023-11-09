@@ -40,6 +40,14 @@ std::any BackendWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
   return 0;
 }
 
+std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
+    auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+
+    this->codeGenerator.streamIn(val);
+
+    return 0;
+}
+
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   // might be arg

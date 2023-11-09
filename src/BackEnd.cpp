@@ -185,6 +185,7 @@ void BackEnd::setupCommonTypeRuntime() {
                                             printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamOut",
                                           printType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
@@ -277,6 +278,15 @@ void BackEnd::streamOut(mlir::Value value) {
   mlir::LLVM::LLVMFuncOp streamOutFunc =
           module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamOut");
   builder->create<mlir::LLVM::CallOp>(loc, streamOutFunc, value);
+}
+
+/*
+ * Reads from stdin (based on the type of the value) and assigns
+ */
+void BackEnd::streamIn(mlir::Value value) {
+    mlir::LLVM::LLVMFuncOp streamInFunc =
+            module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamIn");
+    builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, value);
 }
 
 // === === === TYPEs === === === 
