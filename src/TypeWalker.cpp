@@ -123,7 +123,6 @@ namespace gazprea {
         for (auto expr: tree->val) {
             walk(expr);
         }
-        auto size = tree->val.size();
 
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>("_");
         auto tupleType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("tuple"));
@@ -135,7 +134,6 @@ namespace gazprea {
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(tupleType);
         return nullptr;
     }
-
 
     std::any TypeWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         walkChildren(tree);
