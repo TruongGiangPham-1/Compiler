@@ -14,11 +14,13 @@
 #include "BackendWalker.h"
 #include "Def.h"
 #include "Ref.h"
+#include "Swap.h"
 #include "../include/customError/ErrorListener.h"
 
 #include <iostream>
 #include <fstream>
 
+//#define DEBUG
 int main(int argc, char **argv) {
   if (argc < 3) {
     std::cout << "Missing required argument.\n"
@@ -42,21 +44,31 @@ int main(int argc, char **argv) {
   antlr4::tree::ParseTree *tree = parser.file();
 
   // build ASTNode
+#ifdef DEBUG
   std::cout << "\n\n=== Building ASTNode" << std::endl;
+#endif
   gazprea::ASTBuilder builder;
   auto ast = std::any_cast<std::shared_ptr<ASTNode>>(builder.visit(tree));
 
   std::cout << ast->toStringTree() << std::endl;
+#ifdef DEBUG
   std::cout << "\n\n=== Building SymbolTable" << std::endl;
 
   std::cout << "\n\n=== DEF PASS\n";
+#endif
+  std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>> prototypMap;
+  gazprea::Swap swap(prototypMap);
+  swap.walk(ast);
+
   int mlirID = 1;
   std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
   gazprea::Def def(symbolTable, mlirIDptr);
   def.walk(ast);
 
+#ifdef DEBUG
   std::cout << "\n\n=== REF PASS\n";
+#endif
   gazprea::Ref ref(symbolTable, mlirIDptr);
   ref.walk(ast);
 

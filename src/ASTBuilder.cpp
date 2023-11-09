@@ -4,7 +4,7 @@
 #include <memory>
 
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
@@ -350,7 +350,9 @@ namespace gazprea {
         } else if (ctx->RESERVED_VAR()) {
             return QUALIFIER::VAR;
         } else {
+#ifdef DEBUG
             std::cout << "ERROR: unknown qualifier" << ctx->getText() << std::endl;
+#endif
             throw std::runtime_error("unknown qualifier " + ctx->getText());
         }
     }

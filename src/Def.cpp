@@ -3,7 +3,7 @@
 // NOTE: ALL THE DEF PASS WILL LOOK FOR GLOBAL DECLARATION / FORWARD DECLARATION
 //
 #include "../include/Def.h"
-
+//#define DEBUG
 namespace gazprea {
 Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symtab(symTab), varID(mlirID) {
 
@@ -51,12 +51,35 @@ std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
 }
 
 std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+
     // define if it is forwrd declaration
+    if (symtab->globalScope->resolve(tree->nameSym->getName())) {
+        throw SyntaxError(tree->loc(), "redefinition");
+    }
     if (tree->body) {
-        // not a forward decl, so we just skip it in def pass
+        // loop invariant, if it has body then forward declaration appears after this line, so it doesnt matter
         return 0;
     }  else {
         // forward declaration method
+        // swap
+        auto find = this->prototype->find(tree->nameSym->getName());
+        if (find == this->prototype->end())  return 0;
+        auto methodDefAST = this->prototype->find(tree->nameSym->getName())->second;
+        auto procedureDefAST = std::dynamic_pointer_cast<ProcedureNode>(tree);
+        assert(procedureDefAST);
+        if (tree->loc() < procedureDefAST->loc()) {
+            // forward declare appear before method deifnietion so we swap body
+            auto tempArg = tree->orderedArgs;
+            tree->orderedArgs = procedureDefAST->orderedArgs;  // swap argument
+            tree->body = procedureDefAST->body;               // swap body
+            procedureDefAST->body = nullptr;
+            procedureDefAST->orderedArgs = tempArg;          // swap arg
+
+        }
+        // erase the funcion definciton from the prototype map
+        this->prototype->erase(tree->nameSym->getName());
+
+        return 0;
         std::shared_ptr<Type>retType;
         if (tree->getRetTypeNode()) {  // has return
             retType = symtab->resolveTypeUser(tree->getRetTypeNode());
@@ -67,12 +90,13 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
                                                           scopeName, retType, symtab->globalScope, tree->loc());
 
         methodSym->typeSym = retType;
+#ifdef DEBUG
         if (retType) {
             std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
         } else {
             std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
         }
-
+#endif
         // Here I am just adding argument symbol to the list of 'forwardDeclArgs' so that my Ref pass will be able to take this list and compare it with
         // method definition's arg for type check etc
         for (auto arg: tree->orderedArgs) {
@@ -184,4 +208,7 @@ int Def::getNextId() {
     (*varID) ++;
     return *varID;
 }
+void Def::setPrototype(std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<ASTNode>>> &prototype) {
+        this->prototype = prototype;
+    }
 }
