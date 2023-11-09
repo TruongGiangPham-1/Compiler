@@ -57,5 +57,7 @@ namespace gazprea {
         // streams
         std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+
+        std::string typeEnumToString(TYPE t);
     };
 }

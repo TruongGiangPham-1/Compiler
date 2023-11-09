@@ -221,7 +221,7 @@ namespace gazprea {
         auto exprType = tree->getExpr()->evaluatedType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
-                throw TypeError(tree->loc(), "Cannot stream out a " + type_to_string.at(exprType->baseTypeEnum));
+                throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
             }
         } else {
             throw TypeError(tree->loc(), "Cannot stream out unknown type");
@@ -238,7 +238,7 @@ namespace gazprea {
         auto exprType = tree->getExpr()->evaluatedType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
-                throw TypeError(tree->loc(), "Cannot stream in a " + type_to_string.at(exprType->baseTypeEnum));
+                throw TypeError(tree->loc(), "Cannot stream in a " + typeEnumToString(exprType->baseTypeEnum));
             }
         } else {
             throw TypeError(tree->loc(), "Cannot stream out unknown type");
@@ -246,5 +246,29 @@ namespace gazprea {
 
         // todo (maybe?) check if stream is valid l-value
         return nullptr;
+    }
+
+    std::string TypeWalker::typeEnumToString(TYPE t) {
+        switch (t) {
+            case TYPE::BOOLEAN:
+                return "boolean";
+            case TYPE::CHAR:
+                return "character";
+            case TYPE::INTEGER:
+                return "integer";
+            case TYPE::REAL:
+                return "real";
+            case TYPE::STRING:
+                return "string";
+            case TYPE::VECTOR:
+                return "vector";
+            case TYPE::MATRIX:
+                return "matrix";
+            case TYPE::TUPLE:
+                return "tuple";
+            case TYPE::NONE:
+                return "none";
+        }
+
     }
 }

@@ -86,13 +86,13 @@ void printType(commonType *type, bool nl) {
 // set a commonType to its null value
 void setToNullValue(commonType *type) {
   switch (type->type) {
-    case INT:
+    case INTEGER:
       *(int*)type->value = 0;
           break;
     case CHAR:
       *(char*)type->value = '\0';
           break;
-    case BOOL:
+    case BOOLEAN:
       *(bool*)type->value = false;
           break;
     case REAL:
@@ -116,7 +116,7 @@ void streamIn(commonType *type) {
   int check = 1;
 
   switch (type->type) {
-    case INT:
+    case INTEGER:
 //      printf("Enter an int: ");
       check = scanf("%d", (int*)type->value);
       break;
@@ -125,7 +125,7 @@ void streamIn(commonType *type) {
       // CHAR CAN NEVER FAIL (except if it's an end of file)
       check = scanf("%c", (char*)type->value);
       break;
-    case BOOL: {
+    case BOOLEAN: {
 //      printf("Enter a boolean value (T/F): ");
       // scan char. If it's T, true, else false
       char buffer[1024]; // how big do I make this?
