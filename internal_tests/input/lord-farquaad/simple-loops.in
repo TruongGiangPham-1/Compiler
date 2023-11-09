@@ -1,6 +1,7 @@
 procedure main() returns integer {
   loop {
       1 -> std_output;
+      '\n' -> std_output;
 
       if (1 == 1) {
           break;
@@ -9,17 +10,21 @@ procedure main() returns integer {
 
   loop while (1 == 0) {
      2 -> std_output;
+     '\n' -> std_output;
   }
 
   loop {
       3 -> std_output;
+      '\n' -> std_output;
   } while (1 == 0);
 
   loop {
       4 -> std_output;
+      '\n' -> std_output;
       break;
   } while (1 == 1);
 
   999 -> std_output;
+    '\n' -> std_output;
   return 0;
 }
