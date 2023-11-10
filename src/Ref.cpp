@@ -492,7 +492,7 @@ namespace gazprea {
         } else if (type1->baseTypeEnum == TYPE::TUPLE && type2->baseTypeEnum == TYPE::TUPLE) {
             // iterate thru each tuple child and compare type
             for (int i = 0; i < type1->tupleChildType.size(); i++) {
-                if (type1->tupleChildType[i]->baseTypeEnum != type2->tupleChildType[i]->baseTypeEnum) {
+                if (type1->tupleChildType[i].second->baseTypeEnum != type2->tupleChildType[i].second->baseTypeEnum) {
                     throw TypeError(loc, "type mismatch between tuples");
                 }
             }
