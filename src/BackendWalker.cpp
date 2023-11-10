@@ -4,13 +4,14 @@
 #include "mlir/IR/Value.h"
 #include <memory>
 #include <stdexcept>
-//#define DEBUG;
+//#define DEBUG
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #ifdef DEBUG
   std::cout << "CODE GENERATION\n";
-#endif 
   std::cout << INTEGER << REAL << std::endl;
+#endif 
+
   codeGenerator.init();
   walkChildren(tree);
   //codeGenerator.deallocateObjects();
