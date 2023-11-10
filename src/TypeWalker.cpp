@@ -1,5 +1,6 @@
 #include "TypeWalker.h"
 //#define DEBUG
+// #define SKIP_STREAMOUT_TYPECHECK
 
 namespace gazprea {
 
@@ -176,6 +177,45 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
+        walkChildren(tree);
+        if (!tree->getTypeNode()) {
+            tree->sym->typeSym = tree->getExprNode()->evaluatedType;
+            return nullptr;
+        }
+        if(!tree->getExprNode()) {
+            return nullptr;
+        }
+
+        auto lType = tree->sym->typeSym;
+        auto rType = tree->getExprNode()->evaluatedType;
+
+        if (rType == nullptr) {
+            return nullptr;
+        }
+
+        // I think this is already handled in ref pass
+        if (lType == nullptr) {
+            throw SyntaxError(tree->loc(), "Declaration is missing expression to infer type.");
+        }
+
+        // TODO TUPLE, IDENTITY and NULL handling
+        if (lType->getName() != rType->getName()) {
+            auto leftIndex = promotedType->getTypeIndex(rType->getName());
+            auto rightIndex = promotedType->getTypeIndex(lType->getName());
+            std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+            if (resultTypeString.empty()) {
+                throw TypeError(tree->loc(), "Cannot implicitly promote " + rType->getName() + " to " + lType->getName());
+            }
+            auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
+            tree->evaluatedType = resultType;
+        }
+        else {
+            tree->evaluatedType = rType;
+        }
+        return nullptr;
+    }
+
     std::any TypeWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
         walkChildren(tree);
         auto rhsType = tree->getRvalue()->evaluatedType;
@@ -217,7 +257,13 @@ namespace gazprea {
         // - vector, string, matrix (part 2)
         // basically, NOT tuples
         std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+
         walkChildren(tree);
+
+#ifdef SKIP_STREAMOUT_TYPECHECK
+        return nullptr;
+#endif // SKIP_STREAMOUT_TYPECHECK
+
         auto exprType = tree->getExpr()->evaluatedType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {

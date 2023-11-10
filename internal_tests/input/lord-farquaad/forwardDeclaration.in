@@ -1,0 +1,17 @@
+
+
+function f(integer x) returns integer;
+
+
+procedure main() returns integer {
+   integer a = f(5);
+   a -> std_output;
+   '\n' -> std_output;
+   return 0;
+
+}
+
+
+function f(integer x) returns integer {
+    return 2*x;
+}

@@ -25,7 +25,7 @@ statement:
     );
 
 vardecl
-    : qualifier? type ID ('=' expression)? ';'
+    : qualifier? type? ID ('=' expression)? ';'
     ;
 
 assign
