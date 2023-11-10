@@ -2,6 +2,7 @@
 #include "ASTNode/Expr/CastNode.h"
 #include "Types/TYPES.h"
 #include "mlir/IR/Value.h"
+#include <memory>
 #include <stdexcept>
 //#define DEBUG;
 
@@ -9,6 +10,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #ifdef DEBUG
   std::cout << "CODE GENERATION\n";
 #endif 
+  std::cout << INTEGER << REAL << std::endl;
   codeGenerator.init();
   walkChildren(tree);
   //codeGenerator.deallocateObjects();
@@ -18,22 +20,20 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
   auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
+ 
 
-  if (exprList->children.size() == 1) {
-    if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
-      auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
-      auto k = lvalue->sym->mlirName;
-      codeGenerator.generateAssignment(lvalue->sym->mlirName, val);
+  for (auto destNode : exprList->children) {
+    auto dest = std::any_cast<mlir::Value>(walk(destNode));
 
-    }
-    // TODO: validate for tuple index
+    codeGenerator.generateAssignment(dest, val);
   }
-  // TODO: else tuple unpacking
+
   return 0;
 }
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+
   codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
