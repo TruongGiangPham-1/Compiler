@@ -55,6 +55,8 @@ int main(int argc, char **argv) {
 
   std::cout << "\n\n=== DEF PASS\n";
 #endif
+
+
   int mlirID = 1;
   std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
@@ -80,7 +82,9 @@ int main(int argc, char **argv) {
       return 1;
   }
 
-
+#ifdef DEBUG
+  std::cout << "\n\n=== TYPECHECK PASS\n";
+#endif
   //Type Check
   auto promotionTypes = std::make_shared<gazprea::PromotedType>(symbolTable);
   gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
@@ -92,9 +96,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-
+#ifdef DEBUG
+  std::cout << "\n\n=== CODEGEN\n";
+#endif
   BackendWalker backend(out);
   backend.generateCode(ast);
+#ifdef DEBUG
+    std::cout << "\n\n=== BACKEND END\n";
+#endif
 
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);

@@ -61,7 +61,12 @@ namespace gazprea {
 #ifdef DEBUG
             std::cout << "about to visit print" << std::endl;
 #endif // DEBUG
-            return this->visitPrint(std::dynamic_pointer_cast<StreamOut>(tree));
+            return this->visitStreamOut(std::dynamic_pointer_cast<StreamOut>(tree));
+        } else if (std::dynamic_pointer_cast<StreamIn>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit read" << std::endl;
+#endif // DEBUG
+            return this->visitStreamIn(std::dynamic_pointer_cast<StreamIn>(tree));
 
         } else if (std::dynamic_pointer_cast<TypeNode>(tree)) {
 #ifdef DEBUG
@@ -84,6 +89,13 @@ namespace gazprea {
             std::cout << "about to visit expression list " << std::endl;
 #endif // DEBUG
             return this->visitExpressionList(std::dynamic_pointer_cast<ExprListNode>(tree));
+        }
+
+        else if (std::dynamic_pointer_cast<TupleIndexNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit tupleIndex " << std::endl;
+#endif // DEBUG
+            return this->visitTupleIndex(std::dynamic_pointer_cast<TupleIndexNode>(tree));
         }
 
         else if (std::dynamic_pointer_cast<IDNode>(tree)) {
@@ -257,7 +269,11 @@ namespace gazprea {
     std::any ASTWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitPrint(std::shared_ptr<StreamOut> tree) {
+    std::any ASTWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitType(std::shared_ptr<TypeNode> tree) {
@@ -281,6 +297,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitChar(std::shared_ptr<CharNode> tree) {

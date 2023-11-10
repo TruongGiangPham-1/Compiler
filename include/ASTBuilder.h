@@ -9,6 +9,7 @@
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/TypeDefNode.h"
 #include "ASTNode/Stream/StreamOut.h"
+#include "ASTNode/Stream/StreamIn.h"
 
 #include "ASTNode/Expr/NullNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
@@ -59,6 +60,7 @@ namespace gazprea {
         std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
         std::any visitAssign(GazpreaParser::AssignContext *ctx) override;
         std::any visitLvalue(GazpreaParser::LvalueContext *ctx) override;
+        std::any visitTupleIndex(GazpreaParser::TupleIndexContext *ctx) override;
 
         // typing
         std::any visitBaseType(GazpreaParser::BaseTypeContext *ctx) override;
@@ -109,7 +111,8 @@ namespace gazprea {
         std::any visitBreak(GazpreaParser::BreakContext *ctx) override;
         std::any visitContinue(GazpreaParser::ContinueContext *ctx) override;
 
-        std::any visitStream(GazpreaParser::StreamContext *ctx) override;
+        std::any visitStreamIn(GazpreaParser::StreamInContext *ctx) override;
+        std::any visitStreamOut(GazpreaParser::StreamOutContext *ctx) override;
 
         std::any visitRange(GazpreaParser::RangeContext *ctx) override;
         //std::any visitGenerator(GazpreaParser::GeneratorContext *ctx) override;

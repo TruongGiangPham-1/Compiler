@@ -10,4 +10,7 @@ public:
 
     std::string toString() override;
     char getVal();
+
+    // Given a char after the slash, return the escape char (if valid)
+    static std::optional<char> parseEscape(char c);
 };

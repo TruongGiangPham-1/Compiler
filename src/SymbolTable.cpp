@@ -72,12 +72,12 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>("tuple");
         resolvedType->baseTypeEnum = TYPE::TUPLE;
 
-        auto tupleChild = tupleNode->getTypes();  // vector of inner types
+        auto tupleChild = tupleNode->innerTypes;  // vector of inner types
         for (auto c: tupleChild) {
             // recursively resolve children's type. resolves typedef too
-            auto resolvedChild = resolveTypeUser(c);
+            auto resolvedChild = resolveTypeUser(std::dynamic_pointer_cast<TypeNode>(c.second));
             if (resolvedChild == nullptr) throw TypeError(typeNode->loc(), "cannot resolve type in tuple");
-            resolvedType->tupleChildType.push_back(resolvedChild);
+            resolvedType->tupleChildType.push_back(std::make_pair(c.first, resolvedChild));
         }
 
         return resolvedType;
@@ -102,12 +102,12 @@ void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string 
         std::shared_ptr<AdvanceType> typedefType = std::make_shared<AdvanceType>("tuple" + typeDefTo + std::to_string(ID));  // string hash
         typedefType->baseTypeEnum = TYPE::TUPLE;   // set type to TUPLE
 
-        auto tupleChild = tupleNode->getTypes();  // vector of inner types
+        auto tupleChild = tupleNode->innerTypes;  // vector of inner types
         for (auto c: tupleChild) {
             // resolve children's type
-            auto resolvedChild = resolveTypeUser(c);
+            auto resolvedChild = resolveTypeUser(std::dynamic_pointer_cast<TypeNode>(c.second));
             if (resolvedChild == nullptr) throw TypeError(typeNode->loc(), "cannot resolve type in tuple");
-            typedefType->tupleChildType.push_back(resolvedChild);  // recursively resolve type
+            typedefType->tupleChildType.push_back(std::make_pair(c.first ,resolvedChild));  // recursively resolve type
         }
         typedefType->typDefName = typeDefTo;
         globalScope->defineType(typedefType);

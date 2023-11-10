@@ -1,0 +1,10 @@
+ function incrementAlphabet(integer a) returns real {
+   tuple(integer, real) t1 = (2, 3.0, 4);
+   real l = 1.0;
+   return l;
+ }
+
+ procedure main() returns integer {
+   incrementAlphabet(1) -> std_output;
+   return 0;
+ }

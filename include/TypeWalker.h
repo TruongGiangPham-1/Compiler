@@ -41,17 +41,24 @@ namespace gazprea {
         ~TypeWalker();
 
         std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
-        //std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
+        std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         std::any visitID(std::shared_ptr<IDNode> tree) override;
+        std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
         std::any visitInt(std::shared_ptr<IntNode> tree) override;
         std::any visitReal(std::shared_ptr<RealNode> tree) override;
-        //std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
+        std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
         std::any visitChar(std::shared_ptr<CharNode> tree) override;
         std::any visitBool(std::shared_ptr<BoolNode> tree) override;
 
         std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
+
+        // streams
+        //std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        //std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+
+        std::string typeEnumToString(TYPE t);
     };
 }

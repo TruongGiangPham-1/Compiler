@@ -3,6 +3,7 @@
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Expr/TupleIndexNode.h"
 #include <memory>
 
 
@@ -127,7 +128,7 @@ namespace gazprea {
     }
 
     // STREAMS
-    std::any ASTBuilder::visitStream(GazpreaParser::StreamContext *ctx) {
+    std::any ASTBuilder::visitStreamOut(GazpreaParser::StreamOutContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitOutputStream" << std::endl;
 #endif
@@ -135,7 +136,18 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expression()));
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        return t;
+    }
+
+    std::any ASTBuilder::visitStreamIn(GazpreaParser::StreamInContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitInputStream" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<StreamIn>(ctx->getStart()->getLine());
+
+        t->addChild(visit(ctx->expression()));
+
+        return t;
     }
 
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
@@ -217,10 +229,20 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
-        // TODO. fix the index at 1.
-        std::shared_ptr<ASTNode> t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+        if (charContent[0] == '\\') {
+            auto escapedChar = CharNode::parseEscape(charContent[1]);
+            if (escapedChar.has_value()) {
+                auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), escapedChar.value());
+                return std::dynamic_pointer_cast<ASTNode>(t);
+            } else {
+                throw SyntaxError(ctx->getStart()->getLine(), "invalid escape sequence in character literal " + ctx->getText());
+            }
+        } else {
+            // normal char
+            auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
+            return std::dynamic_pointer_cast<ASTNode>(t);
+        }
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
@@ -360,7 +382,8 @@ namespace gazprea {
         } else {
             t->qualifier = QUALIFIER::VAR;
         }
-        t->addChild(visit(ctx->type()));
+        if (ctx->type())
+            t->addChild(visit(ctx->type()));
         if (ctx->expression()) {
             t->addChild(visit(ctx->expression()));
 
@@ -397,6 +420,23 @@ namespace gazprea {
           t->bodies.push_back(std::any_cast<std::shared_ptr<ASTNode>>(visit(body)));
         }
 
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTupleIndex(GazpreaParser::TupleIndexContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitTupleIndex" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<TupleIndexNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID(0)->getSymbol()->getText());
+        t->addChild(std::dynamic_pointer_cast<ASTNode>(std::make_shared<IDNode>(ctx->getStart()->getLine(), sym)));
+        if (ctx->INT()) {
+            t->addChild(std::dynamic_pointer_cast<ASTNode>(std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->INT()->getText()))));
+        }
+        else {
+            std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID(1)->getSymbol()->getText());
+            t->addChild(std::dynamic_pointer_cast<ASTNode>(std::make_shared<IDNode>(ctx->getStart()->getLine(), sym)));
+        }
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
@@ -545,11 +585,6 @@ namespace gazprea {
       if (ctx->block()) {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         procedureNode->body = blockResult;
-      }
-      if (ctx->RESERVED_RETURNS()) {
-          // has return
-          procedureNode->addChild(visit(ctx->type()));
-
       }
 
       return std::dynamic_pointer_cast<ASTNode>(procedureNode);

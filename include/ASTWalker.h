@@ -8,6 +8,7 @@
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
+#include "ASTNode/Stream/StreamIn.h"
 #include "ASTNode/Expr/ExprListNode.h"
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
@@ -29,6 +30,7 @@
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/CallNode.h"
 #include "ASTNode/TypeDefNode.h"
+#include "ASTNode/Expr/TupleIndexNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -43,7 +45,8 @@ namespace gazprea {
         // === TOP LEVEL AST NODES ===
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);
         virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
-        virtual std::any visitPrint(std::shared_ptr<StreamOut> tree);
+        virtual std::any visitStreamOut(std::shared_ptr<StreamOut> tree);
+        virtual std::any visitStreamIn(std::shared_ptr<StreamIn> tree);
 
         // resolve these
         virtual std::any visitType(std::shared_ptr<TypeNode> tree);
@@ -57,6 +60,7 @@ namespace gazprea {
         virtual std::any visitTuple(std::shared_ptr<TupleNode> tree);
         virtual std::any visitChar(std::shared_ptr<CharNode> tree);
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
+        virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
 
         // Expr/Binary
 

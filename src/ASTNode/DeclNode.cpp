@@ -1,4 +1,6 @@
 #include "ASTNode/DeclNode.h"
+#include "ASTNode/Expr/ExprNode.h"
+#include "ASTNode/Type/TypeNode.h"
 
 DeclNode::DeclNode(int line, std::shared_ptr<Symbol> sym) : ASTNode(line), sym(sym) {}
 
@@ -15,16 +17,25 @@ std::string DeclNode::getIDName() {
 }
 
 std::shared_ptr<ASTNode> DeclNode::getTypeNode() {
-    return children[0];
+    if (!children.empty() and std::dynamic_pointer_cast<TypeNode>(children[0])) {
+        return children[0];
+    }
+    return nullptr;
 }
 
 std::shared_ptr<ASTNode> DeclNode::getExprNode() {
     if (children.size() == 1) {
-        // there is no expression node
+        // might be inferred type expr
+        if (std::dynamic_pointer_cast<ExprNode>(children[0])) {
+            return children[0];
+        }
         return nullptr;
     } else {
-        return children[1];
-    };
+        if (children.size() == 2)
+            return children[1];
+        else
+            return nullptr;
+    }
 }
 
 QUALIFIER DeclNode::getQualifier() {

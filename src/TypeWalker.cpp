@@ -1,5 +1,9 @@
 #include "TypeWalker.h"
+#include "ASTNode/Type/TupleTypeNode.h"
 //#define DEBUG
+
+// until we get more typecheck done
+#define SKIP_STREAMOUT_TYPECHECK
 
 namespace gazprea {
 
@@ -119,6 +123,22 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
+        for (auto expr: tree->val) {
+            walk(expr);
+        }
+
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>("_");
+        auto tupleType = std::dynamic_pointer_cast<Type>(std::make_shared<AdvanceType>("tuple"));
+
+        for (auto tupleVal : tree->val) {
+            auto childType = tupleVal->evaluatedType;
+            tupleType->tupleChildType.push_back(std::make_pair("", childType));
+        }
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(tupleType);
+        return nullptr;
+    }
+
     std::any TypeWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         walkChildren(tree);
         auto lhsType = tree->getLHS()->evaluatedType;
@@ -176,6 +196,102 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
+        walkChildren(tree);
+        auto tupleId = std::dynamic_pointer_cast<IDNode>(tree->children[0]);
+        if (std::dynamic_pointer_cast<IDNode>(tree->children[1])) {
+            auto index = std::dynamic_pointer_cast<IDNode>(tree->children[1])->getName();
+            for (auto c: tupleId->evaluatedType->tupleChildType) {
+                if (index == c.first) {
+                    tree->evaluatedType = std::dynamic_pointer_cast<Type>(c.second);
+                    break;
+                }
+            }
+            if (!tree->evaluatedType) {
+                throw SymbolError(tree->loc(), "Undefined tuple index referenced");
+            }
+        }
+        else if (std::dynamic_pointer_cast<IntNode>(tree->children[1])) {
+            auto index = std::dynamic_pointer_cast<IntNode>(tree->children[1])->getVal();
+            if (index < 1 || index > tupleId->evaluatedType->tupleChildType.size()) {
+                throw SymbolError(tree->loc(), "Out of bound tuple index referenced");
+            }
+            tree->evaluatedType = std::dynamic_pointer_cast<Type>(tupleId->evaluatedType->tupleChildType[index-1].second);
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
+        walkChildren(tree);
+        if (!tree->getTypeNode()) {
+            tree->sym->typeSym = tree->getExprNode()->evaluatedType;
+            return nullptr;
+        }
+        if(!tree->getExprNode()) {
+            return nullptr;
+        }
+
+        auto lType = tree->sym->typeSym;
+        auto rType = tree->getExprNode()->evaluatedType;
+
+        if (rType == nullptr) {
+            return nullptr;
+        }
+
+        // I think this is already handled in ref pass
+        if (lType == nullptr) {
+            throw SyntaxError(tree->loc(), "Declaration is missing expression to infer type.");
+        }
+
+        if (lType->getName() == "tuple") {
+            auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
+            for (size_t i = 0; i < tupleNode->innerTypes.size(); i++) {
+                auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+
+                if (leftTypeString == "tuple") {
+                    throw TypeError(tree->loc(), "Cannot have tuple as a tuple member");
+                }
+            }
+        }
+
+        // TODO IDENTITY and NULL handling
+        if (lType->getName() == "tuple" && rType->getName() == "tuple") {
+            auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
+            if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
+                throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+            }
+            for (size_t i = 0; i < rType->tupleChildType.size(); i++) {
+                auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+                auto rightTypeString = rType->tupleChildType[i].second->getName();
+
+                if (leftTypeString != rightTypeString) {
+                    auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                    auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    if (resultTypeString.empty()) {
+                        throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
+                    }
+                }
+            }
+            tree->evaluatedType = rType;
+        }
+
+        else if (lType->getName() != rType->getName()) {
+            auto leftIndex = promotedType->getTypeIndex(rType->getName());
+            auto rightIndex = promotedType->getTypeIndex(lType->getName());
+            std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+            if (resultTypeString.empty()) {
+                throw TypeError(tree->loc(), "Cannot implicitly promote " + rType->getName() + " to " + lType->getName());
+            }
+            auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
+            tree->evaluatedType = resultType;
+        }
+        else {
+            tree->evaluatedType = rType;
+        }
+        return nullptr;
+    }
+
     std::any TypeWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
         walkChildren(tree);
         auto rhsType = tree->getRvalue()->evaluatedType;
@@ -190,24 +306,165 @@ namespace gazprea {
                     throw AssignError(tree->loc(), "Cannot assign to const");
                 }
             }
-            // TODO else tupleIndex
+
+            else if(std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])) {
+                auto lvalue = std::dynamic_pointer_cast<IDNode>(std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])->children[0]);
+                auto symbol = lvalue->sym;
+                if (symbol != nullptr and symbol->qualifier == QUALIFIER::CONST) {
+                    throw AssignError(tree->loc(), "Cannot assign to const");
+                }
+            }
+
+            else
+                throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+
 
             if (rhsType != nullptr) {
                 if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
                     return nullptr;
-                // TODO tuple handling and identity, null handling
+                // TODO identity and null handling
                 if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+
+                    if (lvalue->evaluatedType->getName() == "tuple" and rhsType->getName() == "tuple") {
+                        if (lvalue->evaluatedType->tupleChildType.size() != rhsType->tupleChildType.size()) {
+                            throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+                        }
+                        for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
+                            auto leftTypeString = lvalue->evaluatedType->tupleChildType[i].second->getName();
+                            auto rightTypeString = rhsType->tupleChildType[i].second->getName();
+
+                            if (leftTypeString != rightTypeString) {
+                                auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                                auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                                std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                                if (resultTypeString.empty()) {
+                                    throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
+                                }
+                            }
+                        }
+                        tree->evaluatedType = rhsType;
+                    }
 
                     if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
                         tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
                     else
                         tree->evaluatedType = tree->getRvalue()->evaluatedType;
                 }
-                // TODO else tupleIndex
+                else if (std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])) {
+                    auto tupleIndexNode = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0]);
+                    if (rhsType->getName() == "tuple") {
+                        throw TypeError(tree->loc(), "Cannot assign tuple to tuple index");
+                    }
+                    if (tree->getRvalue()->evaluatedType->getName() != tupleIndexNode->evaluatedType->getName())
+                        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), tupleIndexNode, tree);
+                    else
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;
+                }
+                else
+                    throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
             }
         }
-        //TODO tuple unpack / assignment
+        else {
+            if (rhsType->getName() != "tuple")
+                throw TypeError(tree->loc(), "Tuple Unpacking requires a tuple as the r-value.");
+            if (lhsCount != rhsType->tupleChildType.size())
+                throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+            for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
+
+                std::string leftTypeString;
+                if (std::dynamic_pointer_cast<IDNode>(exprList->children[i])) {
+                    auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[i]);
+                    leftTypeString = lvalue->evaluatedType->getName();
+                }
+                else if (std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i])) {
+                    auto lvalue = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i]);
+                    leftTypeString = lvalue->evaluatedType->getName();
+                }
+
+                if (leftTypeString.empty()) {
+                    throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+                }
+
+                auto rightTypeString = rhsType->tupleChildType[i].second->getName();
+
+                if (leftTypeString != rightTypeString) {
+                    auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                    auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    if (resultTypeString.empty()) {
+                        throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
+                    }
+                }
+            }
+        }
         return nullptr;
+    }
+
+//    std::any TypeWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
+//        // streamOut supports the following types:
+//        // - char, integer, real, boolean
+//        // - vector, string, matrix (part 2)
+//        // basically, NOT tuples
+//        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+//
+//        walkChildren(tree);
+//
+//#ifdef SKIP_STREAMOUT_TYPECHECK
+//        return nullptr;
+//#endif // SKIP_STREAMOUT_TYPECHECK
+//
+//        auto exprType = tree->getExpr()->evaluatedType;
+//        if (exprType != nullptr) {
+//            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+//                throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
+//            }
+//        } else {
+//            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+//        }
+//        return nullptr;
+//    }
+//
+//    std::any TypeWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
+//        // streamIn supports reading into the following types:
+//        // - char, integer, real, boolean
+//        // NOT any other types
+//        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN};
+//        walkChildren(tree);
+//        auto exprType = tree->getExpr()->evaluatedType;
+//        if (exprType != nullptr) {
+//            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+//                throw TypeError(tree->loc(), "Cannot stream in a " + typeEnumToString(exprType->baseTypeEnum));
+//            }
+//        } else {
+//            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+//        }
+//
+//        // todo (maybe?) check if stream is valid l-value
+//        return nullptr;
+//    }
+
+    std::string TypeWalker::typeEnumToString(TYPE t) {
+        switch (t) {
+            case TYPE::BOOLEAN:
+                return "boolean";
+            case TYPE::CHAR:
+                return "character";
+            case TYPE::INTEGER:
+                return "integer";
+            case TYPE::REAL:
+                return "real";
+            case TYPE::STRING:
+                return "string";
+            case TYPE::VECTOR:
+                return "vector";
+            case TYPE::MATRIX:
+                return "matrix";
+            case TYPE::TUPLE:
+                return "tuple";
+            case TYPE::NONE:
+                return "none";
+        }
+
     }
 }

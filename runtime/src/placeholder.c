@@ -2,6 +2,7 @@
 
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
+#include "run_time_errors.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -57,7 +58,7 @@ void printType(commonType *type, bool nl) {
       printf("%s", *(bool*)type->value ? "true" : "false");
       break;
     case REAL:
-      printf("%f", *(float*)type->value);
+      printf("%g", *(float*)type->value);
       break;
     case TUPLE:
       // {} bc we can't declare variables in switch
@@ -83,8 +84,82 @@ void printType(commonType *type, bool nl) {
   return;
 }
 
+// set a commonType to its null value
+void setToNullValue(commonType *type) {
+  switch (type->type) {
+    case INTEGER:
+      *(int*)type->value = 0;
+          break;
+    case CHAR:
+      *(char*)type->value = '\0';
+          break;
+    case BOOLEAN:
+      *(bool*)type->value = false;
+          break;
+    case REAL:
+      *(float*)type->value = 0.0f;
+          break;
+  }
+}
+
 void printCommonType(commonType *type) {
   printType(type, true);
+}
+
+void streamOut(commonType *type) {
+  printType(type, false);
+}
+
+void streamIn(commonType *type) {
+  // to handle scanf errors, we check the return value
+  // the return value of scanf is the number of validly converted args
+  // https://stackoverflow.com/a/5969152
+  int check = 1;
+
+  switch (type->type) {
+    case INTEGER:
+//      printf("Enter an int: ");
+      check = scanf("%d", (int*)type->value);
+      break;
+    case CHAR:
+//      printf("Enter a char: ");
+      // CHAR CAN NEVER FAIL (except if it's an end of file)
+      check = scanf("%c", (char*)type->value);
+      break;
+    case BOOLEAN: {
+//      printf("Enter a boolean value (T/F): ");
+      // scan char. If it's T, true, else false
+      char buffer[1024]; // how big do I make this?
+      check = scanf("%s", buffer);
+//      printf("buffer: '%s'\n", buffer);
+      if (strcmp(buffer, "T") == 0) {
+        *(bool*)type->value = true;
+      } else {
+        // "default" boolean value is also false
+        *(bool *) type->value = false;
+      }
+      break;
+    }
+    case REAL:
+//      printf("Enter a real: ");
+      check = scanf("%f", (float*)type->value);
+      break;
+  }
+
+  if (check == 0) {
+    // invalid input!
+
+    // check end of file (for char)
+    // https://stackoverflow.com/a/1428924
+    if (feof(stdin) && type->type == CHAR) {
+      // val is now -1
+      *(char*)type->value = -1;
+      return;
+    }
+
+    // in all other cases, set to the "default" value of the type
+    setToNullValue(type);
+  }
 }
 
 /**
@@ -500,6 +575,7 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case EQUAL:
     return l == r;
@@ -516,6 +592,7 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     // we do a little truth table analysis
     return !(!l & r);
     case AND:
@@ -536,10 +613,12 @@ int intBINOP(int l, int r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l,r);
     case AND:
     return l & r;
@@ -582,10 +661,12 @@ float realBINOP(float l, float r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return fmod(l, r);
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l, r);
     case AND:
       {
@@ -668,10 +749,12 @@ char charBINOP(char l, char r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l,r);
     case AND:
     return l & r;

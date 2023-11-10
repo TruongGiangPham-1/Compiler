@@ -11,7 +11,11 @@ ProcedureNode::ProcedureNode(int line, std::shared_ptr<Symbol> procedureNameSym)
 
 
 std::string ProcedureNode::toString() {
-    return "Procedure " + nameSym->getName() + " " + body->toStringTree();
+    if (body) {
+        return "Procedure " + nameSym->getName() + " " + body->toStringTree();
+    } else {
+        return "Procedure " + nameSym->getName() + " forward";
+    }
 }
 
 std::shared_ptr<ASTNode> ProcedureNode::getRetTypeNode() {
