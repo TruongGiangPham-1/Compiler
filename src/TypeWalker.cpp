@@ -129,7 +129,7 @@ namespace gazprea {
         }
 
         std::shared_ptr<Symbol> sym = std::make_shared<Symbol>("_");
-        auto tupleType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("tuple"));
+        auto tupleType = std::dynamic_pointer_cast<Type>(std::make_shared<AdvanceType>("tuple"));
 
         for (auto tupleVal : tree->val) {
             auto childType = tupleVal->evaluatedType;
@@ -270,21 +270,41 @@ namespace gazprea {
                     throw AssignError(tree->loc(), "Cannot assign to const");
                 }
             }
-            // TODO else tupleIndex
+            // TODO else tupleIndex else Syntax Error otherwise
 
             if (rhsType != nullptr) {
                 if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
                     return nullptr;
-                // TODO tuple handling and identity, null handling
+                // TODO identity and null handling
                 if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
+
+                    if (lvalue->evaluatedType->getName() == "tuple" and rhsType->getName() == "tuple") {
+                        if (lvalue->evaluatedType->tupleChildType.size() != rhsType->tupleChildType.size()) {
+                            throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+                        }
+                        for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
+                            auto leftTypeString = lvalue->evaluatedType->tupleChildType[i]->getName();
+                            auto rightTypeString = rhsType->tupleChildType[i]->getName();
+
+                            if (leftTypeString != rightTypeString) {
+                                auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                                auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                                std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                                if (resultTypeString.empty()) {
+                                    throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
+                                }
+                            }
+                        }
+                        tree->evaluatedType = rhsType;
+                    }
 
                     if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
                         tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
                     else
                         tree->evaluatedType = tree->getRvalue()->evaluatedType;
                 }
-                // TODO else tupleIndex
+                // TODO else tupleIndex and Syntax Error otherwise for any other expression?
             }
         }
         //TODO tuple unpack / assignment

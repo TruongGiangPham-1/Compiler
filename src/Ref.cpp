@@ -177,15 +177,11 @@ namespace gazprea {
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
-            std::shared_ptr<Type> resType = std::dynamic_pointer_cast<ExprNode>(tree->getExprNode())->type;
             if (!tree->getTypeNode()) {
-                 idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
+                 idSym = std::make_shared<VariableSymbol>(tree->getIDName(), nullptr);
             }
-#ifdef DEBUG
-            std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
-            printTupleType(resType);
-#endif
         }
+
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
         idSym->qualifier = tree->qualifier;
