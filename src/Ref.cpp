@@ -15,7 +15,7 @@ namespace gazprea {
             std::cout << "printinting tupleType ====\n";
             // print type of each child
             for (auto c: ty->tupleChildType) {
-                std::cout << c->getName() << "\n";
+                std::cout << c.second->getName() << "\n";
             }
             std::cout << "finish printinting tupleType ====\n";
 #endif
