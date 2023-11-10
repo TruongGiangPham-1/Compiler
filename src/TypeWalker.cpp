@@ -192,7 +192,9 @@ namespace gazprea {
         if(tree->sym == nullptr) {
             throw SymbolError(tree->loc(), "Unidentified Symbol referenced!");
         }
+        std::cout << "tuple print" << std::endl;
         tree->evaluatedType = tree->sym->typeSym;
+        std::cout << "" << std::endl;
         return nullptr;
     }
 

@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-#define DEBUG
+//#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int> mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -21,6 +21,50 @@ namespace gazprea {
 #endif
         } else {
         }
+    }
+
+    std::any Ref::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
+        // resolve id
+        walk(tree->getIDNode());
+        auto tupleNameNode = std::dynamic_pointer_cast<IDNode>(tree->getIDNode());
+
+
+        auto tupleIDsym = currentScope->resolve(tupleNameNode->getName());
+        if (tupleIDsym) {
+            // declared tuple
+            if (tupleIDsym->typeSym->baseTypeEnum != TYPE::TUPLE) {
+                throw SymbolError(tree->loc(), "cannot index non tuple");
+            } else {
+                tree->sym = tupleIDsym;
+
+
+                if (std::dynamic_pointer_cast<IDNode>(tree->getIndexNode())) {
+                    // index by ID
+                    auto idCast =  std::dynamic_pointer_cast<IDNode>(tree->getIndexNode());
+                    if (tupleIDsym->tupleIndexMap.find(idCast->getName()) == tupleIDsym->tupleIndexMap.end()) {  // mapint of tuple {ID: position}
+                        // cant find it
+                        throw SymbolError(tree->loc(), "this tupple id index not in tupple");
+                    } else {
+                        tree->index = tupleIDsym->tupleIndexMap[idCast->getName()];
+                    }
+                } else {
+                    // index by integer
+                    assert(std::dynamic_pointer_cast<IntNode>(tree->getIndexNode()));
+                    auto intCast =  std::dynamic_pointer_cast<IntNode>(tree->getIndexNode());
+                    tree->index = intCast->getVal();
+                    if (tree->index > tupleIDsym->typeSym->tupleChildType.size() || tree->index < 1) {
+                        // index out of bound(assume base i index
+                        throw SymbolError(tree->loc(), "tuple index out of bound");
+                    }
+                }
+#ifdef DEBUG
+                std::cout << " index tuple " << tupleIDsym->getName() << " at index=" << tree->index <<std::endl;
+#endif DEBUG
+            }
+        } else {
+            throw SymbolError(tree->loc(), "undeclared variable");
+        }
+        return 0;
     }
 
 
