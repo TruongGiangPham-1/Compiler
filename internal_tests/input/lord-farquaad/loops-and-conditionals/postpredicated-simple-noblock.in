@@ -1,0 +1,8 @@
+procedure main() returns integer {
+
+  integer x = 10;
+  /* Since the conditional is tested after the execution '10' is printed */
+  loop x -> std_output; while (x == 0);
+
+    return 1;
+}

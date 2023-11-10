@@ -37,16 +37,29 @@ lvalue
     ;
 
 cond
-    : RESERVED_IF '(' expression ')' '{' block '}'
-    (RESERVED_ELSE RESERVED_IF '(' expression ')' '{' block '}' )*
-    (RESERVED_ELSE '{' block '}' )?
+    : RESERVED_IF '(' expression ')' bodyStatement
+    (RESERVED_ELSE RESERVED_IF '(' expression ')' bodyStatement )*
+    (RESERVED_ELSE bodyStatement )?
     ;
 
 loop
-    : RESERVED_LOOP '{' block '}'                                                               #infiniteLoop
-    | RESERVED_LOOP RESERVED_WHILE '(' expression ')' '{' block '}'                             #predicatedLoop
-    | RESERVED_LOOP ID RESERVED_IN expression (',' ID RESERVED_IN expression)* '{' block '}'    #iteratorLoop
-    | RESERVED_LOOP '{' block '}' RESERVED_WHILE '(' expression ')' ';'                         #postPredicatedLoop
+    : RESERVED_LOOP bodyStatement                                                               #infiniteLoop
+    | RESERVED_LOOP RESERVED_WHILE '(' expression ')' bodyStatement                             #predicatedLoop
+    | RESERVED_LOOP ID RESERVED_IN expression (',' ID RESERVED_IN expression)* bodyStatement    #iteratorLoop
+    | RESERVED_LOOP bodyStatement RESERVED_WHILE '(' expression ')' ';'                         #postPredicatedLoop
+    ;
+
+// the body of a conditional or a loop could either be a braced block or a valid statement
+
+bodyStatement
+    : '{' block '}'
+    | assign
+    | break
+    | continue
+    | return
+    | stream
+    | cond
+    | loop
     ;
 
 break
