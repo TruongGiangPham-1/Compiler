@@ -698,10 +698,12 @@ int intBINOP(int l, int r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return fmod(l, r);
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l, r);
     default:
     RuntimeOPError("Unknown binary operation for INT");
@@ -737,10 +739,12 @@ float realBINOP(float l, float r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return fmod(l, r);
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l, r);
     default:
     RuntimeOPError("Unknown binary operation for REAL");

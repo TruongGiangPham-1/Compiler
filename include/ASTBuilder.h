@@ -60,6 +60,7 @@ namespace gazprea {
         std::any visitQualifier(GazpreaParser::QualifierContext *ctx) override;
         std::any visitAssign(GazpreaParser::AssignContext *ctx) override;
         std::any visitLvalue(GazpreaParser::LvalueContext *ctx) override;
+        std::any visitTupleIndex(GazpreaParser::TupleIndexContext *ctx) override;
 
         // typing
         std::any visitBaseType(GazpreaParser::BaseTypeContext *ctx) override;

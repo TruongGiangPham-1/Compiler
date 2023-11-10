@@ -1,0 +1,12 @@
+function f(integer x) returns integer;
+function f(real y) returns real;
+
+procedure main() returns integer {
+   f(10) -> std_output;
+   '\n' -> std_output;
+   return 0;
+}
+
+function f(real y) returns real {
+    return 2*y;
+}

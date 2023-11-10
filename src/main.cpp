@@ -55,6 +55,8 @@ int main(int argc, char **argv) {
 
   std::cout << "\n\n=== DEF PASS\n";
 #endif
+
+
   int mlirID = 1;
   std::shared_ptr<int>mlirIDptr = std::make_shared<int>(mlirID);
   std::shared_ptr<SymbolTable> symbolTable = std::make_shared<SymbolTable>();
@@ -99,6 +101,9 @@ int main(int argc, char **argv) {
 #endif
   BackendWalker backend(out);
   backend.generateCode(ast);
+#ifdef DEBUG
+    std::cout << "\n\n=== BACKEND END\n";
+#endif
 
 //  gazprea::DefRef defref(&symbolTable, ast);
 //  defref.visit(ast);
