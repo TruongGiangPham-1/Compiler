@@ -30,6 +30,7 @@
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/CallNode.h"
 #include "ASTNode/TypeDefNode.h"
+#include "ASTNode/Expr/TupleIndexNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -59,6 +60,7 @@ namespace gazprea {
         virtual std::any visitTuple(std::shared_ptr<TupleNode> tree);
         virtual std::any visitChar(std::shared_ptr<CharNode> tree);
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
+        virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
 
         // Expr/Binary
 

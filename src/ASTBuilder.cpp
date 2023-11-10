@@ -3,6 +3,7 @@
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Expr/TupleIndexNode.h"
 #include <memory>
 
 
@@ -419,6 +420,19 @@ namespace gazprea {
           t->bodies.push_back(std::any_cast<std::shared_ptr<ASTNode>>(visit(body)));
         }
 
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTupleIndex(GazpreaParser::TupleIndexContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitTupleIndex" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<TupleIndexNode>(ctx->getStart()->getLine());
+        t->addChild((visit(ctx->ID(0))));
+        if (ctx->INT())
+            t->addChild(visit(ctx->INT()));
+        else
+            t->addChild(visit(ctx->ID(1)));
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 

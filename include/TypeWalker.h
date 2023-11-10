@@ -44,6 +44,7 @@ namespace gazprea {
         std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         std::any visitID(std::shared_ptr<IDNode> tree) override;
+        std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
         std::any visitInt(std::shared_ptr<IntNode> tree) override;
         std::any visitReal(std::shared_ptr<RealNode> tree) override;
         std::any visitTuple(std::shared_ptr<TupleNode> tree) override;

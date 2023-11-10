@@ -133,7 +133,7 @@ namespace gazprea {
 
         for (auto tupleVal : tree->val) {
             auto childType = tupleVal->evaluatedType;
-            tupleType->tupleChildType.push_back(childType);
+            tupleType->tupleChildType.push_back(std::make_pair("", childType));
         }
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(tupleType);
         return nullptr;
@@ -196,6 +196,31 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
+        walkChildren(tree);
+        auto tupleId = std::dynamic_pointer_cast<IDNode>(tree->children[0]);
+        if (std::dynamic_pointer_cast<IDNode>(tree->children[1])) {
+            auto index = std::dynamic_pointer_cast<IDNode>(tree->children[1])->getName();
+            for (auto c: tupleId->evaluatedType->tupleChildType) {
+                if (index == c.first) {
+                    tree->evaluatedType = std::dynamic_pointer_cast<Type>(c.second);
+                    break;
+                }
+            }
+            if (!tree->evaluatedType) {
+                throw SymbolError(tree->loc(), "Undefined tuple index referenced");
+            }
+        }
+        else if (std::dynamic_pointer_cast<IntNode>(tree->children[1])) {
+            auto index = std::dynamic_pointer_cast<IntNode>(tree->children[1])->getVal();
+            if (index < 1 || index > tupleId->evaluatedType->tupleChildType.size()) {
+                throw SymbolError(tree->loc(), "Out of bound tuple index referenced");
+            }
+            tree->evaluatedType = std::dynamic_pointer_cast<Type>(tupleId->evaluatedType->tupleChildType[index-1].second);
+        }
+        return nullptr;
+    }
+
     std::any TypeWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
         walkChildren(tree);
         if (!tree->getTypeNode()) {
@@ -218,6 +243,17 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "Declaration is missing expression to infer type.");
         }
 
+        if (lType->getName() == "tuple") {
+            auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
+            for (size_t i = 0; i < tupleNode->innerTypes.size(); i++) {
+                auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+
+                if (leftTypeString == "tuple") {
+                    throw TypeError(tree->loc(), "Cannot have tuple as a tuple member");
+                }
+            }
+        }
+
         // TODO IDENTITY and NULL handling
         if (lType->getName() == "tuple" && rType->getName() == "tuple") {
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
@@ -226,7 +262,7 @@ namespace gazprea {
             }
             for (size_t i = 0; i < rType->tupleChildType.size(); i++) {
                 auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
-                auto rightTypeString = rType->tupleChildType[i]->getName();
+                auto rightTypeString = rType->tupleChildType[i].second->getName();
 
                 if (leftTypeString != rightTypeString) {
                     auto leftIndex = promotedType->getTypeIndex(rightTypeString);
@@ -270,7 +306,18 @@ namespace gazprea {
                     throw AssignError(tree->loc(), "Cannot assign to const");
                 }
             }
-            // TODO else tupleIndex else Syntax Error otherwise
+
+            else if(std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])) {
+                auto lvalue = std::dynamic_pointer_cast<IDNode>(std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])->children[0]);
+                auto symbol = lvalue->sym;
+                if (symbol != nullptr and symbol->qualifier == QUALIFIER::CONST) {
+                    throw AssignError(tree->loc(), "Cannot assign to const");
+                }
+            }
+
+            else
+                throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+
 
             if (rhsType != nullptr) {
                 if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
@@ -284,8 +331,8 @@ namespace gazprea {
                             throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
                         }
                         for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
-                            auto leftTypeString = lvalue->evaluatedType->tupleChildType[i]->getName();
-                            auto rightTypeString = rhsType->tupleChildType[i]->getName();
+                            auto leftTypeString = lvalue->evaluatedType->tupleChildType[i].second->getName();
+                            auto rightTypeString = rhsType->tupleChildType[i].second->getName();
 
                             if (leftTypeString != rightTypeString) {
                                 auto leftIndex = promotedType->getTypeIndex(rightTypeString);
@@ -304,7 +351,18 @@ namespace gazprea {
                     else
                         tree->evaluatedType = tree->getRvalue()->evaluatedType;
                 }
-                // TODO else tupleIndex and Syntax Error otherwise for any other expression?
+                else if (std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])) {
+                    auto tupleIndexNode = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0]);
+                    if (rhsType->getName() == "tuple") {
+                        throw TypeError(tree->loc(), "Cannot assign tuple to tuple index");
+                    }
+                    if (tree->getRvalue()->evaluatedType->getName() != tupleIndexNode->evaluatedType->getName())
+                        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), tupleIndexNode, tree);
+                    else
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;
+                }
+                else
+                    throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
             }
         }
         else {
@@ -313,24 +371,33 @@ namespace gazprea {
             if (lhsCount != rhsType->tupleChildType.size())
                 throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
+
+                std::string leftTypeString;
                 if (std::dynamic_pointer_cast<IDNode>(exprList->children[i])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[i]);
-                    auto leftTypeString = lvalue->evaluatedType->getName();
-                    auto rightTypeString = rhsType->tupleChildType[i]->getName();
+                    leftTypeString = lvalue->evaluatedType->getName();
+                }
+                else if (std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i])) {
+                    auto lvalue = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i]);
+                    leftTypeString = lvalue->evaluatedType->getName();
+                }
 
-                    if (leftTypeString != rightTypeString) {
-                        auto leftIndex = promotedType->getTypeIndex(rightTypeString);
-                        auto rightIndex = promotedType->getTypeIndex(leftTypeString);
-                        std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
-                        if (resultTypeString.empty()) {
-                            throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
-                        }
+                if (leftTypeString.empty()) {
+                    throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+                }
+
+                auto rightTypeString = rhsType->tupleChildType[i].second->getName();
+
+                if (leftTypeString != rightTypeString) {
+                    auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                    auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    if (resultTypeString.empty()) {
+                        throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
                     }
                 }
-                // TODO else tuple Index and Syntax Error otherwise for any other expr (eg, x, 1 = t)
             }
         }
-
         return nullptr;
     }
 
