@@ -1,0 +1,13 @@
+procedure main() returns integer {
+    call f(1);
+    a -> std_output;
+    '\n' -> std_output;
+    return 0;
+}
+
+procedure f(integer x) returns integer {
+    x -> std_output;
+    return 0;
+}
+
+procedure f(integer x) returns integer;

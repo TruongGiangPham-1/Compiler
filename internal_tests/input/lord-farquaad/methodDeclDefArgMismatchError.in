@@ -1,0 +1,13 @@
+function f(integer x, real y) returns integer;
+
+
+
+procedure main() returns integer {
+   return 0;
+
+}
+
+// argument type mismatch
+function f(integer x, integer y) returns integer {
+    return 2*x;
+}
