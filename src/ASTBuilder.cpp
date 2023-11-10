@@ -415,7 +415,7 @@ namespace gazprea {
           t->conditions.push_back(std::any_cast<std::shared_ptr<ASTNode>>(visit(condition)));
         }
 
-        for (auto body : ctx->block()) {
+        for (auto body : ctx->bodyStatement()) {
           t->bodies.push_back(std::any_cast<std::shared_ptr<ASTNode>>(visit(body)));
         }
 
@@ -481,9 +481,31 @@ namespace gazprea {
         auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
 
         for (auto statement : ctx->statement()) {
-          std::shared_ptr<ASTNode> statementNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(statement));
+          auto statementNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(statement));
           blockNode->addChild(statementNode);
         }
+
+        return std::dynamic_pointer_cast<ASTNode>(blockNode);
+    }
+
+    std::any ASTBuilder::visitBodyStatement(GazpreaParser::BodyStatementContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting body statement." << std::endl;
+#endif
+        // a body statement of a conditional or loop is a bit different
+        // it can be a block, or any valid one-line statement (not variable declarations)
+        // we still want to return a BlockNode though
+
+        // if the body statement is a block, simply return the inner block
+        if (ctx->block()) {
+            return visit(ctx->block());
+        }
+
+        // else, visit the child statement and return a block with that statement
+        // there is guaranteed to be only one child statement
+        auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
+        auto innerNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->children[0]));
+        blockNode->addChild(innerNode);
 
         return std::dynamic_pointer_cast<ASTNode>(blockNode);
     }
@@ -495,7 +517,7 @@ namespace gazprea {
         std::shared_ptr<ASTNode> t = std::make_shared<PredicatedLoopNode>(ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expression()));
-        t->addChild(visit(ctx->block()));
+        t->addChild(visit(ctx->bodyStatement()));
 
         return t;
     }
@@ -506,7 +528,7 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<InfiniteLoopNode>(ctx->getStart()->getLine());
 
-        t->addChild(visit(ctx->block()));
+        t->addChild(visit(ctx->bodyStatement()));
 
         return t;
     }
@@ -518,7 +540,7 @@ namespace gazprea {
         std::shared_ptr<ASTNode> t = std::make_shared<PostPredicatedLoopNode>(ctx->getStart()->getLine());
 
         t->addChild(visit(ctx->expression()));
-        t->addChild(visit(ctx->block()));
+        t->addChild(visit(ctx->bodyStatement()));
 
         return t;
     }
