@@ -333,16 +333,14 @@ namespace gazprea {
     std::any Ref::visitID(std::shared_ptr<IDNode> tree) {
         std::shared_ptr<Symbol> referencedSymbol;
         referencedSymbol = currentScope->resolve(tree->sym->getName());
-
         tree->scope = currentScope;
-        tree->sym = referencedSymbol;
 
         if (referencedSymbol == nullptr) {
 #ifdef DEBUG
             std::cout << "in line " << tree->loc()
                       << " ref null\n"; // variable not defined
 #endif
-            throw SyntaxError(tree->loc(), "Undeclared variable " + tree->sym->getName());
+            throw SymbolError(tree->loc(), "Undeclared variable " + tree->sym->getName());
         } else {
 #ifdef DEBUG
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
@@ -353,6 +351,9 @@ namespace gazprea {
             std::cout << "\n";
 #endif
         }
+
+        tree->sym = referencedSymbol;
+
         return 0;
     }
 
