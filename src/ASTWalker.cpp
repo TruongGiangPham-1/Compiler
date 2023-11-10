@@ -406,4 +406,10 @@ namespace gazprea {
     std::any ASTWalker::visitCast(std::shared_ptr<CastNode> tree) {
         return this->walkChildren(tree);
     }
+    std::any ASTWalker::visitNull(std::shared_ptr<NullNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+        return this->walkChildren(tree);
+    }
 }
