@@ -34,7 +34,7 @@ namespace gazprea {
                 // first time seeing this prototype in the file
                 this->funcProtypeList.emplace(tree->funcNameSym->getName(), tree);
             } else {
-                throw SymbolError(tree->loc(), "redeclaration of prootype method");
+                throw SymbolError(tree->loc(), ":redeclaration of prootype method");
             }
             return 0;  // forward declaration node, we skip
         }
@@ -57,7 +57,7 @@ namespace gazprea {
                 walk(tree->expr);
             } else {
                 // we should never reach here
-                throw SymbolError(tree->loc(), "weird this is the most important thing");
+                throw SymbolError(tree->loc(), ":weird this is the most important thing");
             }
 
             currentScope = symtab->exitScope(currentScope);  // pop local scope
@@ -127,7 +127,7 @@ namespace gazprea {
                     }
                 }
             } else {
-                throw SymbolError(tree->loc(), "function same name as another identifier in the global scope");
+                throw SymbolError(tree->loc(), ":function same name as another identifier in the global scope");
             }
         }
         return 0;
@@ -161,7 +161,7 @@ namespace gazprea {
             // any procedure call in an expression will trigger functionCall runle :(
             std::shared_ptr<ProcedureSymbol> cast = std::dynamic_pointer_cast<ProcedureSymbol>(sym);
             if (tree->loc() < (size_t) cast->line) {
-                throw SymbolError(tree->loc(), "procedure " + cast->getName() + " not defined at this point");
+                throw SymbolError(tree->loc(), ":procedure " + cast->getName() + " not defined at this point");
             } else {
 #ifdef DEBUG
                 std::cout << "line: " << tree->loc() << " ref procedure call " << sym->getName() << "\n";
@@ -175,7 +175,7 @@ namespace gazprea {
             // function call overshaddowed by a non function declaration above || function dont exist
             std::string errMSg = sym->getName() + " is not a function to be called. It is undefined or overshadowed"
                                                   "by another declaration above\n";
-            throw SymbolError(tree->loc(), errMSg);
+            throw SymbolError(tree->loc(), ":" + errMSg);
         }
         return 0;
 
@@ -191,7 +191,7 @@ namespace gazprea {
                 // first time seeing this prototype in the file
                 this->procProtypeList.emplace(tree->nameSym->getName(), tree);
             } else {
-                throw SymbolError(tree->loc(), "redeclaration of prootype method");
+                throw SymbolError(tree->loc(), ":redeclaration of prootype method");
             }
             return 0;  // forward declaration node, we skip
         }
@@ -271,7 +271,7 @@ namespace gazprea {
                     tree->body = nullptr;
                 }
             } else {
-                throw SymbolError(tree->loc(), "procedure same name as another identifier in the global scope");
+                throw SymbolError(tree->loc(), ":procedure same name as another identifier in the global scope");
             }
         }
         return 0;
@@ -295,7 +295,7 @@ namespace gazprea {
 
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
-            throw SymbolError(tree->loc(), "redeclaration of identifier " + tree->getIDName());
+            throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
         }
 
         // define the ID in symtable
