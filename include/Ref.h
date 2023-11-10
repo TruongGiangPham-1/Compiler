@@ -19,12 +19,25 @@
 namespace gazprea {
     class Ref: public ASTWalker {
     public:
+        /*
+         * as stan suggested. whenenever i see a method prototype, I will store it in thse maps
+         * Whenever I see a method definition that appears after its method prototype, I will swap the bodies with the prototype to move it up higher
+         * in file
+         *
+         */
+        std::unordered_map<std::string, std::shared_ptr<FunctionNode>> funcProtypeList;  // map forwad declared function prototype  for swapping
+        std::unordered_map<std::string, std::shared_ptr<ProcedureNode>> procProtypeList;  // map forwad declared function prototype for swapping
+
+
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
         int getNextId();
         void defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
                                           std::shared_ptr<Type> retType ,int isFunc); //
+        void defineForwardFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
+                                            std::shared_ptr<Type> retType ); //
+        void parametersTypeCheck(std::shared_ptr<Type> typ1, std::shared_ptr<Type> type2, int loc);
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;

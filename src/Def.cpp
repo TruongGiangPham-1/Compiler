@@ -44,55 +44,47 @@ std::any Def::visitID(std::shared_ptr<IDNode> tree) {
 }
 
 std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
-    //  typdef type id;
     // define type def mapping
-   // symtab->globalScope->defineType(std::make_shared<AdvanceType>(tree->getType()->getTypeName(), tree->getName()));
     std::string typdefToString = tree->getName();
     symtab->defineTypeDef(tree->getType(), typdefToString, getNextId());
     return 0;
 }
 
 std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+
     // define if it is forwrd declaration
+
     if (tree->body) {
-        // not a forward decl, so we just skip it in def pass
+        // loop invariant, if it has body then forward declaration appears after this line, so it doesnt matter
         return 0;
     }  else {
         // forward declaration method
         std::shared_ptr<Type>retType;
-        if (tree->hasReturn) {
+        if (tree->getRetTypeNode()) {  // has return
             retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            if (retType == nullptr) throw TypeError(tree->loc(), "cannot verify types");
         }
-        tree->nameSym->typeSym = retType;  // set return type
-        // define procedure scope Symbol
-        std::string fname = "ProcedureScope" + tree->nameSym->getName() + std::to_string(tree->loc());
-        std::shared_ptr<ProcedureSymbol> procSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
-                                                                                     fname, retType, symtab->globalScope, tree->loc());
+        std::string scopeName= "procScope" + tree->nameSym->getName() +std::to_string(tree->loc());
+        std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
+                                                          scopeName, retType, symtab->globalScope, tree->loc());
 
-        currentScope->define(procSym);  // define methd symbol in global
+        methodSym->typeSym = retType;
 #ifdef DEBUG
-        std::cout << "defined method " << procSym->getName() << " in scope " << currentScope->getScopeName() << "\n";
-#endif
-        currentScope = symtab->enterScope( procSym);
-
-        // define args
-        for (auto argAST: tree->orderedArgs) {
-            // define this myself, dont need mlir name because arguments are
-            auto argNode = std::dynamic_pointer_cast<ArgNode>(argAST);
-            assert(argNode);  // not null
-            assert(argNode->type);
-            auto res= symtab->resolveTypeUser(argNode->type);
-            if (res == nullptr) throw TypeError(tree->loc(), "unknown type ");
-            argNode->idSym->typeSym = res;
-#ifdef DEBUG
-            std::cout << "in line " << tree->loc()
-                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName()
-                      << " as type " << argNode->idSym->typeSym->getName() <<"\n";
-#endif
-            currentScope->define(argNode->idSym);  // define arg in curren scope
-            argNode->scope = currentScope;  // set scope to function scope
+        if (retType) {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+        } else {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
         }
-        currentScope = symtab->exitScope(currentScope);
+#endif
+        // Here I am just adding argument symbol to the list of 'forwardDeclArgs' so that my Ref pass will be able to take this list and compare it with
+        // method definition's arg for type check etc
+        for (auto arg: tree->orderedArgs) {
+            // define arg symbols
+            methodSym->forwardDeclArgs.push_back(arg);
+        }
+        currentScope->define(methodSym);  // define methd symbol in global
+//        defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, retType , 0);
+//        currentScope = symtab->exitScope(currentScope);  // exit the argument scope
         assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // make sure we back to global scope
     }
     return 0;
@@ -120,7 +112,34 @@ std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     if (tree->body || tree->expr) {  // we skip all function definition in def pass
         return 0;
     } else {
-        // TOODO: forward functino decl
+        // forward declaration method
+        // I will just define the symbol
+        std::shared_ptr<Type>retType;
+        if (tree->getRetTypeNode()) {  // has return
+            retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            if (retType == nullptr) throw TypeError(tree->loc(), "cannot verify types");
+        }
+        std::string scopeName= "funcScope" + tree->funcNameSym->getName() +std::to_string(tree->loc());
+        std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
+                                                                                    scopeName, retType, symtab->globalScope, tree->loc());
+        methodSym->typeSym = retType;
+#ifdef DEBUG
+        if (retType) {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " ret type "  << retType->getName() <<"\n";
+        } else {
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName() << " no ret type \n";
+        }
+#endif
+        // Here I am just adding argument nodes to the list of 'forwardDeclArgs' so that my Ref pass will be able to take this list and compare it with
+        // method definition's arg for type check etc
+        for (auto arg: tree->orderedArgs) {
+            // define arg symbols
+            methodSym->forwardDeclArgs.push_back(arg);
+        }
+        currentScope->define(methodSym);  // define methd symbol in global
+//        defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, retType , 0);
+//        currentScope = symtab->exitScope(currentScope);  // exit the argument scope
+        assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));  // make sure we back to global scope
     }
     return 0;
 }
@@ -128,9 +147,6 @@ std::any Def::visitCall(std::shared_ptr<CallNode> tree) {
     // SKIP in def pass
     return 0;
 }
-
-
-
 
 int Def::getNextId() {
     (*varID) ++;

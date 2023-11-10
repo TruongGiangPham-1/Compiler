@@ -1,0 +1,8 @@
+//
+// Created by truong on 10/11/23.
+//
+
+#ifndef GAZPREABASE_TUPLEINDEXNODE_H
+#define GAZPREABASE_TUPLEINDEXNODE_H
+
+#endif //GAZPREABASE_TUPLEINDEXNODE_H
