@@ -1,0 +1,14 @@
+procedure passByReference(integer a, integer b) returns integer {
+  a = 17;
+  return a + b;
+}
+
+
+procedure main() returns integer {
+  var integer a = 5;
+  a -> std_output;
+  '\n' -> std_output;
+  var integer b = passByReference(a,b);
+  a -> std_output;
+}
+
