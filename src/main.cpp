@@ -100,7 +100,13 @@ int main(int argc, char **argv) {
   std::cout << "\n\n=== CODEGEN\n";
 #endif
   BackendWalker backend(out);
-  backend.generateCode(ast);
+  try {
+      backend.generateCode(ast);
+  }
+  catch (CompileTimeException& e) {
+      std::cerr << e.what();
+      return 1;
+  }
 #ifdef DEBUG
     std::cout << "\n\n=== BACKEND END\n";
 #endif
