@@ -398,7 +398,7 @@ namespace gazprea {
             std::cout << "in line " << tree->loc()
                       << " ref null\n"; // variable not defined
 #endif
-            throw SymbolError(tree->loc(), "Undeclared variable " + tree->sym->getName());
+            throw SymbolError(tree->loc(), "Undeclared variable ");
         } else {
 #ifdef DEBUG
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
