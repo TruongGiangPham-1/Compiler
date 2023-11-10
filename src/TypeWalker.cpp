@@ -307,7 +307,30 @@ namespace gazprea {
                 // TODO else tupleIndex and Syntax Error otherwise for any other expression?
             }
         }
-        //TODO tuple unpack / assignment
+        else {
+            if (rhsType->getName() != "tuple")
+                throw TypeError(tree->loc(), "Tuple Unpacking requires a tuple as the r-value.");
+            if (lhsCount != rhsType->tupleChildType.size())
+                throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+            for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
+                if (std::dynamic_pointer_cast<IDNode>(exprList->children[i])) {
+                    auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[i]);
+                    auto leftTypeString = lvalue->evaluatedType->getName();
+                    auto rightTypeString = rhsType->tupleChildType[i]->getName();
+
+                    if (leftTypeString != rightTypeString) {
+                        auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                        auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                        std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                        if (resultTypeString.empty()) {
+                            throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
+                        }
+                    }
+                }
+                // TODO else tuple Index and Syntax Error otherwise for any other expr (eg, x, 1 = t)
+            }
+        }
+
         return nullptr;
     }
 
