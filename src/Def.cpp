@@ -91,23 +91,6 @@ std::any Def::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
 }
 
 
-std::any Def::visitConditional(std::shared_ptr<ConditionalNode> tree) {
-
-    for (auto condition : tree->conditions) {
-      walk(condition);
-    }
-        // enter scope
-    std::string sname = "loopcond" + std::to_string(tree->loc());
-    currentScope = symtab->enterScope(sname, currentScope);
-
-    for (auto body: tree->bodies) {
-        walk(body);
-    }
-    currentScope = symtab->exitScope(currentScope);
-    return 0;
-}
-
-
 std::any Def::visitFunction(std::shared_ptr<FunctionNode> tree) {
     if (tree->body || tree->expr) {  // we skip all function definition in def pass
         return 0;
