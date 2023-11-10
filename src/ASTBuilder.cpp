@@ -568,11 +568,6 @@ namespace gazprea {
         auto blockResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->block()));
         procedureNode->body = blockResult;
       }
-      if (ctx->RESERVED_RETURNS()) {
-          // has return
-          procedureNode->addChild(visit(ctx->type()));
-
-      }
 
       return std::dynamic_pointer_cast<ASTNode>(procedureNode);
     }
