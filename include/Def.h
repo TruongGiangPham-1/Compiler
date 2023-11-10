@@ -17,10 +17,10 @@ namespace gazprea {
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
-
         int getNextId();
 
         Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID);
+
 
         std::shared_ptr<int> varID;
 
@@ -38,8 +38,6 @@ namespace gazprea {
         //std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
 
         // === BLOCK AST NODES ===
-        std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
-
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
         std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
