@@ -2,6 +2,7 @@
 
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
+#include "run_time_errors.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -574,6 +575,7 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case EQUAL:
     return l == r;
@@ -590,6 +592,7 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     // we do a little truth table analysis
     return !(!l & r);
     case AND:
@@ -610,10 +613,12 @@ int intBINOP(int l, int r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l,r);
     case AND:
     return l & r;
@@ -656,10 +661,12 @@ float realBINOP(float l, float r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return fmod(l, r);
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l, r);
     case AND:
       {
@@ -742,10 +749,12 @@ char charBINOP(char l, char r, enum BINOP op) {
     case MULT:
     return l * r;
     case DIV:
+    if (r==0) MathError("cannot divide by zero");
     return l/r;
     case REM:
     return l % r;
     case EXP:
+    if (r==0 && r ==0) MathError("cannot exponentiate zero to the power of zero");
     return pow(l,r);
     case AND:
     return l & r;
