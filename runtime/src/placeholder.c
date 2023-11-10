@@ -988,5 +988,9 @@ bool commonTypeToBool(commonType* val) {
   }
 }
 
-
+// assume we are indexing a tuploe item
+commonType* indexCommonType(commonType* indexee, int indexor) {
+  tuple* tup = (tuple*)indexee->value;
+  return tup->values[indexor];
+}
 
