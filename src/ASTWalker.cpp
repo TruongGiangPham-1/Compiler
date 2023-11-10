@@ -91,6 +91,13 @@ namespace gazprea {
             return this->visitExpressionList(std::dynamic_pointer_cast<ExprListNode>(tree));
         }
 
+        else if (std::dynamic_pointer_cast<TupleIndexNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit tupleIndex " << std::endl;
+#endif // DEBUG
+            return this->visitTupleIndex(std::dynamic_pointer_cast<TupleIndexNode>(tree));
+        }
+
         else if (std::dynamic_pointer_cast<IDNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit ID" << std::endl;
@@ -290,6 +297,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitChar(std::shared_ptr<CharNode> tree) {

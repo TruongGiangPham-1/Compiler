@@ -15,7 +15,7 @@ namespace gazprea {
             std::cout << "printinting tupleType ====\n";
             // print type of each child
             for (auto c: ty->tupleChildType) {
-                std::cout << c->getName() << "\n";
+                std::cout << c.second->getName() << "\n";
             }
             std::cout << "finish printinting tupleType ====\n";
 #endif
@@ -314,11 +314,11 @@ namespace gazprea {
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
-            std::shared_ptr<Type> resType = std::dynamic_pointer_cast<ExprNode>(tree->getExprNode())->type;
             if (!tree->getTypeNode()) {
                  idSym = std::make_shared<VariableSymbol>(tree->getIDName(), nullptr);
             }
         }
+
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
         idSym->qualifier = tree->qualifier;
