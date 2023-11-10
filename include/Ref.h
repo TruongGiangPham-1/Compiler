@@ -12,6 +12,8 @@
 #include "ScopedSymbol.h"
 #include "FunctionCallTypes/FuncCallType.h"
 #include "AdvanceType.h"
+#include "ASTNode/Type/TupleTypeNode.h"
+#include "ASTNode/Type/TypeNode.h"
 
 
 namespace gazprea {
@@ -40,6 +42,7 @@ namespace gazprea {
 
         std::shared_ptr<int> varID;
 
+        std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
 
         // === EXPRESSION AST NODES ===
         std::any visitID(std::shared_ptr<IDNode> tree) override;
