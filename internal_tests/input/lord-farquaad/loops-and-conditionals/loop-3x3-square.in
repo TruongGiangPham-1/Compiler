@@ -8,9 +8,8 @@ procedure main() returns integer {
 
         /* Normally this would loop forever, but the break exits this inner loop */
         loop {
-            if (x >= 3) {
+            if (x >= 3)
                 break;
-            }
 
             x = x + 1;
             '*' -> std_output;

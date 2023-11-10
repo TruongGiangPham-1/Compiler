@@ -1,0 +1,7 @@
+procedure main() returns integer {
+  1 -> std_output;
+  if (1 == 0)
+    2 -> std_output;
+    3 -> std_output;
+  return 0;
+}

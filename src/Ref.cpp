@@ -398,7 +398,7 @@ namespace gazprea {
             std::cout << "in line " << tree->loc()
                       << " ref null\n"; // variable not defined
 #endif
-            throw SymbolError(tree->loc(), "Undeclared variable " + tree->sym->getName());
+            throw SymbolError(tree->loc(), "Undeclared variable ");
         } else {
 #ifdef DEBUG
             std::cout << "in line " << tree->loc() << " id=" << tree->sym->getName()
@@ -485,6 +485,7 @@ namespace gazprea {
             // define mlirname
             argNode->idSym->scope = currentScope;
             argNode->idSym->index = index;
+            argNode->idSym->qualifier = argNode->qualifier;
             index++;
             currentScope->define(argNode->idSym);  // define arg in curren scope
             argNode->scope = currentScope;  // set scope to function scope
