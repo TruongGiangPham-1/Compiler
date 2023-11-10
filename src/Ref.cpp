@@ -364,7 +364,7 @@ namespace gazprea {
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
 
             auto resType = symtab->resolveTypeUser(argNode->type);
-            argNode->idSym->typeSym =  retType;
+            argNode->idSym->typeSym =  resType;
             if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
 #ifdef DEBUG
             std::cout << "in line " << loc
