@@ -22,7 +22,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
  
 
   for (auto destNode : exprList->children) {
-    auto dest = std::any_cast<mlir::Value>(destNode);
+    auto dest = std::any_cast<mlir::Value>(walk(destNode));
     codeGenerator.generateAssignment(dest, val);
   }
 

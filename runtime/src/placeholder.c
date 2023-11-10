@@ -202,10 +202,10 @@ void extractAndAssignValue(void* value, commonType *dest) {
       break;
   }
 }
-commonType* copyCommonType(commonType* copyFrom);
+void* copyValue(commonType* copyFrom);
 
 void assignByReference(commonType* dest, commonType* from) {
-  dest->value = copyCommonType(from);
+  dest->value = copyValue(from);
 }
 
 commonType* allocateCommonType(void* value, enum TYPE type) {
@@ -220,15 +220,42 @@ commonType* allocateCommonType(void* value, enum TYPE type) {
   return newType;
 }
 
-commonType* copyCommonType(commonType* copyFrom) {
-  if (copyFrom->type == TUPLE) {
-    printf("\n\ncopying a tuple");
-    tuple* copiedTuple = copyTuple((tuple*)copyFrom->value);
-    return allocateCommonType(&copiedTuple, TUPLE);
-  } else {
-    printf("\n\ncopying a regular type");
-    return allocateCommonType(copyFrom->value, copyFrom->type);
-  }
+void* copyValue(commonType* copyFrom) {
+   switch (copyFrom->type) {
+    case INTEGER:
+      {
+        int* newIntVal = malloc(sizeof(int));
+        *newIntVal = *(int*)copyFrom->value;
+        return newIntVal;
+      }
+      break;
+    case BOOLEAN:
+      {
+        bool* newBoolVal = malloc(sizeof(bool));
+        *newBoolVal = *(bool*)copyFrom->value;
+        return newBoolVal;
+      }
+      break;
+    case REAL:
+      {
+        float* newFloatVal = malloc(sizeof(float));
+        *newFloatVal = *(float*)copyFrom->value;
+        return newFloatVal;
+      }
+      break;
+    case TUPLE:
+      {
+        return copyTuple((tuple*)copyFrom->value);
+      }
+      break;
+    case CHAR: 
+      {
+        char* newCharVal = malloc(sizeof(char));
+        *newCharVal = *(char*)copyFrom->value;
+        return newCharVal;
+      }
+      break;
+  } 
 }
 
 void deallocateTuple(tuple* tuple) {
