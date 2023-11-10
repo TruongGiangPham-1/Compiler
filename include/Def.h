@@ -17,10 +17,10 @@ namespace gazprea {
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
 
-
         int getNextId();
 
         Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID);
+
 
         std::shared_ptr<int> varID;
 

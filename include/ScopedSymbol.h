@@ -12,6 +12,8 @@ public:
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;
 
+    std::vector<std::shared_ptr<ASTNode>>forwardDeclArgs;  // arguments of the forward declared
+
     ScopedSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope)
             : Symbol(symName, retType), enclosingScope(enclosingScope) {};
     // from Scope.h
@@ -47,6 +49,7 @@ class ProcedureSymbol: public ScopedSymbol {
 public:
     std::string scopeName;
     int line;  // line number it was created
+
     ProcedureSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line):
     ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName), line(line) {};
     std::string getScopeName() override {
