@@ -37,7 +37,7 @@
 #include "Operands/BINOP.h"
 #include "BackEnd.h"
 
-//#define DEBUG
+#define DEBUG
 
 /**
  *  Set up main function

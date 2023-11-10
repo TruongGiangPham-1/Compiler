@@ -91,6 +91,20 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
   return codeGenerator.generateValue(values);
 }
 
+std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
+  std::cout << "HERE" << std::endl;
+  mlir::Value indexee;
+
+  // indexee isn't an expression. HACK
+  if (tree->sym->index >= 0) {
+    indexee = codeGenerator.generateLoadArgument(tree->sym->index);
+  } else {
+    indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
+
+  return codeGenerator.indexCommonType(indexee, tree->index);
+}
+
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
