@@ -55,8 +55,8 @@ namespace gazprea {
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
 
         // streams
-        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
-        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+        //std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        //std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
 
         std::string typeEnumToString(TYPE t);
     };
