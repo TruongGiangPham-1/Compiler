@@ -56,8 +56,11 @@ namespace gazprea {
         //std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
         //std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
 
-        // Loop
+        // Loops and conditionals
         std::any visitConditional(std::shared_ptr<ConditionalNode> tree) override;
+        std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
+        std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
+        std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
 
 
         // miscaleous function

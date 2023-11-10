@@ -502,6 +502,48 @@ namespace gazprea {
     }
 
     std::any Ref::visitConditional(std::shared_ptr<ConditionalNode> tree) {
+        for (auto condition : tree->conditions) {
+            walk(condition);
+        }
+
+        for (auto body: tree->bodies) {
+            // enter scope
+            std::string sname = "loopcond" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+            walk(body);
+            currentScope = symtab->exitScope(currentScope);
+        }
+        return 0;
+    }
+
+    std::any Ref::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
+        // enter scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
+
+    std::any Ref::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+
+        // enter scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
+
+    std::any Ref::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+
+        // enter scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
         return 0;
     }
 
