@@ -204,6 +204,16 @@ void extractAndAssignValue(void* value, commonType *dest) {
 }
 void* copyValue(commonType* copyFrom);
 
+commonType* copyCommonType(commonType* copyFrom) {
+  commonType* copy = (commonType*)malloc(sizeof(commonType));
+  copy->type = copyFrom->type;
+  copy->value = copyValue(copyFrom);
+  return copy;
+}
+
+
+
+
 void assignByReference(commonType* dest, commonType* from) {
   dest->value = copyValue(from);
 }
