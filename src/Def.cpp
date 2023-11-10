@@ -3,7 +3,7 @@
 // NOTE: ALL THE DEF PASS WILL LOOK FOR GLOBAL DECLARATION / FORWARD DECLARATION
 //
 #include "../include/Def.h"
-#define DEBUG
+//#define DEBUG
 namespace gazprea {
 Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symtab(symTab), varID(mlirID) {
 
