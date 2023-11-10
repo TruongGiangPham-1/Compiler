@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-//#define DEBUG
+#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -364,7 +364,7 @@ namespace gazprea {
             argNode->idSym->mlirName =  "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
 
             auto resType = symtab->resolveTypeUser(argNode->type);
-            argNode->idSym->typeSym =  retType;
+            argNode->idSym->typeSym =  resType;
             if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
 #ifdef DEBUG
             std::cout << "in line " << loc
