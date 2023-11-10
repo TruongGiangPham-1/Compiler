@@ -2,7 +2,12 @@
 // Created by truong on 10/11/23.
 //
 
-#ifndef GAZPREABASE_TUPLEINDEXNODE_H
-#define GAZPREABASE_TUPLEINDEXNODE_H
 
-#endif //GAZPREABASE_TUPLEINDEXNODE_H
+#pragma once
+#include "ASTNode/ASTNode.h"
+
+// Children - [IDNode, (IDNode | IntNode)]
+class TupleIndexNode : public ASTNode {
+public:
+    TupleIndexNode(int line) : ASTNode(line) {}
+};

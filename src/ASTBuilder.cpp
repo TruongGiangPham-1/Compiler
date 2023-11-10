@@ -3,6 +3,7 @@
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Expr/TupleIndexNode.h"
 #include <memory>
 
 
@@ -419,6 +420,23 @@ namespace gazprea {
           t->bodies.push_back(std::any_cast<std::shared_ptr<ASTNode>>(visit(body)));
         }
 
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitTupleIndex(GazpreaParser::TupleIndexContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitTupleIndex" << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<TupleIndexNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID(0)->getSymbol()->getText());
+        t->addChild(std::dynamic_pointer_cast<ASTNode>(std::make_shared<IDNode>(ctx->getStart()->getLine(), sym)));
+        if (ctx->INT()) {
+            t->addChild(std::dynamic_pointer_cast<ASTNode>(std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->INT()->getText()))));
+        }
+        else {
+            std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->ID(1)->getSymbol()->getText());
+            t->addChild(std::dynamic_pointer_cast<ASTNode>(std::make_shared<IDNode>(ctx->getStart()->getLine(), sym)));
+        }
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
