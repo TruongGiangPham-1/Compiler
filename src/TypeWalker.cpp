@@ -1,7 +1,9 @@
 #include "TypeWalker.h"
 #include "ASTNode/Type/TupleTypeNode.h"
 //#define DEBUG
-// #define SKIP_STREAMOUT_TYPECHECK
+
+// until we get more typecheck done
+#define SKIP_STREAMOUT_TYPECHECK
 
 namespace gazprea {
 
