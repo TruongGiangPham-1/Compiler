@@ -177,7 +177,6 @@ void BackEnd::setupCommonTypeRuntime() {
   auto commonReferenceAssign = mlir::LLVM::LLVMFunctionType::get(voidType, {commonTypeAddr, commonTypeAddr});
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
-
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "assignByReference",
                                             commonReferenceAssign);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "performCommonTypeBINOP",
