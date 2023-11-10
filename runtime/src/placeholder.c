@@ -1,6 +1,7 @@
 #include "Operands/BINOP.h"
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
+#include "run_time_errors.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +22,24 @@ bool isCOMP(enum BINOP op) {
     return false;
   }
 }
+
+bool ValidType(enum TYPE type) {
+  switch (type) {
+    case INTEGER:
+    return true;
+    case CHAR:
+    return true;
+    case REAL:
+    return true;
+    case BOOLEAN:
+    return true;
+    case TUPLE:
+    return true;
+    default:
+    return false;
+  }
+}
+
 //#define DEBUGTUPLE
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
@@ -403,7 +422,7 @@ commonType* boolCast(bool fromValue, enum TYPE toType) {
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
   #endif /* ifdef DEBUGTYPES */
-    return NULL;
+    CastError("Invalid cast from bool, type not recognized or implemented");
   }
 }
 
@@ -436,7 +455,7 @@ commonType* intCast(int fromValue, enum TYPE toType) {
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
   #endif /* ifdef DEBUGTYPES */
-    return NULL;
+    CastError("Invalid cast from int, type not recognized or implemented");
   }
 }
 
@@ -469,7 +488,7 @@ commonType* charCast(char fromValue, enum TYPE toType) {
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
   #endif /* ifdef DEBUGTYPES */
-    return NULL;
+    CastError("Invalid cast from char, type not recognized or implemented");
   }
 }
 
@@ -498,15 +517,18 @@ commonType* realCast(float fromValue, enum TYPE toType) {
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
   #endif /* ifdef DEBUGTYPES */
-      return NULL;
+    CastError("Invalid cast from real, type not recognized or implemented");
+    return NULL;
   }
 }
 
 commonType* cast(commonType* from, enum TYPE toType) {
+  if (!ValidType(toType)) {
+    UnsupportedTypeError("Cast recieved a type it could not recognize");
+  }
 #ifdef DEBUGTYPES
     printf("Choosing appropriate case...\n");
 #endif /* ifdef DEBUGTYPES */
-
   switch (from->type) {
     case BOOLEAN:
 #ifdef DEBUGTYPES
@@ -538,6 +560,7 @@ commonType* cast(commonType* from, enum TYPE toType) {
 #ifdef DEBUGTYPES
     printf("Error! Uncastable type!\n");
 #endif /* ifdef DEBUGTYPES */
+    CastError("Invalid cast, type not recognized or implemented");
     return NULL;
   }
 }
@@ -558,6 +581,7 @@ commonType* boolPromotion(commonType* fromValue, enum TYPE toType) {
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
 #endif /* ifdef DEBUGTYPES */
+  PromotionError("Invalid promotion from bool");
   return NULL;
   }
 }
@@ -584,6 +608,7 @@ commonType* intPromotion(commonType* fromValue, enum TYPE toType) {
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
 #endif /* ifdef DEBUGTYPES */
+    PromotionError("Invalid promotion from int");
     return NULL;
   }
 }
@@ -604,6 +629,7 @@ commonType* charPromotion(commonType* fromValue, enum TYPE toType) {
 #ifdef DEBUGTYPES
     printf("Error! Promotion not possible\n");
 #endif /* ifdef DEBUGTYPES */
+    PromotionError("Invalid promotion from char");
     return NULL;
   }
 }
@@ -627,6 +653,7 @@ commonType* realPromotion(commonType* fromValue, enum TYPE toType) {
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
 #endif /* ifdef DEBUGTYPES */
+    PromotionError("Invalid promotion from real");
     return NULL;
   }
 }
@@ -640,48 +667,25 @@ commonType* promotion(commonType* from, commonType* to) {
     return intPromotion(from, to->type);
     case CHAR:
     return charPromotion(from, to->type);
-    case TUPLE:
-    // don't think we need this 
-    return NULL;
-    break;
     case REAL:
     return realPromotion(from, to->type);
+    default:
+    PromotionError("Attempting promotion on invalid or tuple type");
+    return NULL;
   }
 }
 
 bool boolBINOP(bool l, bool r, enum BINOP op) {
   switch (op) {
-    case ADD:
-    return l + r;
-    case SUB:
-    return l - r;
-    case MULT:
-    return l * r;
-    case DIV:
-    return l/r;
-    case EQUAL:
-    return l == r;
-    case NEQUAL:
-    return l != r;
-    case LTHAN:
-    return l < r;
-    case LEQ:
-    return l <= r;
-    case GTHAN:
-    return r > l;
-    case GEQ:
-    return r >= l;
-    case REM:
-    return l % r;
-    case EXP:
-    // we do a little truth table analysis
-    return !(!l & r);
     case AND:
     return l & r;
     case OR:
     return l | r;
     case XOR:
     return l ^ r;
+    default:
+    RuntimeOPError("Unknown binary operation for BOOL");
+    return NULL;
   }
 }
 
@@ -696,17 +700,11 @@ int intBINOP(int l, int r, enum BINOP op) {
     case DIV:
     return l/r;
     case REM:
-    return l % r;
+    return fmod(l, r);
     case EXP:
-    return pow(l,r);
-    case AND:
-    return l & r;
-    case OR:
-    return l | r;
-    case XOR:
-    return l ^ r;
+    return pow(l, r);
     default:
-    // should never be here
+    RuntimeOPError("Unknown binary operation for INT");
     return NULL;
   }
 }
@@ -726,8 +724,7 @@ bool intCOMP(int l, int r, enum BINOP op) {
     case GEQ:
     return l >= r;
     default:
-    // should never be here
-    return NULL;
+    RuntimeOPError("Unknown comparison operation for INT");
   }
 }
 
@@ -745,56 +742,8 @@ float realBINOP(float l, float r, enum BINOP op) {
     return fmod(l, r);
     case EXP:
     return pow(l, r);
-    case AND:
-      {
-      // more memory hacking
-      // floats cannot be binop'd. Have to put their bits in an int and do it
-      uint32_t leftTemp;
-      memcpy(&leftTemp, &l, sizeof(float));
-
-      uint32_t rightTemp;
-      memcpy(&rightTemp, &r, sizeof(float));
-
-      leftTemp = leftTemp & rightTemp;
-      float result;
-
-      memcpy(&result, &leftTemp, sizeof(float));
-      return result;
-    }
-    case OR:
-    {
-      // more memory hacking
-      // floats cannot be binop'd. Have to put their bits in an int and do it
-      uint32_t leftTemp;
-      memcpy(&leftTemp, &l, sizeof(float));
-
-      uint32_t rightTemp;
-      memcpy(&rightTemp, &r, sizeof(float));
-
-      leftTemp = leftTemp | rightTemp;
-      float result;
-
-      memcpy(&result, &leftTemp, sizeof(float));
-      return result;
-    }    
-    case XOR:
-    {
-      // more memory hacking
-      // floats cannot be binop'd. Have to put their bits in an int and do it
-      uint32_t leftTemp;
-      memcpy(&leftTemp, &l, sizeof(float));
-
-      uint32_t rightTemp;
-      memcpy(&rightTemp, &r, sizeof(float));
-
-      leftTemp = leftTemp ^ rightTemp;
-      float result;
-
-      memcpy(&result, &leftTemp, sizeof(float));
-      return result;
-    }
     default:
-    return 0;
+    RuntimeOPError("Unknown binary operation for REAL");
   }
 }
 
@@ -813,32 +762,14 @@ bool realCOMP(float l, float r, enum BINOP op) {
     case GEQ:
     return l >= r;
     default:
-    return NULL;
+    RuntimeOPError("Unknown comparison operation for REAL");
   }
 }
 
 char charBINOP(char l, char r, enum BINOP op) {
   switch (op) {
-    case ADD:
-    return l + r;
-    case SUB:
-    return l - r;
-    case MULT:
-    return l * r;
-    case DIV:
-    return l/r;
-    case REM:
-    return l % r;
-    case EXP:
-    return pow(l,r);
-    case AND:
-    return l & r;
-    case OR:
-    return l | r;
-    case XOR:
-    return l ^ r;
     default:
-    return NULL;
+    RuntimeOPError("Char does not support arithmetic BINOPs");
   }
 }
 
@@ -857,7 +788,7 @@ bool charCOMP(char l, char r, enum BINOP op) {
     case GEQ:
     return l >= r;
     default:
-    return NULL;
+    RuntimeOPError("Unknown comparison operation for CHAR");
   }
 }
 
@@ -896,6 +827,10 @@ commonType* tupleCOMP(tuple* l, tuple* r, enum BINOP op) {
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op) {
   commonType* promotedLeft;
   commonType* promotedRight;
+
+  if (!ValidType(left->type) || !ValidType(right->type)) {
+    UnsupportedTypeError("BINOP recieved a type it could not recognize");
+  }
 
   // tuples treated differenly
   if (!(left->type == TUPLE)) {
