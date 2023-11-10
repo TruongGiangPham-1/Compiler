@@ -71,6 +71,7 @@ namespace gazprea {
         std::any visitTupleType(GazpreaParser::TupleTypeContext *ctx) override;
 
         std::any visitBlock(GazpreaParser::BlockContext *ctx) override;
+        std::any visitBodyStatement(GazpreaParser::BodyStatementContext *ctx) override;
 
 
         // literals. will populate ast with values

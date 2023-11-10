@@ -1,0 +1,8 @@
+procedure passByReference(const integer a, integer b) returns integer {
+  a = 17;
+  return a + b;
+}
+
+procedure main() returns integer {
+  return 1;
+}

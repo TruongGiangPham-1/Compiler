@@ -1,0 +1,13 @@
+procedure main() returns integer {
+  integer x = 0;
+
+  if (1 == 1)
+    x = 4;
+
+  if (0 == 1)
+    x = 8;
+
+  x -> std_output;
+
+  return 0;
+}
