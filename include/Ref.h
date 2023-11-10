@@ -12,6 +12,8 @@
 #include "ScopedSymbol.h"
 #include "FunctionCallTypes/FuncCallType.h"
 #include "AdvanceType.h"
+#include "ASTNode/Type/TupleTypeNode.h"
+#include "ASTNode/Type/TypeNode.h"
 
 
 namespace gazprea {

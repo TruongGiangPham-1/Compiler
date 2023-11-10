@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-//#define DEBUG
+#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -173,18 +173,27 @@ namespace gazprea {
             std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
             printTupleType(resType);
 #endif
+            // === For tuple indexing populate the map fr ==============
+            if (resType->baseTypeEnum == TYPE::TUPLE) {
+                // populate the index
+                auto tupleChilds = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode())->innerTypes;  // vect<pair<ID, ASTNode>> for child
+                for (int i = 0; i < tupleChilds.size(); i++) {
+                    if (tupleChilds[i].first != "") {
+                        // tuple child has an ID
+                        std::string tupleChildID = tupleChilds[i].first;
+                        idSym->tupleIndexMap.emplace(tupleChildID, i);
+                    }
+                }
+            }
+            // =====================================
         }
         //assert(type);  // ensure its not nullptr  // should be builtin type
         if (tree->getExprNode()) {
             walk(tree->getExprNode());
             std::shared_ptr<Type> resType = std::dynamic_pointer_cast<ExprNode>(tree->getExprNode())->type;
             if (!tree->getTypeNode()) {
-                 idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
+                 idSym = std::make_shared<VariableSymbol>(tree->getIDName(), nullptr);
             }
-#ifdef DEBUG
-            std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
-            printTupleType(resType);
-#endif
         }
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
@@ -215,6 +224,10 @@ namespace gazprea {
                       << "  ref mlirName " << referencedSymbol->mlirName << " in scope " << tree->scope->getScopeName();
             if (std::dynamic_pointer_cast<ScopedSymbol>(referencedSymbol->scope)) {
                 std::cout << " index of param=" << referencedSymbol->index ;
+            } else if (referencedSymbol->typeSym->baseTypeEnum == TYPE::TUPLE) {
+                for (auto kv: referencedSymbol->tupleIndexMap) {
+                    std::cout << " tupleIndex " << kv.first << "=" << kv.second << " ";
+                }
             }
             std::cout << "\n";
 #endif

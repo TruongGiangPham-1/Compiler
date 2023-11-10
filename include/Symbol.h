@@ -21,7 +21,8 @@ public:
     TYPE type;
     std::shared_ptr<Type> typeSym;  // cast to advancedType!
     //
-    int index = -1;
+    int index = -1;  // for method parameters
+    std::unordered_map<std::string , int> tupleIndexMap;  // look up map if the tuple index is an ID
 
     mlir::Value mlirAddr;
     std::string mlirName;
