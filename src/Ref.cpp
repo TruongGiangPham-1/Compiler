@@ -485,6 +485,7 @@ namespace gazprea {
             // define mlirname
             argNode->idSym->scope = currentScope;
             argNode->idSym->index = index;
+            argNode->idSym->qualifier = argNode->qualifier;
             index++;
             currentScope->define(argNode->idSym);  // define arg in curren scope
             argNode->scope = currentScope;  // set scope to function scope
