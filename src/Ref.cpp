@@ -313,12 +313,8 @@ namespace gazprea {
             walk(tree->getExprNode());
             std::shared_ptr<Type> resType = std::dynamic_pointer_cast<ExprNode>(tree->getExprNode())->type;
             if (!tree->getTypeNode()) {
-            //     idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
+                 idSym = std::make_shared<VariableSymbol>(tree->getIDName(), nullptr);
             }
-#ifdef DEBUG
-            std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << /*resType->getName() << */" as mlirNmae: " << mlirName << "\n" ;
-            //printTupleType(resType);
-#endif
         }
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
@@ -410,7 +406,7 @@ namespace gazprea {
             argNode->idSym->mlirName = "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
 
             auto resType = symtab->resolveTypeUser(argNode->type);
-            argNode->idSym->typeSym = retType;
+            argNode->idSym->typeSym =  resType;
             if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
 #ifdef DEBUG
             std::cout << "in line " << loc
