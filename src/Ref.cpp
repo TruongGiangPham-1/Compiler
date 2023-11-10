@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-//#define DEBUG
+#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int> mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -56,6 +56,7 @@ namespace gazprea {
                         // index out of bound(assume base i index
                         throw SymbolError(tree->loc(), "tuple index out of bound");
                     }
+                    tree->index --;  // mae is base 0 index
                 }
 #ifdef DEBUG
                 std::cout << " index tuple " << tupleIDsym->getName() << " at index=" << tree->index <<std::endl;
