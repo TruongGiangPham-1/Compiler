@@ -55,7 +55,7 @@ void printType(commonType *type, bool nl) {
       printf("%c", *(char*)type->value);
       break;
     case BOOLEAN:
-      printf("%s", *(bool*)type->value ? "true" : "false");
+      printf("%s", *(bool*)type->value ? "T" : "F");
       break;
     case REAL:
       printf("%g", *(float*)type->value);
