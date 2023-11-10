@@ -9,5 +9,6 @@ procedure main() returns integer {
   var integer c = 5;
   var integer b = passByReference(c,a);
   c -> std_output;
+  '\n' -> std_output;
   return 1;
 }
