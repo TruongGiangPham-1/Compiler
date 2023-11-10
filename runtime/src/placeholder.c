@@ -43,7 +43,7 @@ bool ValidType(enum TYPE type) {
 //#define DEBUGTUPLE
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
-#define DEBUGPRINT
+//#define DEBUGPRINT
 
 typedef struct vecStruct {
   int* base;
