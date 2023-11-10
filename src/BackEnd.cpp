@@ -76,7 +76,6 @@ void BackEnd::generate() {
   if (mlir::failed(mlir::verify(
           module))) { // trying to verify will complain about some issue that
                       // did not exist when I dump it in visitLoop()
-                      module->dump();
     module.emitError("module failed to verify");
   }
   int result = this->writeLLVMIR();

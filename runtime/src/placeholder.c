@@ -24,6 +24,8 @@ bool isCOMP(enum BINOP op) {
 //#define DEBUGTUPLE
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
+#define DEBUGPRINT
+
 typedef struct vecStruct {
   int* base;
   int sizeOf;
@@ -49,18 +51,33 @@ tuple* copyTuple(tuple* copyFrom);
 void printType(commonType *type, bool nl) {
   switch (type->type) {
     case INTEGER:
+      #ifdef DEBUGPRINT
+      printf("\nPRINTING INTEGER\n");
+      #endif /* ifdef DEBUGPRINT */
       printf("%d", *(int*)type->value);
       break;
     case CHAR:
+      #ifdef DEBUGPRINT
+      printf("\nPRINTING CHAR\n");
+      #endif /* ifdef DEBUGPRINT */
       printf("%c", *(char*)type->value);
       break;
     case BOOLEAN:
+      #ifdef DEBUGPRINT
+      printf("\nPRINTING BOOL:\n");
+      #endif /* ifdef DEBUGPRINT */
       printf("%s", *(bool*)type->value ? "T" : "F");
       break;
     case REAL:
+      #ifdef DEBUGPRINT
+      printf("\nPRINTING REAL\n");
+      #endif /* ifdef DEBUGPRINT */
       printf("%g", *(float*)type->value);
       break;
     case TUPLE:
+      #ifdef DEBUGPRINT
+      printf("\nPRINTING TUPLE\n");
+      #endif /* ifdef DEBUGPRINT */
       // {} bc we can't declare variables in switch
       {
         tuple *mTuple = ((tuple*)type->value);

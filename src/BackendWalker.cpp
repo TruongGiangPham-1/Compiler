@@ -10,6 +10,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #ifdef DEBUG
   std::cout << "CODE GENERATION\n";
 #endif 
+  std::cout << INTEGER << REAL << std::endl;
   codeGenerator.init();
   walkChildren(tree);
   //codeGenerator.deallocateObjects();
@@ -23,7 +24,11 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
   for (auto destNode : exprList->children) {
     auto dest = std::any_cast<mlir::Value>(walk(destNode));
-    codeGenerator.generateAssignment(dest, val);
+
+    auto asigneeType = destNode->evaluatedType->baseTypeEnum;
+    auto castedToType = codeGenerator.cast(val, asigneeType);
+
+    codeGenerator.generateAssignment(dest, castedToType);
   }
 
   return 0;
@@ -34,7 +39,12 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 
   auto typenode = std::dynamic_pointer_cast<TypeNode>(tree->getTypeNode());
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
+  auto asigneeType = tree->getID()->type;
+
+  auto valueAfterCast = codeGenerator.cast(val, asigneeType);
+
+  codeGenerator.generateDeclaration(tree->sym->mlirName, valueAfterCast);
+
   return 0;
 }
 
