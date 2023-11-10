@@ -1,0 +1,11 @@
+procedure main() returns integer {
+    integer a = 5;
+    integer b = 1;
+    integer c = 0;
+    const tuple(real i, integer s) t = (5.0, 2);
+    tuple(real, integer) q = (6.0, 3);
+    t.1 = q;
+    a -> std_output;
+    '\n' -> std_output;
+    return 0;
+}
