@@ -103,7 +103,7 @@ namespace gazprea {
 
                 // swap here?  // swap if line number is greater than prototypes
                 auto find = this->funcProtypeList.find(funcSym->getName());
-                if (find == nullptr) return 0;  // there was forward declaration but the prototype appear after this defintino
+                if (find == this->funcProtypeList.end()) return 0;  // there was forward declaration but the prototype appear after this defintino
                 auto protoType = this->funcProtypeList.find(funcSym->getName())->second;
 
                 if (protoType->loc() < tree->loc()) {
@@ -254,7 +254,10 @@ namespace gazprea {
 
                 // swap here?  // swap if line number is greater than prototypes =======================================
                 auto find = this->procProtypeList.find(procSym->getName());
-                if (find == nullptr) return 0;  // this definition is higher in the file then forward declaration so we dont need to swap
+                if (find == this->procProtypeList.end()) return 0;  // this definition is higher in the file then forward declaration so we dont need to swap
+
+
+
                 auto protoType = this->procProtypeList.find(procSym->getName())->second;
                 if (protoType->loc() < tree->loc()) {
 #ifdef DEBUG
