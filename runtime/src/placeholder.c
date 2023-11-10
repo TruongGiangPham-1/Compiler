@@ -888,9 +888,15 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   
   commonType* result;
 
+
   // god is dead and i have killed him
   if (!isCOMP(op)) {
-    if(promotedLeft->type == BOOLEAN) {
+
+    if (left->type == TUPLE) {
+
+      result = tupleBINOP((tuple*)left->value, (tuple*)right->value, op);
+
+    } else if(promotedLeft->type == BOOLEAN) {
 
       bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
       result = allocateCommonType(&tempBool, BOOLEAN);
@@ -909,13 +915,11 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
       char tempChar = charBINOP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
       result = allocateCommonType(&tempChar, CHAR);
-
-    } else {
-      // tuples don't need promotions, their held items do.
-      result = tupleBINOP((tuple*)left->value, (tuple*)right->value, op);
-    }
+    } 
   } else {
-    if(promotedLeft->type == BOOLEAN) {
+    if (left->type == TUPLE) {
+      result = tupleCOMP((tuple*)left->value, (tuple*)right->value, op);
+    } else if(promotedLeft->type == BOOLEAN) {
 
       bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
       result = allocateCommonType(&tempBool, BOOLEAN);
@@ -933,15 +937,10 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
       bool tempChar = charCOMP(*(char*)promotedLeft->value, *(char*)promotedRight->value, op);
       result = allocateCommonType(&tempChar, BOOLEAN);
-
-    } else {
-      // tuples don't need promotions, their held items do.
-      result = tupleCOMP((tuple*)left->value, (tuple*)right->value, op);
-    }
-
+    } 
   }
     
-  
+
   // temporary operands
 #ifdef DEBUGMEMORY
   printf("=== de allocating temporary operands...\n");
