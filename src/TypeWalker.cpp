@@ -12,23 +12,23 @@ namespace gazprea {
 
     std::string PromotedType::booleanResult[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null:*/
-/*boolean*/  {"boolean",  "",         "",         "",       "",  "", ""},
-/*character*/{"",         "",         "",         "",       "",  "", ""},
-/*integer*/  {"",         "",         "",         "",       "" , "", ""},
-/*real*/     {"",         "",         "",         "",       "" , "", ""},
-/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
-/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "identity", ""},
-/*null*/     {"boolean",  "character", "integer", "real", "tuple" , "", ""}
+/*boolean*/  {"boolean",  "",         "",         "",       "",  "boolean", ""},
+/*character*/{"",         "",         "",         "",       "",  "character", ""},
+/*integer*/  {"",         "",         "",         "",       "" , "integer", ""},
+/*real*/     {"",         "",         "",         "",       "" , "real", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
+/*null*/     {"",  "", "", "", "" , "", ""}
     };
 
 
     std::string PromotedType::arithmeticResult[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
-/*boolean*/  {"",         "",         "",         "",       "" , "", ""},
-/*character*/{"",         "",         "",         "",       "" , "", ""},
-/*integer*/  {"",         "",         "integer",  "real",   "" , "", ""},
-/*real*/     {"",         "",         "real",     "real",   "" , "", ""},
-/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
+/*boolean*/  {"",         "",         "",         "",       "" , "boolean", ""},
+/*character*/{"",         "",         "",         "",       "" , "character", ""},
+/*integer*/  {"",         "",         "integer",  "real",   "" , "integer", ""},
+/*real*/     {"",         "",         "real",     "real",   "" , "real", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
 /*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
 /*null*/         {"",  "", "", "", "" , "", ""}
     };
@@ -41,7 +41,7 @@ namespace gazprea {
 /*real*/     {"",         "",         "boolean",  "boolean","" , "real", ""},
 /*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
 /*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
-/*null*/         {"",  "", "", "", "" , "", ""}
+/*null*/         {"",  "", "", "", "" , "", "" }
     };
 
     std::string PromotedType::equalityResult[7][7] = {
@@ -174,14 +174,14 @@ namespace gazprea {
             case BINOP::REM:
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
-                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
-                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
         }
         return nullptr;
