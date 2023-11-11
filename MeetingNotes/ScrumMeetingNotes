@@ -1,6 +1,148 @@
 ============================================================================================
 *** Meeting Date/Time start/end:
+  26/10/2023 3:30 PM
+  26/10/2023 3:45 PM
+
 *** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
 *** Progress:
-*** Issues:
+    - Stan:
+        - Yesterday - Merged backend vcalc
+        - Today - Work on connecting backend with new AST
+        - Blockers - Waiting on AST tree walker from Joshua
+    - Sanjeev
+        - Yesterday - None
+        - Today - Expanding vcalc grammar to Gazprea
+        - Blockers - None
+    - Joshua
+        - Yesterday - Copied vcalc grammar, ast walker, builder and def ref.
+        - Today - Making AST heterogeneous.
+        - Blockers - None
+    - Truong
+        - Yesterday - None
+        - Today - Help Joshua with AST stuff
+        - Blockers - None
+
 *** Actions:
+    - Issue Tracking / Kanban board
+    - Design meeting backend
+============================================================================================
+*** Meeting Date/Time start/end:
+  31/10/2023 3:30 PM
+  31/10/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - None
+        - Today -  Will work on typing systems using structs and do all operations in runtime.
+        - Blockers - None
+    - Sanjeev
+        - Yesterday - None
+        - Today - Will finish new grammar
+        - Blockers - None
+    - Joshua
+        - Yesterday - None
+        - Today - Fix up AST.
+        - Blockers - Sanjeev's grammar
+    - Truong
+        - Yesterday - None
+        - Today - Update def ref and forward refs
+        - Blockers - None
+
+*** Actions:
+    - Sanjeev will finish his grammar very soon.
+============================================================================================
+*** Meeting Date/Time start/end:
+  02/11/2023 3:30 PM
+  02/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - All part 1 types + memory management
+        - Today -  Arithmetic operations, will attempt to get to control flow stuff once arithmetic ops get finished
+        - Blockers - None
+    - Sanjeev
+        - Yesterday -  Finished grammar yesterday
+        - Today - Will look into typing
+        - Blockers - Need PR review (https://github.com/cmput415-2023/gazprea-lord-farquaad/pull/10)
+    - Joshua
+        - Yesterday - made AST Checklist with most things
+        - Today - AST nodes (everything apart from functions and procedures).
+        - Blockers - None
+    - Truong
+        - Yesterday - defref for functions and procedure ,forward declation.
+        - Today - throwing compilr errors for function and procedure. Update defref for everything once all astbuilder is updated
+        - Blockers - but need updated typenodes from joshua
+============================================================================================
+*** Meeting Date/Time start/end:
+  07/11/2023 3:30 PM
+  07/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Working on functions runtime.
+        - Today -  Working on functions runtime.
+        - Blockers - None
+    - Sanjeev
+        - Yesterday -  Basic type computation
+        - Today - Tuple type computation
+        - Blockers - None
+    - Joshua
+        - Yesterday - Worked on tuple type node
+        - Today - working on streams ast nodes and backends and loops.
+        - Blockers - None
+    - Truong
+        - Yesterday - defref for functions and procedure ,forward declation.
+        - Today - Working on def ref functions, functions parameters scope
+        - Blockers - None
+============================================================================================
+*** Meeting Date/Time start/end:
+  09/11/2023 3:30 PM
+  09/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Backend Assignment.
+        - Today -  Pass by reference will be done tonight I think
+        - Blockers - tuple type checks
+    - Sanjeev
+        - Yesterday - tuple type check
+        - Today - tuple Index
+        - Blockers - None
+    - Joshua
+        - Yesterday - Worked on backend block bugs
+        - Today - reviewing PRs
+        - Blockers - None
+    - Truong
+        - Yesterday -  error checks for my forward declaration methods.
+        - Today - Working on def ref functions, functions parameters scope
+        - Blockers - None
+============================================================================================

@@ -1,10 +1,81 @@
 ============================================================================================
-*** Meeting Date/Time start/end:
+*** Meeting Date/Time start/end: (First Meeting)
+ 24/10/2023 4:05 PM
+ 24/10/2023 5:05 PM
+
 *** Attendees:
-*** Late arrivals (Person (time)):
-*** Early departures (Person(time)):
+    Sanjeev
+    Truong
+    Stan
+    Joshua
+
+*** Role Decisions:
+    Notes - Sanjeev
+    ScrumMaster - Truong
+    Chair - Stan
+
+*** Design Decisions:
+    Code Style - clang tidy
+    AST Design - github issues / UML diagrams (on google docs)
+    Code Review - one reviewer, create a PR, feature/bug branches
+    Conflict Resolution - Majority vote
+    Testing Strategy - github actions ci pipelines, internal tests suite
+    Project Review Meeting Time - 1-2 pm on Mondays
+    Scrum Meeting Time - 15 mins after class
+============================================================================================
+*** Meeting Date/Time start/end:
+ 30/10/2023 1:15 PM
+ 30/10/2023 2:00 PM
+
+*** Attendees:
+    Sanjeev
+    Truong
+    Stan
+    Joshua
+
 *** Member's Progress:
+    Truong: Busy with 429, after wednesday, will update DefRef and AST.
+    Joshua: Setting up CI testing to run tests and lab machines, importing tests from vcalc.
+    Stan:  Busy with 429, after wednesday, will finish inclusion of different types in backend.
+    Sanjeev: Working on grammar, will try to finish after Wednesday morning.
 *** Discussion items/agenda:
+    Task distribution
 *** Actions:
+    Setup CI testing
+    Grammar
 *** Outstanding Issues:
+    None
 *** Round table:
+    Josh: wants to work on AST nodes if Sanjeev get’s done with grammar before Wednesday.
+	Stan: wants to work on Backend typing.
+	Truong: Def pass and Ref pass, handle typedefs.
+	Sanjeev: Computing Types for vectors ops, tuple ops, and matrices ops.
+============================================================================================
+*** Meeting Date/Time start/end:
+ 06/11/2023 1:00 PM
+ 06/11/2023 2:00 PM
+
+*** Attendees:
+    Stan
+    Truong
+    Sanjeev
+    Joshua
+
+*** Member's Progress:
+	Truong: Working on def ref functions, functions parameters scope.
+	Joshua: Worked on tuple type node, working on streams ast nodes and backends and loops.
+	Sanjeev: Basic type computation will be done by today.
+    Stan: Working on functions runtime.
+*** Discussion items/agenda:
+    Task distribution
+    Marking Scheme Enquiry
+    Def Ref Needs more work.
+*** Actions:
+	None
+*** Outstanding Issues:
+	Def Ref to be completed for functions, procedure
+	Type computation
+	Def Ref for loops and backend
+	Identity and Null
+	Tuple resolving
+============================================================================================
