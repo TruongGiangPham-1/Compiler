@@ -1,0 +1,10 @@
+procedure f(real f) returns integer {
+    return 0;
+}
+
+procedure main() returns integer {
+    integer y = f(3.14);
+    y -> std_output;
+
+    return 0;
+}
