@@ -65,6 +65,15 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   }
 }
 
+std::any BackendWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+
+    return 0;
+}
+
+std::any BackendWalker::visitNull(std::shared_ptr<NullNode> tree) {
+    return 0;
+}
+
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }

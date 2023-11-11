@@ -250,9 +250,13 @@ namespace gazprea {
         walkChildren(tree);
         if (!tree->getTypeNode()) {
             tree->sym->typeSym = tree->getExprNode()->evaluatedType;
+            if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY)  {
+               throw TypeError(tree->loc(), "cannot have identity when type is not defined");
+            }
             return nullptr;
         }
         if(!tree->getExprNode()) {
+            // set
             return nullptr;
         }
 
