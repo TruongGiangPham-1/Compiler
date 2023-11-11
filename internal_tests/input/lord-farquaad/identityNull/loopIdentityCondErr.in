@@ -1,0 +1,6 @@
+procedure main() returns integer {
+    loop while (identity) {
+
+    }
+    return 0;
+}

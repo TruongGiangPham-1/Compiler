@@ -64,6 +64,8 @@ namespace gazprea {
         std::any visitNull(std::shared_ptr<NullNode> tree) override;
         std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
+        std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
+        std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
         std::string typeEnumToString(TYPE t);
     };
 }

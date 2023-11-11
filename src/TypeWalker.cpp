@@ -335,6 +335,20 @@ namespace gazprea {
         }
         return nullptr;
     }
+    std::any TypeWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+        if (tree->getCondition()->evaluatedType->baseTypeEnum == TYPE::IDENTITY) {
+            throw TypeError(tree->loc(), "idenitty in loop cond");
+        }
+        return nullptr;
+    }
+    std::any TypeWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+        if (tree->getCondition()->evaluatedType->baseTypeEnum == TYPE::IDENTITY) {
+            throw TypeError(tree->loc(), "idenitty in loop cond");
+        }
+        return nullptr;
+    }
 
     std::any TypeWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
         walkChildren(tree);
