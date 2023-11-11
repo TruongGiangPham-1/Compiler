@@ -100,7 +100,6 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
 }
 
 std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
-  std::cout << "HERE" << std::endl;
   mlir::Value indexee;
 
   // indexee isn't an expression. HACK
