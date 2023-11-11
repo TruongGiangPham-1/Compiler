@@ -35,12 +35,12 @@
 namespace gazprea {
     class ASTWalker {
     protected:
-        std::any walkChildren(std::shared_ptr<ASTNode> tree);
+        virtual std::any walkChildren(std::shared_ptr<ASTNode> tree);
 
     public:
         ASTWalker() {};
 
-        std::any walk(std::shared_ptr<ASTNode> tree);
+        virtual std::any walk(std::shared_ptr<ASTNode> tree);
 
         // === TOP LEVEL AST NODES ===
         virtual std::any visitAssign(std::shared_ptr<AssignNode> tree);

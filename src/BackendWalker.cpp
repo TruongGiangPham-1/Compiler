@@ -1,10 +1,20 @@
 #include "BackendWalker.h"
 #include "ASTNode/Expr/CastNode.h"
+#include "ASTWalker.h"
 #include "Types/TYPES.h"
 #include "mlir/IR/Value.h"
 #include <memory>
 #include <stdexcept>
 //#define DEBUG
+
+
+std::any BackendWalker::walk(std::shared_ptr<ASTNode> tree) {
+  // stop reading code if theres a return won't be reached
+  if (!this->returnDropped) {
+    return gazprea::ASTWalker::walk(tree);
+  }
+  return 0;
+}
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #ifdef DEBUG
@@ -163,7 +173,13 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
     codeGenerator.setBuilderInsertionPoint(trueBlocks[i]);
     walk(tree->bodies[i]);
-    codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+
+    // return was dropped during walk, don't need to bound back
+    if (!this->returnDropped) {
+      codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+    }
+
+    this->returnDropped = false;
     this->earlyReturn = false;
 
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
@@ -176,6 +192,7 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
   codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
   this->earlyReturn = false;
+  this->returnDropped = false;
   codeGenerator.setBuilderInsertionPoint(endBlock);
 
   return 0;
@@ -287,7 +304,9 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(),
         false);
     walk(tree->body);
-    codeGenerator.generateEndFunctionDefinition(block);
+    codeGenerator.generateEndFunctionDefinition(block, tree->line);
+    codeGenerator.verifyFunction(tree->line, "Procedure " + tree->nameSym->name);
+    this->returnDropped = false;
   }
 
   return 0;
@@ -301,8 +320,9 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         false);
     walk(tree->body);
 
-
-    codeGenerator.generateEndFunctionDefinition(block);
+    codeGenerator.generateEndFunctionDefinition(block, tree->line);
+    codeGenerator.verifyFunction(tree->line, "Function " + tree->funcNameSym->name);
+    this->returnDropped = false;
   }
   return 0;
 }
@@ -320,6 +340,7 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
   codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
+  this->returnDropped = true;
   return 0;
 }
 

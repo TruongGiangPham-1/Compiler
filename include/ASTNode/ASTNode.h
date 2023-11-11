@@ -18,9 +18,8 @@ class Scope;
 class Symbol;
 
 class ASTNode {
-protected:
-    int line;                                       // line number in source file
 public:
+    int line;                                       // line number in source file
     std::vector<std::shared_ptr<ASTNode>> children; // normalized list of children
     std::shared_ptr<Scope> scope;                   // containing scope
     std::shared_ptr<Type> evaluatedType;

@@ -20,6 +20,7 @@ public:
   void printCommonType(mlir::Value value);
   void streamOut(mlir::Value value);
   void streamIn(mlir::Value value);
+  void verifyFunction(int line, std::string name);
 
   mlir::Value generateInteger(int value);
   mlir::Value generateValue(int value);
@@ -52,7 +53,7 @@ public:
   mlir::Value cast(mlir::Value from, TYPE toType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
-  void generateEndFunctionDefinition(mlir::Block* returnBlock);
+  void generateEndFunctionDefinition(mlir::Block* returnBlock, int line);
   void generateReturn(mlir::Value returnVal);
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);

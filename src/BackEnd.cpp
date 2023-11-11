@@ -1,4 +1,5 @@
 #include "llvm/ADT/APFloat.h"
+#include "CompileTimeExceptions.h"
 #include "Types/TYPES.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
@@ -57,6 +58,12 @@ void BackEnd::init() {
   builder->setInsertionPointToStart(mainEntry);
 }
 
+void BackEnd::verifyFunction(int line, std::string name) {
+  if (mlir::failed(mlir::verify(functionStack[functionStack.size()-1]))) {
+    throw ReturnError(1, name + " Does not have a return statement reachable by all control flows");
+  }
+  functionStack.pop_back();
+}
 /**
  * Finish codegen + main function.
  */
@@ -439,9 +446,8 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
     return currentBlock;
 }
 
-void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
+void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, int line) {
     builder->setInsertionPointToEnd(returnBlock);
-    functionStack.pop_back();
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {
