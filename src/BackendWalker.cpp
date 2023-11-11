@@ -24,24 +24,26 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
  
   if (exprList->children.size() == 1) {
     auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
-    codeGenerator.generateAssignment(dest, val);
+    auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
+    codeGenerator.generateAssignment(dest, castedVal);
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
       auto indexedValue = codeGenerator.indexCommonType(val, i);
-      codeGenerator.generateAssignment(dest, indexedValue);
+
+      auto castedIndexedVal = codeGenerator.possiblyCast(indexedValue, tree->evaluatedType);
+      codeGenerator.generateAssignment(dest, castedIndexedVal);
     }
   }
-
-
 
   return 0;
 }
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
+  codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
   return 0;
 }
 
@@ -98,7 +100,6 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
 }
 
 std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
-  std::cout << "HERE" << std::endl;
   mlir::Value indexee;
 
   // indexee isn't an expression. HACK

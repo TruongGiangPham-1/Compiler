@@ -52,6 +52,7 @@ public:
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
   void generateEndFunctionDefinition(mlir::Block* returnBlock);
