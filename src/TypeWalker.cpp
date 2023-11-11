@@ -41,7 +41,7 @@ namespace gazprea {
 /*real*/     {"",         "",         "boolean",  "boolean","" , "real", ""},
 /*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
 /*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
-/*null*/         {"",  "", "", "", "" , "", "" }
+/*null*/         {"",  "", "", "", "" , "", ""}
     };
 
     std::string PromotedType::equalityResult[7][7] = {
@@ -139,9 +139,11 @@ namespace gazprea {
 
     std::any TypeWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("identity"));
+        return nullptr;
     }
     std::any TypeWalker::visitNull(std::shared_ptr<NullNode> tree) {
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("null"));
+        return nullptr;
     }
 
     std::any TypeWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
