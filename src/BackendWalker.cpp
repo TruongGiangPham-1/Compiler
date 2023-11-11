@@ -4,7 +4,7 @@
 #include "mlir/IR/Value.h"
 #include <memory>
 #include <stdexcept>
-//#define DEBUG
+#define DEBUG
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #ifdef DEBUG
@@ -21,10 +21,17 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
   auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
- 
 
   for (auto destNode : exprList->children) {
     auto dest = std::any_cast<mlir::Value>(walk(destNode));
+
+    // implicit cast from intger to real
+    if (destNode->evaluatedType->getName() == "real" && tree->getRvalue()->evaluatedType->getName() == "integer") {
+#ifdef DEBUG
+        std::cout << "implicit cast from integer to real in assign\n";
+#endif
+        val = codeGenerator.cast(val, TYPE::REAL);
+    }
 
     codeGenerator.generateAssignment(dest, val);
   }
@@ -34,6 +41,14 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+
+  // implicit cast from intger to real
+  if (tree->evaluatedType->getName() == "real" && tree->getExprNode()->evaluatedType->getName() == "integer") {
+#ifdef DEBUG
+    std::cout << "implicit cast from integer to real in decl\n";
+#endif
+    val = codeGenerator.cast(val, TYPE::REAL);
+  }
 
   codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
