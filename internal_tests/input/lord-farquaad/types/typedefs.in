@@ -1,0 +1,10 @@
+typedef character main;
+typedef integer i;
+
+const main A = 'A';
+
+procedure main() returns i {
+  i i = 1;
+  i -> std_output;
+  return i;
+}

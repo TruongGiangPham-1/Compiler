@@ -15,6 +15,7 @@ namespace gazprea {
         static std::string comparisonResult[5][5]; //>= <= > <
         static std::string equalityResult[5][5]; //==, !=
         static std::string promotionTable[5][5];
+        static std::string castTable[4][4];
 
         const int boolIndex = 0;
         const int charIndex = 1;
@@ -56,8 +57,14 @@ namespace gazprea {
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
 
         // streams
-        //std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
-        //std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+
+        // Return CFG unsupported right now :(
+
+        std::any visitCall(std::shared_ptr<CallNode> tree) override; // Procedure Call, function and procedure call in expr
+        std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
+        std::any visitCast(std::shared_ptr<CastNode> tree) override;
 
         std::string typeEnumToString(TYPE t);
     };
