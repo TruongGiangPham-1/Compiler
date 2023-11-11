@@ -1,0 +1,6 @@
+procedure main() returns integer {
+    tuple(integer, integer) t = (0, 0);
+    t <- std_input;
+
+    return 0;
+}

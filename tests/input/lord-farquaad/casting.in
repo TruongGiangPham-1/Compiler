@@ -1,0 +1,14 @@
+procedure main() returns integer {
+  as<character>(97) -> std_output;
+  '\n' -> std_output;
+  as<character>(as<integer>(97.0)) -> std_output;
+  '\n' -> std_output;
+  as<integer>('a') -> std_output;
+  '\n' -> std_output;
+  as<boolean>('a') -> std_output;
+  '\n' -> std_output;
+  as<boolean>('\0') -> std_output;
+  '\n' -> std_output;
+
+  return 1;
+}
