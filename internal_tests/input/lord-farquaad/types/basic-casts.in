@@ -1,0 +1,41 @@
+procedure main() returns integer {
+    boolean b1 = as<boolean>(true);
+    boolean b2 = as<boolean>('a');
+    boolean b3 = as<boolean>(10);
+    boolean b4 = as<boolean>('\0');
+
+    b1 -> std_output; '\n' -> std_output;
+    b2 -> std_output; '\n' -> std_output;
+    b3 -> std_output; '\n' -> std_output;
+    b4 -> std_output; '\n' -> std_output;
+
+    '\n' -> std_output;
+
+    integer i1 = as<integer>(true);
+    integer i2 = as<integer>('a');
+    integer i3 = as<integer>(10);
+    integer i4 = as<integer>('\0');
+    integer i5 = as<integer>(3.14);
+
+    i1 -> std_output; '\n' -> std_output;
+    i2 -> std_output; '\n' -> std_output;
+    i3 -> std_output; '\n' -> std_output;
+    i4 -> std_output; '\n' -> std_output;
+    i5 -> std_output; '\n' -> std_output;
+
+    '\n' -> std_output;
+
+    real r1 = as<real>(true);
+    real r2 = as<real>(10);
+    real r3 = as<real>('\0');
+    // real r4 = as<real>(3.14);
+
+    r1 -> std_output; '\n' -> std_output;
+    r2 -> std_output; '\n' -> std_output;
+    r3 -> std_output; '\n' -> std_output;
+    // r4 -> std_output; '\n' -> std_output;
+
+    '\n' -> std_output;
+
+    return 0;
+}
