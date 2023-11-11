@@ -301,7 +301,6 @@ namespace gazprea {
             }
         }
 
-        // TODO IDENTITY and NULL handling
         if (lType->getName() == "tuple" && rType->getName() == "tuple") {
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
@@ -408,6 +407,9 @@ namespace gazprea {
                             }
                         }
                         tree->evaluatedType = lvalue->evaluatedType;
+                    } else if (rhsType->getName() == "null" || rhsType->getName() == "identity") {  // if it null then we just set it to ltype
+                        tree->evaluatedType = lvalue->evaluatedType;  //
+                        tree->getRvalue()->evaluatedType = lvalue->evaluatedType;  // set identity/null node type to this type for promotion
                     }
 
                     if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
