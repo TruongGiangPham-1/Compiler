@@ -630,7 +630,13 @@ namespace gazprea {
       }
       if (ctx->expression()) {
           auto expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
-          functionNode->expr = expr;
+          auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
+          auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
+          returnNode->returnExpr = expr;
+
+          blockNode->addChild(std::dynamic_pointer_cast<ASTNode>(returnNode));
+          
+          functionNode->body = blockNode;
       }
       if (ctx->RESERVED_RETURNS()) {
           functionNode->addChild(visit(ctx->type()));
