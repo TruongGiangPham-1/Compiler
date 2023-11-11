@@ -1,0 +1,4 @@
+procedure main() returns integer {
+  1 / 0 -> std_output;
+  return 0;
+}

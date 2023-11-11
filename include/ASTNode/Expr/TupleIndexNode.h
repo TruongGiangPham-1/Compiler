@@ -5,14 +5,15 @@
 
 #pragma once
 #include "ASTNode/ASTNode.h"
+#include "ASTNode/Expr/ExprNode.h"
 #include "Symbol.h"
 
 // Children - [IDNode, (IDNode | IntNode)]
-class TupleIndexNode : public ASTNode {
+class TupleIndexNode : public ExprNode {
 public:
     std::shared_ptr<Symbol> sym; // pointer to symbol definition
     int index = -1;
-    TupleIndexNode(int line) : ASTNode(line) {}
+    TupleIndexNode(int line) : ExprNode(line) {}
 
 
     std::shared_ptr<ASTNode> getIDNode() {

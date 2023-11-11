@@ -45,6 +45,8 @@ public:
   mlir::Value generateIndexWithVector(mlir::Value indexee, mlir::Value indexor);
 
   mlir::Value generateLoadValue(mlir::Value addr);
+  mlir::Value generateNullValue(TYPE type);
+  mlir::Value generateIdentityValue(TYPE type);
 
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);

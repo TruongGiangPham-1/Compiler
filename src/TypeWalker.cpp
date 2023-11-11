@@ -287,7 +287,7 @@ namespace gazprea {
         if (lType->getName() == "tuple" && rType->getName() == "tuple") {
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
-                throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+                throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             }
             for (size_t i = 0; i < rType->tupleChildType.size(); i++) {
                 auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
@@ -360,7 +360,7 @@ namespace gazprea {
 
                     if (lvalue->evaluatedType->getName() == "tuple" and rhsType->getName() == "tuple") {
                         if (lvalue->evaluatedType->tupleChildType.size() != rhsType->tupleChildType.size()) {
-                            throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+                            throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
                         }
                         for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
                             auto leftTypeString = lvalue->evaluatedType->tupleChildType[i].second->getName();

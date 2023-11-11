@@ -1,0 +1,21 @@
+procedure main() returns integer {
+  tuple(integer a, integer b) a = (1, 2);
+  tuple(integer a, real b) b = (1, 2.5);
+  tuple(real a, real b) c = (5.9, 2.5);
+
+  a.a -> std_output;
+  '\n' -> std_output;
+  b.a -> std_output;
+  '\n' -> std_output;
+  c.a -> std_output;
+  '\n' -> std_output;
+
+  a.2 -> std_output;
+  '\n' -> std_output;
+  b.2 -> std_output;
+  '\n' -> std_output;
+  c.2 -> std_output;
+  '\n' -> std_output;
+
+  return 1;
+}
