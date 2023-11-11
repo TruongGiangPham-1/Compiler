@@ -15,6 +15,7 @@ namespace gazprea {
         static std::string comparisonResult[7][7]; //>= <= > <
         static std::string equalityResult[7][7]; //==, !=
         static std::string promotionTable[7][7];
+        static std::string castTable[4][4];
 
         const int boolIndex = 0;
         const int charIndex = 1;
@@ -58,11 +59,18 @@ namespace gazprea {
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
 
         // streams
-        //std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
-        //std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+
         // === Null and identity
         std::any visitNull(std::shared_ptr<NullNode> tree) override;
         std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
+
+        // Return CFG unsupported right now :(
+
+        std::any visitCall(std::shared_ptr<CallNode> tree) override; // Procedure Call, function and procedure call in expr
+        std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
+        std::any visitCast(std::shared_ptr<CastNode> tree) override;
 
         std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
         std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);

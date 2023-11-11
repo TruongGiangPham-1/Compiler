@@ -1,0 +1,7 @@
+function f(integer a) returns integer = 5*a;
+
+procedure main() returns integer {
+  f(5) -> std_output;
+  '\n' -> std_output;
+  return 1;
+}
