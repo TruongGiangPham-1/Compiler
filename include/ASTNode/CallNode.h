@@ -17,7 +17,7 @@ public:
     //FUNCTYPE functype;
     std::shared_ptr<Symbol> CallName;  // only used for calling user defined function
     std::shared_ptr<ScopedSymbol> MethodRef;  // symbol to the function/procedure definition that it is calling
-
+    bool procCall = false;
     CallNode(int loc): ExprNode(loc) {};
 
 

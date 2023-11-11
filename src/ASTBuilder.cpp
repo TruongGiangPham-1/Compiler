@@ -681,6 +681,7 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(callNode);
 
     }
+
     std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure call" << std::endl;
@@ -692,9 +693,9 @@ namespace gazprea {
         for (auto expr: ctx->expression()) {
             pCallNode->addChild(visit(expr));
         }
+        pCallNode->procCall = true;
         return std::dynamic_pointer_cast<ASTNode>(pCallNode);
     }
-
 
     std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
 #ifdef DEBUG
