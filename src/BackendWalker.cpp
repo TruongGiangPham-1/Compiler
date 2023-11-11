@@ -21,10 +21,19 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
   auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
+ 
+  if (exprList->children.size() == 1) {
+    auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
+    auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
+    codeGenerator.generateAssignment(dest, castedVal);
+  } else {
+    for (int i = 0 ; i < exprList->children.size() ; i++) {
+      auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
+      auto indexedValue = codeGenerator.indexCommonType(val, i);
 
-  for (auto destNode : exprList->children) {
-    auto dest = std::any_cast<mlir::Value>(walk(destNode));
-    codeGenerator.generateAssignment(dest, val);
+      auto castedIndexedVal = codeGenerator.possiblyCast(indexedValue, tree->evaluatedType);
+      codeGenerator.generateAssignment(dest, castedIndexedVal);
+    }
   }
 
   return 0;
@@ -32,10 +41,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-  auto castedVal = val;
-  if (tree->evaluatedType) {
-      castedVal = codeGenerator.cast(val, tree->evaluatedType->baseTypeEnum);
-  }
+  auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
 
   codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
   return 0;

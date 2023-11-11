@@ -1,5 +1,6 @@
 #include "llvm/ADT/APFloat.h"
 #include "Types/TYPES.h"
+#include "Type.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
@@ -8,6 +9,7 @@
 #include "llvm/Support/raw_os_ostream.h"
 #include <assert.h>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
@@ -248,6 +250,18 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   return result;
 }
 
+/*
+ * Takes a nullable std::shared_ptr<Type>, and cast the value to that type
+ * If the type is null, return the same value (no-op)
+ */
+mlir::Value BackEnd::possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType) {
+  if (nullableType) {
+    return cast(val, nullableType->baseTypeEnum);
+  } else {
+    return val;
+  }
+}
+
 mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
   auto unaryopFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("performCommonTypeUNARYOP");
   auto result = builder->create<mlir::LLVM::CallOp>(loc,
@@ -382,6 +396,36 @@ mlir::Value BackEnd::generateInteger(int value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI32Type(), value);
   return result;
+}
+
+mlir::Value BackEnd::generateNullValue(TYPE type) {
+  switch (type) {
+    case BOOLEAN:
+      return this->generateValue(false);
+    case CHAR:
+      return this->generateValue((char)0x00);
+    case INTEGER:
+      return this->generateValue(0);
+    case REAL:
+      return this->generateValue(0.0f);
+    default:
+      throw std::runtime_error("Identity not available");
+  }
+}
+
+mlir::Value BackEnd::generateIdentityValue(TYPE type) {
+  switch (type) {
+    case BOOLEAN:
+      return this->generateValue(true);
+    case CHAR:
+      return this->generateValue((char)0x01);
+    case INTEGER:
+      return this->generateValue(1);
+    case REAL:
+      return this->generateValue(1.0f);
+    default:
+      throw std::runtime_error("Identity not available");
+  }
 }
 
 void BackEnd::deallocateObjects() {

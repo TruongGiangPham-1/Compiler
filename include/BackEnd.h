@@ -45,11 +45,14 @@ public:
   mlir::Value generateIndexWithVector(mlir::Value indexee, mlir::Value indexor);
 
   mlir::Value generateLoadValue(mlir::Value addr);
+  mlir::Value generateNullValue(TYPE type);
+  mlir::Value generateIdentityValue(TYPE type);
 
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
   void generateEndFunctionDefinition(mlir::Block* returnBlock);
