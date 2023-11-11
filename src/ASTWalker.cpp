@@ -253,7 +253,19 @@ namespace gazprea {
             std::cout << "about to visit return" << std::endl;
 #endif // DEBUG
             return this->visitReturn(std::dynamic_pointer_cast<ReturnNode>(tree));
-      } else {
+
+      } else if (std::dynamic_pointer_cast<IdentityNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit identity" << std::endl;
+#endif // DEBUG
+            return this->visitIdentity(std::dynamic_pointer_cast<IdentityNode>(tree));
+    } else if (std::dynamic_pointer_cast<NullNode>(tree)) {
+
+#ifdef DEBUG
+            std::cout << "about to visit null" << std::endl;
+#endif // DEBUG
+            return this->visitNull(std::dynamic_pointer_cast<NullNode>(tree));
+    } else {
           // NIL node
 #ifdef DEBUG
           std::cout << "about to visit NIL" << std::endl;

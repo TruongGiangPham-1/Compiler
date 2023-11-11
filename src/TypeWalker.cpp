@@ -10,54 +10,64 @@ namespace gazprea {
     PromotedType::PromotedType(std::shared_ptr<SymbolTable> symtab) : symtab(symtab), currentScope(symtab->globalScope) {}
     PromotedType::~PromotedType() {}
 
-    std::string PromotedType::booleanResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"boolean",  "",         "",         "",       "" },
-/*character*/{"",         "",         "",         "",       "" },
-/*integer*/  {"",         "",         "",         "",       "" },
-/*real*/     {"",         "",         "",         "",       "" },
-/*tuple*/    {"",         "",         "",         "",       "" }
+    std::string PromotedType::booleanResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null:*/
+/*boolean*/  {"boolean",  "",         "",         "",       "",  "", ""},
+/*character*/{"",         "",         "",         "",       "",  "", ""},
+/*integer*/  {"",         "",         "",         "",       "" , "", ""},
+/*real*/     {"",         "",         "",         "",       "" , "", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "identity", ""},
+/*null*/     {"boolean",  "character", "integer", "real", "tuple" , "", ""}
     };
 
 
-    std::string PromotedType::arithmeticResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"",         "",         "",         "",       "" },
-/*character*/{"",         "",         "",         "",       "" },
-/*integer*/  {"",         "",         "integer",  "real",   "" },
-/*real*/     {"",         "",         "real",     "real",   "" },
-/*tuple*/    {"",         "",         "",         "",       "" }
+    std::string PromotedType::arithmeticResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/  {"",         "",         "",         "",       "" , "", ""},
+/*character*/{"",         "",         "",         "",       "" , "", ""},
+/*integer*/  {"",         "",         "integer",  "real",   "" , "", ""},
+/*real*/     {"",         "",         "real",     "real",   "" , "", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
     };
 
-    std::string PromotedType::comparisonResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"",         "",         "",         "",       "" },
-/*character*/{"",         "",         "",         "",       "" },
-/*integer*/  {"",         "",         "boolean",  "boolean","" },
-/*real*/     {"",         "",         "boolean",  "boolean","" },
-/*tuple*/    {"",         "",         "",         "",       "" }
+    std::string PromotedType::comparisonResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/  {"",         "",         "",         "",       "" , "boolean", ""},
+/*character*/{"",         "",         "",         "",       "" , "character", ""},
+/*integer*/  {"",         "",         "boolean",  "boolean","" , "integer", ""},
+/*real*/     {"",         "",         "boolean",  "boolean","" , "real", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
     };
 
-    std::string PromotedType::equalityResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"boolean",  "",         "",         "",        "" },
-/*character*/{"",         "boolean",  "",         "",        "" },
-/*integer*/  {"",         "",         "boolean",  "boolean", "" },
-/*real*/     {"",         "",         "boolean",  "boolean", "" },
-/*tuple*/    {"",         "",         "",         "",        "boolean" }
+    std::string PromotedType::equalityResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/  {"boolean",  "",         "",         "",        "" ,       "boolean", ""},
+/*character*/{"",         "boolean",  "",         "",        "" ,       "character", ""},
+/*integer*/  {"",         "",         "boolean",  "boolean", "" ,       "integer", ""},
+/*real*/     {"",         "",         "boolean",  "boolean", "" ,       "real", ""},
+/*tuple*/    {"",         "",         "",         "",        "boolean", "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real", "tuple",      "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
     };
 
-    std::string PromotedType::promotionTable[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/      {"boolean",  "",         "",         "",        "" },
-/*character*/    {"",         "boolean",  "",         "",        "" },
-/*integer*/      {"",         "",         "",         "real",    "" },
-/*real*/         {"",         "",         "",         "",        "" },
-/*tuple*/        {"",         "",         "",         "",        "" }
+    std::string PromotedType::promotionTable[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/      {"boolean",  "",         "",         "",        "",   "boolean", ""},
+/*character*/    {"",         "boolean",  "",         "",        "",   "character", ""},
+/*integer*/      {"",         "",         "",         "real",    "",   "integer", ""},
+/*real*/         {"",         "",         "",         "",        "",   "real", ""},
+/*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
+/*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
 
-    std::shared_ptr<Type> PromotedType::getType(std::string table[5][5], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
+    std::shared_ptr<Type> PromotedType::getType(std::string table[7][7], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
         if (left->evaluatedType == nullptr || right->evaluatedType == nullptr) {
             return nullptr;
         }
@@ -95,8 +105,12 @@ namespace gazprea {
             return this->realIndex;
         } else if (type == "tuple") {
             return this->tupleIndex;
+        } else if (type == "identity") {
+            return this->identityIndex;
+        } else if (type == "null") {
+            return this->nullIndex;
         } else {
-            throw std::runtime_error("Unknown type");
+                throw std::runtime_error("Unknown type");
         }
     }
 
@@ -121,6 +135,13 @@ namespace gazprea {
     std::any TypeWalker::visitBool(std::shared_ptr<BoolNode> tree) {
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("boolean"));
         return nullptr;
+    }
+
+    std::any TypeWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("identity"));
+    }
+    std::any TypeWalker::visitNull(std::shared_ptr<NullNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("null"));
     }
 
     std::any TypeWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
@@ -152,11 +173,15 @@ namespace gazprea {
             case BINOP::SUB:
             case BINOP::REM:
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
+                if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 break;
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
+                if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 break;
         }
         return nullptr;
@@ -274,6 +299,9 @@ namespace gazprea {
                 }
             }
             tree->evaluatedType = rType;
+        } else if (rType->getName() == "null" || rType ->getName() == "identity") {  // if it null then we just set it to ltype
+            tree->evaluatedType = lType;  //
+            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
         }
 
         else if (lType->getName() != rType->getName()) {
@@ -467,4 +495,6 @@ namespace gazprea {
         }
 
     }
+
+
 }
