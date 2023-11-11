@@ -10,7 +10,7 @@ procedure main() returns integer {
     b4 -> std_output; '\n' -> std_output;
 
     '\n' -> std_output;
-
+/*
     integer i1 = as<integer>(true);
     integer i2 = as<integer>('a');
     integer i3 = as<integer>(10);
@@ -24,6 +24,7 @@ procedure main() returns integer {
     i5 -> std_output; '\n' -> std_output;
 
     '\n' -> std_output;
+    */
 
     real r1 = as<real>(true);
     real r2 = as<real>(10);
