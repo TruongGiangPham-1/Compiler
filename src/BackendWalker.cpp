@@ -4,7 +4,7 @@
 #include "mlir/IR/Value.h"
 #include <memory>
 #include <stdexcept>
-#define DEBUG
+//#define DEBUG
 
 void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #ifdef DEBUG
