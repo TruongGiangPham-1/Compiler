@@ -258,7 +258,17 @@ namespace gazprea {
             return nullptr;
         }
         if(!tree->getExprNode()) {
-            // set
+            // has a type node //  add a null node :)
+            std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(tree->loc());
+            tree->addChild(nullNode);
+            walk(nullNode);  // walk null node to popualte the type
+
+            auto lType = tree->sym->typeSym;
+            if (lType == nullptr) {
+                throw SyntaxError(tree->loc(), "Declaration is missing expression to infer type.");
+            }
+            tree->evaluatedType = lType;  //
+            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
             return nullptr;
         }
 
