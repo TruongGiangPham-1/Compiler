@@ -1,5 +1,6 @@
 #include "llvm/ADT/APFloat.h"
 #include "Types/TYPES.h"
+#include "Type.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
@@ -247,6 +248,26 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   this->allocatedObjects++;
 
   return result;
+}
+
+/*
+ * Takes a nullable std::shared_ptr<Type>, and cast the value to that type
+ *
+ * ONLY WORKS for simple types (integer, char, bool, real)
+ * if we pass a vector type, we will just return the value
+ * If the type is null, return the same value (no-op)
+ */
+mlir::Value BackEnd::possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType) {
+  if (nullableType) {
+    std::vector<TYPE> acceptableTypes = {TYPE::INTEGER, TYPE::CHAR, TYPE::BOOLEAN, TYPE::REAL};
+    if (std::find(acceptableTypes.begin(), acceptableTypes.end(), nullableType->baseTypeEnum) == acceptableTypes.end()) {
+      return val;
+    } else {
+      return cast(val, nullableType->baseTypeEnum);
+    }
+  } else {
+    return val;
+  }
 }
 
 mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {

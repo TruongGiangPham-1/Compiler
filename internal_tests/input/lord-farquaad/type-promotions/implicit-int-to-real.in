@@ -1,0 +1,7 @@
+procedure main() returns integer {
+    real f = 10;
+    real g = f / 4;
+    g -> std_output; '\n' -> std_output;
+
+    return 0;
+}
