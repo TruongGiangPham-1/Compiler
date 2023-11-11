@@ -1,0 +1,10 @@
+function incrementAlphabet(integer a) returns integer {
+  integer k = 1.0;
+  k = a+1;
+  return k;
+}
+
+procedure main() returns integer {
+  incrementAlphabet(1) -> std_output;
+  return 0;
+}

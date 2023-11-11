@@ -1,0 +1,12 @@
+procedure main() returns integer {
+  tuple(integer a, integer b) a = (1, 2);
+
+  a.a = 5;
+  a.a -> std_output;
+  '\n' -> std_output;
+  a.2 = 10;
+  a.2 -> std_output;
+  '\n' -> std_output;
+
+  return 1;
+}
