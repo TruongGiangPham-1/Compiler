@@ -21,6 +21,8 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     globalScope->defineType(std::make_shared<AdvanceType>("character"));
     globalScope->defineType(std::make_shared<AdvanceType>("tuple"));
     globalScope->defineType(std::make_shared<AdvanceType>("string"));
+    globalScope->defineType(std::make_shared<AdvanceType>("identity"));
+    globalScope->defineType(std::make_shared<AdvanceType>("null"));
 
 
     // simulate typdef  resolveType will walk up the type chain

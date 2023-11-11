@@ -59,6 +59,9 @@ private:
   std::any visitCall(std::shared_ptr<CallNode> tree) override;
 
   std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
+  // === Null and identity
+  std::any visitNull(std::shared_ptr<NullNode> tree) override;
+  std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};

@@ -10,11 +10,11 @@ namespace gazprea {
     public:
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
-        static std::string booleanResult[5][5]; //XOR AND NOT OR
-        static std::string arithmeticResult[5][5]; //+ - / * ^ % **
-        static std::string comparisonResult[5][5]; //>= <= > <
-        static std::string equalityResult[5][5]; //==, !=
-        static std::string promotionTable[5][5];
+        static std::string booleanResult[7][7]; //XOR AND NOT OR
+        static std::string arithmeticResult[7][7]; //+ - / * ^ % **
+        static std::string comparisonResult[7][7]; //>= <= > <
+        static std::string equalityResult[7][7]; //==, !=
+        static std::string promotionTable[7][7];
         static std::string castTable[4][4];
 
         const int boolIndex = 0;
@@ -22,8 +22,10 @@ namespace gazprea {
         const int integerIndex = 2;
         const int realIndex = 3;
         const int tupleIndex = 4;
+        const int identityIndex = 5;
+        const int nullIndex = 6;
 
-        std::shared_ptr<Type> getType(std::string table[5][5], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
+        std::shared_ptr<Type> getType(std::string table[7][7], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
         int getTypeIndex(const std::string type);
 
         PromotedType(std::shared_ptr<SymbolTable> symtab);
@@ -60,12 +62,18 @@ namespace gazprea {
         std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
 
+        // === Null and identity
+        std::any visitNull(std::shared_ptr<NullNode> tree) override;
+        std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
+
         // Return CFG unsupported right now :(
 
         std::any visitCall(std::shared_ptr<CallNode> tree) override; // Procedure Call, function and procedure call in expr
         std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
         std::any visitCast(std::shared_ptr<CastNode> tree) override;
 
+        std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
+        std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
         std::string typeEnumToString(TYPE t);
     };
 }

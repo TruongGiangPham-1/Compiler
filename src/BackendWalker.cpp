@@ -73,6 +73,15 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   }
 }
 
+std::any BackendWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+
+    return codeGenerator.generateIdentityValue(tree->evaluatedType->baseTypeEnum);
+}
+
+std::any BackendWalker::visitNull(std::shared_ptr<NullNode> tree) {
+    return codeGenerator.generateNullValue(tree->evaluatedType->baseTypeEnum);
+}
+
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }

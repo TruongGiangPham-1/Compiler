@@ -46,6 +46,7 @@
 #include "ASTNode/Expr/Literal/StringNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
+#include "ASTNode/Expr/IdentityNode.h"
 
 namespace gazprea {
 

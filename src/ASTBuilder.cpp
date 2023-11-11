@@ -154,9 +154,9 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitIdentity " << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<NullNode>(ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<IdentityNode>(ctx->getStart()->getLine());
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitNull(GazpreaParser::NullContext *ctx) {
@@ -165,7 +165,7 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<NullNode>(ctx->getStart()->getLine());
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
 

@@ -31,6 +31,8 @@
 #include "ASTNode/CallNode.h"
 #include "ASTNode/TypeDefNode.h"
 #include "ASTNode/Expr/TupleIndexNode.h"
+#include "ASTNode/Expr/NullNode.h"
+#include "ASTNode/Expr/IdentityNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -94,5 +96,8 @@ namespace gazprea {
         virtual std::any visitParameter(std::shared_ptr<ArgNode> tree);
         // === FUNCTION CALL NODE ===
 
+        // === Null and identity
+        virtual std::any visitNull(std::shared_ptr<NullNode> tree);
+        virtual std::any visitIdentity(std::shared_ptr<IdentityNode> tree);
     };
 }
