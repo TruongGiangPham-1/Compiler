@@ -261,6 +261,7 @@ namespace gazprea {
             if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY)  {
                throw TypeError(tree->loc(), "cannot have identity when type is not defined");
             }
+            tree->evaluatedType = tree->getExprNode()->evaluatedType;
             return nullptr;
         }
         if(!tree->getExprNode()) {
@@ -383,8 +384,10 @@ namespace gazprea {
 
 
             if (rhsType != nullptr) {
-                if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
+                if (tree->getLvalue()->children[0]->evaluatedType == nullptr) {
+                    tree->evaluatedType = rhsType;
                     return nullptr;
+                }
                 // TODO identity and null handling
                 if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
