@@ -60,7 +60,7 @@ void BackEnd::init() {
 
 void BackEnd::verifyFunction(int line, std::string name) {
   if (mlir::failed(mlir::verify(functionStack[functionStack.size()-1]))) {
-    throw ReturnError(1, name + " does not have a return statement reachable by all control flows\n");
+    throw ReturnError(1, name + " does not have a return statement reachable by all control flows);
   }
   functionStack.pop_back();
 }

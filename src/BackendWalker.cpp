@@ -305,7 +305,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         false);
     walk(tree->body);
     codeGenerator.generateEndFunctionDefinition(block, tree->line);
-    codeGenerator.verifyFunction(tree->line, "Procedure " + tree->nameSym->name);
+    codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
     this->returnDropped = false;
   }
 
@@ -321,7 +321,7 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
     walk(tree->body);
 
     codeGenerator.generateEndFunctionDefinition(block, tree->line);
-    codeGenerator.verifyFunction(tree->line, "Function " + tree->funcNameSym->name);
+    codeGenerator.verifyFunction(tree->loc(), "Function " + tree->funcNameSym->name);
     this->returnDropped = false;
   }
   return 0;
