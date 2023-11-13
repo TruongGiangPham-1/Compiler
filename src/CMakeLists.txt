@@ -104,6 +104,8 @@ set(
         ASTNode/Expr/ExprListNode.cpp
         ASTNode/Stream/StreamIn.cpp
         ../include/ASTNode/Stream/StreamIn.h
+        ASTNode/Expr/Literal/VectorNode.cpp
+        ../include/ASTNode/Expr/Literal/VectorNode.h
 )
 
 # Build our executable from the source files.

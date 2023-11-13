@@ -245,6 +245,20 @@ namespace gazprea {
         }
     }
 
+    std::any ASTBuilder::visitLiteralVector(GazpreaParser::LiteralVectorContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitLiteralVector" << ctx->getText() << std::endl;
+#endif
+        std::shared_ptr<ASTNode> t = std::make_shared<VectorNode>(ctx->getStart()->getLine());
+
+        auto vectorCtx = ctx->literal_vector();
+        for (auto exprCtx : vectorCtx->expression()) {
+            t->addChild(visit(exprCtx));
+        }
+
+        return t;
+    }
+
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
