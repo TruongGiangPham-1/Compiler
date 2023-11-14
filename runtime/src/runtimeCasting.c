@@ -27,14 +27,13 @@ bool isCOMP(enum BINOP op) {
 bool ValidType(enum TYPE type) {
   switch (type) {
     case INTEGER:
-    return true;
     case CHAR:
-    return true;
     case REAL:
-    return true;
     case BOOLEAN:
-    return true;
     case TUPLE:
+    case STRING:
+    case VECTOR:
+    case MATRIX:
     return true;
     default:
     return false;
