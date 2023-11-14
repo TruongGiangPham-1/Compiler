@@ -67,7 +67,6 @@ void printType(commonType *type, bool nl) {
         printf(")");
       }
       break;
-    case VECTOR:
   }
 
   if (nl) printf("\n");
