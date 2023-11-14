@@ -173,50 +173,22 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
 
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
-  list *mlist;
-  enum TYPE resultingType;
-
-  // ugly duplicate code ahead
-  
-  // figure out which one of these is composite (one has to be or something is broken)
-  if (isCompositeType(l->type) && isCompositeType(r->type)) {
-
-    list* left = l->value;
-    list* right = r->value;
-    resultingType = l->type;
-
-    // both lists need to be the same size in order to OP on, this is arbitrary
-    mlist = allocateList(left->size);
-
-    for (int i = 0 ; i < left->size; i ++) {
-      commonType* result = performCommonTypeBINOP(left->values[i], right->values[i], op);
-      appendList(mlist, result);
-    }
-
-  } else if (isCompositeType(l->type) && !isCompositeType(r->type)) {
-
-    list* left = l->value;
-    resultingType = l->type;
-    mlist = allocateList(left->size);
-
-    for (int i = 0 ; i < left->size; i ++) {
-      commonType* result = performCommonTypeBINOP(left->values[i], r, op);
-      appendList(mlist, result);
-    }
-
-  } else if (!isCompositeType(l->type) && isCompositeType(r->type)) {
-
-    list* right = r->value;
-    resultingType = r->type;
-    mlist = allocateList(right->size);
-
-    for (int i = 0 ; i < right->size; i ++) {
-      commonType* result = performCommonTypeBINOP(l, right->values[i], op);
-      appendList(mlist, result);
-    }
-
-  } else {
+  if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list comparison, but neither operand is listable type");
+  }
+  
+  // if not one then the other
+  int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r)->size;
+  list *mlist = allocateList(listSize);
+
+  enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
+
+  for (int i = 0 ; i < listSize ; i ++) {
+    commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
+    commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
+
+    commonType* result = performCommonTypeBINOP(left, right, op);
+    appendList(mlist, result);
   }
 
   commonType *result = allocateCommonType(&mlist, resultingType);
