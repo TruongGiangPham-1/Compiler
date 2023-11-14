@@ -2,6 +2,7 @@
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
 #include "run_time_errors.h"
+#include "runtimeMemory.c"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -44,37 +45,6 @@ bool ValidType(enum TYPE type) {
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 //#define DEBUGPRINT
-
-typedef struct vecStruct {
-  int* base;
-  int sizeOf;
-} vecStruct;
-
-typedef struct commonType {
-  enum TYPE type; 
-  void* value; 
-} commonType;
-
-typedef struct tuple {
-  int size;
-  int currentSize;
-  commonType** values; // list of values
-} tuple;
-
-
-// memory stuff. Defined in runtimeMemory
-#ifndef RUNTIMEMEMORY
-commonType* copyCommonType(commonType* copyFrom);
-void assignByReference(commonType* dest, commonType* from);
-commonType* allocateCommonType(void* value, enum TYPE type);
-void* copyValue(commonType* copyFrom);
-void extractAndAssignValue(void* value, commonType *dest);
-void deallocateTuple(tuple* tuple);
-void deallocateCommonType(commonType* object);
-tuple* allocateTuple(int size);
-void appendTuple(tuple* tuple, commonType *value);
-tuple* copyTuple(tuple* copyFrom);
-#endif
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {

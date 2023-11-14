@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#ifndef RUNTIMETYPES
 typedef struct commonType {
   enum TYPE type; 
   void* value; 
@@ -22,7 +21,6 @@ typedef struct tuple {
   int currentSize;
   commonType** values; // list of values
 } tuple;
-#endif
 
 commonType* copyCommonType(commonType* copyFrom);
 void assignByReference(commonType* dest, commonType* from);
