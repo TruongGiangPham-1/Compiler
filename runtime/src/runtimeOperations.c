@@ -205,8 +205,10 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
     list* newlist = concat((list*)l->value, (list*)r->value);
 
+    printf("here\n\n");
     // concat should be between vectors or strings
-    return allocateCommonType(newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR );
+    // TODO: leaking here 
+    return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR );
   }
   
   // if not one then the other
@@ -228,6 +230,8 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 }
 
 commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
+
+
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list comparison, but neither operand is listable type");
   }
@@ -255,7 +259,7 @@ commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
 }
 
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op) {
-  commonType* promotedLeft;
+    commonType* promotedLeft;
   commonType* promotedRight;
 
   if (!ValidType(left->type) || !ValidType(right->type)) {
