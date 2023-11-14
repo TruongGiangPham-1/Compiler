@@ -70,8 +70,6 @@ void BackEnd::generate() {
   std::vector<mlir::Value> mainArgs;
   this->generateCallNamed("main", mainArgs);
 
-  this->printCommonType(this->generateValue((std::string)"hello there"));
-
   auto intType = builder->getI32Type();
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getIntegerAttr(intType, 0));
