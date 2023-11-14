@@ -66,6 +66,20 @@ void printType(commonType *type, bool nl) {
         }
         printf(")");
       }
+    // we don't disambiguate. similar behavior
+    case VECTOR:
+    case MATRIX:
+    case STRING:
+      {
+        list* mListable = ((list*)type->value);
+
+        if (type->type != STRING) printf("[");
+        for (int i = 0 ; i < mListable->size ; i++) {
+          printType(mListable->values[i], false);
+          if (i != mListable->size-1 && type->type != STRING) printf(", ");
+        }
+        if (type->type != STRING) printf("]");
+      }
       break;
   }
 
