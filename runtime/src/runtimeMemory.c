@@ -22,16 +22,23 @@ typedef struct tuple {
   commonType** values; // list of values
 } tuple;
 
-commonType* copyCommonType(commonType* copyFrom);
-void assignByReference(commonType* dest, commonType* from);
+// allocate some memory for a new commontype
 commonType* allocateCommonType(void* value, enum TYPE type);
-void* copyValue(commonType* copyFrom);
-void extractAndAssignValue(void* value, commonType *dest);
-void deallocateTuple(tuple* tuple);
-void deallocateCommonType(commonType* object);
 tuple* allocateTuple(int size);
 void appendTuple(tuple* tuple, commonType *value);
+void extractAndAssignValue(void* value, commonType *dest);
+
+// de-allocation. common types which are 'list' types hold an address to a list of common types
+void deallocateTuple(tuple* tuple);
+void deallocateCommonType(commonType* object);
+
+commonType* copyCommonType(commonType* copyFrom);
 tuple* copyTuple(tuple* copyFrom);
+
+// copy the value that the common type is pointing to. KEY WORD COPY
+void* copyValue(commonType* copyFrom);
+
+void assignByReference(commonType* dest, commonType* from);
 
 commonType* copyCommonType(commonType* copyFrom) {
   commonType* copy = (commonType*)malloc(sizeof(commonType));
@@ -131,6 +138,7 @@ void extractAndAssignValue(void* value, commonType *dest) {
       break;
   }
 }
+
 void deallocateTuple(tuple* tuple) {
 #ifdef DEBUGMEMORY
   printf("Deallocating Tuple at %p...\n", tuple);
