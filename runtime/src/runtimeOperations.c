@@ -34,6 +34,21 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op);
 // index a type
 commonType* indexCommonType(commonType* indexee, int indexor);
 
+bool isCompositeType(enum TYPE type) {
+  switch (type) {
+    case STRING:
+    return true;
+    case VECTOR:
+    return true;
+    case MATRIX:
+    return true;
+    case TUPLE:
+    return true;
+    default:
+    return false;
+  }
+}
+
 // turn into bool for llvm control flow
 bool commonTypeToBool(commonType* val);
 
@@ -196,8 +211,8 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     UnsupportedTypeError("BINOP recieved a type it could not recognize");
   }
 
-  // tuples treated differenly
-  if (!(left->type == TUPLE)) {
+  // composites treated differenly
+  if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
     promotedLeft = promotion(left,right);
     promotedRight = promotion(right,left);
   }
@@ -207,7 +222,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   // god is dead and i have killed him
   if (!isCOMP(op)) {
 
-    if (left->type == TUPLE) {
+    if (isCompositeType(left->type) || isCompositeType(right->type)) {
 
       result = listBINOP((list*)left->value, (list*)right->value, op);
 
@@ -232,8 +247,8 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
       result = allocateCommonType(&tempChar, CHAR);
     } 
   } else {
-    if (left->type == TUPLE) {
-      result = tupleCOMP((list*)left->value, (list*)right->value, op);
+    if (isCompositeType(left->type) || isCompositeType(right->type)) {
+      result = listCOMP((list*)left->value, (list*)right->value, op);
     } else if(promotedLeft->type == BOOLEAN) {
 
       bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
