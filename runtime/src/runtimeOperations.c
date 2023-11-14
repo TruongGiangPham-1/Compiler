@@ -171,10 +171,42 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
   }
 }
 
+list* concat(list* l, list* r) {
+  int concatenatedSize = l->size + r->size;
+  list* newList = allocateList(concatenatedSize);
+
+  for (int i = 0; i < l->size ; i ++) {
+    
+    commonType* result = (r->size > 0) ? promotion(l->values[i], r->values[0]) : copyCommonType(result);
+
+    appendList(newList, result);
+  }
+
+  for (int i = 0; i < r->size ; i ++) {
+
+    commonType* result = (l->size > 0) ? promotion(l->values[i], l->values[0]) : copyCommonType(result);
+
+    appendList(newList, result);
+  }
+  
+  return newList;
+}
+
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list binop, but neither operand is listable type");
+  }
+
+  if (op == CONCAT) {
+    if (!isCompositeType(l->type) || !isCompositeType(r->type)) {
+      UnsupportedTypeError("Trying to concatenate non-list types");
+    }
+
+    list* newlist = concat((list*)l->value, (list*)r->value);
+
+    // concat should be between vectors or strings
+    return allocateCommonType(newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR );
   }
   
   // if not one then the other
@@ -267,7 +299,9 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     } 
   } else {
     if (isCompositeType(left->type) || isCompositeType(right->type)) {
+
       result = listCOMP(left, right, op);
+
     } else if(promotedLeft->type == BOOLEAN) {
 
       bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
