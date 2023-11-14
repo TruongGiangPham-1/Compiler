@@ -125,6 +125,9 @@ void extractAndAssignValue(void* value, commonType *dest) {
       }
       break;
     case TUPLE:
+    case STRING:
+    case VECTOR:
+    case MATRIX:
       {
         dest->value = *(list**)value;
       }
@@ -203,7 +206,6 @@ void appendList(list* list, commonType *value) {
   printf("====== Appending to list\n");
   printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
-
   // dont want the real thing, make copy
   list->values[list->currentSize] = allocateCommonType(value->value, value->type);
 

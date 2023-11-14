@@ -74,13 +74,17 @@ void printType(commonType *type, bool nl) {
         list* mListable = ((list*)type->value);
 
         if (type->type != STRING) printf("[");
+
         for (int i = 0 ; i < mListable->size ; i++) {
+
           printType(mListable->values[i], false);
           if (i != mListable->size-1 && type->type != STRING) printf(", ");
         }
         if (type->type != STRING) printf("]");
       }
       break;
+    default:
+    UnsupportedTypeError("Attempting to print a type not recognized by the backend (this happens when type enums are bad)");
   }
 
   if (nl) printf("\n");
