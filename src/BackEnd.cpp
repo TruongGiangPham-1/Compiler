@@ -162,16 +162,16 @@ void BackEnd::setupCommonTypeRuntime() {
 
   auto commonTypeAddr = mlir::LLVM::LLVMPointerType::get(commonType);
   
-  auto tupleType =
+  auto listType =
       mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intType, mlir::LLVM::LLVMPointerType::get(commonTypeAddr)});
-  auto tupleTypeAddr = mlir::LLVM::LLVMPointerType::get(tupleType);
+  auto listTypeAddr = mlir::LLVM::LLVMPointerType::get(listType);
 
   auto printType = mlir::LLVM::LLVMFunctionType::get(
       voidType, {commonTypeAddr});
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
-  auto allocateTupleType = mlir::LLVM::LLVMFunctionType::get(tupleTypeAddr, {intType});
-  auto appendTupleType = mlir::LLVM::LLVMFunctionType::get(intType, {tupleTypeAddr, commonTypeAddr});
+  auto allocateListType = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {intType});
+  auto appendListType = mlir::LLVM::LLVMFunctionType::get(intType, {listTypeAddr, commonTypeAddr});
   auto indexCommonType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
@@ -198,9 +198,9 @@ void BackEnd::setupCommonTypeRuntime() {
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
-                                            allocateTupleType);
+                                            allocateListType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendList",
-                                            appendTupleType);
+                                            appendListType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
