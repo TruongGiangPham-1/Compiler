@@ -386,10 +386,30 @@ mlir::Value BackEnd::generateValue(char value) {
   return this->generateCommonType(result, CHAR);
 }
 
-mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
+mlir::Value BackEnd::generateValue(std::string value) {
+  std::vector<mlir::Value> values;
+
+  for (auto character : value) {
+    values.push_back(this->generateValue(character));
+  }
+
   mlir::LLVM::LLVMFuncOp allocateTupleFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
 
-  auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateTupleFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
+  auto string = builder->create<mlir::LLVM::CallOp>(loc, allocateTupleFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
+
+  mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendList");
+
+  for (auto value : values) {
+    builder->create<mlir::LLVM::CallOp>(loc, appendTuple, mlir::ValueRange({string, value}));
+  }
+
+  return this->generateCommonType(string, STRING);
+}
+
+mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
+
+  auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
 
   mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendList");
 

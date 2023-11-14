@@ -27,6 +27,8 @@ public:
   mlir::Value generateValue(char* value);
   mlir::Value generateValue(char value);
   mlir::Value generateValue(bool value);
+  mlir::Value generateValue(std::string value);
+
 
   void functionShowcase();
 
