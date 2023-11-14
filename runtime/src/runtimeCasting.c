@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-bool isCOMP(enum BINOP op) {
+bool isComparison(enum BINOP op) {
   switch (op) {
     case EQUAL:
     case NEQUAL:

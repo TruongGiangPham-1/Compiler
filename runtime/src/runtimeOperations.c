@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 // defined binary operations between types
 int intBINOP(int l, int r, enum BINOP op);
 bool intCOMP(int l, int r, enum BINOP op);
@@ -24,8 +24,8 @@ bool boolUNARYOP(bool val, enum UNARYOP op);
 int intUNARYOP(int val, enum UNARYOP op);
 float floatUNARYOP(float val, enum UNARYOP op);
 // these act differently, apply operations to each internal member
-commonType* listBINOP(list* l, list* r, enum BINOP op);
-commonType* listCOMP(list* l, list* r, enum BINOP op);
+commonType* listBINOP(commonType* l, commonType* r, enum BINOP op);
+commonType* listCOMP(commonType* l, commonType* r, enum BINOP op);
 
 // perform operation between two types
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op);
@@ -34,14 +34,12 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op);
 // index a type
 commonType* indexCommonType(commonType* indexee, int indexor);
 
+// 'composite'. internally, it holds a list of commonTypes
 bool isCompositeType(enum TYPE type) {
   switch (type) {
     case STRING:
-    return true;
     case VECTOR:
-    return true;
     case MATRIX:
-    return true;
     case TUPLE:
     return true;
     default:
@@ -170,32 +168,76 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
     return l ^ r;
     default:
     RuntimeOPError("Unknown binary operation for BOOL");
-    return NULL;
   }
 }
 
-commonType* listBINOP(list* l, list* r, enum BINOP op) {
-  list *list = allocateList(l->size);
+commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
-  for (int i = 0 ; i < l->currentSize ; i ++) {
-    appendList(list, performCommonTypeBINOP(l->values[i], r->values[i], op)); 
+  list *mlist;
+  enum TYPE resultingType;
+
+  // ugly duplicate code ahead
+  
+  // figure out which one of these is composite (one has to be or something is broken)
+  if (isCompositeType(l->type) && isCompositeType(r->type)) {
+
+    list* left = l->value;
+    list* right = r->value;
+    resultingType = l->type;
+
+    // both lists need to be the same size in order to OP on, this is arbitrary
+    mlist = allocateList(left->size);
+
+    for (int i = 0 ; i < left->size; i ++) {
+      commonType* result = performCommonTypeBINOP(left->values[i], right->values[i], op);
+      appendList(mlist, result);
+    }
+
+  } else if (isCompositeType(l->type) && !isCompositeType(r->type)) {
+
+    list* left = l->value;
+    resultingType = l->type;
+    mlist = allocateList(left->size);
+
+    for (int i = 0 ; i < left->size; i ++) {
+      commonType* result = performCommonTypeBINOP(left->values[i], r, op);
+      appendList(mlist, result);
+    }
+
+  } else if (!isCompositeType(l->type) && isCompositeType(r->type)) {
+
+    list* right = r->value;
+    resultingType = r->type;
+    mlist = allocateList(right->size);
+
+    for (int i = 0 ; i < right->size; i ++) {
+      commonType* result = performCommonTypeBINOP(l, right->values[i], op);
+      appendList(mlist, result);
+    }
+
+  } else {
+    UnsupportedTypeError("Reached list comparison, but neither operand is listable type");
   }
 
-  commonType *result = allocateCommonType(&list, TUPLE);
+  commonType *result = allocateCommonType(&mlist, resultingType);
 
   return result;
 }
 
-commonType* listCOMP(list* l, list* r, enum BINOP op) {
-  list *list = allocateList(l->size);
+commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
+  list *list; 
 
   bool compResult = true;
 
-  for (int i = 0 ; i < l->currentSize ; i ++) {
-    commonType* result = performCommonTypeBINOP(l->values[i], r->values[i], op); 
-    if (! *(bool*)result->value) {
-      compResult = false;
-    }
+  // figure out which one of this is composite (one has to be or something is broken)
+  if (isCompositeType(l->type) && isCompositeType(r->type)) {
+
+  } else if (isCompositeType(l->type) && !isCompositeType(r->type)) {
+
+  } else if (!isCompositeType(l->type) && isCompositeType(r->type)) {
+
+  } else {
+    UnsupportedTypeError("Reached list comparison, but neither operand is list");
   }
 
   commonType *result = allocateCommonType(&compResult, BOOLEAN);
@@ -220,11 +262,11 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   commonType* result;
 
   // god is dead and i have killed him
-  if (!isCOMP(op)) {
+  if (!isComparison(op)) {
 
     if (isCompositeType(left->type) || isCompositeType(right->type)) {
 
-      result = listBINOP((list*)left->value, (list*)right->value, op);
+      result = listBINOP(left, right, op);
 
     } else if(promotedLeft->type == BOOLEAN) {
 
@@ -248,7 +290,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     } 
   } else {
     if (isCompositeType(left->type) || isCompositeType(right->type)) {
-      result = listCOMP((list*)left->value, (list*)right->value, op);
+      result = listCOMP(left, right, op);
     } else if(promotedLeft->type == BOOLEAN) {
 
       bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
