@@ -87,6 +87,9 @@ void* copyValue(commonType* copyFrom) {
       }
       break;
     case TUPLE:
+    case VECTOR:
+    case MATRIX:
+    case STRING:
       {
         return copyList((list*)copyFrom->value);
       }
@@ -169,6 +172,9 @@ void deallocateCommonType(commonType* object) {
   if (object != NULL) {
     switch (object->type) {
       case TUPLE:
+      case VECTOR:
+      case MATRIX:
+      case STRING:
       deallocateList((list*)object->value);
       break;
       default:

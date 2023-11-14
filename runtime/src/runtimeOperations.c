@@ -178,7 +178,7 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   }
   
   // if not one then the other
-  int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r)->size;
+  int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r->value)->size;
   list *mlist = allocateList(listSize);
 
   for (int i = 0 ; i < listSize ; i ++) {
@@ -288,7 +288,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   printf("=== de allocating temporary operands...\n");
 #endif /* ifdef DEBUGMEMORY */
 
-  if (!(left->type == TUPLE)) {
+  if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
     deallocateCommonType(promotedLeft);
     deallocateCommonType(promotedRight);
   }
