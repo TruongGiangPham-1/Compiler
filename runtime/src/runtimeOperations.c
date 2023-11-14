@@ -174,7 +174,7 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
-    UnsupportedTypeError("Reached list comparison, but neither operand is listable type");
+    UnsupportedTypeError("Reached list binop, but neither operand is listable type");
   }
   
   // if not one then the other
@@ -196,19 +196,25 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 }
 
 commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
-  list *list; 
-
+  if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
+    UnsupportedTypeError("Reached list comparison, but neither operand is listable type");
+  }
+  
+  // if not one then the other
+  int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r->value)->size;
   bool compResult = true;
 
-  // figure out which one of this is composite (one has to be or something is broken)
-  if (isCompositeType(l->type) && isCompositeType(r->type)) {
+  for (int i = 0 ; i < listSize ; i ++) {
+    commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
+    commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
 
-  } else if (isCompositeType(l->type) && !isCompositeType(r->type)) {
+    commonType* result = performCommonTypeBINOP(left, right, op);
 
-  } else if (!isCompositeType(l->type) && isCompositeType(r->type)) {
+    if (!*(bool*)result->value) {
+      compResult = false;
+    }
 
-  } else {
-    UnsupportedTypeError("Reached list comparison, but neither operand is list");
+    deallocateCommonType(result);
   }
 
   commonType *result = allocateCommonType(&compResult, BOOLEAN);
