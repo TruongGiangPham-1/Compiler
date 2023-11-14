@@ -171,7 +171,7 @@ commonType* listBINOP(list* l, list* r, enum BINOP op) {
   return result;
 }
 
-commonType* tupleCOMP(list* l, list* r, enum BINOP op) {
+commonType* listCOMP(list* l, list* r, enum BINOP op) {
   list *list = allocateList(l->size);
 
   bool compResult = true;
