@@ -181,8 +181,6 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r)->size;
   list *mlist = allocateList(listSize);
 
-  enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
-
   for (int i = 0 ; i < listSize ; i ++) {
     commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
     commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
@@ -191,6 +189,7 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
     appendList(mlist, result);
   }
 
+  enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
   commonType *result = allocateCommonType(&mlist, resultingType);
 
   return result;
