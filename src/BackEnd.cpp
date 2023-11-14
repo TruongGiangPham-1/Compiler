@@ -197,9 +197,9 @@ void BackEnd::setupCommonTypeRuntime() {
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateTuple",
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
                                             allocateTupleType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendTuple",
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendList",
                                             appendTupleType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
@@ -387,11 +387,11 @@ mlir::Value BackEnd::generateValue(char value) {
 }
 
 mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
-  mlir::LLVM::LLVMFuncOp allocateTupleFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateTuple");
+  mlir::LLVM::LLVMFuncOp allocateTupleFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
 
   auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateTupleFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
 
-  mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendTuple");
+  mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendList");
 
   for (auto value : values) {
     builder->create<mlir::LLVM::CallOp>(loc, appendTuple, mlir::ValueRange({tuple, value}));

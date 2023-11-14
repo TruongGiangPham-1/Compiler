@@ -24,8 +24,8 @@ bool boolUNARYOP(bool val, enum UNARYOP op);
 int intUNARYOP(int val, enum UNARYOP op);
 float floatUNARYOP(float val, enum UNARYOP op);
 // these act differently, apply operations to each internal member
-commonType* tupleBINOP(tuple* l, tuple* r, enum BINOP op);
-commonType* tupleCOMP(tuple* l, tuple* r, enum BINOP op);
+commonType* listBINOP(list* l, list* r, enum BINOP op);
+commonType* listCOMP(list* l, list* r, enum BINOP op);
 
 // perform operation between two types
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op);
@@ -159,20 +159,20 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
   }
 }
 
-commonType* tupleBINOP(tuple* l, tuple* r, enum BINOP op) {
-  tuple *tuple = allocateTuple(l->size);
+commonType* listBINOP(list* l, list* r, enum BINOP op) {
+  list *list = allocateList(l->size);
 
   for (int i = 0 ; i < l->currentSize ; i ++) {
-    appendTuple(tuple, performCommonTypeBINOP(l->values[i], r->values[i], op)); 
+    appendList(list, performCommonTypeBINOP(l->values[i], r->values[i], op)); 
   }
 
-  commonType *result = allocateCommonType(&tuple, TUPLE);
+  commonType *result = allocateCommonType(&list, TUPLE);
 
   return result;
 }
 
-commonType* tupleCOMP(tuple* l, tuple* r, enum BINOP op) {
-  tuple *tuple = allocateTuple(l->size);
+commonType* tupleCOMP(list* l, list* r, enum BINOP op) {
+  list *list = allocateList(l->size);
 
   bool compResult = true;
 
@@ -209,7 +209,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
     if (left->type == TUPLE) {
 
-      result = tupleBINOP((tuple*)left->value, (tuple*)right->value, op);
+      result = listBINOP((list*)left->value, (list*)right->value, op);
 
     } else if(promotedLeft->type == BOOLEAN) {
 
@@ -233,7 +233,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     } 
   } else {
     if (left->type == TUPLE) {
-      result = tupleCOMP((tuple*)left->value, (tuple*)right->value, op);
+      result = tupleCOMP((list*)left->value, (list*)right->value, op);
     } else if(promotedLeft->type == BOOLEAN) {
 
       bool tempBool = boolBINOP(*(bool*)promotedLeft->value, *(bool*)promotedRight->value, op);
@@ -326,8 +326,8 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 
 // assume we are indexing a tuploe item
 commonType* indexCommonType(commonType* indexee, int indexor) {
-  tuple* tup = (tuple*)indexee->value;
-  return tup->values[indexor];
+  list* list = indexee->value;
+  return list->values[indexor];
 }
 
 // https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar

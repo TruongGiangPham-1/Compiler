@@ -52,7 +52,7 @@ void printType(commonType *type, bool nl) {
       #endif /* ifdef DEBUGPRINT */
       // {} bc we can't declare variables in switch
       {
-        tuple *mTuple = ((tuple*)type->value);
+        list*mTuple = ((list*)type->value);
         #ifdef DEBUGTUPLE
         printf("Printing tuple %p\n", mTuple);
         #endif
@@ -67,6 +67,7 @@ void printType(commonType *type, bool nl) {
         printf(")");
       }
       break;
+    case VECTOR:
   }
 
   if (nl) printf("\n");

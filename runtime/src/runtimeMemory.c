@@ -16,24 +16,24 @@ typedef struct commonType {
   void* value; 
 } commonType;
 
-typedef struct tuple {
+typedef struct list {
   int size;
   int currentSize;
   commonType** values; // list of values
-} tuple;
+} list;
 
 // allocate some memory for a new commontype
 commonType* allocateCommonType(void* value, enum TYPE type);
-tuple* allocateTuple(int size);
-void appendTuple(tuple* tuple, commonType *value);
+list* allocateList(int size);
+void appendList(list* list, commonType *value);
 void extractAndAssignValue(void* value, commonType *dest);
 
 // de-allocation. common types which are 'list' types hold an address to a list of common types
-void deallocateTuple(tuple* tuple);
+void deallocateList(list* list);
 void deallocateCommonType(commonType* object);
 
 commonType* copyCommonType(commonType* copyFrom);
-tuple* copyTuple(tuple* copyFrom);
+list* copyList(list* copyFrom);
 
 // copy the value that the common type is pointing to. KEY WORD COPY
 void* copyValue(commonType* copyFrom);
@@ -88,7 +88,7 @@ void* copyValue(commonType* copyFrom) {
       break;
     case TUPLE:
       {
-        return copyTuple((tuple*)copyFrom->value);
+        return copyList((list*)copyFrom->value);
       }
       break;
     case CHAR: 
@@ -126,7 +126,7 @@ void extractAndAssignValue(void* value, commonType *dest) {
       break;
     case TUPLE:
       {
-        dest->value = *(tuple**)value;
+        dest->value = *(list**)value;
       }
       break;
     case CHAR: 
@@ -139,21 +139,21 @@ void extractAndAssignValue(void* value, commonType *dest) {
   }
 }
 
-void deallocateTuple(tuple* tuple) {
+void deallocateList(list* list) {
 #ifdef DEBUGMEMORY
-  printf("Deallocating Tuple at %p...\n", tuple);
-  printf("=== TUPLE ===\n");
+  printf("Deallocating List at %p...\n", list);
+  printf("=== LIST ===\n");
 #endif /* ifdef DEBUGMEMORY */
 
-    for (int i = 0; i < tuple->currentSize ; i++) {
-      deallocateCommonType(tuple->values[i]);
+    for (int i = 0; i < list->currentSize ; i++) {
+      deallocateCommonType(list->values[i]);
     }
-    free(tuple->values);
-    free(tuple);
+    free(list->values);
+    free(list);
 
 #ifdef DEBUGMEMORY
-  printf("=== TUPLE ===\n");
-  printf("Tuple deallocation success!\n");
+  printf("=== LIST ===\n");
+  printf("List deallocation success!\n");
 #endif
 }
 
@@ -166,7 +166,7 @@ void deallocateCommonType(commonType* object) {
   if (object != NULL) {
     switch (object->type) {
       case TUPLE:
-      deallocateTuple((tuple*)object->value);
+      deallocateList((list*)object->value);
       break;
       default:
       free(object->value);
@@ -178,50 +178,50 @@ void deallocateCommonType(commonType* object) {
 #endif /* ifdef DEBUGMEMORY */
 }
 
-tuple* allocateTuple(int size) {
-  tuple* newTuple = (tuple*) malloc(sizeof(tuple));
+list* allocateList(int size) {
+  list* newList = (list*) malloc(sizeof(list));
   commonType** valueList = (commonType**) calloc(size, sizeof(commonType*));
 
-  newTuple->size = size;
-  newTuple->currentSize = 0;
-  newTuple->values= valueList;
+  newList->size = size;
+  newList->currentSize = 0;
+  newList->values= valueList;
 
 #ifdef DEBUGMEMORY
-  printf("Allocated tuple at %p\n", newTuple);
+  printf("Allocated tuple at %p\n", newList);
   printf("Tuple list beings at %p\n", valueList);
 #endif
   
-  return newTuple;
+  return newList;
 };
 
 /**
  * Add item to our tuple, we can potentially go over bounds....
  * but we shoulnd't due to spec, right?
  */
-void appendTuple(tuple* tuple, commonType *value) {
+void appendList(list* list, commonType *value) {
 #ifdef DEBUGTUPLE
-  printf("====== Appending to tuple\n");
-  printf("Tuple currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
+  printf("====== Appending to list\n");
+  printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
 
   // dont want the real thing, make copy
-  tuple->values[tuple->currentSize] = allocateCommonType(value->value, value->type);
+  list->values[list->currentSize] = allocateCommonType(value->value, value->type);
 
 #ifdef DEBUGTUPLE
-  printf("appended to tuple at %p, %p\n", &tuple->values[tuple->currentSize], value);
-  printf("Tuple now holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
+  printf("appended to list at %p, %p\n", &list->values[list->currentSize], value);
+  printf("List now holding %p  at index %d address %p\n", list->values[list->currentSize], list->currentSize, &list->values[list->currentSize]);
   printf("====== Append complete\n"); 
 #endif /* ifdef DEBUGTUPLE */
 
-  tuple->currentSize++;
+  list->currentSize++;
 }
 
-tuple* copyTuple(tuple* copyFrom) {
-  tuple* copiedTo = allocateTuple(copyFrom->size);
+list* copyList(list* copyFrom) {
+  list* copiedTo = allocateList(copyFrom->size);
 
   for (int i = 0 ; i < copyFrom->size ; i ++) {
     commonType* newVal = copyCommonType(copyFrom->values[i]);
-    appendTuple(copiedTo, newVal);
+    appendList(copiedTo, newVal);
   }
 
   return copiedTo;
