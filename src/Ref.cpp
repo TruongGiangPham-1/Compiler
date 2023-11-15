@@ -265,6 +265,7 @@ namespace gazprea {
                                                                                         scopeName, retType, symtab->globalScope, tree->loc());
             methodSym->typeSym = retType;
             currentScope->define(methodSym);  // define methd symbol in global
+            currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
             // --------------------------------------
             defineFunctionAndProcedureArgs(tree->loc(), methodSym, tree->orderedArgs, retType);
 
