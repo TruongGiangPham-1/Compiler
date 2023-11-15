@@ -16,6 +16,7 @@ enum BINOP {
     GEQ,
     // vectors, strings
     CONCAT,
+    STRIDE,
     // vectors+ matrix
     DOT_PROD,
     // boolean

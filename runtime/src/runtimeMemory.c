@@ -234,5 +234,4 @@ list* copyList(list* copyFrom) {
 
   return copiedTo;
 }
-
 #endif

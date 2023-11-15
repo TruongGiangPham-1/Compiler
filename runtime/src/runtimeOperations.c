@@ -192,6 +192,16 @@ list* concat(list* l, list* r) {
   return newList;
 }
 
+list* stride(list* l, int stride) {
+  int finalSize = l->size / stride;
+  list* newList = allocateList(finalSize);
+
+  for (int i = 0 ; i < l->size ; i += stride) {
+    appendList(newList, l->values[i]);
+  }
+  return newList;
+}
+
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
@@ -205,10 +215,20 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
 
     list* newlist = concat((list*)l->value, (list*)r->value);
 
-    printf("here\n\n");
     // concat should be between vectors or strings
     // TODO: leaking here 
-    return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR );
+    return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR);
+  }
+
+  if (op == STRIDE) {
+    commonType* castedRight = cast(r, INTEGER);
+
+    list* newlist = stride((list*)l->value, *(int*)castedRight->value);
+
+    deallocateCommonType(castedRight);
+
+    // TODO: leaking here 
+    return allocateCommonType(&newlist, l->type);
   }
   
   // if not one then the other
@@ -422,4 +442,8 @@ bool commonTypeToBool(commonType* val) {
         return tmpChar != '\0';
     }
   }
+}
+
+commonType* vectorFromRange(commonType* lower, commonType* upper) {
+  commonType* castedLower = cast(lower, INTEGER);
 }
