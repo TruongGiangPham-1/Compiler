@@ -245,6 +245,38 @@ namespace gazprea {
         }
     }
 
+    std::any ASTBuilder::visitLiteralVector(GazpreaParser::LiteralVectorContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitLiteralVector" << ctx->getText() << std::endl;
+#endif
+        return visit(ctx->literal_vector());
+    }
+
+    // this literal_vector is used in both literalVector and literalMatrix to parse vectors
+    std::any ASTBuilder::visitLiteral_vector(GazpreaParser::Literal_vectorContext *ctx) {
+        auto t = std::make_shared<VectorNode>(ctx->getStart()->getLine());
+
+        for (auto exprCtx : ctx->expression()) {
+            t->addChild(visit(exprCtx));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
+#endif
+        auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
+
+        auto matrixCtx = ctx->literal_matrix();
+        for (auto vectorCtx : matrixCtx->literal_vector()) {
+            t->addChild(visit(vectorCtx));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitMath, op = " << ctx->op->getText() << std::endl;
