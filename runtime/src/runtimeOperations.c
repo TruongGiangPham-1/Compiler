@@ -203,11 +203,9 @@ list* stride(list* l, int stride) {
 }
 
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
-
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list binop, but neither operand is listable type");
   }
-
 
   switch (op) {
     case CONCAT:
@@ -259,13 +257,11 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
       return result;
     }
     default:
-    RuntimeOPError("Unknown operation between lists");
+    RuntimeOPError("Unknown binary operation between lists");
   }
 }
 
 commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
-
-
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list comparison, but neither operand is listable type");
   }
