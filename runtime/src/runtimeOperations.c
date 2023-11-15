@@ -208,45 +208,59 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
     UnsupportedTypeError("Reached list binop, but neither operand is listable type");
   }
 
-  if (op == CONCAT) {
-    if (!isCompositeType(l->type) || !isCompositeType(r->type)) {
-      UnsupportedTypeError("Trying to concatenate non-list types");
+
+  switch (op) {
+    case CONCAT:
+    {
+      if (!isCompositeType(l->type) || !isCompositeType(r->type)) {
+        UnsupportedTypeError("Trying to concatenate non-list types");
+      }
+
+      list* newlist = concat((list*)l->value, (list*)r->value);
+
+      // concat should be between vectors or strings
+      // TODO: leaking here 
+      return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR);
     }
+    case STRIDE:
+    {
+      commonType* castedRight = cast(r, INTEGER);
 
-    list* newlist = concat((list*)l->value, (list*)r->value);
+      list* newlist = stride((list*)l->value, *(int*)castedRight->value);
 
-    // concat should be between vectors or strings
-    // TODO: leaking here 
-    return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR);
+      deallocateCommonType(castedRight);
+
+      // TODO: leaking here 
+      return allocateCommonType(&newlist, l->type);
+
+    }
+    case ADD:
+    case MULT:
+    case SUB:
+    case DIV:
+    case EXP:
+    case REM:
+    {
+      // if not one then the other
+      int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r->value)->size;
+      list *mlist = allocateList(listSize);
+
+      for (int i = 0 ; i < listSize ; i ++) {
+        commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
+        commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
+
+        commonType* result = performCommonTypeBINOP(left, right, op);
+        appendList(mlist, result);
+      }
+
+      enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
+      commonType *result = allocateCommonType(&mlist, resultingType);
+
+      return result;
+    }
+    default:
+    RuntimeOPError("Unknown operation between lists");
   }
-
-  if (op == STRIDE) {
-    commonType* castedRight = cast(r, INTEGER);
-
-    list* newlist = stride((list*)l->value, *(int*)castedRight->value);
-
-    deallocateCommonType(castedRight);
-
-    // TODO: leaking here 
-    return allocateCommonType(&newlist, l->type);
-  }
-  
-  // if not one then the other
-  int listSize = isCompositeType(l->type) ? ((list*) l->value)->size : ((list*) r->value)->size;
-  list *mlist = allocateList(listSize);
-
-  for (int i = 0 ; i < listSize ; i ++) {
-    commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
-    commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
-
-    commonType* result = performCommonTypeBINOP(left, right, op);
-    appendList(mlist, result);
-  }
-
-  enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
-  commonType *result = allocateCommonType(&mlist, resultingType);
-
-  return result;
 }
 
 commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
