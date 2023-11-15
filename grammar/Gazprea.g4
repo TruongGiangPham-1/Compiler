@@ -146,9 +146,9 @@ expr
     | INT                                                                                               #literalInt
     | literal_real                                                                                      #literalReal
     | '(' expr (',' expr )+ ')'                                                                         #literalTuple
+    | literal_matrix                                                                                    #literalMatrix
     | literal_vector                                                                                    #literalVector
     | LITERAL_STRING                                                                                    #literalString
-    | literal_matrix                                                                                    #literalMatrix
     ;
 
 
