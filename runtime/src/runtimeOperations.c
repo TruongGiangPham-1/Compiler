@@ -288,8 +288,22 @@ commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
   return result;
 }
 
+commonType* vectorFromRange(commonType* lower, commonType* upper) {
+  commonType* castedLower = cast(lower, INTEGER);
+  commonType* castedUpped = cast(upper, INTEGER);
+
+  list* newList = allocateList(*(int*)upper->value - *(int*)lower->value);
+
+  for(int i = *(int*)lower->value ; i < *(int*)upper->value ; i ++) {
+    commonType* newItem = allocateCommonType(&i, INTEGER);
+    appendList(newList, newItem); 
+  }
+
+  return allocateCommonType(&newList, VECTOR);
+}
+
 commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BINOP op) {
-    commonType* promotedLeft;
+  commonType* promotedLeft;
   commonType* promotedRight;
 
   if (!ValidType(left->type) || !ValidType(right->type)) {
@@ -303,6 +317,10 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   }
   
   commonType* result;
+    
+  if (op == RANGE) {
+    return vectorFromRange(left, right);
+  }
 
   // god is dead and i have killed him
   if (!isComparison(op)) {
@@ -454,6 +472,4 @@ bool commonTypeToBool(commonType* val) {
   }
 }
 
-commonType* vectorFromRange(commonType* lower, commonType* upper) {
-  commonType* castedLower = cast(lower, INTEGER);
-}
+
