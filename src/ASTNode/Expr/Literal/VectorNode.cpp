@@ -16,6 +16,10 @@ std::vector<std::shared_ptr<ExprNode>> VectorNode::getElements() {
     return ret;
 }
 
+std::shared_ptr<ExprNode> VectorNode::getElement(int i) {
+    return std::static_pointer_cast<ExprNode>(children[i]);
+}
+
 int VectorNode::getSize() {
     return children.size();
 }
