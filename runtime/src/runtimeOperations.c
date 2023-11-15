@@ -193,7 +193,7 @@ list* concat(list* l, list* r) {
 }
 
 list* stride(list* l, int stride) {
-  int finalSize = l->size / stride;
+  int finalSize = ceil(l->size / (float)stride);
   list* newList = allocateList(finalSize);
 
   for (int i = 0 ; i < l->size ; i += stride) {
