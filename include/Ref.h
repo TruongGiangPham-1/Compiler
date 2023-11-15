@@ -38,6 +38,8 @@ namespace gazprea {
         void defineForwardFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
                                             std::shared_ptr<Type> retType ); //
         void parametersTypeCheck(std::shared_ptr<Type> typ1, std::shared_ptr<Type> type2, int loc);
+
+        void methodParamErrorCheck(std::vector<std::shared_ptr<ASTNode>>prototypeArg, std::vector<std::shared_ptr<ASTNode>>methodArg, int loc);
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;

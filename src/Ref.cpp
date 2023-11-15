@@ -139,7 +139,8 @@ namespace gazprea {
                 //
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
-                defineForwardFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
+                defineFunctionAndProcedureArgs(funcSymCast->line, funcSymCast, tree->orderedArgs, retType);
+                methodParamErrorCheck(funcSymCast->forwardDeclArgs, tree->orderedArgs, funcSymCast->line);
 
                 // push local scope for body
                 std::string sname = "funcScope" + std::to_string(tree->loc());
@@ -296,11 +297,12 @@ namespace gazprea {
                 }
                 // IMPORTANT: update the line number of the method symbol to be one highest
                 procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
-                //
+                // --------------------------------------------------------------
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
-
-                defineForwardFunctionAndProcedureArgs(tree->loc(), procSymCast, tree->orderedArgs, retType);
+                // -------------------------------------------------------------
+                defineFunctionAndProcedureArgs(procSymCast->line, procSymCast, tree->orderedArgs, retType);
+                methodParamErrorCheck(procSymCast->forwardDeclArgs, tree->orderedArgs, procSymCast->line);  // TYPECHECK
 
                 // push local scope for body
                 std::string sname = "procScope" + std::to_string(tree->loc());
@@ -542,6 +544,25 @@ namespace gazprea {
 #endif
             currentScope->define(argNodeDef->idSym);  // define arg in curren scope
             assert(std::dynamic_pointer_cast<GlobalScope>(currentScope->getEnclosingScope()));
+        }
+    }
+    void Ref::methodParamErrorCheck(std::vector<std::shared_ptr<ASTNode>> prototypeArg,
+                                    std::vector<std::shared_ptr<ASTNode>> methodArg, int loc) {
+        assert(std::dynamic_pointer_cast<ScopedSymbol>(currentScope));
+        if (methodArg.size() != prototypeArg.size()) {
+            throw DefinitionError(loc, "argument mismatch between forward decl and definition");
+        }
+        for (int i = 0; i < methodArg.size(); i++) {
+            auto argNodeDef = std::dynamic_pointer_cast<ArgNode>(
+                    methodArg[i]);  // argnode[i] for this method definiton
+            auto argNodeFw = std::dynamic_pointer_cast<ArgNode>(
+                    prototypeArg[i]);  // argnode[i] for forward decl
+            assert(argNodeDef->type);
+            assert(argNodeFw->type);
+
+            auto argNodeDefType = symtab->resolveTypeUser(argNodeDef->type);
+            auto argNodeFwType = symtab->resolveTypeUser(argNodeFw->type);
+            parametersTypeCheck(argNodeDefType, argNodeFwType, loc);
         }
     }
 
