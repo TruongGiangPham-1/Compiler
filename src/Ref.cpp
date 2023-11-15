@@ -139,8 +139,8 @@ namespace gazprea {
                 //
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
-                defineFunctionAndProcedureArgs(funcSymCast->line, funcSymCast, tree->orderedArgs, retType);
-                methodParamErrorCheck(funcSymCast->forwardDeclArgs, tree->orderedArgs, funcSymCast->line);
+                defineFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
+                methodParamErrorCheck(funcSymCast->forwardDeclArgs, tree->orderedArgs, tree->loc());
 
                 // push local scope for body
                 std::string sname = "funcScope" + std::to_string(tree->loc());
@@ -301,9 +301,9 @@ namespace gazprea {
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
                 // -------------------------------------------------------------
-                defineFunctionAndProcedureArgs(procSymCast->line, procSymCast, tree->orderedArgs, retType);
-                methodParamErrorCheck(procSymCast->forwardDeclArgs, tree->orderedArgs, procSymCast->line);  // TYPECHECK
-
+                defineFunctionAndProcedureArgs(tree->loc(), procSymCast, tree->orderedArgs, retType);  // define arguments
+                methodParamErrorCheck(procSymCast->forwardDeclArgs, tree->orderedArgs, tree->loc());  // TYPECHECK
+                // ----------------------------------------------------------------------
                 // push local scope for body
                 std::string sname = "procScope" + std::to_string(tree->loc());
                 currentScope = symtab->enterScope(sname, currentScope);
