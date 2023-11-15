@@ -21,6 +21,8 @@ public:
     int getRowSize();
     // size of each vector
     int getColSize();
+
+    std::string toString() override;
 };
 
 

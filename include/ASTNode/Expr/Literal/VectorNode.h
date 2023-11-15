@@ -15,6 +15,8 @@ public:
     std::vector<std::shared_ptr<ExprNode>> getElements();
     std::shared_ptr<ExprNode> getElement(int i);
     int getSize();
+
+    std::string toString() override;
 };
 
 

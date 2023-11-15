@@ -264,6 +264,9 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
+#endif
         auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
 
         auto matrixCtx = ctx->literal_matrix();

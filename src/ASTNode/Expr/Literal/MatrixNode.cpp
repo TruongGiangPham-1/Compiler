@@ -31,3 +31,7 @@ int MatrixNode::getRowSize() {
 int MatrixNode::getColSize() {
     return getElement(0)->getSize();
 }
+
+std::string MatrixNode::toString() {
+    return "MatrixNode";
+}

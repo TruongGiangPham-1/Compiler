@@ -23,3 +23,7 @@ std::shared_ptr<ExprNode> VectorNode::getElement(int i) {
 int VectorNode::getSize() {
     return children.size();
 }
+
+std::string VectorNode::toString() {
+    return "VectorNode";
+}
