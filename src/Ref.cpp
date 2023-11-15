@@ -168,53 +168,7 @@ namespace gazprea {
         return 0;
     }
 
-    std::any Ref::visitCall(std::shared_ptr<CallNode> tree) {
-        walkChildren(tree);  // walk children to ref it
-        std::shared_ptr<Symbol> sym;
-        sym = currentScope->resolve(tree->CallName->getName());
-        if (sym == nullptr) {
-            throw SymbolError(tree->loc(), "Undefined call  " + tree->CallName->getName());
-        }
-        // you can get the ordered args using  cast->orderedArgs
-        if (std::dynamic_pointer_cast<FunctionSymbol>(sym)) {  // resolved to a function
-            // valid
-            std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
-            // check if it is called before declaration/definition
-            if (tree->loc() < (size_t) cast->line) {
-                throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
-            } else {
-#ifdef DEBUG
-                std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
-#endif
-            }
-            tree->scope = currentScope;
-            // reference to the function Symbol that we are calling. can get all arguments using
-            // tree->functionRef->orderedArgs
-            tree->MethodRef = cast;
-        } else if (std::dynamic_pointer_cast<ProcedureSymbol>(sym)) {
-            // resolved to a procedure
-            // any procedure call in an expression will trigger functionCall runle :(
-            std::shared_ptr<ProcedureSymbol> cast = std::dynamic_pointer_cast<ProcedureSymbol>(sym);
-            if (tree->loc() < (size_t) cast->line) {
-                throw SymbolError(tree->loc(), ":procedure " + cast->getName() + " not defined at this point");
-            } else {
-#ifdef DEBUG
-                std::cout << "line: " << tree->loc() << " ref procedure call " << sym->getName() << "\n";
-#endif
-            }
-            tree->scope = currentScope;
-            // reference to the function Symbol that we are calling. can get all arguments using
-            // tree->functionRef->orderedArgs
-            tree->MethodRef = cast;
-        } else {
-            // function call overshaddowed by a non function declaration above || function dont exist
-            std::string errMSg = sym->getName() + " is not a function to be called. It is undefined or overshadowed"
-                                                  "by another declaration above\n";
-            throw SymbolError(tree->loc(), ":" + errMSg);
-        }
-        return 0;
 
-    }
 
     std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         /*
@@ -309,48 +263,57 @@ namespace gazprea {
         return 0;
     }
 
-    void Ref::swapMethodBody(int prototypeLine, int methodDefinitionLine,
-                             std::shared_ptr<ASTNode> prototypeNode, std::shared_ptr<ASTNode>tree) {
-        if (std::dynamic_pointer_cast<ProcedureNode>(tree)) {
-            if (prototypeLine < methodDefinitionLine) { // case: we want to swap procedure
-#ifdef DEBUG
-                std::cout << "swapping prototype and function definition\n";
-#endif DEBUG
-                auto protoType = std::dynamic_pointer_cast<ProcedureNode>(prototypeNode);  // cast it to procedure symbol
-                auto defNode = std::dynamic_pointer_cast<ProcedureNode>(tree);
-                assert(tree); assert(protoType);
-                auto tempArg = protoType->orderedArgs;
-                protoType->orderedArgs = defNode->orderedArgs;
-                defNode->orderedArgs = tempArg;
-                protoType->body = defNode->body;
-                defNode->body = nullptr; }
-        } else {
-            assert(std::dynamic_pointer_cast<FunctionNode>(tree));  // case: we want to swap function
-            // swap the prototype
-            if (prototypeLine < methodDefinitionLine) {
-#ifdef DEBUG
-                std::cout << "swapping prototype and function definition\n";
-#endif DEBUG
-                auto protoType = std::dynamic_pointer_cast<FunctionNode>(prototypeNode);  // cast it to procedure symbol
-                auto defNode = std::dynamic_pointer_cast<FunctionNode>(tree);
-                assert(tree); assert(protoType);
-                if (defNode->body) {
-                    auto tempArg = protoType->orderedArgs;
-                    protoType->orderedArgs = defNode->orderedArgs;
-                    defNode->orderedArgs = tempArg;
-                    protoType->body = defNode->body;
-                    defNode->body = nullptr;
-                } else {
-                    assert(defNode->expr);
-                    auto tempArg = protoType->orderedArgs;
-                    protoType->orderedArgs = defNode->orderedArgs;
-                    defNode->orderedArgs = tempArg;
-                    protoType->expr = defNode->expr;
-                    defNode->expr = nullptr;
-                }
-            }
+    std::any Ref::visitCall(std::shared_ptr<CallNode> tree) {
+        walkChildren(tree);  // walk children to ref it
+        std::shared_ptr<Symbol> sym;
+        sym = currentScope->resolve(tree->CallName->getName());
+        if (sym == nullptr) {
+            throw SymbolError(tree->loc(), "Undefined call  " + tree->CallName->getName());
         }
+        // you can get the ordered args using  cast->orderedArgs
+        if (std::dynamic_pointer_cast<FunctionSymbol>(sym)) {  // resolved to a function
+            // valid
+            std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
+            // check if it is called before declaration/definition
+            if (tree->loc() < (size_t) cast->line) {
+                throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
+            } else {
+#ifdef DEBUG
+                std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
+#endif
+            }
+            tree->scope = currentScope;
+            // reference to the function Symbol that we are calling. can get all arguments using
+            // tree->functionRef->orderedArgs
+            tree->MethodRef = cast;
+        } else if (std::dynamic_pointer_cast<ProcedureSymbol>(sym)) {
+            // resolved to a procedure
+            // any procedure call in an expression will trigger functionCall runle :(
+            std::shared_ptr<ProcedureSymbol> cast = std::dynamic_pointer_cast<ProcedureSymbol>(sym);
+            if (tree->loc() < (size_t) cast->line) {
+                throw SymbolError(tree->loc(), ":procedure " + cast->getName() + " not defined at this point");
+            } else {
+#ifdef DEBUG
+                std::cout << "line: " << tree->loc() << " ref procedure call " << sym->getName() << "\n";
+#endif
+            }
+            tree->scope = currentScope;
+            // reference to the function Symbol that we are calling. can get all arguments using
+            // tree->functionRef->orderedArgs
+            tree->MethodRef = cast;
+        } else {
+            // function call overshaddowed by a non function declaration above || function dont exist
+            std::string errMSg = sym->getName() + " is not a function to be called. It is undefined or overshadowed"
+                                                  "by another declaration above\n";
+            throw SymbolError(tree->loc(), ":" + errMSg);
+        }
+        return 0;
+
     }
+
+
+
+
 
     std::any Ref::visitDecl(std::shared_ptr<DeclNode> tree) {
         // this is declare statement defined in funciton/procedure. NOT in global scope
@@ -449,6 +412,57 @@ namespace gazprea {
         return 0;
     }
 
+
+
+    std::any Ref::visitConditional(std::shared_ptr<ConditionalNode> tree) {
+        for (auto condition : tree->conditions) {
+            walk(condition);
+        }
+
+        for (auto body: tree->bodies) {
+            // enter scope
+            std::string sname = "loopcond" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+            walk(body);
+            currentScope = symtab->exitScope(currentScope);
+        }
+        return 0;
+    }
+
+    std::any Ref::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
+        // enter scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
+
+    std::any Ref::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+
+        // enter scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
+
+    std::any Ref::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+
+        // enter scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
+
+
+
+
     /*
      * @args:
      *      loc: line number
@@ -546,51 +560,52 @@ namespace gazprea {
         // TYPECHECK ---------------------------------------
     }
 
-    std::any Ref::visitConditional(std::shared_ptr<ConditionalNode> tree) {
-        for (auto condition : tree->conditions) {
-            walk(condition);
+
+    void Ref::swapMethodBody(int prototypeLine, int methodDefinitionLine,
+                             std::shared_ptr<ASTNode> prototypeNode, std::shared_ptr<ASTNode>tree) {
+        if (std::dynamic_pointer_cast<ProcedureNode>(tree)) {
+            if (prototypeLine < methodDefinitionLine) { // case: we want to swap procedure
+#ifdef DEBUG
+                std::cout << "swapping prototype and function definition\n";
+#endif DEBUG
+                auto protoType = std::dynamic_pointer_cast<ProcedureNode>(prototypeNode);  // cast it to procedure symbol
+                auto defNode = std::dynamic_pointer_cast<ProcedureNode>(tree);
+                assert(tree); assert(protoType);
+                auto tempArg = protoType->orderedArgs;
+                protoType->orderedArgs = defNode->orderedArgs;
+                defNode->orderedArgs = tempArg;
+                protoType->body = defNode->body;
+                defNode->body = nullptr; }
+        } else {
+            assert(std::dynamic_pointer_cast<FunctionNode>(tree));  // case: we want to swap function
+            // swap the prototype
+            if (prototypeLine < methodDefinitionLine) {
+#ifdef DEBUG
+                std::cout << "swapping prototype and function definition\n";
+#endif DEBUG
+                auto protoType = std::dynamic_pointer_cast<FunctionNode>(prototypeNode);  // cast it to procedure symbol
+                auto defNode = std::dynamic_pointer_cast<FunctionNode>(tree);
+                assert(tree); assert(protoType);
+                if (defNode->body) {
+                    auto tempArg = protoType->orderedArgs;
+                    protoType->orderedArgs = defNode->orderedArgs;
+                    defNode->orderedArgs = tempArg;
+                    protoType->body = defNode->body;
+                    defNode->body = nullptr;
+                } else {
+                    assert(defNode->expr);
+                    auto tempArg = protoType->orderedArgs;
+                    protoType->orderedArgs = defNode->orderedArgs;
+                    defNode->orderedArgs = tempArg;
+                    protoType->expr = defNode->expr;
+                    defNode->expr = nullptr;
+                }
+            }
         }
-
-        for (auto body: tree->bodies) {
-            // enter scope
-            std::string sname = "loopcond" + std::to_string(tree->loc());
-            currentScope = symtab->enterScope(sname, currentScope);
-            walk(body);
-            currentScope = symtab->exitScope(currentScope);
-        }
-        return 0;
     }
 
-    std::any Ref::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) {
-        // enter scope
-        std::string sname = "loopcond" + std::to_string(tree->loc());
-        currentScope = symtab->enterScope(sname, currentScope);
-        walk(tree->getBody());
-        currentScope = symtab->exitScope(currentScope);
-        return 0;
-    }
 
-    std::any Ref::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
-        walk(tree->getCondition());
 
-        // enter scope
-        std::string sname = "loopcond" + std::to_string(tree->loc());
-        currentScope = symtab->enterScope(sname, currentScope);
-        walk(tree->getBody());
-        currentScope = symtab->exitScope(currentScope);
-        return 0;
-    }
-
-    std::any Ref::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
-        walk(tree->getCondition());
-
-        // enter scope
-        std::string sname = "loopcond" + std::to_string(tree->loc());
-        currentScope = symtab->enterScope(sname, currentScope);
-        walk(tree->getBody());
-        currentScope = symtab->exitScope(currentScope);
-        return 0;
-    }
 
     int Ref::getNextId() {
         (*varID)++;

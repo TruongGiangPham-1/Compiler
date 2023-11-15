@@ -41,8 +41,10 @@ namespace gazprea {
         // do neccesary parameter checks for method prototype and defintion paramters
         void methodParamErrorCheck(std::vector<std::shared_ptr<ASTNode>>prototypeArg, std::vector<std::shared_ptr<ASTNode>>methodArg, int loc);
 
+        // swap the body of the prototype and function definition to bring definition to the highest line number
         void swapMethodBody(int prototypeLine, int methodDefinitionLine, std::shared_ptr<ASTNode>prototypeNode
         , std::shared_ptr<ASTNode> methodDefTree);
+
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;
