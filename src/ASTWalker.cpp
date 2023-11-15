@@ -14,7 +14,6 @@
 #include "ASTNode/Expr/Literal/RealNode.h"
 #include "ASTNode/Expr/Literal/TupleNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
-#include "ASTNode/Expr/Literal/VectorNode.h"
 #include "ASTNode/Expr/ExprListNode.h"
 
 
@@ -146,6 +145,11 @@ namespace gazprea {
 #endif // DEBUG
             return this->visitVector(std::dynamic_pointer_cast<VectorNode>(tree));
 
+        } else if (std::dynamic_pointer_cast<MatrixNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit literal Matrix" << std::endl;
+#endif // DEBUG
+            return this->visitMatrix(std::dynamic_pointer_cast<MatrixNode>(tree));
         } else if (std::dynamic_pointer_cast<BinaryCmpNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Cmp" << std::endl;
@@ -324,6 +328,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {

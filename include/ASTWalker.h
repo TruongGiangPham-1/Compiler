@@ -16,6 +16,7 @@
 #include "ASTNode/Expr/Literal/CharNode.h"
 #include "ASTNode/Expr/Literal/TupleNode.h"
 #include "ASTNode/Expr/Literal/VectorNode.h"
+#include "ASTNode/Expr/Literal/MatrixNode.h"
 #include "ASTNode/Method/ProcedureNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
@@ -65,6 +66,7 @@ namespace gazprea {
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
         virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
         virtual std::any visitVector(std::shared_ptr<VectorNode> tree);
+        virtual std::any visitMatrix(std::shared_ptr<MatrixNode> tree);
 
         // Expr/Binary
 
