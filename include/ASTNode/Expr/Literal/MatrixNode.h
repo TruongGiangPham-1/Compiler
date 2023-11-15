@@ -10,6 +10,7 @@
 
 // children are the vectors that make up the matrix
 class MatrixNode : public ExprNode {
+public:
     MatrixNode(int line);
 
     std::vector<std::shared_ptr<VectorNode>> getElements();

@@ -47,6 +47,7 @@
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
 #include "ASTNode/Expr/Literal/VectorNode.h"
+#include "ASTNode/Expr/Literal/MatrixNode.h"
 #include "ASTNode/Expr/IdentityNode.h"
 
 namespace gazprea {
@@ -83,6 +84,8 @@ namespace gazprea {
         std::any visitLiteralTuple(GazpreaParser::LiteralTupleContext *ctx) override;
         std::any visitLiteralID(GazpreaParser::LiteralIDContext *ctx) override;
         std::any visitLiteralVector(GazpreaParser::LiteralVectorContext *ctx) override;
+        std::any visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) override;
+        std::any visitLiteral_vector(GazpreaParser::Literal_vectorContext *ctx) override;
 
         // operations
         std::any visitMath(GazpreaParser::MathContext *ctx) override;
