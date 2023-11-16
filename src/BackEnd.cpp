@@ -68,6 +68,7 @@ void BackEnd::generate() {
             << std::endl;
 #endif
   std::vector<mlir::Value> mainArgs;
+
   this->generateCallNamed("main", mainArgs);
 
   auto intType = builder->getI32Type();
@@ -180,6 +181,13 @@ void BackEnd::setupCommonTypeRuntime() {
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
+  auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
+                                            lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__columns",
+                                            lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
+                                            lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "indexCommonType",
                                             indexCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "assignByReference",
@@ -417,7 +425,7 @@ mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
     builder->create<mlir::LLVM::CallOp>(loc, appendTuple, mlir::ValueRange({tuple, value}));
   }
 
-  return this->generateCommonType(tuple, TUPLE);
+  return this->generateCommonType(tuple, VECTOR);
 }
 
 mlir::Value BackEnd::generateInteger(int value) {
