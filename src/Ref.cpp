@@ -87,10 +87,18 @@ namespace gazprea {
         if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
-            auto reType = symtab->resolveTypeUser(tree->getRetTypeNode());
-            if (reType == nullptr) throw TypeError(tree->loc(), "cannot resolve function return type");
+            auto retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve function return type");
 
-            defineFunctionAndProcedureArgs(tree->loc(), tree->funcNameSym, tree->orderedArgs, reType, 1);
+            // ----------------------------------
+            std::string scopeName= "funcScope" + tree->funcNameSym->getName() +std::to_string(tree->loc());
+            std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
+                                                                                       scopeName, retType, symtab->globalScope, tree->loc());
+            methodSym->typeSym = retType;
+            currentScope->define(methodSym);  // define methd symbol in global
+            currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
+            // ----------------------------------
+            defineFunctionAndProcedureArgs(tree->loc(), methodSym, tree->orderedArgs, retType);
 
             // push a local scope for function block,  to walk childre
             std::string sname = "functionScope" + std::to_string(tree->loc());
@@ -131,7 +139,8 @@ namespace gazprea {
                 //
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
-                defineForwardFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
+                defineFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
+                methodParamErrorCheck(funcSymCast->forwardDeclArgs, tree->orderedArgs, tree->loc());
 
                 // push local scope for body
                 std::string sname = "funcScope" + std::to_string(tree->loc());
@@ -151,28 +160,104 @@ namespace gazprea {
                 if (find == this->funcProtypeList.end()) return 0;  // there was forward declaration but the prototype appear after this defintino
                 auto protoType = this->funcProtypeList.find(funcSym->getName())->second;
 
-                if (protoType->loc() < tree->loc()) {
-#ifdef DEBUG
-                    std::cout << "swapping prototype and function definition\n";
-#endif DEBUG
-                    // swap the prototype
-                    if (tree->body) {
-                        auto tempArg = protoType->orderedArgs;
-                        protoType->orderedArgs = tree->orderedArgs;
-                        tree->orderedArgs = tempArg;
-                        protoType->body = tree->body;
-                        tree->body = nullptr;
-                    } else {
-                        assert(tree->expr);
-                        auto tempArg = protoType->orderedArgs;
-                        protoType->orderedArgs = tree->orderedArgs;
-                        tree->orderedArgs = tempArg;
-                        protoType->expr = tree->expr;
-                        tree->expr = nullptr;
-                    }
-                }
+                swapMethodBody(protoType->loc(), tree->loc(), std::dynamic_pointer_cast<ASTNode>(protoType), std::dynamic_pointer_cast<ASTNode>(tree));
             } else {
                 throw SymbolError(tree->loc(), ":function same name as another identifier in the global scope");
+            }
+        }
+        return 0;
+    }
+
+
+
+    std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+        /*
+         * whenever we see a prototype prototype, we add them to this map.
+         * so that in if the definition is lower in the file than the prototype, we swap!
+         */
+        if (tree->body == nullptr) {
+            if (this->procProtypeList.find(tree->nameSym->getName()) == this->procProtypeList.end()) {
+                // first time seeing this prototype in the file
+                this->procProtypeList.emplace(tree->nameSym->getName(), tree);
+            } else {
+                throw SymbolError(tree->loc(), ":redeclaration of prootype method");
+            }
+            return 0;  // forward declaration node, we skip
+        }
+
+
+        auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
+        if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
+            // no forward declaration
+            // define method scope and push. define method symbol
+            std::shared_ptr<Type> retType = nullptr;
+            if (tree->getRetTypeNode()) {
+                retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+                if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
+            }
+            // --------------------------------------
+            std::string scopeName= "procScope" + tree->nameSym->getName() +std::to_string(tree->loc());
+            std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
+                                                                                        scopeName, retType, symtab->globalScope, tree->loc());
+            methodSym->typeSym = retType;
+            currentScope->define(methodSym);  // define methd symbol in global
+            currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
+            // --------------------------------------
+            defineFunctionAndProcedureArgs(tree->loc(), methodSym, tree->orderedArgs, retType);
+
+            // push a local scope for function block,  to walk childre
+            std::string sname = "procedureScope" + std::to_string(tree->loc());
+            currentScope = symtab->enterScope(sname, currentScope);
+
+            if (tree->body) {
+                walk(tree->body);  // ref all the symbol inside function block;
+            }
+
+            currentScope = symtab->exitScope(currentScope);  // pop local scope
+            currentScope = symtab->exitScope(currentScope);  // pop method scope
+            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+        } else {
+            // case there is a forrward declaration
+            if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
+                // there was a forward declaration(method prototype)
+                auto procSymCast = std::dynamic_pointer_cast<ProcedureSymbol>(procSym);
+                std::cout << "resolved procedure definition " << procSym->getName() << " at line: " << tree->loc()
+                          << " at scope "
+                          << currentScope->getScopeName() << std::endl;
+
+                std::shared_ptr<Type> retType = nullptr;
+                if (tree->getRetTypeNode()) {
+                    retType = symtab->resolveTypeUser(tree->getRetTypeNode());
+                    if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
+                }
+                // IMPORTANT: update the line number of the method symbol to be one highest
+                procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
+                // --------------------------------------------------------------
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+                currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
+                // -------------------------------------------------------------
+                defineFunctionAndProcedureArgs(tree->loc(), procSymCast, tree->orderedArgs, retType);  // define arguments
+                methodParamErrorCheck(procSymCast->forwardDeclArgs, tree->orderedArgs, tree->loc());  // TYPECHECK
+                // ----------------------------------------------------------------------
+                // push local scope for body
+                std::string sname = "procScope" + std::to_string(tree->loc());
+                currentScope = symtab->enterScope(sname, currentScope);
+
+                if (tree->body) {
+                    walk(tree->body);  // ref all the symbol inside function block;
+                }
+                currentScope = symtab->exitScope(currentScope);  // pop local scope
+                currentScope = symtab->exitScope(currentScope);  // pop method scope
+                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
+
+                // swap here?  // swap if line number is greater than prototypes =======================================
+                auto find = this->procProtypeList.find(procSym->getName());
+                if (find == this->procProtypeList.end()) return 0;  // this definition is higher in the file then forward declaration so we dont need to swap
+
+                auto protoType = this->procProtypeList.find(procSym->getName())->second;
+                swapMethodBody(protoType->loc(), tree->loc(), std::dynamic_pointer_cast<ASTNode>(protoType), std::dynamic_pointer_cast<ASTNode>(tree));
+            } else {
+                throw SymbolError(tree->loc(), ":procedure same name as another identifier in the global scope");
             }
         }
         return 0;
@@ -226,101 +311,9 @@ namespace gazprea {
 
     }
 
-    std::any Ref::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
-        /*
-         * whenever we see a prototype prototype, we add them to this map.
-         * so that in if the definition is lower in the file than the prototype, we swap!
-         */
-        if (tree->body == nullptr) {
-            if (this->procProtypeList.find(tree->nameSym->getName()) == this->procProtypeList.end()) {
-                // first time seeing this prototype in the file
-                this->procProtypeList.emplace(tree->nameSym->getName(), tree);
-            } else {
-                throw SymbolError(tree->loc(), ":redeclaration of prootype method");
-            }
-            return 0;  // forward declaration node, we skip
-        }
-
-
-        auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
-        if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
-            // no forward declaration
-            // define method scope and push. define method symbol
-            std::shared_ptr<Type> retType = nullptr;
-            if (tree->getRetTypeNode()) {
-                retType = symtab->resolveTypeUser(tree->getRetTypeNode());
-                if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
-            }
-            defineFunctionAndProcedureArgs(tree->loc(), tree->nameSym, tree->orderedArgs, retType, 0);
-
-            // push a local scope for function block,  to walk childre
-            std::string sname = "procedureScope" + std::to_string(tree->loc());
-            currentScope = symtab->enterScope(sname, currentScope);
-
-            if (tree->body) {
-                walk(tree->body);  // ref all the symbol inside function block;
-            }
-
-            currentScope = symtab->exitScope(currentScope);  // pop local scope
-            currentScope = symtab->exitScope(currentScope);  // pop method scope
-            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
-        } else {
-            // case there is a forrward declaration
-            if (std::dynamic_pointer_cast<ProcedureSymbol>(procSym)) {
-                // there was a forward declaration(method prototype)
-                auto procSymCast = std::dynamic_pointer_cast<ProcedureSymbol>(procSym);
-                std::cout << "resolved procedure definition " << procSym->getName() << " at line: " << tree->loc()
-                          << " at scope "
-                          << currentScope->getScopeName() << std::endl;
-
-                std::shared_ptr<Type> retType = nullptr;
-                if (tree->getRetTypeNode()) {
-                    retType = symtab->resolveTypeUser(tree->getRetTypeNode());
-                    if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
-                }
-                // IMPORTANT: update the line number of the method symbol to be one highest
-                procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
-                //
-                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
-                currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
-
-                defineForwardFunctionAndProcedureArgs(tree->loc(), procSymCast, tree->orderedArgs, retType);
-
-                // push local scope for body
-                std::string sname = "procScope" + std::to_string(tree->loc());
-                currentScope = symtab->enterScope(sname, currentScope);
-
-                if (tree->body) {
-                    walk(tree->body);  // ref all the symbol inside function block;
-                }
-                currentScope = symtab->exitScope(currentScope);  // pop local scope
-                currentScope = symtab->exitScope(currentScope);  // pop method scope
-                assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
-
-                // swap here?  // swap if line number is greater than prototypes =======================================
-                auto find = this->procProtypeList.find(procSym->getName());
-                if (find == this->procProtypeList.end()) return 0;  // this definition is higher in the file then forward declaration so we dont need to swap
 
 
 
-                auto protoType = this->procProtypeList.find(procSym->getName())->second;
-                if (protoType->loc() < tree->loc()) {
-#ifdef DEBUG
-                    std::cout << "swapping prototype and function definition\n";
-#endif DEBUG
-                    // swap
-                    auto tempArg = protoType->orderedArgs;
-                    protoType->orderedArgs = tree->orderedArgs;
-                    tree->orderedArgs = tempArg;
-                    protoType->body = tree->body;
-                    tree->body = nullptr;
-                }
-            } else {
-                throw SymbolError(tree->loc(), ":procedure same name as another identifier in the global scope");
-            }
-        }
-        return 0;
-    }
 
     std::any Ref::visitDecl(std::shared_ptr<DeclNode> tree) {
         // this is declare statement defined in funciton/procedure. NOT in global scope
@@ -419,150 +412,7 @@ namespace gazprea {
         return 0;
     }
 
-    /*
-     * @args:
-     *      loc: line number
-     *      funcNameSym = symbol of function/procedure name
-     *      orderedArgs = list of function/prcedure arguments
-     *      isFunc? 1: 0    // 1 to define function, 0 to define procedure
-     * 1.defines function name in global
-     * 2. push method scope , enter it, and define arguments inside it
-     *
-     */
-    void Ref::defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> funcNameSym,
-                                             std::vector<std::shared_ptr<ASTNode>> orderedArgs,
-                                             std::shared_ptr<Type> retType, int isFunc) {
-        // TODO: resolve return type.
-        // define function scope Symbol
-        std::shared_ptr<ScopedSymbol> methodSym;
-        if (isFunc) {
-            std::string fname = "FuncScope" + funcNameSym->getName() + std::to_string(loc);
-            methodSym = std::make_shared<FunctionSymbol>(funcNameSym->getName(),
-                                                         fname, retType, symtab->globalScope, loc);
-        } else {
-            std::string fname = "ProcScope" + funcNameSym->getName() + std::to_string(loc);
-            methodSym = std::make_shared<ProcedureSymbol>(funcNameSym->getName(),
-                                                          fname, retType, symtab->globalScope, loc);
-        }
-        methodSym->typeSym = retType;
-        if (retType) {
-#ifdef DEBUG
-            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName()
-                      << " ret type " << retType->getName() << "\n";
-#endif
-        } else {
-#ifdef DEBUG
-            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName()
-                      << " no ret type \n";
-#endif
-        }
 
-        currentScope->define(methodSym);  // define methd symbol in global
-        currentScope = symtab->enterScope(methodSym);
-
-        // define the argument symbols
-        int index = 0;
-        for (auto &argIDNode: orderedArgs) {
-            // define this myself, dont need mlir name because arguments are
-            auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
-            //TODO: this id symbol dont have types yet. waiting for visitType implementation
-            assert(argNode);  // not null
-            assert(argNode->type);  // assert it exist
-
-            argNode->idSym->mlirName = "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
-
-            auto resType = symtab->resolveTypeUser(argNode->type);
-            argNode->idSym->typeSym =  resType;
-            if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
-#ifdef DEBUG
-            std::cout << "in line " << loc
-                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName()
-                      <<
-                      " as Type " << argNode->idSym->typeSym->getName() << " as mlirname=" << argNode->idSym->mlirName
-                      << "\n";
-#endif
-
-            // define mlirname
-            argNode->idSym->scope = currentScope;
-            argNode->idSym->index = index;
-            argNode->idSym->qualifier = argNode->qualifier;
-            index++;
-            currentScope->define(argNode->idSym);  // define arg in curren scope
-            argNode->scope = currentScope;  // set scope to function scope
-        }
-        //currentScope = symtab->exitScope(currentScope);
-    }
-
-    /*
-     * we populate the argument of the method symbol and type check between the parameters of  method definition and
-     * method prototype arguments
-     */
-    void Ref::defineForwardFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym,
-                                                    std::vector<std::shared_ptr<ASTNode>> orderedArgs,
-                                                    std::shared_ptr<Type> retType) {
-
-        assert(std::dynamic_pointer_cast<ScopedSymbol>(currentScope));
-        methodSym->typeSym = retType;
-
-        if (orderedArgs.size() != methodSym->forwardDeclArgs.size())
-            throw DefinitionError(loc, "argument mismatch between forward decl and definition");
-        int index = 0;  // argument index for stan
-        //
-        for (int i = 0; i < orderedArgs.size(); i++) {
-            auto argNodeDef = std::dynamic_pointer_cast<ArgNode>(
-                    orderedArgs[i]);  // argnode[i] for this method definiton
-            auto argNodeFw = std::dynamic_pointer_cast<ArgNode>(
-                    methodSym->forwardDeclArgs[i]);  // argnode[i] for forward decl
-
-            assert(argNodeDef->type);
-            assert(argNodeFw->type);
-
-            auto argNodeDefType = symtab->resolveTypeUser(argNodeDef->type);
-            auto argNodeFwType = symtab->resolveTypeUser(argNodeFw->type);
-
-            // TYPECHECK ---------------------------------------
-            if (argNodeDefType == nullptr || argNodeFwType == nullptr) {  // case: we could not resolve either
-                throw TypeError(loc, "cannot resolve type");
-            }
-            parametersTypeCheck(argNodeDefType, argNodeFwType, loc);
-            // TYPECHECK ---------------------------------------
-            // add arguments to the methdd scope  and walk tree
-            // define mlirname
-            argNodeDef->idSym->index = index;
-            argNodeDef->idSym->typeSym = argNodeDefType;
-            argNodeDef->idSym->mlirName = "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
-            argNodeDef->scope = currentScope;  // set scope to function scope
-            index++;
-#ifdef DEBUG
-            std::cout << "in line " << loc
-                      << " argument = " << argNodeDef->idSym->getName() << " defined in "
-                      << currentScope->getScopeName() <<
-                      " as Type " << argNodeDef->idSym->typeSym->getName() << " as mlirname="
-                      << argNodeDef->idSym->mlirName << "\n";
-#endif
-            currentScope->define(argNodeDef->idSym);  // define arg in curren scope
-            assert(std::dynamic_pointer_cast<GlobalScope>(currentScope->getEnclosingScope()));
-        }
-    }
-
-        /*
-         * make sure the types are the same between 2 parameters
-         * TODO: check for const
-         */
-    void Ref::parametersTypeCheck(std::shared_ptr<Type> type1, std::shared_ptr<Type> type2, int loc) {
-        // TYPECHECK ---------------------------------------
-        if (type1->baseTypeEnum != type2->baseTypeEnum) {  // TODO: tuple check
-            throw TypeError(loc, "type mismatch between forward decl and definitino");
-        } else if (type1->baseTypeEnum == TYPE::TUPLE && type2->baseTypeEnum == TYPE::TUPLE) {
-            // iterate thru each tuple child and compare type
-            for (int i = 0; i < type1->tupleChildType.size(); i++) {
-                if (type1->tupleChildType[i].second->baseTypeEnum != type2->tupleChildType[i].second->baseTypeEnum) {
-                    throw TypeError(loc, "type mismatch between tuples");
-                }
-            }
-        }
-        // TYPECHECK ---------------------------------------
-    }
 
     std::any Ref::visitConditional(std::shared_ptr<ConditionalNode> tree) {
         for (auto condition : tree->conditions) {
@@ -609,6 +459,153 @@ namespace gazprea {
         currentScope = symtab->exitScope(currentScope);
         return 0;
     }
+
+
+
+
+    /*
+     * @args:
+     *      loc: line number
+     *      funcNameSym = symbol of function/procedure name
+     *      orderedArgs = list of function/prcedure arguments
+     *      isFunc? 1: 0    // 1 to define function, 0 to define procedure
+     * 1.defines function name in global
+     * 2. push method scope , enter it, and define arguments inside it
+     *
+     */
+    void Ref::defineFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym,
+                                             std::vector<std::shared_ptr<ASTNode>> orderedArgs,
+                                             std::shared_ptr<Type> retType) {
+        // TODO: resolve return type.
+        // define function scope Symbol
+        if (retType) {
+#ifdef DEBUG
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName()
+                      << " ret type " << retType->getName() << "\n";
+#endif
+        } else {
+#ifdef DEBUG
+            std::cout << "defined method " << methodSym->getName() << " in scope " << currentScope->getScopeName()
+                      << " no ret type \n";
+#endif
+        }
+        // define the argument symbols
+        int index = 0;
+        for (auto &argIDNode: orderedArgs) {
+            // define this myself, dont need mlir name because arguments are
+            auto argNode = std::dynamic_pointer_cast<ArgNode>(argIDNode);
+            //TODO: this id symbol dont have types yet. waiting for visitType implementation
+            assert(argNode);  // not null
+            assert(argNode->type);  // assert it exist
+
+
+            auto resType = symtab->resolveTypeUser(argNode->type);
+            argNode->idSym->typeSym =  resType;
+            if (resType == nullptr) throw TypeError(loc, "cannot resolve type");
+#ifdef DEBUG
+            std::cout << "in line " << loc
+                      << " argument = " << argNode->idSym->getName() << " defined in " << currentScope->getScopeName()
+                      <<
+                      " as Type " << argNode->idSym->typeSym->getName() << " as mlirname=" << argNode->idSym->mlirName
+                      << "\n";
+#endif
+            // define mlirname
+            argNode->idSym->scope = currentScope;
+            argNode->idSym->index = index;
+            argNode->idSym->qualifier = argNode->qualifier;
+            currentScope->define(argNode->idSym);  // define arg in curren scope
+            argNode->scope = currentScope;  // set scope to function scope
+            argNode->idSym->mlirName = "VAR_DEF" + std::to_string(getNextId());  // create new mlirname
+            index++;
+        }
+        //currentScope = symtab->exitScope(currentScope);
+    }
+
+    void Ref::methodParamErrorCheck(std::vector<std::shared_ptr<ASTNode>> prototypeArg,
+                                    std::vector<std::shared_ptr<ASTNode>> methodArg, int loc) {
+        assert(std::dynamic_pointer_cast<ScopedSymbol>(currentScope));
+        if (methodArg.size() != prototypeArg.size()) {
+            throw DefinitionError(loc, "argument mismatch between forward decl and definition");
+        }
+        for (int i = 0; i < methodArg.size(); i++) {
+            auto argNodeDef = std::dynamic_pointer_cast<ArgNode>(
+                    methodArg[i]);  // argnode[i] for this method definiton
+            auto argNodeFw = std::dynamic_pointer_cast<ArgNode>(
+                    prototypeArg[i]);  // argnode[i] for forward decl
+            assert(argNodeDef->type);
+            assert(argNodeFw->type);
+
+            auto argNodeDefType = symtab->resolveTypeUser(argNodeDef->type);
+            auto argNodeFwType = symtab->resolveTypeUser(argNodeFw->type);
+            parametersTypeCheck(argNodeDefType, argNodeFwType, loc);
+        }
+    }
+
+        /*
+         * make sure the types are the same between 2 parameters
+         * TODO: check for const
+         */
+    void Ref::parametersTypeCheck(std::shared_ptr<Type> type1, std::shared_ptr<Type> type2, int loc) {
+        // TYPECHECK ---------------------------------------
+        if (type1->baseTypeEnum != type2->baseTypeEnum) {  // TODO: tuple check
+            throw TypeError(loc, "type mismatch between forward decl and definitino");
+        } else if (type1->baseTypeEnum == TYPE::TUPLE && type2->baseTypeEnum == TYPE::TUPLE) {
+            // iterate thru each tuple child and compare type
+            for (int i = 0; i < type1->tupleChildType.size(); i++) {
+                if (type1->tupleChildType[i].second->baseTypeEnum != type2->tupleChildType[i].second->baseTypeEnum) {
+                    throw TypeError(loc, "type mismatch between tuples");
+                }
+            }
+        }
+        // TYPECHECK ---------------------------------------
+    }
+
+
+    void Ref::swapMethodBody(int prototypeLine, int methodDefinitionLine,
+                             std::shared_ptr<ASTNode> prototypeNode, std::shared_ptr<ASTNode>tree) {
+        if (std::dynamic_pointer_cast<ProcedureNode>(tree)) {
+            if (prototypeLine < methodDefinitionLine) { // case: we want to swap procedure
+#ifdef DEBUG
+                std::cout << "swapping prototype and function definition\n";
+#endif DEBUG
+                auto protoType = std::dynamic_pointer_cast<ProcedureNode>(prototypeNode);  // cast it to procedure symbol
+                auto defNode = std::dynamic_pointer_cast<ProcedureNode>(tree);
+                assert(tree); assert(protoType);
+                auto tempArg = protoType->orderedArgs;
+                protoType->orderedArgs = defNode->orderedArgs;
+                defNode->orderedArgs = tempArg;
+                protoType->body = defNode->body;
+                defNode->body = nullptr; }
+        } else {
+            assert(std::dynamic_pointer_cast<FunctionNode>(tree));  // case: we want to swap function
+            // swap the prototype
+            if (prototypeLine < methodDefinitionLine) {
+#ifdef DEBUG
+                std::cout << "swapping prototype and function definition\n";
+#endif DEBUG
+                auto protoType = std::dynamic_pointer_cast<FunctionNode>(prototypeNode);  // cast it to procedure symbol
+                auto defNode = std::dynamic_pointer_cast<FunctionNode>(tree);
+                assert(tree); assert(protoType);
+                if (defNode->body) {
+                    auto tempArg = protoType->orderedArgs;
+                    protoType->orderedArgs = defNode->orderedArgs;
+                    defNode->orderedArgs = tempArg;
+                    protoType->body = defNode->body;
+                    defNode->body = nullptr;
+                } else {
+                    assert(defNode->expr);
+                    auto tempArg = protoType->orderedArgs;
+                    protoType->orderedArgs = defNode->orderedArgs;
+                    defNode->orderedArgs = tempArg;
+                    protoType->expr = defNode->expr;
+                    defNode->expr = nullptr;
+                }
+            }
+        }
+    }
+
+
+
 
     int Ref::getNextId() {
         (*varID)++;

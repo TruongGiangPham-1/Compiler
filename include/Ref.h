@@ -33,11 +33,18 @@ namespace gazprea {
         std::shared_ptr<Scope> currentScope;
 
         int getNextId();
-        void defineFunctionAndProcedureArgs(int loc, std::shared_ptr<Symbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
-                                          std::shared_ptr<Type> retType ,int isFunc); //
-        void defineForwardFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
-                                            std::shared_ptr<Type> retType ); //
+        void defineFunctionAndProcedureArgs(int loc, std::shared_ptr<ScopedSymbol> methodSym, std::vector<std::shared_ptr<ASTNode>>orderedArgs,
+                                          std::shared_ptr<Type> retType); //
+        // given 2 types, throw errors if they are different
         void parametersTypeCheck(std::shared_ptr<Type> typ1, std::shared_ptr<Type> type2, int loc);
+
+        // do neccesary parameter checks for method prototype and defintion paramters
+        void methodParamErrorCheck(std::vector<std::shared_ptr<ASTNode>>prototypeArg, std::vector<std::shared_ptr<ASTNode>>methodArg, int loc);
+
+        // swap the body of the prototype and function definition to bring definition to the highest line number
+        void swapMethodBody(int prototypeLine, int methodDefinitionLine, std::shared_ptr<ASTNode>prototypeNode
+        , std::shared_ptr<ASTNode> methodDefTree);
+
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;
