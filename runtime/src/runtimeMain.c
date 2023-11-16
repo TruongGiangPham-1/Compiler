@@ -51,6 +51,7 @@ void printType(commonType *type, bool nl) {
       printf("\nPRINTING TUPLE\n");
       #endif /* ifdef DEBUGPRINT */
       // {} bc we can't declare variables in switch
+      // we actually aren't allowed to print these. Shouldn't ever happen. nice for dbg tho!
       {
         list*mTuple = ((list*)type->value);
         #ifdef DEBUGTUPLE
@@ -66,6 +67,7 @@ void printType(commonType *type, bool nl) {
         }
         printf(")");
       }
+      break;
     // we don't disambiguate. similar behavior
     case VECTOR:
     case MATRIX:
