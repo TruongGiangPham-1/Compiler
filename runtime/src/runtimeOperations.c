@@ -473,24 +473,26 @@ bool commonTypeToBool(commonType* val) {
 }
 
 // STANDARD LIBRARY
-unsigned int length(commonType* vector)  {
+commonType* __length(commonType* vector)  {
   if (vector->type != VECTOR) {
     UnsupportedTypeError("Trying to take length of non-vector type");
   }
 
-  return ((list*)vector->value)->size;
+  int length = ((list*)vector->value)->size;
+
+  return allocateCommonType(&length, INTEGER);
 }
 
-unsigned int rows(commonType* matrix) {
+commonType* __rows(commonType* matrix) {
   // we don't differnetiate matrices and vectors
   if (matrix->type != VECTOR) {
     UnsupportedTypeError("Trying to take row of non-matrix type");
   }
 
-  return length(matrix);
+  return __length(matrix);
 }
 
-unsigned int columns(commonType* matrix) {
+commonType* __columns(commonType* matrix) {
   // we don't differnetiate matrices and vectors
   if (matrix->type != VECTOR) {
     UnsupportedTypeError("Trying to take column of non-matrix type");
@@ -498,5 +500,5 @@ unsigned int columns(commonType* matrix) {
 
   commonType* row = ((list*)matrix->value)->values[0];
 
-  return length(row);
+  return __length(row);
 }
