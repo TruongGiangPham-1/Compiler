@@ -568,6 +568,29 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+        for (auto &exprNode: tree->getElements()) {
+            walk(exprNode);
+        }
+        // TODO: check if all the expression node have same type
+        for (int i = 1; i < tree->getElements().size(); i++) {
+            if (tree->getElement(i)->evaluatedType->baseTypeEnum != tree->getElement(i - 1)->evaluatedType->baseTypeEnum) {
+                throw TypeError(tree->loc(), "vector cannot have mixed type");
+            }
+        }
+        tree->evaluatedType = std::make_shared<AdvanceType>("vector");
+        tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum;
+        return nullptr;
+    }
+    std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
+        // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+        tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
+        tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
+        return nullptr;
+    }
+
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
             case TYPE::BOOLEAN:

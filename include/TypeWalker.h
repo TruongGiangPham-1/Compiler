@@ -53,6 +53,8 @@ namespace gazprea {
         std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
         std::any visitChar(std::shared_ptr<CharNode> tree) override;
         std::any visitBool(std::shared_ptr<BoolNode> tree) override;
+        std::any visitVector(std::shared_ptr<VectorNode> tree) override;
+        std::any visitMatrix(std::shared_ptr<MatrixNode> tree) override;
 
         std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
