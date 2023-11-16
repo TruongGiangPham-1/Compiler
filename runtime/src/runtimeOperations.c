@@ -472,4 +472,31 @@ bool commonTypeToBool(commonType* val) {
   }
 }
 
+// STANDARD LIBRARY
+unsigned int length(commonType* vector)  {
+  if (vector->type != VECTOR) {
+    UnsupportedTypeError("Trying to take length of non-vector type");
+  }
 
+  return ((list*)vector->value)->size;
+}
+
+unsigned int rows(commonType* matrix) {
+  // we don't differnetiate matrices and vectors
+  if (matrix->type != VECTOR) {
+    UnsupportedTypeError("Trying to take row of non-matrix type");
+  }
+
+  return length(matrix);
+}
+
+unsigned int columns(commonType* matrix) {
+  // we don't differnetiate matrices and vectors
+  if (matrix->type != VECTOR) {
+    UnsupportedTypeError("Trying to take column of non-matrix type");
+  }
+
+  commonType* row = ((list*)matrix->value)->values[0];
+
+  return length(row);
+}
