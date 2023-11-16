@@ -77,7 +77,7 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
             throw TypeError(typeNode->loc(), "cannot resolve innner type " + innerTypeN->getTypeName());
         }
         if (innerTypeRes->baseTypeEnum == TYPE::TUPLE || innerTypeRes->baseTypeEnum == TYPE::IDENTITY || innerTypeRes->baseTypeEnum == TYPE::NULL_) {
-            throw (typeNode->loc(), "vector can only be int, real, boolean, char");
+            throw (typeNode->loc(), "matrix can only be int, real, boolean, char");
         }
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>("vector");
