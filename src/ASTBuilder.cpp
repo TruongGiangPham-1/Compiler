@@ -7,7 +7,7 @@
 #include <memory>
 
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
