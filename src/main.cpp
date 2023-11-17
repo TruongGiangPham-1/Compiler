@@ -1,3 +1,4 @@
+#include "CompileTimeExceptions.h"
 #include "GazpreaLexer.h"
 #include "GazpreaParser.h"
 
