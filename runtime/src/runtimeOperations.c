@@ -34,19 +34,6 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op);
 // index a type
 commonType* indexCommonType(commonType* indexee, int indexor);
 
-// 'composite'. internally, it holds a list of commonTypes
-bool isCompositeType(enum TYPE type) {
-  switch (type) {
-    case STRING:
-    case VECTOR:
-    case MATRIX:
-    case TUPLE:
-    return true;
-    default:
-    return false;
-  }
-}
-
 // turn into bool for llvm control flow
 bool commonTypeToBool(commonType* val);
 

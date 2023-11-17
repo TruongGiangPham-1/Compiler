@@ -40,6 +40,19 @@ void* copyValue(commonType* copyFrom);
 
 void assignByReference(commonType* dest, commonType* from);
 
+// 'composite'. internally, it holds a list of commonTypes
+bool isCompositeType(enum TYPE type) {
+  switch (type) {
+    case STRING:
+    case VECTOR:
+    case MATRIX:
+    case TUPLE:
+    return true;
+    default:
+    return false;
+  }
+}
+
 commonType* copyCommonType(commonType* copyFrom) {
   commonType* copy = (commonType*)malloc(sizeof(commonType));
   copy->type = copyFrom->type;
@@ -48,6 +61,10 @@ commonType* copyCommonType(commonType* copyFrom) {
 }
 
 void assignByReference(commonType* dest, commonType* from) {
+  if (isCompositeType(dest->type)) {
+    deallocateList(dest->value);
+  }
+
   dest->value = copyValue(from);
 }
 
