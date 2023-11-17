@@ -32,11 +32,18 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
   auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
  
+  if (exprList->children.size() == 1) {
+    auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
+    auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
+    codeGenerator.generateAssignment(dest, castedVal);
+  } else {
+    for (int i = 0 ; i < exprList->children.size() ; i++) {
+      auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
+      auto indexedValue = codeGenerator.indexCommonType(val, i);
 
-  for (auto destNode : exprList->children) {
-    auto dest = std::any_cast<mlir::Value>(walk(destNode));
-
-    codeGenerator.generateAssignment(dest, val);
+      auto castedIndexedVal = codeGenerator.possiblyCast(indexedValue, tree->evaluatedType);
+      codeGenerator.generateAssignment(dest, castedIndexedVal);
+    }
   }
 
   return 0;
@@ -44,8 +51,9 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
+  codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
   return 0;
 }
 
@@ -75,6 +83,15 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   }
 }
 
+std::any BackendWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+
+    return codeGenerator.generateIdentityValue(tree->evaluatedType->baseTypeEnum);
+}
+
+std::any BackendWalker::visitNull(std::shared_ptr<NullNode> tree) {
+    return codeGenerator.generateNullValue(tree->evaluatedType->baseTypeEnum);
+}
+
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }
@@ -101,10 +118,23 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
   return codeGenerator.generateValue(values);
 }
 
+std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
+  mlir::Value indexee;
+
+  // indexee isn't an expression. HACK
+  if (tree->sym->index >= 0) {
+    indexee = codeGenerator.generateLoadArgument(tree->sym->index);
+  } else {
+    indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
+
+  return codeGenerator.indexCommonType(indexee, tree->index);
+}
+
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
-  auto type = tree->getType()->typeEnum;
+  auto type = tree->evaluatedType->baseTypeEnum;
 
   return codeGenerator.cast(val, type);
 }

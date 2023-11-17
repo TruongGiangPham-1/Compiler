@@ -3,61 +3,77 @@
 //#define DEBUG
 
 // until we get more typecheck done
-#define SKIP_STREAMOUT_TYPECHECK
 
 namespace gazprea {
 
     PromotedType::PromotedType(std::shared_ptr<SymbolTable> symtab) : symtab(symtab), currentScope(symtab->globalScope) {}
     PromotedType::~PromotedType() {}
 
-    std::string PromotedType::booleanResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"boolean",  "",         "",         "",       "" },
-/*character*/{"",         "",         "",         "",       "" },
-/*integer*/  {"",         "",         "",         "",       "" },
-/*real*/     {"",         "",         "",         "",       "" },
-/*tuple*/    {"",         "",         "",         "",       "" }
+    std::string PromotedType::booleanResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null:*/
+/*boolean*/  {"boolean",  "",         "",         "",       "",  "boolean", ""},
+/*character*/{"",         "",         "",         "",       "",  "character", ""},
+/*integer*/  {"",         "",         "",         "",       "" , "integer", ""},
+/*real*/     {"",         "",         "",         "",       "" , "real", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
+/*null*/     {"",  "", "", "", "" , "", ""}
     };
 
-
-    std::string PromotedType::arithmeticResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"",         "",         "",         "",       "" },
-/*character*/{"",         "",         "",         "",       "" },
-/*integer*/  {"",         "",         "integer",  "real",   "" },
-/*real*/     {"",         "",         "real",     "real",   "" },
-/*tuple*/    {"",         "",         "",         "",       "" }
+    std::string PromotedType::castTable[4][4] = {
+/* from\to                     boolean   character    integer  real  */
+/*boolean*/  {"boolean",  "character",   "integer",  "real"},
+/*character*/{"boolean",  "character",   "integer",  "real"},
+/*integer*/  {"boolean",  "character",   "integer",  "real"},
+/*real*/     {"",         "",            "integer",  "real"},
     };
 
-    std::string PromotedType::comparisonResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"",         "",         "",         "",       "" },
-/*character*/{"",         "",         "",         "",       "" },
-/*integer*/  {"",         "",         "boolean",  "boolean","" },
-/*real*/     {"",         "",         "boolean",  "boolean","" },
-/*tuple*/    {"",         "",         "",         "",       "" }
+    std::string PromotedType::arithmeticResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/  {"",         "",         "",         "",       "" , "boolean", ""},
+/*character*/{"",         "",         "",         "",       "" , "character", ""},
+/*integer*/  {"",         "",         "integer",  "real",   "" , "integer", ""},
+/*real*/     {"",         "",         "real",     "real",   "" , "real", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
     };
 
-    std::string PromotedType::equalityResult[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/  {"boolean",  "",         "",         "",        "" },
-/*character*/{"",         "boolean",  "",         "",        "" },
-/*integer*/  {"",         "",         "boolean",  "boolean", "" },
-/*real*/     {"",         "",         "boolean",  "boolean", "" },
-/*tuple*/    {"",         "",         "",         "",        "boolean" }
+    std::string PromotedType::comparisonResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/  {"",         "",         "",         "",       "" , "boolean", ""},
+/*character*/{"",         "",         "",         "",       "" , "character", ""},
+/*integer*/  {"",         "",         "boolean",  "boolean","" , "integer", ""},
+/*real*/     {"",         "",         "boolean",  "boolean","" , "real", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
     };
 
-    std::string PromotedType::promotionTable[5][5] = {
-/*                      boolean   character    integer  real  tuple */
-/*boolean*/      {"boolean",  "",         "",         "",        "" },
-/*character*/    {"",         "boolean",  "",         "",        "" },
-/*integer*/      {"",         "",         "",         "real",    "" },
-/*real*/         {"",         "",         "",         "",        "" },
-/*tuple*/        {"",         "",         "",         "",        "" }
+    std::string PromotedType::equalityResult[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/  {"boolean",  "",         "",         "",        "" ,       "boolean", ""},
+/*character*/{"",         "boolean",  "",         "",        "" ,       "character", ""},
+/*integer*/  {"",         "",         "boolean",  "boolean", "" ,       "integer", ""},
+/*real*/     {"",         "",         "boolean",  "boolean", "" ,       "real", ""},
+/*tuple*/    {"",         "",         "",         "",        "boolean", "tuple", ""},
+/*identity*/ {"boolean",  "character", "integer", "real", "tuple",      "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
+    };
+
+    std::string PromotedType::promotionTable[7][7] = {
+/*                      boolean   character    integer  real  tuple identity null*/
+/*boolean*/      {"boolean",  "",         "",         "",        "",   "boolean", ""},
+/*character*/    {"",         "boolean",  "",         "",        "",   "character", ""},
+/*integer*/      {"",         "",         "",         "real",    "",   "integer", ""},
+/*real*/         {"",         "",         "",         "",        "",   "real", ""},
+/*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
+/*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
+/*null*/         {"",  "", "", "", "" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
 
-    std::shared_ptr<Type> PromotedType::getType(std::string table[5][5], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
+    std::shared_ptr<Type> PromotedType::getType(std::string table[7][7], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
         if (left->evaluatedType == nullptr || right->evaluatedType == nullptr) {
             return nullptr;
         }
@@ -95,8 +111,12 @@ namespace gazprea {
             return this->realIndex;
         } else if (type == "tuple") {
             return this->tupleIndex;
+        } else if (type == "identity") {
+            return this->identityIndex;
+        } else if (type == "null") {
+            return this->nullIndex;
         } else {
-            throw std::runtime_error("Unknown type");
+                throw std::runtime_error("Unknown type");
         }
     }
 
@@ -120,6 +140,15 @@ namespace gazprea {
 
     std::any TypeWalker::visitBool(std::shared_ptr<BoolNode> tree) {
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("boolean"));
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("identity"));
+        return nullptr;
+    }
+    std::any TypeWalker::visitNull(std::shared_ptr<NullNode> tree) {
+        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("null"));
         return nullptr;
     }
 
@@ -152,11 +181,15 @@ namespace gazprea {
             case BINOP::SUB:
             case BINOP::REM:
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
+                if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
+                if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
         }
         return nullptr;
@@ -225,9 +258,24 @@ namespace gazprea {
         walkChildren(tree);
         if (!tree->getTypeNode()) {
             tree->sym->typeSym = tree->getExprNode()->evaluatedType;
+            if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY)  {
+               throw TypeError(tree->loc(), "cannot have identity when type is not defined");
+            }
+            tree->evaluatedType = tree->getExprNode()->evaluatedType;
             return nullptr;
         }
         if(!tree->getExprNode()) {
+            // has a type node //  add a null node :)
+            std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(tree->loc());
+            tree->addChild(nullNode);
+            walk(nullNode);  // walk null node to popualte the type
+
+            auto lType = tree->sym->typeSym;
+            if (lType == nullptr) {
+                throw SyntaxError(tree->loc(), "Declaration is missing expression to infer type.");
+            }
+            tree->evaluatedType = lType;  //
+            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
             return nullptr;
         }
 
@@ -254,7 +302,6 @@ namespace gazprea {
             }
         }
 
-        // TODO IDENTITY and NULL handling
         if (lType->getName() == "tuple" && rType->getName() == "tuple") {
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
@@ -274,6 +321,9 @@ namespace gazprea {
                 }
             }
             tree->evaluatedType = rType;
+        } else if (rType->getName() == "null" || rType ->getName() == "identity") {  // if it null then we just set it to ltype
+            tree->evaluatedType = lType;  //
+            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
         }
 
         else if (lType->getName() != rType->getName()) {
@@ -288,6 +338,20 @@ namespace gazprea {
         }
         else {
             tree->evaluatedType = rType;
+        }
+        return nullptr;
+    }
+    std::any TypeWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+        if (tree->getCondition()->evaluatedType->baseTypeEnum == TYPE::IDENTITY || tree->getCondition()->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+            throw TypeError(tree->loc(), "idenitty in loop cond");
+        }
+        return nullptr;
+    }
+    std::any TypeWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+        walk(tree->getCondition());
+        if (tree->getCondition()->evaluatedType->baseTypeEnum == TYPE::IDENTITY || tree->getCondition()->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+            throw TypeError(tree->loc(), "idenitty in loop cond");
         }
         return nullptr;
     }
@@ -320,8 +384,10 @@ namespace gazprea {
 
 
             if (rhsType != nullptr) {
-                if (tree->getLvalue()->children[0]->evaluatedType == nullptr)
+                if (tree->getLvalue()->children[0]->evaluatedType == nullptr) {
+                    tree->evaluatedType = rhsType;
                     return nullptr;
+                }
                 // TODO identity and null handling
                 if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
@@ -343,7 +409,10 @@ namespace gazprea {
                                 }
                             }
                         }
-                        tree->evaluatedType = rhsType;
+                        tree->evaluatedType = lvalue->evaluatedType;
+                    } else if (rhsType->getName() == "null" || rhsType->getName() == "identity") {  // if it null then we just set it to ltype
+                        tree->evaluatedType = lvalue->evaluatedType;  //
+                        tree->getRvalue()->evaluatedType = lvalue->evaluatedType;  // set identity/null node type to this type for promotion
                     }
 
                     if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
@@ -401,48 +470,103 @@ namespace gazprea {
         return nullptr;
     }
 
-//    std::any TypeWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
-//        // streamOut supports the following types:
-//        // - char, integer, real, boolean
-//        // - vector, string, matrix (part 2)
-//        // basically, NOT tuples
-//        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
-//
-//        walkChildren(tree);
-//
-//#ifdef SKIP_STREAMOUT_TYPECHECK
-//        return nullptr;
-//#endif // SKIP_STREAMOUT_TYPECHECK
-//
-//        auto exprType = tree->getExpr()->evaluatedType;
-//        if (exprType != nullptr) {
-//            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
-//                throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
-//            }
-//        } else {
-//            throw TypeError(tree->loc(), "Cannot stream out unknown type");
-//        }
-//        return nullptr;
-//    }
-//
-//    std::any TypeWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
-//        // streamIn supports reading into the following types:
-//        // - char, integer, real, boolean
-//        // NOT any other types
-//        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN};
-//        walkChildren(tree);
-//        auto exprType = tree->getExpr()->evaluatedType;
-//        if (exprType != nullptr) {
-//            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
-//                throw TypeError(tree->loc(), "Cannot stream in a " + typeEnumToString(exprType->baseTypeEnum));
-//            }
-//        } else {
-//            throw TypeError(tree->loc(), "Cannot stream out unknown type");
-//        }
-//
-//        // todo (maybe?) check if stream is valid l-value
-//        return nullptr;
-//    }
+    std::any TypeWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
+        // streamOut supports the following types:
+        // - char, integer, real, boolean
+        // - vector, string, matrix (part 2)
+        // basically, NOT tuples
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+
+        walkChildren(tree);
+        auto exprType = tree->getExpr()->evaluatedType;
+        if (exprType != nullptr) {
+            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+                throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
+            }
+        } else {
+            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
+        // streamIn supports reading into the following types:
+        // - char, integer, real, boolean
+        // NOT any other types
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN};
+        walkChildren(tree);
+        auto exprType = tree->getExpr()->evaluatedType;
+        if (exprType != nullptr) {
+            if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
+                throw TypeError(tree->loc(), "Cannot stream in a " + typeEnumToString(exprType->baseTypeEnum));
+            }
+        } else {
+            throw TypeError(tree->loc(), "Cannot stream out unknown type");
+        }
+
+        if(!std::dynamic_pointer_cast<IDNode>(tree->getExpr()) && !std::dynamic_pointer_cast<TupleIndexNode>(tree->getExpr())) {
+            throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+        }
+
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitCall(std::shared_ptr<CallNode> tree) {
+        if (tree->procCall) {
+            walkChildren(tree);
+            tree->evaluatedType = nullptr;
+        }
+        else {
+            //must be an expression then
+            tree->evaluatedType = tree->MethodRef->typeSym;
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitCast(std::shared_ptr<CastNode> tree) {
+        walkChildren(tree);
+        auto toType = symtab->resolveTypeUser(tree->children[0]);
+        auto exprType = tree->children[1]->evaluatedType;
+        if (toType->getName() == "tuple" && exprType->getName() == "tuple") {
+            if (toType->tupleChildType.size() != exprType->tupleChildType.size()) {
+                throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+            }
+            for (size_t i = 0; i < exprType->tupleChildType.size(); i++) {
+                auto leftTypeString = exprType->tupleChildType[i].second->getName();
+                auto rightTypeString = toType->tupleChildType[i].second->getName();
+
+                if (leftTypeString != rightTypeString) {
+                    auto leftIndex = promotedType->getTypeIndex(leftTypeString);
+                    auto rightIndex = promotedType->getTypeIndex(rightTypeString);
+                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    if (resultTypeString.empty()) {
+                        throw TypeError(tree->loc(), "Cannot implicitly promote " + leftTypeString + " to " + rightTypeString);
+                    }
+                }
+            }
+            tree->evaluatedType = toType; // tuple Type
+        }
+        else if (toType->getName() == "tuple" || toType->getName() == "tuple" ) {
+            throw TypeError(tree->loc(), "only tuple to tuple casting is permitted");
+        }
+        else {
+            auto leftIndex = promotedType->getTypeIndex(exprType->getName());
+            auto rightIndex = promotedType->getTypeIndex(toType->getName());
+            std::string resultTypeString = promotedType->castTable[leftIndex][rightIndex];
+            if (resultTypeString.empty()) {
+                throw TypeError(tree->loc(), "Cannot cast " + exprType->getName() + " to " + toType->getName());
+            }
+            auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
+            tree->evaluatedType = resultType; // base Type
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
+        auto typeNode = tree->children[0];
+        tree->evaluatedType = symtab->resolveTypeUser(typeNode);
+        return nullptr;
+    }
 
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
@@ -467,4 +591,6 @@ namespace gazprea {
         }
 
     }
+
+
 }

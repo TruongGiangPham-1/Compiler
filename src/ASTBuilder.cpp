@@ -154,9 +154,9 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitIdentity " << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<NullNode>(ctx->getStart()->getLine());
+        std::shared_ptr<ASTNode> t = std::make_shared<IdentityNode>(ctx->getStart()->getLine());
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitNull(GazpreaParser::NullContext *ctx) {
@@ -165,7 +165,7 @@ namespace gazprea {
 #endif
         std::shared_ptr<ASTNode> t = std::make_shared<NullNode>(ctx->getStart()->getLine());
 
-        return t;
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
 
@@ -243,6 +243,38 @@ namespace gazprea {
             auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
             return std::dynamic_pointer_cast<ASTNode>(t);
         }
+    }
+
+    std::any ASTBuilder::visitLiteralVector(GazpreaParser::LiteralVectorContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitLiteralVector" << ctx->getText() << std::endl;
+#endif
+        return visit(ctx->literal_vector());
+    }
+
+    // this literal_vector is used in both literalVector and literalMatrix to parse vectors
+    std::any ASTBuilder::visitLiteral_vector(GazpreaParser::Literal_vectorContext *ctx) {
+        auto t = std::make_shared<VectorNode>(ctx->getStart()->getLine());
+
+        for (auto exprCtx : ctx->expression()) {
+            t->addChild(visit(exprCtx));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
+    }
+
+    std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
+#endif
+        auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
+
+        auto matrixCtx = ctx->literal_matrix();
+        for (auto vectorCtx : matrixCtx->literal_vector()) {
+            t->addChild(visit(vectorCtx));
+        }
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
@@ -630,7 +662,13 @@ namespace gazprea {
       }
       if (ctx->expression()) {
           auto expr = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression()));
-          functionNode->expr = expr;
+          auto blockNode = std::make_shared<BlockNode>(ctx->getStart()->getLine());
+          auto returnNode = std::make_shared<ReturnNode>(ctx->getStart()->getLine());
+          returnNode->returnExpr = expr;
+
+          blockNode->addChild(std::dynamic_pointer_cast<ASTNode>(returnNode));
+          
+          functionNode->body = blockNode;
       }
       if (ctx->RESERVED_RETURNS()) {
           functionNode->addChild(visit(ctx->type()));
@@ -681,6 +719,7 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(callNode);
 
     }
+
     std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure call" << std::endl;
@@ -692,9 +731,9 @@ namespace gazprea {
         for (auto expr: ctx->expression()) {
             pCallNode->addChild(visit(expr));
         }
+        pCallNode->procCall = true;
         return std::dynamic_pointer_cast<ASTNode>(pCallNode);
     }
-
 
     std::any ASTBuilder::visitReturn(GazpreaParser::ReturnContext *ctx) {
 #ifdef DEBUG

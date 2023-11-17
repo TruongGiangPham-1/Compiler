@@ -36,6 +36,7 @@ private:
   std::any visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
   std::any visitCast(std::shared_ptr<CastNode> tree) override;
+  std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
 
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
@@ -60,6 +61,9 @@ private:
   std::any visitCall(std::shared_ptr<CallNode> tree) override;
 
   std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
+  // === Null and identity
+  std::any visitNull(std::shared_ptr<NullNode> tree) override;
+  std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};

@@ -139,7 +139,17 @@ namespace gazprea {
             std::cout << "about to visit Arith" << std::endl;
 #endif // DEBUG
             return this->visitArith(std::dynamic_pointer_cast<BinaryArithNode>(tree));
+        } else if (std::dynamic_pointer_cast<VectorNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit literal Vector" << std::endl;
+#endif // DEBUG
+            return this->visitVector(std::dynamic_pointer_cast<VectorNode>(tree));
 
+        } else if (std::dynamic_pointer_cast<MatrixNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit literal Matrix" << std::endl;
+#endif // DEBUG
+            return this->visitMatrix(std::dynamic_pointer_cast<MatrixNode>(tree));
         } else if (std::dynamic_pointer_cast<BinaryCmpNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Cmp" << std::endl;
@@ -253,7 +263,19 @@ namespace gazprea {
             std::cout << "about to visit return" << std::endl;
 #endif // DEBUG
             return this->visitReturn(std::dynamic_pointer_cast<ReturnNode>(tree));
-      } else {
+
+      } else if (std::dynamic_pointer_cast<IdentityNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit identity" << std::endl;
+#endif // DEBUG
+            return this->visitIdentity(std::dynamic_pointer_cast<IdentityNode>(tree));
+    } else if (std::dynamic_pointer_cast<NullNode>(tree)) {
+
+#ifdef DEBUG
+            std::cout << "about to visit null" << std::endl;
+#endif // DEBUG
+            return this->visitNull(std::dynamic_pointer_cast<NullNode>(tree));
+    } else {
           // NIL node
 #ifdef DEBUG
           std::cout << "about to visit NIL" << std::endl;
@@ -303,6 +325,12 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitChar(std::shared_ptr<CharNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
@@ -404,6 +432,12 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitCast(std::shared_ptr<CastNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitNull(std::shared_ptr<NullNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
         return this->walkChildren(tree);
     }
 }

@@ -27,5 +27,6 @@ bool VectorTypeNode::isInferred() const {
 }
 
 std::string VectorTypeNode::toString() {
-    return "VectorTypeNode [" + size->toStringTree() + "] " + innerType->toString();
+    std::string sizeStr = size == nullptr ? "*" : size->toStringTree();
+    return "VectorTypeNode [" + sizeStr + "] " + innerType->toString();
 }

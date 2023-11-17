@@ -1,0 +1,12 @@
+procedure main() returns integer {
+    integer a;
+    real b;
+    boolean c;
+    a -> std_output;
+    '\n' -> std_output;
+    b -> std_output;
+    '\n' -> std_output;
+    c -> std_output;
+    '\n' -> std_output;
+    return 0;
+}

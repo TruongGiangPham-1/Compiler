@@ -1,6 +1,7 @@
 #include "llvm/ADT/APFloat.h"
 #include "CompileTimeExceptions.h"
 #include "Types/TYPES.h"
+#include "Type.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
@@ -9,6 +10,7 @@
 #include "llvm/Support/raw_os_ostream.h"
 #include <assert.h>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
@@ -167,16 +169,16 @@ void BackEnd::setupCommonTypeRuntime() {
 
   auto commonTypeAddr = mlir::LLVM::LLVMPointerType::get(commonType);
   
-  auto tupleType =
+  auto listType =
       mlir::LLVM::LLVMStructType::getLiteral(&context, {intType, intType, mlir::LLVM::LLVMPointerType::get(commonTypeAddr)});
-  auto tupleTypeAddr = mlir::LLVM::LLVMPointerType::get(tupleType);
+  auto listTypeAddr = mlir::LLVM::LLVMPointerType::get(listType);
 
   auto printType = mlir::LLVM::LLVMFunctionType::get(
       voidType, {commonTypeAddr});
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
-  auto allocateTupleType = mlir::LLVM::LLVMFunctionType::get(tupleTypeAddr, {intType});
-  auto appendTupleType = mlir::LLVM::LLVMFunctionType::get(intType, {tupleTypeAddr, commonTypeAddr});
+  auto allocateListType = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {intType});
+  auto appendListType = mlir::LLVM::LLVMFunctionType::get(intType, {listTypeAddr, commonTypeAddr});
   auto indexCommonType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
@@ -202,10 +204,10 @@ void BackEnd::setupCommonTypeRuntime() {
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateTuple",
-                                            allocateTupleType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendTuple",
-                                            appendTupleType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
+                                            allocateListType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendList",
+                                            appendListType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
@@ -253,6 +255,26 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   this->allocatedObjects++;
 
   return result;
+}
+
+/*
+ * Takes a nullable std::shared_ptr<Type>, and cast the value to that type
+ *
+ * ONLY WORKS for simple types (integer, char, bool, real)
+ * if we pass a vector type, we will just return the value
+ * If the type is null, return the same value (no-op)
+ */
+mlir::Value BackEnd::possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType) {
+  if (nullableType) {
+    std::vector<TYPE> acceptableTypes = {TYPE::INTEGER, TYPE::CHAR, TYPE::BOOLEAN, TYPE::REAL};
+    if (std::find(acceptableTypes.begin(), acceptableTypes.end(), nullableType->baseTypeEnum) == acceptableTypes.end()) {
+      return val;
+    } else {
+      return cast(val, nullableType->baseTypeEnum);
+    }
+  } else {
+    return val;
+  }
 }
 
 mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
@@ -371,12 +393,32 @@ mlir::Value BackEnd::generateValue(char value) {
   return this->generateCommonType(result, CHAR);
 }
 
+mlir::Value BackEnd::generateValue(std::string value) {
+  std::vector<mlir::Value> values;
+
+  for (char character : value) {
+    values.push_back(this->generateValue(character));
+  }
+
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
+
+  auto string = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
+
+  mlir::LLVM::LLVMFuncOp appendList = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendList");
+
+  for (auto commonChar : values) {
+    builder->create<mlir::LLVM::CallOp>(loc, appendList, mlir::ValueRange({string, commonChar}));
+  }
+
+  return this->generateCommonType(string, STRING);
+}
+
 mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {
-  mlir::LLVM::LLVMFuncOp allocateTupleFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateTuple");
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
 
-  auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateTupleFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
+  auto tuple = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger((int) values.size())})).getResult();
 
-  mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendTuple");
+  mlir::LLVM::LLVMFuncOp appendTuple = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendList");
 
   for (auto value : values) {
     builder->create<mlir::LLVM::CallOp>(loc, appendTuple, mlir::ValueRange({tuple, value}));
@@ -389,6 +431,36 @@ mlir::Value BackEnd::generateInteger(int value) {
   mlir::Value result = builder->create<mlir::LLVM::ConstantOp>(
       loc, builder->getI32Type(), value);
   return result;
+}
+
+mlir::Value BackEnd::generateNullValue(TYPE type) {
+  switch (type) {
+    case BOOLEAN:
+      return this->generateValue(false);
+    case CHAR:
+      return this->generateValue((char)0x00);
+    case INTEGER:
+      return this->generateValue(0);
+    case REAL:
+      return this->generateValue(0.0f);
+    default:
+      throw std::runtime_error("Identity not available");
+  }
+}
+
+mlir::Value BackEnd::generateIdentityValue(TYPE type) {
+  switch (type) {
+    case BOOLEAN:
+      return this->generateValue(true);
+    case CHAR:
+      return this->generateValue((char)0x01);
+    case INTEGER:
+      return this->generateValue(1);
+    case REAL:
+      return this->generateValue(1.0f);
+    default:
+      throw std::runtime_error("Identity not available");
+  }
 }
 
 void BackEnd::deallocateObjects() {

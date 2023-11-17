@@ -25,7 +25,11 @@ private:
             baseTypeEnum = TYPE::TUPLE;
         } else if (name == "string") {
             baseTypeEnum = TYPE::STRING;
-        } else {
+        } else if (name == "identity") {
+            baseTypeEnum = TYPE::IDENTITY;
+        } else if (name == "null") {
+            baseTypeEnum = TYPE::NULL_;
+        }else {
             // throw TypeError(0, "invalid typename when creating AdvancedType object");
             // custom user type
         }

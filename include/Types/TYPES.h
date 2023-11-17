@@ -15,5 +15,8 @@ enum TYPE{
     VECTOR,
     MATRIX,
     TUPLE,
-    NONE
+    NONE,
+
+    IDENTITY,
+    NULL_  // underline because null is a reserved keyword
 };

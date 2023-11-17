@@ -15,6 +15,8 @@
 #include "ASTNode/Expr/Literal/RealNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
 #include "ASTNode/Expr/Literal/TupleNode.h"
+#include "ASTNode/Expr/Literal/VectorNode.h"
+#include "ASTNode/Expr/Literal/MatrixNode.h"
 #include "ASTNode/Method/ProcedureNode.h"
 #include "ASTNode/Expr/Binary/BinaryExpr.h"
 #include "ASTNode/Expr/Vector/RangeVecNode.h"
@@ -31,6 +33,8 @@
 #include "ASTNode/CallNode.h"
 #include "ASTNode/TypeDefNode.h"
 #include "ASTNode/Expr/TupleIndexNode.h"
+#include "ASTNode/Expr/NullNode.h"
+#include "ASTNode/Expr/IdentityNode.h"
 
 namespace gazprea {
     class ASTWalker {
@@ -61,6 +65,8 @@ namespace gazprea {
         virtual std::any visitChar(std::shared_ptr<CharNode> tree);
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
         virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
+        virtual std::any visitVector(std::shared_ptr<VectorNode> tree);
+        virtual std::any visitMatrix(std::shared_ptr<MatrixNode> tree);
 
         // Expr/Binary
 
@@ -94,5 +100,8 @@ namespace gazprea {
         virtual std::any visitParameter(std::shared_ptr<ArgNode> tree);
         // === FUNCTION CALL NODE ===
 
+        // === Null and identity
+        virtual std::any visitNull(std::shared_ptr<NullNode> tree);
+        virtual std::any visitIdentity(std::shared_ptr<IdentityNode> tree);
     };
 }

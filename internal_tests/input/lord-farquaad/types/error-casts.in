@@ -1,0 +1,3 @@
+procedure main() returns integer {
+    boolean b = as<real>(1.0);
+}
