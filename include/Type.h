@@ -5,7 +5,7 @@
 #include <vector>
 class Type {
 public:
-    TYPE baseTypeEnum;  // [integer, real, character, boolean, string, tuple,   identity, null]
+    TYPE baseTypeEnum = TYPE::NONE;  // [integer, real, character, boolean, string, tuple,   identity, null]
     TYPE vectorOrMatrixEnum = TYPE::NONE;  // [vector, matrix]  // indicate if the type is a matrix or vector or none
     std::vector<std::string> typeString{"integer", "real", "boolean", "character", "string", "vector", "matrix","tuple","none", "identity", "null"};
 

@@ -350,6 +350,7 @@ namespace gazprea {
             tree->getExprNode()->evaluatedType->baseTypeEnum = lType->baseTypeEnum;  // set the LHS vector literal type. int?real?
             tree->getExprNode()->evaluatedType->setName(lType->getBaseTypeEnumName());  // set the string evaluated type
             tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node
+            tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
         }
         else if (lType->getBaseTypeEnumName() != rType->getBaseTypeEnumName()) {
             auto leftIndex = promotedType->getTypeIndex(rType->getBaseTypeEnumName());
@@ -504,12 +505,10 @@ namespace gazprea {
 
         walkChildren(tree);
         auto exprType = tree->getExpr()->evaluatedType;
+        tree->evaluatedType = exprType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
                 throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
-            } else if (exprType->vectorOrMatrixEnum == TYPE::VECTOR) {
-               // check if vector type is in
-
             }
         } else {
             throw TypeError(tree->loc(), "Cannot stream out unknown type");
@@ -601,9 +600,10 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
-        tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());  // this string name will be modified in visitDecl
+        // this string name will be modified in visitDecl if we need to promote elements. rn assume that all elements same type
+        tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
-        tree->evaluatedType->baseTypeEnum = TYPE::NONE; // this will be set by visitDecl when we promote all RHS
+        tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
         tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
         return nullptr;
     }
