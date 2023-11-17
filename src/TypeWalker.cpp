@@ -128,8 +128,8 @@ namespace gazprea {
         auto exprNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
         // promote each vector elements
         for (auto &child: exprNodeCast->getElements()) {
-            auto rhsIndex = getTypeIndex(child->evaluatedType->getName());
-            auto lhsIndex = getTypeIndex(promoteTo->getName());
+            auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
+            auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
             auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
             if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
@@ -348,6 +348,7 @@ namespace gazprea {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
             promotedType->promoteVectorElements(lType, tree->getExprNode());
             tree->getExprNode()->evaluatedType->baseTypeEnum = lType->baseTypeEnum;  // set the LHS vector literal type. int?real?
+            tree->getExprNode()->evaluatedType->setName(lType->getBaseTypeEnumName());  // set the string evaluated type
             tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node
         }
         else if (lType->getName() != rType->getName()) {
@@ -499,13 +500,16 @@ namespace gazprea {
         // - char, integer, real, boolean
         // - vector, string, matrix (part 2)
         // basically, NOT tuples
-        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN,  TYPE::STRING};
 
         walkChildren(tree);
         auto exprType = tree->getExpr()->evaluatedType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
                 throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
+            } else if (exprType->vectorOrMatrixEnum == TYPE::VECTOR) {
+               // check if vector type is in
+
             }
         } else {
             throw TypeError(tree->loc(), "Cannot stream out unknown type");
@@ -597,7 +601,7 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
-        tree->evaluatedType = std::make_shared<AdvanceType>("vector");
+        tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());  // this string name will be modified in visitDecl
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
         tree->evaluatedType->baseTypeEnum = TYPE::NONE; // this will be set by visitDecl when we promote all RHS
         tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector

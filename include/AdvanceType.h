@@ -57,6 +57,13 @@ public:
     std::string getName() {
         return Symbol::getName();
     };
+
+    std::string setName(std::string name) override{
+        this->name = name;
+    };
+    std::string getBaseTypeEnumName() override {
+        return typeString[baseTypeEnum];
+    };
     std::string getTypDefname() {
         return typDefName;
     }
