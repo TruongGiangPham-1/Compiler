@@ -8,9 +8,11 @@
 #include "ASTWalker.h"
 
 namespace gazprea {
+    // additional context as to what we're currently visiting
     enum class CONTEXT {
         FUNCTION_BODY,
         DECL_BODY, // inside `type qualifier ID = ***`
+        VECTOR_LITERAL, // inside a VectorNode
         NONE,
     };
 
@@ -46,6 +48,7 @@ namespace gazprea {
 
         // Expr
         std::any visitCall(std::shared_ptr<CallNode> tree);
+        std::any visitVector(std::shared_ptr<VectorNode> tree);
     };
 
 }

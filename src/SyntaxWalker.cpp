@@ -139,6 +139,8 @@ namespace gazprea {
         return 0;
     }
 
+    // === EXPR ===
+
     std::any SyntaxWalker::visitCall(std::shared_ptr<CallNode> tree) {
         // a function or procedure call
         // if we are in a global declaration initialization, this is an error
@@ -146,5 +148,17 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "Global initialization cannot contain function/procedure calls");
         }
         return 0;
+    }
+
+    std::any SyntaxWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        // if we are already in a vector, this is an error
+        if (getCurrentContext() == CONTEXT::VECTOR_LITERAL) {
+            throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
+        }
+
+        // else, we are in a vector. Go through children
+        contexts.push_back(CONTEXT::VECTOR_LITERAL);
+        walkChildren(tree);
+        contexts.pop_back();
     }
 }
