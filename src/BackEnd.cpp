@@ -234,7 +234,6 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
 }
 
 std::string BackEnd::trackObject() {
-  std::cout << "pushing object" << std::endl;
   std::string newLabel =
       "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
   std::vector<std::string> *currentScope  = *(this->objectLabels.end() - 1);
@@ -246,7 +245,6 @@ std::string BackEnd::trackObject() {
 void BackEnd::pushScope() {
   std::vector<std::string> *labelScope = new std::vector<std::string>();
   this->objectLabels.push_back(labelScope);
-  std::cout << "pushed scope" << std::endl;
 }
 
 mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
