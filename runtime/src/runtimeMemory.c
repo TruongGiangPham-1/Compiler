@@ -63,6 +63,8 @@ commonType* copyCommonType(commonType* copyFrom) {
 void assignByReference(commonType* dest, commonType* from) {
   if (isCompositeType(dest->type)) {
     deallocateList(dest->value);
+  } else {
+    free(dest->value);
   }
 
   dest->value = copyValue(from);
