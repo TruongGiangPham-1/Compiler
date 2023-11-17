@@ -112,16 +112,25 @@ namespace gazprea {
         return 0;
     }
 
+    // === FUNCTION/PROCEDURE ===
+
     std::any SyntaxWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
 #ifdef DEBUG
         std::cout << "Visiting " << tree->toString()
                   << " inside global scope: " << debugGlobalScope() << std::endl;
 #endif
+        contexts.push_back(CONTEXT::FUNCTION);
         if (tree->body) {
             scopeDepth++;
             walk(tree->body);
             scopeDepth--;
         }
+
+        // visit arguments
+        for (const auto& arg : tree->orderedArgs) {
+            walk(arg);
+        }
+        contexts.pop_back();
         return 0;
     }
 

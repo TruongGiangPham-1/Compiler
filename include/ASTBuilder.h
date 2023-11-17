@@ -100,6 +100,7 @@ namespace gazprea {
         std::any visitProcedure(GazpreaParser::ProcedureContext *ctx) override;
         std::any visitFunction(GazpreaParser::FunctionContext *ctx) override;
         std::any visitParameter(GazpreaParser::ParameterContext *ctx) override;
+        std::any visitFuncParameter(GazpreaParser::FuncParameterContext *ctx) override;
         std::any visitReturn(GazpreaParser::ReturnContext *ctx) override;
 
         std::any visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) override;

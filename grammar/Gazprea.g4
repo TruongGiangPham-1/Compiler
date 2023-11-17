@@ -74,12 +74,13 @@ return
     : RESERVED_RETURN expression? ';'
     ;
 
+funcParameter : type ID;
 parameter: qualifier? type ID;
 
 function
-    : RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '=' expression ';'
-    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type '{' block '}'
-    | RESERVED_FUNCTION ID '(' (parameter (',' parameter)*)? ')' RESERVED_RETURNS type ';'
+    : RESERVED_FUNCTION ID '(' (funcParameter (',' funcParameter)*)? ')' RESERVED_RETURNS type '=' expression ';'
+    | RESERVED_FUNCTION ID '(' (funcParameter (',' funcParameter)*)? ')' RESERVED_RETURNS type '{' block '}'
+    | RESERVED_FUNCTION ID '(' (funcParameter (',' funcParameter)*)? ')' RESERVED_RETURNS type ';'
     ;
 
 procedure

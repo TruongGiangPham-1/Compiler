@@ -10,7 +10,7 @@
 namespace gazprea {
     // additional context as to what we're currently visiting
     enum class CONTEXT {
-        FUNCTION_BODY,
+        FUNCTION,
         DECL_BODY, // inside `type qualifier ID = ***`
         VECTOR_LITERAL, // inside a VectorNode
         NONE,
@@ -46,9 +46,10 @@ namespace gazprea {
         std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
 
-        // Expr
+        // === EXPR ===
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
         std::any visitVector(std::shared_ptr<VectorNode> tree) override;
+
     };
 
 }
