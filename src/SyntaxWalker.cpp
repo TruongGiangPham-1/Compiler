@@ -119,6 +119,10 @@ namespace gazprea {
         std::cout << "Visiting " << tree->toString()
                   << " inside global scope: " << debugGlobalScope() << std::endl;
 #endif
+        if (!inGlobalScope()) {
+            throw SyntaxError(tree->loc(), "(forward) function declarations found in non-global scope");
+        }
+
         contexts.push_back(CONTEXT::FUNCTION);
         if (tree->body) {
             scopeDepth++;
@@ -139,6 +143,10 @@ namespace gazprea {
         std::cout << "Visiting " << tree->toString()
                   << " inside global scope: " << debugGlobalScope() << std::endl;
 #endif
+        if (!inGlobalScope()) {
+            throw SyntaxError(tree->loc(), "(forward) procedure declaration found in non-global scope");
+        }
+
         // if there isn't a body, this is a forward declaration
         if (tree->body) {
             scopeDepth++;
