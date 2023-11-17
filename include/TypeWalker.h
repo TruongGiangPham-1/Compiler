@@ -81,7 +81,5 @@ namespace gazprea {
 
 
 
-        // Vector and Matrices helper
-        void declareVectorType(std::shared_ptr<ASTNode>exprNode);
     };
 }
