@@ -1,4 +1,5 @@
 #include "llvm/ADT/APFloat.h"
+#include "CompileTimeExceptions.h"
 #include "Types/TYPES.h"
 #include "Type.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -53,12 +54,23 @@ void BackEnd::init() {
   auto mainType = mlir::LLVM::LLVMFunctionType::get(intType, {}, false);
 
   auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
-  functionStack.push_back(mainFunc);
 
+  // override handler to not output to stderr
+  context.getDiagEngine().registerHandler([](mlir::Diagnostic &diag) {
+    return;
+  });
+
+  functionStack.push_back(mainFunc);
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
 }
 
+void BackEnd::verifyFunction(int line, std::string name) {
+  if (mlir::verify(functionStack[functionStack.size()-1]).failed()) {
+    throw ReturnError(line, name + " does not have a return statement reachable by all control flows");
+  }
+  functionStack.pop_back();
+}
 /**
  * Finish codegen + main function.
  */
@@ -523,9 +535,8 @@ mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t a
     return currentBlock;
 }
 
-void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
+void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, int line) {
     builder->setInsertionPointToEnd(returnBlock);
-    functionStack.pop_back();
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {

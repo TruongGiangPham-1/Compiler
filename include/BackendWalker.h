@@ -7,6 +7,7 @@
 class BackendWalker : private gazprea::ASTWalker {
 private:
   BackEnd codeGenerator;
+  std::any walk(std::shared_ptr<ASTNode> tree) override;
 
   // if we are inside a loop, we want to track the start and end blocks
   // this is so we can know where to jump to when we encounter a break or continue
@@ -14,6 +15,7 @@ private:
   // if we encounter a break, we have an early return
   // this boolean is true when we are inside a loop and we encounter a break
   bool earlyReturn = false;
+  bool returnDropped = false;
 
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
