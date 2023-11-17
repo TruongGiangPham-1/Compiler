@@ -55,6 +55,7 @@ void BackEnd::init() {
 
   auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
 
+  // override handler to not output to stderr
   context.getDiagEngine().registerHandler([](mlir::Diagnostic &diag) {
     return;
   });
