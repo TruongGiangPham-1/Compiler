@@ -9,6 +9,7 @@
 namespace gazprea {
     SyntaxWalker::SyntaxWalker() {
         scopeDepth = 0;
+        contexts = {CONTEXT::NONE};
     }
 
     bool SyntaxWalker::inGlobalScope() {
@@ -21,6 +22,10 @@ namespace gazprea {
         } else {
             return "false " + std::to_string(scopeDepth);
         }
+    }
+
+    CONTEXT SyntaxWalker::getCurrentContext() {
+        return contexts.back();
     }
 
     // Declaration
@@ -38,6 +43,14 @@ namespace gazprea {
                 throw SyntaxError(tree->loc(), "Global Variables must be initialized");
             }
         }
+
+        // visit DECL body
+        if (tree->getExprNode()) {
+            contexts.push_back(CONTEXT::DECL_BODY);
+            walk(tree->getExprNode());
+            contexts.pop_back();
+        }
+
         return 0;
     }
 
@@ -122,6 +135,15 @@ namespace gazprea {
             scopeDepth++;
             walk(tree->body);
             scopeDepth--;
+        }
+        return 0;
+    }
+
+    std::any SyntaxWalker::visitCall(std::shared_ptr<CallNode> tree) {
+        // a function or procedure call
+        // if we are in a global declaration initialization, this is an error
+        if (getCurrentContext() == CONTEXT::DECL_BODY && inGlobalScope()) {
+            throw SyntaxError(tree->loc(), "Global initialization cannot contain function/procedure calls");
         }
         return 0;
     }

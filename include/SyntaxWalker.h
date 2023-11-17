@@ -8,6 +8,11 @@
 #include "ASTWalker.h"
 
 namespace gazprea {
+    enum class CONTEXT {
+        FUNCTION_BODY,
+        DECL_BODY, // inside `type qualifier ID = ***`
+        NONE,
+    };
 
     class SyntaxWalker : public ASTWalker {
     private:
@@ -18,6 +23,11 @@ namespace gazprea {
 
         bool inGlobalScope();
         std::string debugGlobalScope();
+
+        // CONTEXT gives us more info as to what we're currently visiting
+        // it's a vector so it's easy to push/pop
+        std::vector<CONTEXT> contexts;
+        CONTEXT getCurrentContext();
     public:
         SyntaxWalker();
 
@@ -33,6 +43,9 @@ namespace gazprea {
 
         virtual std::any visitFunction(std::shared_ptr<FunctionNode> tree);
         virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
+
+        // Expr
+        virtual std::any visitCall(std::shared_ptr<CallNode> tree);
     };
 
 }
