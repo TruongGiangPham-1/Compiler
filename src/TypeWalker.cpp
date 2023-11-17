@@ -64,9 +64,9 @@ namespace gazprea {
     std::string PromotedType::promotionTable[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
 /*boolean*/      {"boolean",  "",         "",         "",        "",   "boolean", ""},
-/*character*/    {"",         "boolean",  "",         "",        "",   "character", ""},
-/*integer*/      {"",         "",         "",         "real",    "",   "integer", ""},
-/*real*/         {"",         "",         "",         "",        "",   "real", ""},
+/*character*/    {"",         "character","",         "",        "",   "character", ""},
+/*integer*/      {"",         "",         "integer",  "real",    "",   "integer", ""},
+/*real*/         {"",         "",         "",         "real",    "",   "real", ""},
 /*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
 /*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
 /*null*/         {"",  "", "", "", "" , "", ""}
@@ -78,23 +78,23 @@ namespace gazprea {
             return nullptr;
         }
         // TODO: identity and null handling
-        auto leftIndex = this->getTypeIndex(left->evaluatedType->getName());
-        auto rightIndex = this->getTypeIndex(right->evaluatedType->getName());
+        auto leftIndex = this->getTypeIndex(left->evaluatedType->getBaseTypeEnumName());
+        auto rightIndex = this->getTypeIndex(right->evaluatedType->getBaseTypeEnumName());
         std::string resultTypeString = table[leftIndex][rightIndex];
         if (resultTypeString.empty()) {
             if (table == promotionTable) {
-                throw TypeError(t->loc(), "Cannot implicitly promote " + left->evaluatedType->getName() + " to " + right->evaluatedType->getName());
+                throw TypeError(t->loc(), "Cannot implicitly promote " + left->evaluatedType->getBaseTypeEnumName() + " to " + right->evaluatedType->getBaseTypeEnumName());
             }
             else {
-                throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getName() + " and " + right->evaluatedType->getName());
+                throw TypeError(t->loc(), "Cannot perform operation between " + left->evaluatedType->getBaseTypeEnumName() + " and " + right->evaluatedType->getBaseTypeEnumName());
             }
         }
 
         auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
 
         #ifdef DEBUG
-                std::cout << "type promotions between " <<  left->evaluatedType->getName() << ", " << right->evaluatedType->getName() << "\n";
-                std::cout << "result: " <<  resultType->getName() << "\n";
+                std::cout << "type promotions between " <<  left->evaluatedType->getBaseTypeEnumName() << ", " << right->evaluatedType->getBaseTypeEnumName() << "\n";
+                std::cout << "result: " <<  resultType->getBaseTypeEnumName() << "\n";
         #endif
         assert(resultType);
         return resultType;
@@ -117,6 +117,26 @@ namespace gazprea {
             return this->nullIndex;
         } else {
                 throw std::runtime_error("Unknown type");
+        }
+    }
+    void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
+        // only care about vector expr node
+        if (exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::NONE) {
+            return;
+        }
+        assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
+        auto exprNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
+        // promote each vector elements
+        for (auto &child: exprNodeCast->getElements()) {
+            auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
+            auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
+            auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
+            if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+            auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
+#ifdef DEBUG
+            std::cout << "promoted vector element " << child->evaluatedType->getBaseTypeEnumName() << "to " << promoteTo->getBaseTypeEnumName() << "\n";
+#endif
+            child->evaluatedType = resultType;  // set each vector element node to its promoted type
         }
     }
 
@@ -181,15 +201,15 @@ namespace gazprea {
             case BINOP::SUB:
             case BINOP::REM:
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
-                if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
-                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
+                if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
-                if (lhsType->getName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
-                if (rhsType->getName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
+                if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
+                if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
         }
         return nullptr;
@@ -265,7 +285,7 @@ namespace gazprea {
             return nullptr;
         }
         if(!tree->getExprNode()) {
-            // has a type node //  add a null node :)
+            // has a type node //  add a null node :) TODO: this identity and null handling is different for matrices and vector
             std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(tree->loc());
             tree->addChild(nullNode);
             walk(nullNode);  // walk null node to popualte the type
@@ -291,7 +311,7 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "Declaration is missing expression to infer type.");
         }
 
-        if (lType->getName() == "tuple") {
+        if (lType->getBaseTypeEnumName() == "tuple") {
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             for (size_t i = 0; i < tupleNode->innerTypes.size(); i++) {
                 auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
@@ -302,14 +322,14 @@ namespace gazprea {
             }
         }
 
-        if (lType->getName() == "tuple" && rType->getName() == "tuple") {
+        if (lType->getBaseTypeEnumName() == "tuple" && rType->getBaseTypeEnumName() == "tuple") {
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             }
             for (size_t i = 0; i < rType->tupleChildType.size(); i++) {
                 auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
-                auto rightTypeString = rType->tupleChildType[i].second->getName();
+                auto rightTypeString = rType->tupleChildType[i].second->getBaseTypeEnumName();
 
                 if (leftTypeString != rightTypeString) {
                     auto leftIndex = promotedType->getTypeIndex(rightTypeString);
@@ -321,22 +341,28 @@ namespace gazprea {
                 }
             }
             tree->evaluatedType = rType;
-        } else if (rType->getName() == "null" || rType ->getName() == "identity") {  // if it null then we just set it to ltype
+        } else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
             tree->evaluatedType = lType;  //
             tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
+        } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
+            // promote all RHS vector element to ltype if exprNode is a vectorNode
+            promotedType->promoteVectorElements(lType, tree->getExprNode());
+            tree->getExprNode()->evaluatedType->baseTypeEnum = lType->baseTypeEnum;  // set the LHS vector literal type. int?real?
+            tree->getExprNode()->evaluatedType->setName(lType->getBaseTypeEnumName());  // set the string evaluated type
+            tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node
+            tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
         }
-
-        else if (lType->getName() != rType->getName()) {
-            auto leftIndex = promotedType->getTypeIndex(rType->getName());
-            auto rightIndex = promotedType->getTypeIndex(lType->getName());
+        else if (lType->getBaseTypeEnumName() != rType->getBaseTypeEnumName()) {
+            auto leftIndex = promotedType->getTypeIndex(rType->getBaseTypeEnumName());
+            auto rightIndex = promotedType->getTypeIndex(lType->getBaseTypeEnumName());
             std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
             if (resultTypeString.empty()) {
-                throw TypeError(tree->loc(), "Cannot implicitly promote " + rType->getName() + " to " + lType->getName());
+                throw TypeError(tree->loc(), "Cannot implicitly promote " + rType->getBaseTypeEnumName() + " to " + lType->getBaseTypeEnumName());
             }
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
             tree->evaluatedType = resultType;
         }
-        else {
+        else {  // normal implicit promotion
             tree->evaluatedType = rType;
         }
         return nullptr;
@@ -392,13 +418,13 @@ namespace gazprea {
                 if(std::dynamic_pointer_cast<IDNode>(exprList->children[0])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[0]);
 
-                    if (lvalue->evaluatedType->getName() == "tuple" and rhsType->getName() == "tuple") {
+                    if (lvalue->evaluatedType->getBaseTypeEnumName() == "tuple" and rhsType->getBaseTypeEnumName() == "tuple") {
                         if (lvalue->evaluatedType->tupleChildType.size() != rhsType->tupleChildType.size()) {
                             throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
                         }
                         for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
-                            auto leftTypeString = lvalue->evaluatedType->tupleChildType[i].second->getName();
-                            auto rightTypeString = rhsType->tupleChildType[i].second->getName();
+                            auto leftTypeString = lvalue->evaluatedType->tupleChildType[i].second->getBaseTypeEnumName();
+                            auto rightTypeString = rhsType->tupleChildType[i].second->getBaseTypeEnumName();
 
                             if (leftTypeString != rightTypeString) {
                                 auto leftIndex = promotedType->getTypeIndex(rightTypeString);
@@ -410,22 +436,22 @@ namespace gazprea {
                             }
                         }
                         tree->evaluatedType = lvalue->evaluatedType;
-                    } else if (rhsType->getName() == "null" || rhsType->getName() == "identity") {  // if it null then we just set it to ltype
+                    } else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
                         tree->evaluatedType = lvalue->evaluatedType;  //
                         tree->getRvalue()->evaluatedType = lvalue->evaluatedType;  // set identity/null node type to this type for promotion
                     }
 
-                    if (tree->getRvalue()->evaluatedType->getName() != tree->getLvalue()->children[0]->evaluatedType->getName())
+                    if (tree->getRvalue()->evaluatedType->getBaseTypeEnumName() != tree->getLvalue()->children[0]->evaluatedType->getBaseTypeEnumName())
                         tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), lvalue, tree);
                     else
                         tree->evaluatedType = tree->getRvalue()->evaluatedType;
                 }
                 else if (std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0])) {
                     auto tupleIndexNode = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[0]);
-                    if (rhsType->getName() == "tuple") {
+                    if (rhsType->getBaseTypeEnumName() == "tuple") {
                         throw TypeError(tree->loc(), "Cannot assign tuple to tuple index");
                     }
-                    if (tree->getRvalue()->evaluatedType->getName() != tupleIndexNode->evaluatedType->getName())
+                    if (tree->getRvalue()->evaluatedType->getBaseTypeEnumName() != tupleIndexNode->evaluatedType->getBaseTypeEnumName())
                         tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), tupleIndexNode, tree);
                     else
                         tree->evaluatedType = tree->getRvalue()->evaluatedType;
@@ -435,7 +461,7 @@ namespace gazprea {
             }
         }
         else {
-            if (rhsType->getName() != "tuple")
+            if (rhsType->getBaseTypeEnumName() != "tuple")
                 throw TypeError(tree->loc(), "Tuple Unpacking requires a tuple as the r-value.");
             if (lhsCount != rhsType->tupleChildType.size())
                 throw AssignError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
@@ -444,18 +470,18 @@ namespace gazprea {
                 std::string leftTypeString;
                 if (std::dynamic_pointer_cast<IDNode>(exprList->children[i])) {
                     auto lvalue = std::dynamic_pointer_cast<IDNode>(exprList->children[i]);
-                    leftTypeString = lvalue->evaluatedType->getName();
+                    leftTypeString = lvalue->evaluatedType->getBaseTypeEnumName();
                 }
                 else if (std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i])) {
                     auto lvalue = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i]);
-                    leftTypeString = lvalue->evaluatedType->getName();
+                    leftTypeString = lvalue->evaluatedType->getBaseTypeEnumName();
                 }
 
                 if (leftTypeString.empty()) {
                     throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
                 }
 
-                auto rightTypeString = rhsType->tupleChildType[i].second->getName();
+                auto rightTypeString = rhsType->tupleChildType[i].second->getBaseTypeEnumName();
 
                 if (leftTypeString != rightTypeString) {
                     auto leftIndex = promotedType->getTypeIndex(rightTypeString);
@@ -475,10 +501,11 @@ namespace gazprea {
         // - char, integer, real, boolean
         // - vector, string, matrix (part 2)
         // basically, NOT tuples
-        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN, TYPE::VECTOR, TYPE::STRING, TYPE::MATRIX};
+        std::vector<TYPE> allowedTypes = {TYPE::CHAR, TYPE::INTEGER, TYPE::REAL, TYPE::BOOLEAN,  TYPE::STRING};
 
         walkChildren(tree);
         auto exprType = tree->getExpr()->evaluatedType;
+        tree->evaluatedType = exprType;
         if (exprType != nullptr) {
             if (std::find(allowedTypes.begin(), allowedTypes.end(), exprType->baseTypeEnum) == allowedTypes.end()) {
                 throw TypeError(tree->loc(), "Cannot stream out a " + typeEnumToString(exprType->baseTypeEnum));
@@ -527,13 +554,13 @@ namespace gazprea {
         walkChildren(tree);
         auto toType = symtab->resolveTypeUser(tree->children[0]);
         auto exprType = tree->children[1]->evaluatedType;
-        if (toType->getName() == "tuple" && exprType->getName() == "tuple") {
+        if (toType->getBaseTypeEnumName() == "tuple" && exprType->getBaseTypeEnumName() == "tuple") {
             if (toType->tupleChildType.size() != exprType->tupleChildType.size()) {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             }
             for (size_t i = 0; i < exprType->tupleChildType.size(); i++) {
-                auto leftTypeString = exprType->tupleChildType[i].second->getName();
-                auto rightTypeString = toType->tupleChildType[i].second->getName();
+                auto leftTypeString = exprType->tupleChildType[i].second->getBaseTypeEnumName();
+                auto rightTypeString = toType->tupleChildType[i].second->getBaseTypeEnumName();
 
                 if (leftTypeString != rightTypeString) {
                     auto leftIndex = promotedType->getTypeIndex(leftTypeString);
@@ -546,15 +573,15 @@ namespace gazprea {
             }
             tree->evaluatedType = toType; // tuple Type
         }
-        else if (toType->getName() == "tuple" || toType->getName() == "tuple" ) {
+        else if (toType->getBaseTypeEnumName() == "tuple" || toType->getBaseTypeEnumName() == "tuple" ) {
             throw TypeError(tree->loc(), "only tuple to tuple casting is permitted");
         }
         else {
-            auto leftIndex = promotedType->getTypeIndex(exprType->getName());
-            auto rightIndex = promotedType->getTypeIndex(toType->getName());
+            auto leftIndex = promotedType->getTypeIndex(exprType->getBaseTypeEnumName());
+            auto rightIndex = promotedType->getTypeIndex(toType->getBaseTypeEnumName());
             std::string resultTypeString = promotedType->castTable[leftIndex][rightIndex];
             if (resultTypeString.empty()) {
-                throw TypeError(tree->loc(), "Cannot cast " + exprType->getName() + " to " + toType->getName());
+                throw TypeError(tree->loc(), "Cannot cast " + exprType->getBaseTypeEnumName() + " to " + toType->getBaseTypeEnumName());
             }
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
             tree->evaluatedType = resultType; // base Type
@@ -565,6 +592,25 @@ namespace gazprea {
     std::any TypeWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
         auto typeNode = tree->children[0];
         tree->evaluatedType = symtab->resolveTypeUser(typeNode);
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+        for (auto &exprNode: tree->getElements()) {
+            walk(exprNode);  // set the evaluated type of each expr
+        }
+        // this string name will be modified in visitDecl if we need to promote elements. rn assume that all elements same type
+        tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());
+        tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
+        return nullptr;
+    }
+    std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
+        // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+        tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
+        tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
         return nullptr;
     }
 

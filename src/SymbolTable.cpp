@@ -47,7 +47,6 @@ std::string SymbolTable::toString() {
 std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> typeNode) {
     // cast it to vector or matrix type
     if (std::dynamic_pointer_cast<VectorTypeNode>(typeNode)) {
-        // TODO: FORGOT VECTOR IS NOT IN PART 1,
         // resolve innertyp
         auto typeN = std::dynamic_pointer_cast<VectorTypeNode>(typeNode);
 #ifdef DEBUG
@@ -56,12 +55,35 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         auto innerTypeN = std::dynamic_pointer_cast<TypeNode>(typeN->innerType);
         assert(typeN);
         auto innerTypeRes = globalScope->resolveType(innerTypeN->getTypeName());
-        if (innerTypeRes == nullptr) throw (typeNode->loc(), "cannot resolve innner type " + innerTypeN->getTypeName());
-
+        if (innerTypeRes == nullptr) {
+            throw TypeError(typeNode->loc(), "cannot resolve innner type " + innerTypeN->getTypeName());
+        }
+        if (innerTypeRes->baseTypeEnum == TYPE::TUPLE || innerTypeRes->baseTypeEnum == TYPE::IDENTITY || innerTypeRes->baseTypeEnum == TYPE::NULL_) {
+            throw (typeNode->loc(), "vector can only be int, real, boolean, char");
+        }
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
-        return innerTypeRes;
+
+        std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getName());  // create typenode with integer
+        resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
+        resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        return resolvedType;
 
     } else if (std::dynamic_pointer_cast<MatrixTypeNode>(typeNode)) {
+        auto typeN = std::dynamic_pointer_cast<MatrixTypeNode>(typeNode);
+        auto innerTypeN = std::dynamic_pointer_cast<TypeNode>(typeN->innerType);
+        assert(typeN);
+        auto innerTypeRes = globalScope->resolveType(innerTypeN->getTypeName());
+        if (innerTypeRes == nullptr) {
+            throw TypeError(typeNode->loc(), "cannot resolve innner type " + innerTypeN->getTypeName());
+        }
+        if (innerTypeRes->baseTypeEnum == TYPE::TUPLE || innerTypeRes->baseTypeEnum == TYPE::IDENTITY || innerTypeRes->baseTypeEnum == TYPE::NULL_) {
+            throw (typeNode->loc(), "matrix can only be int, real, boolean, char");
+        }
+        // create a new type object to set the advancedTYPE to TYPE::VECTOR
+        std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>("vector");
+        resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
+        resolvedType->vectorOrMatrixEnum = TYPE::MATRIX;
+        return resolvedType;
 
     } else if (std::dynamic_pointer_cast<StringTypeNode>(typeNode)){
 
