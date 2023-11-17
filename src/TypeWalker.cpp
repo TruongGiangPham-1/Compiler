@@ -121,10 +121,10 @@ namespace gazprea {
     }
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         // only care about vector expr node
-        if (exprNode->evaluatedType->vectorOrMatrixEnum != TYPE::NONE) {
+        if (exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::NONE) {
             return;
         }
-        assert(exprNode->evaluatedType->getBaseTypeEnumName() == "vector");
+        assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
         auto exprNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
         // promote each vector elements
         for (auto &child: exprNodeCast->getElements()) {
