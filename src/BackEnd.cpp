@@ -54,15 +54,19 @@ void BackEnd::init() {
   auto mainType = mlir::LLVM::LLVMFunctionType::get(intType, {}, false);
 
   auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
-  functionStack.push_back(mainFunc);
 
+  context.getDiagEngine().registerHandler([](mlir::Diagnostic &diag) {
+    return;
+  });
+
+  functionStack.push_back(mainFunc);
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
 }
 
 void BackEnd::verifyFunction(int line, std::string name) {
-  if (mlir::failed(mlir::verify(functionStack[functionStack.size()-1]))) {
-    throw ReturnError(1, name + " does not have a return statement reachable by all control flows");
+  if (mlir::verify(functionStack[functionStack.size()-1]).failed()) {
+    throw ReturnError(line, name + " does not have a return statement reachable by all control flows");
   }
   functionStack.pop_back();
 }
