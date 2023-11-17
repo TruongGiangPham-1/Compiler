@@ -118,6 +118,8 @@ int main(int argc, char **argv) {
       backend.generateCode(ast);
   }
   catch (CompileTimeException& e) {
+      out.close();
+      std::remove(argv[2]);
       std::cerr << e.what();
       return 1;
   }
