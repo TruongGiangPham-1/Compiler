@@ -354,6 +354,7 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
 }
 
 std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
+  codeGenerator.pushScope();
   // TODO deallocate here later.
   return walkChildren(tree);
 }

@@ -234,11 +234,19 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
 }
 
 std::string BackEnd::trackObject() {
+  std::cout << "pushing object" << std::endl;
   std::string newLabel =
       "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
-  this->objectLabels.end()->push_back(newLabel);
+  std::vector<std::string> *currentScope  = *(this->objectLabels.end() - 1);
+  currentScope->push_back(newLabel);
   this->allocatedObjects++;
   return newLabel;
+}
+
+void BackEnd::pushScope() {
+  std::vector<std::string> *labelScope = new std::vector<std::string>();
+  this->objectLabels.push_back(labelScope);
+  std::cout << "pushed scope" << std::endl;
 }
 
 mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
@@ -463,7 +471,7 @@ mlir::Value BackEnd::generateIdentityValue(TYPE type) {
 }
 
 void BackEnd::deallocateObjects() {
-  for (auto label : *objectLabels.end()) {
+  for (auto label : **(objectLabels.end() - 1)) {
     mlir::LLVM::LLVMFuncOp deallocateObject =
         module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
 

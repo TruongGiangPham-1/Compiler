@@ -71,6 +71,8 @@ public:
   void generateInitializeGlobalVar(std::string varName, mlir::Value value);
   void deallocateVectors();
   void deallocateObjects();
+  void pushScope();
+
 
   // LOOP METHOD 2: we either discard method 1 later
   void generateCompAndJump(mlir::Block *trueBlock, mlir::Block *falseBlock,
@@ -125,7 +127,7 @@ protected:
 private:
   std::vector<std::string> vectorLabels;
   // stack of labels defined in the current scope
-  std::vector<std::vector<std::string>> objectLabels;
+  std::vector<std::vector<std::string>*> objectLabels;
   std::vector<mlir::LLVM::LLVMFuncOp> functionContext;
 
   unsigned int allocatedVectors = 0;
