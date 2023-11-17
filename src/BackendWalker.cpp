@@ -14,7 +14,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 
   codeGenerator.init();
   walkChildren(tree);
-  //codeGenerator.deallocateObjects();
+  codeGenerator.deallocateObjects();
   codeGenerator.generate();
 }
 
