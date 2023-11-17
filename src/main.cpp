@@ -111,7 +111,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-  throw ReturnError(1, "help");
 #ifdef DEBUG
   std::cout << "\n\n=== CODEGEN\n";
 #endif
