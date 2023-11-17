@@ -472,7 +472,8 @@ bool commonTypeToBool(commonType* val) {
   }
 }
 
-// STANDARD LIBRARY
+// STANDARD LIBRARY. They are prefixed with __ because they can be called with regular
+// function calls in the walker.
 commonType* __length(commonType* vector)  {
   if (vector->type != VECTOR) {
     UnsupportedTypeError("Trying to take length of non-vector type");
