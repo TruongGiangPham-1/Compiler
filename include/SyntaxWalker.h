@@ -32,20 +32,20 @@ namespace gazprea {
         SyntaxWalker();
 
         // declarations
-        virtual std::any visitDecl(std::shared_ptr<DeclNode> tree);
+        std::any visitDecl(std::shared_ptr<DeclNode> tree);
 
         // === SCOPES ===
-        virtual std::any visitBlock(std::shared_ptr<BlockNode>tree);
-        virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
-        virtual std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
-        virtual std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
-        virtual std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
+        std::any visitBlock(std::shared_ptr<BlockNode>tree);
+        std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
+        std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
+        std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
+        std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
 
-        virtual std::any visitFunction(std::shared_ptr<FunctionNode> tree);
-        virtual std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
+        std::any visitFunction(std::shared_ptr<FunctionNode> tree);
+        std::any visitProcedure(std::shared_ptr<ProcedureNode> tree);
 
         // Expr
-        virtual std::any visitCall(std::shared_ptr<CallNode> tree);
+        std::any visitCall(std::shared_ptr<CallNode> tree);
     };
 
 }
