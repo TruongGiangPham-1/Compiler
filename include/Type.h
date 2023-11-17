@@ -11,6 +11,8 @@ public:
     // yikes, need to check if the type is TYPE::tuple then this vector will hav size when resolvd
     std::vector<std::pair<std::string, std::shared_ptr<Type>>> tupleChildType;
 
+    std::vector<int> dims;  // maybe can populate this in the backend?
+
     Type() {};
     virtual std::string getName() = 0;
     virtual ~Type() {}

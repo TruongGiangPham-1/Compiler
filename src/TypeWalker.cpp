@@ -64,9 +64,9 @@ namespace gazprea {
     std::string PromotedType::promotionTable[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
 /*boolean*/      {"boolean",  "",         "",         "",        "",   "boolean", ""},
-/*character*/    {"",         "boolean",  "",         "",        "",   "character", ""},
-/*integer*/      {"",         "",         "",         "real",    "",   "integer", ""},
-/*real*/         {"",         "",         "",         "",        "",   "real", ""},
+/*character*/    {"",         "character","",         "",        "",   "character", ""},
+/*integer*/      {"",         "",         "integer",  "real",    "",   "integer", ""},
+/*real*/         {"",         "",         "",         "real",    "",   "real", ""},
 /*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
 /*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
 /*null*/         {"",  "", "", "", "" , "", ""}
@@ -117,6 +117,26 @@ namespace gazprea {
             return this->nullIndex;
         } else {
                 throw std::runtime_error("Unknown type");
+        }
+    }
+    void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
+        // only care about vector expr node
+        if (exprNode->evaluatedType->getName() != "vector") {
+            return;
+        }
+        assert(exprNode->evaluatedType->getName() == "vector");
+        auto exprNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
+        // promote each vector elements
+        for (auto &child: exprNodeCast->getElements()) {
+            auto rhsIndex = getTypeIndex(child->evaluatedType->getName());
+            auto lhsIndex = getTypeIndex(promoteTo->getName());
+            auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
+            if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+            auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
+#ifdef DEBUG
+            std::cout << "promoted vector element " << child->evaluatedType->getName() << "to " << promoteTo->getName() << "\n";
+#endif
+            child->evaluatedType = resultType;  // set each vector element node to its promoted type
         }
     }
 
@@ -265,7 +285,7 @@ namespace gazprea {
             return nullptr;
         }
         if(!tree->getExprNode()) {
-            // has a type node //  add a null node :)
+            // has a type node //  add a null node :) TODO: this identity and null handling is different for matrices and vector
             std::shared_ptr<ASTNode> nullNode = std::make_shared<NullNode>(tree->loc());
             tree->addChild(nullNode);
             walk(nullNode);  // walk null node to popualte the type
@@ -324,8 +344,12 @@ namespace gazprea {
         } else if (rType->getName() == "null" || rType ->getName() == "identity") {  // if it null then we just set it to ltype
             tree->evaluatedType = lType;  //
             tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
+        } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
+            // promote all RHS vector element to ltype if exprNode is a vectorNode
+            promotedType->promoteVectorElements(lType, tree->getExprNode());
+            tree->getExprNode()->evaluatedType->baseTypeEnum = lType->baseTypeEnum;  // set the LHS vector literal type. int?real?
+            tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node
         }
-
         else if (lType->getName() != rType->getName()) {
             auto leftIndex = promotedType->getTypeIndex(rType->getName());
             auto rightIndex = promotedType->getTypeIndex(lType->getName());
@@ -336,7 +360,7 @@ namespace gazprea {
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
             tree->evaluatedType = resultType;
         }
-        else {
+        else {  // normal implicit promotion
             tree->evaluatedType = rType;
         }
         return nullptr;
@@ -571,17 +595,12 @@ namespace gazprea {
     std::any TypeWalker::visitVector(std::shared_ptr<VectorNode> tree) {
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
         for (auto &exprNode: tree->getElements()) {
-            walk(exprNode);
-        }
-        // TODO: check if all the expression node have same type
-        for (int i = 1; i < tree->getElements().size(); i++) {
-            if (tree->getElement(i)->evaluatedType->baseTypeEnum != tree->getElement(i - 1)->evaluatedType->baseTypeEnum) {
-                throw TypeError(tree->loc(), "vector cannot have mixed type");
-            }
+            walk(exprNode);  // set the evaluated type of each expr
         }
         tree->evaluatedType = std::make_shared<AdvanceType>("vector");
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
-        tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum;
+        tree->evaluatedType->baseTypeEnum = TYPE::NONE; // this will be set by visitDecl when we promote all RHS
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
         return nullptr;
     }
     std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {

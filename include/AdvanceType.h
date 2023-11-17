@@ -44,7 +44,6 @@ public:
     /*
      * vector of dimentions. if it is a Vector, dims,size() = 1, if it is a matrix, dims.size() = 2
      */
-    std::vector<mlir::Value> dims;  // maybe can populate this in the backend?
 
     AdvanceType(std::string name) : Symbol(name), typDefName(name) {
         parseBaseTypeEnum(name);
