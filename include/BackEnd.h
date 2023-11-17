@@ -118,12 +118,14 @@ protected:
   void setupPrintVec();
   void setupVectorRuntime();
   void setupCommonTypeRuntime();
+  std::string trackObject();
   mlir::Value translateToMLIRType(TYPE type);
   int writeLLVMIR();
 
 private:
   std::vector<std::string> vectorLabels;
-  std::vector<std::string> objectLabels;
+  // stack of labels defined in the current scope
+  std::vector<std::vector<std::string>> objectLabels;
   std::vector<mlir::LLVM::LLVMFuncOp> functionContext;
 
   unsigned int allocatedVectors = 0;

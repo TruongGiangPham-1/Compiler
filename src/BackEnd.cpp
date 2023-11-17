@@ -226,13 +226,19 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
         generateInteger(op)})
       ).getResult();
 
-  std::string newLabel =
-      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
-  this->objectLabels.push_back(newLabel);
+
+  auto newLabel = trackObject();
   this->generateDeclaration(newLabel, result);
-  this->allocatedObjects++;
 
   return result;
+}
+
+std::string BackEnd::trackObject() {
+  std::string newLabel =
+      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
+  this->objectLabels.end()->push_back(newLabel);
+  this->allocatedObjects++;
+  return newLabel;
 }
 
 mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
@@ -249,9 +255,7 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, this->generateInteger(toType)})).getResult();
 
   // we create a new object, have to tag it
-  std::string newLabel =
-      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
-  this->objectLabels.push_back(newLabel);
+  auto newLabel = trackObject();
   this->generateDeclaration(newLabel, result);
   this->allocatedObjects++;
 
@@ -285,11 +289,8 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
                                                     mlir::ValueRange({val, generateInteger(op)})
           ).getResult();
 
-  std::string newLabel =
-          "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
-  this->objectLabels.push_back(newLabel);
+  std::string newLabel = trackObject();
   this->generateDeclaration(newLabel, result);
-  this->allocatedObjects++;
 
   return result;
 }
@@ -356,11 +357,8 @@ mlir::Value BackEnd::generateCommonType(mlir::Value value, int type) {
       )
     .getResult();
 
-  std::string newLabel =
-      "OBJECT_NUMBER" + std::to_string(this->allocatedObjects);
-  this->objectLabels.push_back(newLabel);
+  std::string newLabel = trackObject();
   this->generateDeclaration(newLabel, result);
-  this->allocatedObjects++;
 
   return result;
 }
@@ -465,7 +463,7 @@ mlir::Value BackEnd::generateIdentityValue(TYPE type) {
 }
 
 void BackEnd::deallocateObjects() {
-  for (auto label : objectLabels) {
+  for (auto label : *objectLabels.end()) {
     mlir::LLVM::LLVMFuncOp deallocateObject =
         module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
 
@@ -527,105 +525,6 @@ void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock) {
 void BackEnd::generateReturn(mlir::Value returnVal) {
   builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
 }
-
-/**
- * Generate a vector of the given size
- */
-mlir::Value BackEnd::generateVectorOfSize(mlir::Value sizeOf) {
-  mlir::LLVM::LLVMFuncOp getTrueSizeFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("getTrueVectorSize");
-  mlir::LLVM::LLVMFuncOp makeVector =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateVector");
-
-  mlir::Value trueSize =
-      builder->create<mlir::LLVM::CallOp>(loc, getTrueSizeFunc, sizeOf)
-          .getResult();
-
-  mlir::Value structAddr =
-      builder->create<mlir::LLVM::CallOp>(loc, makeVector, trueSize)
-          .getResult();
-
-  // deallocation hack 2025
-  std::string newLabel =
-      "VECTOR_NUMBER_" + std::to_string(this->allocatedVectors);
-  this->allocatedVectors++;
-  this->vectorLabels.push_back(newLabel);
-  this->generateDeclaration(newLabel, structAddr);
-
-  return structAddr;
-}
-
-/**
- * lower is an integer value
- * upper is an integer value
- * Generate a vector from a range. [1..2]
- * */
-mlir::Value BackEnd::generateVectorFromRange(mlir::Value lower,
-                                             mlir::Value upper) {
-  mlir::Value sizeOf =
-      this->generateIntegerBinaryOperation(upper, lower, BINOP::SUB);
-  auto intType = builder->getI32Type();
-  mlir::Value one = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(intType, 1));
-  sizeOf = this->generateIntegerBinaryOperation(one, sizeOf, BINOP::ADD);
-
-  auto structAddr = this->generateVectorOfSize(sizeOf);
-
-  auto fillFunction = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("fill");
-  builder->create<mlir::LLVM::CallOp>(
-      loc, fillFunction, mlir::ValueRange({structAddr, lower, upper}));
-
-  return structAddr;
-}
-
-/**
- * @param left
- * @param right
- * @param op
- * @return the result of the OP
- */
-mlir::Value BackEnd::generateIntegerBinaryOperation(mlir::Value left,
-                                                    mlir::Value right,
-                                                    BINOP op) {
-  mlir::Value result;
-
-  switch (op) {
-  case ADD:
-    result = builder->create<mlir::LLVM::AddOp>(loc, left, right);
-    break;
-  case SUB:
-    result = builder->create<mlir::LLVM::SubOp>(loc, left, right);
-    break;
-  case MULT:
-    result = builder->create<mlir::LLVM::MulOp>(loc, left, right);
-    break;
-  case DIV:
-    result = builder->create<mlir::LLVM::SDivOp>(loc, left, right);
-    break;
-  case EQUAL:
-    result = builder->create<mlir::LLVM::ICmpOp>(
-        loc, builder->getI1Type(), mlir::LLVM::ICmpPredicate::eq, left, right);
-    break;
-  case NEQUAL:
-    result = builder->create<mlir::LLVM::ICmpOp>(
-        loc, builder->getI1Type(), mlir::LLVM::ICmpPredicate::ne, left, right);
-    break;
-  case GTHAN:
-    result = builder->create<mlir::LLVM::ICmpOp>(
-        loc, builder->getI1Type(), mlir::LLVM::ICmpPredicate::sgt, left, right);
-    break;
-  case LTHAN:
-    result = builder->create<mlir::LLVM::ICmpOp>(
-        loc, builder->getI1Type(), mlir::LLVM::ICmpPredicate::slt, left, right);
-    break;
-  }
-
-  // zero extension from I1-I32. LLVM picky about types
-  result =
-      builder->create<mlir::LLVM::ZExtOp>(loc, builder->getI32Type(), result);
-  return result;
-}
-
 
 void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {
   this->generateInitializeGlobalVar(varName, value);
