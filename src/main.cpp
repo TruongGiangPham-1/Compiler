@@ -10,6 +10,7 @@
 #include "ASTBuilder.h"
 #include "SymbolTable.h"
 #include "ASTWalker.h"
+#include "SyntaxWalker.h"
 #include "TypeWalker.h"
 #include "BackendWalker.h"
 #include "Def.h"
@@ -68,6 +69,19 @@ int main(int argc, char **argv) {
       std::cerr << e.what();
       return 1;
   }
+
+  // Additional SyntaxChecks
+#ifdef DEBUG
+    std::cout << "\n\n=== SYNTAX PASS\n";
+#endif
+    gazprea::SyntaxWalker syntaxWalker;
+    try {
+        syntaxWalker.walk(ast);
+    }
+    catch (CompileTimeException& e) {
+        std::cerr << e.what();
+        return 1;
+    }
 
 
 #ifdef DEBUG
