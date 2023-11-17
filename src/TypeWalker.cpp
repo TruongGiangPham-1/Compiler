@@ -253,7 +253,7 @@ namespace gazprea {
         walkChildren(tree);
         auto tupleId = std::dynamic_pointer_cast<IDNode>(tree->children[0]);
         if (std::dynamic_pointer_cast<IDNode>(tree->children[1])) {
-            auto index = std::dynamic_pointer_cast<IDNode>(tree->children[1])->getBaseTypeEnumName();
+            auto index = std::dynamic_pointer_cast<IDNode>(tree->children[1])->getName();
             for (auto c: tupleId->evaluatedType->tupleChildType) {
                 if (index == c.first) {
                     tree->evaluatedType = std::dynamic_pointer_cast<Type>(c.second);

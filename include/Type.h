@@ -18,7 +18,7 @@ public:
     virtual std::string getName() = 0;  // getname returnn Symbol::getname() when type is custome user type, used during typedef
     // I know its confusing , but getbaseTypeEnumName() returns the string form of TYPES.h enum
     virtual std::string getBaseTypeEnumName() = 0;
-    virtual std::string setName(std::string name) = 0;
+    virtual void setName(std::string name) = 0;
     virtual ~Type() {}
 };
 

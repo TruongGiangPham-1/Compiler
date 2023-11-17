@@ -58,7 +58,7 @@ public:
         return Symbol::getName();
     };
 
-    std::string setName(std::string name) override{
+    void setName(std::string name) override{
         this->name = name;
     };
     std::string getBaseTypeEnumName() override {
