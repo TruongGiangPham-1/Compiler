@@ -33,7 +33,11 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
   if (exprList->children.size() == 1) {
     auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
-    auto castedVal = castType(val, tree->evaluatedType);
+    
+    auto lhs = std::dynamic_pointer_cast<IDNode>(tree->getLvalue()->children[0]);
+
+    auto castedVal = castType(val, lhs->sym->typeSym);
+
     codeGenerator.generateAssignment(dest, castedVal);
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
