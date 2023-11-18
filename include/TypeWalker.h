@@ -29,6 +29,8 @@ namespace gazprea {
         int getTypeIndex(const std::string type);
         void promoteVectorElements(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode> exprNode);
         void updateVectorNodeEvaluatedType(std::shared_ptr<Type>assignType, std::shared_ptr<ASTNode> exprNode);
+        void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
+
         PromotedType(std::shared_ptr<SymbolTable> symtab);
         ~PromotedType();
     };

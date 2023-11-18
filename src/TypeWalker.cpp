@@ -119,14 +119,23 @@ namespace gazprea {
                 throw std::runtime_error("Unknown type");
         }
     }
+    void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
+        if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
+            identityNode->evaluatedType = promoteTo;
+        } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
+
+        } else {
+            identityNode->evaluatedType = promoteTo;
+        }
+        return;
+    }
+
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
-        // only care about vector expr node
         if (exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::NONE) {
             return;
-        } else if (exprNode->evaluatedType->baseTypeEnum == TYPE::NONE) {
-           // todo: create promoteVectorIdentity() function
-        } else if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY) {
-            // todo: create promoteVectorNull() function
+        } else if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY || exprNode->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+            promoteIdentityAndNull(promoteTo, exprNode);
+            return;
         }
         // TODO, handle NONE and identity exprNode
         assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
@@ -355,15 +364,18 @@ namespace gazprea {
                 }
             }
             tree->evaluatedType = rType;
-        } else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
-            tree->evaluatedType = lType;  //
-            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
+
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
             promotedType->promoteVectorElements(lType, tree->getExprNode());
             promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
             tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
             tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
+            return nullptr;
+        }
+        else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
+            tree->evaluatedType = lType;  //
+            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
         }
         else if (lType->getBaseTypeEnumName() != rType->getBaseTypeEnumName()) {
             auto leftIndex = promotedType->getTypeIndex(rType->getBaseTypeEnumName());
