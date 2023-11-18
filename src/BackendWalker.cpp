@@ -368,7 +368,6 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-  codeGenerator.deallocateObjects();
   codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
   this->returnDropped = true;
   return 0;

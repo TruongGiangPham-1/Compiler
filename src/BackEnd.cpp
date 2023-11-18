@@ -193,12 +193,16 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
   auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto commonReferenceAssign = mlir::LLVM::LLVMFunctionType::get(voidType, {commonTypeAddr, commonTypeAddr});
+  auto copy= mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
+
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
                                             lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType",
+                                            copy);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__columns",
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
@@ -271,6 +275,13 @@ mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("indexCommonType");
 
   return builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({indexee, this->generateInteger(indexor)})).getResult();
+}
+
+mlir::Value BackEnd::copyCommonType(mlir::Value val) {
+  mlir::LLVM::LLVMFuncOp copyFunc=
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("copyCommonType");
+
+  return builder->create<mlir::LLVM::CallOp>(loc, copyFunc, mlir::ValueRange({val})).getResult();
 }
 
 mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
@@ -492,6 +503,7 @@ mlir::Value BackEnd::generateIdentityValue(TYPE type) {
 }
 
 void BackEnd::deallocateObjects() {
+  std::cout << "deallocating" << std::endl;
   for (auto label : **(objectLabels.end() - 1)) {
     mlir::LLVM::LLVMFuncOp deallocateObject =
         module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
@@ -551,7 +563,9 @@ void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, int line) 
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {
-  builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
+  auto val = copyCommonType(returnVal);
+  deallocateObjects();
+  builder->create<mlir::LLVM::ReturnOp>(loc, val);
 }
 
 void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {

@@ -45,6 +45,8 @@ public:
   mlir::Value generateVectorFromRange(mlir::Value lower, mlir::Value upper);
   mlir::Value generateIndexWithInteger(mlir::Value vector, mlir::Value index);
   mlir::Value generateIndexWithVector(mlir::Value indexee, mlir::Value indexor);
+  mlir::Value copyCommonType(mlir::Value val);
+
 
   mlir::Value generateLoadValue(mlir::Value addr);
   mlir::Value generateNullValue(TYPE type);
