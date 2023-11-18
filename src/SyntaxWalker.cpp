@@ -4,7 +4,7 @@
 
 #include "SyntaxWalker.h"
 
-#define DEBUG
+//#define DEBUG
 
 namespace gazprea {
     SyntaxWalker::SyntaxWalker() {
