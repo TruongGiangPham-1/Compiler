@@ -503,7 +503,6 @@ mlir::Value BackEnd::generateIdentityValue(TYPE type) {
 }
 
 void BackEnd::deallocateObjects() {
-  std::cout << "deallocating" << std::endl;
   for (auto label : **(objectLabels.end() - 1)) {
     mlir::LLVM::LLVMFuncOp deallocateObject =
         module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
