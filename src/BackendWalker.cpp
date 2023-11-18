@@ -39,7 +39,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
       auto indexedValue = codeGenerator.indexCommonType(val, i);
-      auto castedIndexedVal = castType(indexedValue, tree->evaluatedType->tupleChildType[i].second);
+      auto castedIndexedVal = castType(indexedValue, tree->getLvalue()->children[i]->evaluatedType);
       codeGenerator.generateAssignment(dest, castedIndexedVal);
     }
   }
