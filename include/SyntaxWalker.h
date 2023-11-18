@@ -27,9 +27,12 @@ namespace gazprea {
         std::string debugGlobalScope();
 
         // CONTEXT gives us more info as to what we're currently visiting
-        // it's a vector so it's easy to push/pop
+        // it's a vector so it's easy to push/pop as we enter into new contexts
         std::vector<CONTEXT> contexts;
-        CONTEXT getCurrentContext();
+        bool inContext(CONTEXT context);
+        std::string debugContext();
+
+        static std::string contextToString(CONTEXT context);
     public:
         SyntaxWalker();
 
@@ -50,6 +53,10 @@ namespace gazprea {
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
         std::any visitVector(std::shared_ptr<VectorNode> tree) override;
 
+        // === IMPURE STATEMENTS ===
+        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+        // this also includes visitCall when it is a procedure call
     };
 
 }

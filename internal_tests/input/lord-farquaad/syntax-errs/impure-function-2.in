@@ -1,0 +1,13 @@
+procedure increment(var integer x) {
+    x = x + 1;
+}
+
+function f() returns integer {
+    integer i = 0;
+    call increment(i);
+    return 1;
+}
+
+procedure main() returns integer {
+    return 0;
+}
