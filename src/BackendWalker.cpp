@@ -30,17 +30,16 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getRvalue()));
   auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
- 
+
   if (exprList->children.size() == 1) {
     auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
-    auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
+    auto castedVal = castType(val, tree->evaluatedType);
     codeGenerator.generateAssignment(dest, castedVal);
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
       auto indexedValue = codeGenerator.indexCommonType(val, i);
-
-      auto castedIndexedVal = codeGenerator.possiblyCast(indexedValue, tree->evaluatedType);
+      auto castedIndexedVal = castType(indexedValue, tree->evaluatedType->tupleChildType[i].second);
       codeGenerator.generateAssignment(dest, castedIndexedVal);
     }
   }
@@ -48,9 +47,33 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   return 0;
 }
 
+mlir::Value BackendWalker::castType(mlir::Value val, std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
+    case TUPLE:
+      {
+        std::vector<mlir::Value> castedValues;
+        for (int i = 0 ; i < type->tupleChildType.size(); i++ ) {
+
+          auto uncastedChild = codeGenerator.indexCommonType(val, i);
+          auto destinationType = type->tupleChildType[i].second->baseTypeEnum;
+          auto castedChild = codeGenerator.cast(uncastedChild, destinationType);
+
+          std::cout << type->tupleChildType[i].second->getBaseTypeEnumName() << std::endl;
+
+          castedValues.push_back(castedChild);
+        }
+        return codeGenerator.generateValue(castedValues);
+      }
+      break;
+    default:
+      return codeGenerator.cast(val, type->baseTypeEnum);
+  }
+}
+
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-  auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
+
+  mlir::Value castedVal = castType(val, tree->evaluatedType);
 
   codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
   return 0;
