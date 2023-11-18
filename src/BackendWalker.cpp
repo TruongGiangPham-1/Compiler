@@ -24,7 +24,6 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 
   codeGenerator.init();
   walkChildren(tree);
-  codeGenerator.deallocateObjects();
   codeGenerator.generate();
 }
 
@@ -369,6 +368,7 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+  codeGenerator.deallocateObjects();
   codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
   this->returnDropped = true;
   return 0;
@@ -376,8 +376,11 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
 
 std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   codeGenerator.pushScope();
-  // TODO deallocate here later.
-  return walkChildren(tree);
+
+  auto returnVal = walkChildren(tree);
+
+  codeGenerator.popScope();
+  return returnVal;
 }
 
 //std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {

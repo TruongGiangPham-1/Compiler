@@ -259,6 +259,10 @@ void BackEnd::pushScope() {
   this->objectLabels.push_back(labelScope);
 }
 
+void BackEnd::popScope() {
+  this->objectLabels.pop_back();
+}
+
 mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("indexCommonType");

@@ -73,6 +73,8 @@ public:
   void deallocateVectors();
   void deallocateObjects();
   void pushScope();
+  void popScope();
+
 
 
   // LOOP METHOD 2: we either discard method 1 later
