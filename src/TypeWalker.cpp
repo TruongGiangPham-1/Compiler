@@ -375,7 +375,7 @@ namespace gazprea {
         }
         else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
             tree->evaluatedType = lType;  //
-            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
+            promotedType->promoteIdentityAndNull(lType, tree->getExprNode());
         }
         else if (lType->getBaseTypeEnumName() != rType->getBaseTypeEnumName()) {
             auto leftIndex = promotedType->getTypeIndex(rType->getBaseTypeEnumName());
