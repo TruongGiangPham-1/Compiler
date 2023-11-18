@@ -63,6 +63,7 @@ void BackEnd::init() {
   functionStack.push_back(mainFunc);
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
+  this->pushScope();
 }
 
 void BackEnd::verifyFunction(int line, std::string name) {
@@ -82,6 +83,8 @@ void BackEnd::generate() {
   std::vector<mlir::Value> mainArgs;
 
   this->generateCallNamed("main", mainArgs);
+  this->deallocateObjects();
+  this->popScope();
 
   auto intType = builder->getI32Type();
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
@@ -322,7 +325,11 @@ mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("__"+signature);
 
-  return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
+
+  this->generateDeclaration(trackObject(), result);
+
+  return result;
 }
 
 // === === === Printing === === ===
