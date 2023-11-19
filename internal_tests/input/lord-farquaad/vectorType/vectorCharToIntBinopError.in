@@ -1,0 +1,11 @@
+
+
+
+
+
+procedure main() returns integer {
+
+    real[2] a = ['a', 'b'] + [1.0,2.0];
+
+
+}
