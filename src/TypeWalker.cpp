@@ -93,8 +93,9 @@ namespace gazprea {
         }
 
         auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
-        // HERE vector should have identical types because possiblyPromoteBinop have make sure both vectors are same types
-        if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+        // HERE vector should have identical types because possiblyPromoteBinop have make sure both vectors are same types.
+        if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
+                                           std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
             assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
             return left->evaluatedType;
         }
@@ -280,6 +281,7 @@ namespace gazprea {
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
@@ -298,10 +300,12 @@ namespace gazprea {
             case BINOP::GTHAN:
             case BINOP::LEQ:
             case BINOP::GEQ:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->comparisonResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
             case BINOP::EQUAL:
             case BINOP::NEQUAL:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
         }
