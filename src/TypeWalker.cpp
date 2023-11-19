@@ -314,6 +314,13 @@ namespace gazprea {
 
     std::any TypeWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
         walkChildren(tree);
+        switch (tree->op) {
+            case NOT: {
+                if (tree->getExpr()->evaluatedType->baseTypeEnum != BOOLEAN) {
+                    throw TypeError(tree->loc(), "cannot apply unaryNot on non boolean");
+                }
+            }
+        }
         tree->evaluatedType = tree->getExpr()->evaluatedType;
         return nullptr;
     }
