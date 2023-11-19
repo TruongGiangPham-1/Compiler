@@ -145,6 +145,7 @@ namespace gazprea {
      * given left and right binop node
      * try to promote one side with another, vice vcerssa
      * eg: left =int vector , right =  real vector, i will promote left to a real vector
+     * TODO: i only implement this for vector binops for far. so future ill try to generalize this to all type?
      */
     void PromotedType::possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right) {
         auto LtoRpromotion = getPromotedTypeString(promotionTable, left->evaluatedType, right->evaluatedType);
