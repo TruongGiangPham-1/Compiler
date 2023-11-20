@@ -29,6 +29,8 @@ private:
   std::any visitChar(std::shared_ptr<CharNode> tree) override;
   std::any visitBool(std::shared_ptr<BoolNode> tree) override;
   std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
+  std::any visitVector(std::shared_ptr<VectorNode> tree) override;
+
 
   // Expr/Binary
   std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;

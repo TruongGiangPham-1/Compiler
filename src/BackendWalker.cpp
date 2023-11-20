@@ -34,8 +34,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
  
   if (exprList->children.size() == 1) {
     auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
-    auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
-    codeGenerator.generateAssignment(dest, castedVal);
+    codeGenerator.generateAssignment(dest, val);
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
@@ -51,6 +50,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+
   auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
 
   codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
@@ -106,6 +106,16 @@ std::any BackendWalker::visitChar(std::shared_ptr<CharNode> tree) {
 
 std::any BackendWalker::visitBool(std::shared_ptr<BoolNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
+}
+
+std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+  std::vector<mlir::Value> values;
+
+  for (auto node : tree->getElements()) {
+    values.push_back(std::any_cast<mlir::Value>(walk(node)));
+  }
+
+  return codeGenerator.generateValue(values);
 }
 
 std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
