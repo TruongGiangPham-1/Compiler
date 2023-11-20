@@ -184,8 +184,10 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 }
 
 std::any BackendWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
-  throw std::runtime_error("Not implemented!");
-  return walkChildren(tree);
+  auto lower = std::any_cast<mlir::Value>(walk(tree->getStart()));
+  auto upper = std::any_cast<mlir::Value>(walk(tree->getEnd()));
+
+  return codeGenerator.generateValue(lower, upper);
 }
 
 // === BLOCK AST NODES ===
