@@ -28,6 +28,8 @@ public:
   mlir::Value generateValue(char value);
   mlir::Value generateValue(bool value);
   mlir::Value generateValue(std::string value);
+  mlir::Value generateValue(unsigned length);
+
 
 
   void functionShowcase();
@@ -56,6 +58,8 @@ public:
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  void appendCommon(mlir::Value destination, mlir::Value item);
+
   mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 

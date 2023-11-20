@@ -188,6 +188,7 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
   auto allocateListType = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {intType});
   auto appendListType = mlir::LLVM::LLVMFunctionType::get(intType, {listTypeAddr, commonTypeAddr});
+  auto appendCommon = mlir::LLVM::LLVMFunctionType::get(intType, {commonTypeAddr, commonTypeAddr});
   auto indexCommonType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
@@ -228,6 +229,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                             allocateListType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendList",
                                             appendListType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendCommon",
+                                            appendCommon);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
@@ -296,6 +299,15 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   this->allocatedObjects++;
 
   return result;
+}
+
+void BackEnd::appendCommon(mlir::Value destination, mlir::Value item) {
+  mlir::LLVM::LLVMFuncOp appendFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendCommon");
+
+  builder->create<mlir::LLVM::CallOp>(loc, appendFunc, mlir::ValueRange({destination, item}));
+
+  return;
 }
 
 /*
@@ -450,6 +462,15 @@ mlir::Value BackEnd::generateValue(std::string value) {
   }
 
   return this->generateCommonType(string, STRING);
+}
+
+/**
+ * empty vector so we can append to it. For filters and generators
+ * */
+mlir::Value BackEnd::generateValue(unsigned length) {
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
+  auto list = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger((int) length)})).getResult();
+  return this->generateCommonType(list, VECTOR);
 }
 
 mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {

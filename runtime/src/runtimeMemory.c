@@ -24,8 +24,10 @@ typedef struct list {
 
 // allocate some memory for a new commontype
 commonType* allocateCommonType(void* value, enum TYPE type);
+commonType* allocateListOfSize(int size);
 list* allocateList(int size);
 void appendList(list* list, commonType *value);
+void appendCommon(commonType* list, commonType *value);
 void extractAndAssignValue(void* value, commonType *dest);
 
 // de-allocation. common types which are 'list' types hold an address to a list of common types
@@ -238,6 +240,10 @@ void appendList(list* list, commonType *value) {
 #endif /* ifdef DEBUGTUPLE */
 
   list->currentSize++;
+}
+
+void appendCommon(commonType* list, commonType *value) {
+  appendList(list->value, value);
 }
 
 list* copyList(list* copyFrom) {
