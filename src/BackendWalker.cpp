@@ -1,6 +1,7 @@
 #include "BackendWalker.h"
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTWalker.h"
+#include "Operands/BINOP.h"
 #include "Types/TYPES.h"
 #include "mlir/IR/Value.h"
 #include <memory>
@@ -38,7 +39,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
-      auto indexedValue = codeGenerator.indexCommonType(val, i);
+      auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i));
 
       auto castedIndexedVal = codeGenerator.possiblyCast(indexedValue, tree->evaluatedType);
       codeGenerator.generateAssignment(dest, castedIndexedVal);
@@ -138,7 +139,7 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
     indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
 
-  return codeGenerator.indexCommonType(indexee, tree->index);
+  return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index));
 }
 
 // Expr/Binary
@@ -179,6 +180,29 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 }
 
 std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
+  auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVecNode()));
+
+  // we do a little indexing
+  auto index = codeGenerator.generateValue(0);
+
+  // build arg list
+  std::vector<mlir::Value> argument;
+  argument.push_back(baseVec);
+
+  auto vecSize = codeGenerator.generateCallNamed("length", argument);
+
+  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+  mlir::Block *trueBlock = codeGenerator.generateBlock();
+  mlir::Block *exitBlock = codeGenerator.generateBlock();
+
+  codeGenerator.generateEnterBlock(loopBeginBlock);
+  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+
+  auto inBounds = codeGenerator.performBINOP(index, vecSize, LTHAN);
+
+  auto indexedItem = codeGenerator.indexCommonType(baseVec, index);
+
+
   throw std::runtime_error("Not implemented!");
   return walkChildren(tree);
 }
@@ -394,23 +418,3 @@ std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   codeGenerator.popScope();
   return returnVal;
 }
-
-//std::any BackendWalker::visitLoop(std::shared_ptr<LoopNode> tree) {
-//  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
-//  mlir::Block *trueBlock = codeGenerator.generateBlock();
-//  mlir::Block *falseBlock = codeGenerator.generateBlock();
-//
-//  codeGenerator.generateEnterBlock(loopBeginBlock);
-//  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
-//
-//  mlir::Value exprResult = std::any_cast<mlir::Value>(walk(tree->getCondition()));
-//  codeGenerator.generateCompAndJump(trueBlock, falseBlock, exprResult);
-//
-//  codeGenerator.setBuilderInsertionPoint(trueBlock);
-//  walkChildren(tree);
-//
-//  codeGenerator.generateEnterBlock(loopBeginBlock);
-//  codeGenerator.setBuilderInsertionPoint(falseBlock);
-//  return 0;
-//}
-//

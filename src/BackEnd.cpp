@@ -278,11 +278,11 @@ void BackEnd::popScope() {
   this->objectLabels.pop_back();
 }
 
-mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
+mlir::Value BackEnd::indexCommonType(mlir::Value indexee, mlir::Value indexor) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("indexCommonType");
 
-  return builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({indexee, this->generateInteger(indexor)})).getResult();
+  return builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({indexee, indexor})).getResult();
 }
 
 mlir::Value BackEnd::copyCommonType(mlir::Value val) {

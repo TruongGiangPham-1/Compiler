@@ -69,7 +69,7 @@ public:
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
   mlir::Value generateLoadArgument(size_t index);
-  mlir::Value indexCommonType(mlir::Value indexee, int indexor);
+  mlir::Value indexCommonType(mlir::Value indexee, mlir::Value indexor);
 
   void generateDeclaration(std::string varName, mlir::Value value);
   void generateAssignment(std::string varName, mlir::Value value);
