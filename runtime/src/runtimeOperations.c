@@ -490,3 +490,25 @@ commonType* __columns(commonType* matrix) {
 
   return __length(row);
 }
+
+commonType* allocateFromRange(commonType* lower, commonType* upper) {
+  commonType* castedLower = cast(lower, INTEGER);
+  commonType* castedUpper = cast(upper, INTEGER);
+
+  int lowerVal = *(int*)castedLower->value;
+  int upperVal = *(int*)castedUpper->value;
+
+  // allocate of size 1 if nothing. 1 just lets us stay consistent with de-alloc
+  list* newList = allocateList(upperVal - lowerVal <= 0 ? 1 : upperVal - lowerVal);
+
+  for (int i = lowerVal ; i < upperVal ; i++) {
+    commonType* newItem = allocateCommonType(&i, INTEGER);
+
+    appendList(newList, newItem);
+  }
+
+  deallocateCommonType(castedLower);
+  deallocateCommonType(castedUpper);
+
+  return allocateCommonType(&newList, VECTOR);
+}

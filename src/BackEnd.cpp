@@ -186,6 +186,9 @@ void BackEnd::setupCommonTypeRuntime() {
       voidType, {commonTypeAddr});
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
+  auto allocateFromRange =
+      mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr});
+
   auto allocateListType = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {intType});
   auto appendListType = mlir::LLVM::LLVMFunctionType::get(intType, {listTypeAddr, commonTypeAddr});
   auto appendCommon = mlir::LLVM::LLVMFunctionType::get(intType, {commonTypeAddr, commonTypeAddr});
@@ -227,6 +230,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
                                             allocateListType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateFromRange",
+                                            allocateFromRange);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendList",
                                             appendListType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendCommon",
@@ -301,6 +306,9 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   return result;
 }
 
+/**
+ * append to a list
+ **/
 void BackEnd::appendCommon(mlir::Value destination, mlir::Value item) {
   mlir::LLVM::LLVMFuncOp appendFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendCommon");
@@ -471,6 +479,14 @@ mlir::Value BackEnd::generateValue(unsigned length) {
   mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
   auto list = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger((int) length)})).getResult();
   return this->generateCommonType(list, VECTOR);
+}
+
+/**
+ * range thingy
+ * */
+mlir::Value BackEnd::generateValue(mlir::Value lower, mlir::Value upper) {
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateFromRange");
+  return builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({lower, upper})).getResult();
 }
 
 mlir::Value BackEnd::generateValue(std::vector<mlir::Value> values) {

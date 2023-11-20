@@ -28,8 +28,8 @@ public:
   mlir::Value generateValue(char value);
   mlir::Value generateValue(bool value);
   mlir::Value generateValue(std::string value);
+  mlir::Value generateValue(mlir::Value lower, mlir::Value upper);
   mlir::Value generateValue(unsigned length);
-
 
 
   void functionShowcase();
