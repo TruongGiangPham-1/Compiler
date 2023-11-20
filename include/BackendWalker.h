@@ -67,7 +67,9 @@ private:
   std::any visitNull(std::shared_ptr<NullNode> tree) override;
   std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
+  mlir::Value castType(mlir::Value, std::shared_ptr<Type> type);
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};
+
   void generateCode(std::shared_ptr<ASTNode> tree);
 };

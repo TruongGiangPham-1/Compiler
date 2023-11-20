@@ -170,9 +170,6 @@ void deallocateList(list* list) {
   printf("=== LIST ===\n");
 #endif /* ifdef DEBUGMEMORY */
 
-    for (int i = 0; i < list->currentSize ; i++) {
-      deallocateCommonType(list->values[i]);
-    }
     free(list->values);
     free(list);
 

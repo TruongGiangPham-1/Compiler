@@ -63,6 +63,7 @@ void BackEnd::init() {
   functionStack.push_back(mainFunc);
   mainEntry = mainFunc.addEntryBlock();
   builder->setInsertionPointToStart(mainEntry);
+  this->pushScope();
 }
 
 void BackEnd::verifyFunction(int line, std::string name) {
@@ -82,6 +83,8 @@ void BackEnd::generate() {
   std::vector<mlir::Value> mainArgs;
 
   this->generateCallNamed("main", mainArgs);
+  this->deallocateObjects();
+  this->popScope();
 
   auto intType = builder->getI32Type();
   mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
@@ -190,12 +193,16 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
   auto commonCastType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
   auto commonReferenceAssign = mlir::LLVM::LLVMFunctionType::get(voidType, {commonTypeAddr, commonTypeAddr});
+  auto copy= mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
+
   auto commonBinopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr, intType});
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
                                             lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType",
+                                            copy);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__columns",
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
@@ -259,11 +266,22 @@ void BackEnd::pushScope() {
   this->objectLabels.push_back(labelScope);
 }
 
+void BackEnd::popScope() {
+  this->objectLabels.pop_back();
+}
+
 mlir::Value BackEnd::indexCommonType(mlir::Value indexee, int indexor) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("indexCommonType");
 
   return builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({indexee, this->generateInteger(indexor)})).getResult();
+}
+
+mlir::Value BackEnd::copyCommonType(mlir::Value val) {
+  mlir::LLVM::LLVMFuncOp copyFunc=
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("copyCommonType");
+
+  return builder->create<mlir::LLVM::CallOp>(loc, copyFunc, mlir::ValueRange({val})).getResult();
 }
 
 mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
@@ -318,7 +336,11 @@ mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("__"+signature);
 
-  return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
+
+  this->generateDeclaration(trackObject(), result);
+
+  return result;
 }
 
 // === === === Printing === === ===
@@ -540,7 +562,9 @@ void BackEnd::generateEndFunctionDefinition(mlir::Block* returnBlock, int line) 
 }
 
 void BackEnd::generateReturn(mlir::Value returnVal) {
-  builder->create<mlir::LLVM::ReturnOp>(loc, returnVal);
+  auto val = copyCommonType(returnVal);
+  deallocateObjects();
+  builder->create<mlir::LLVM::ReturnOp>(loc, val);
 }
 
 void BackEnd::generateDeclaration(std::string varName, mlir::Value value) {
