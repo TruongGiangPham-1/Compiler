@@ -1,0 +1,4 @@
+procedure main() returns integer {
+    integer a = 9999999999999999999999999999999999999999999999999;
+    return 0;
+}
