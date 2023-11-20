@@ -245,8 +245,10 @@ namespace gazprea {
         }
     }
 
-
     std::any ASTBuilder::visitLiteralString(GazpreaParser::LiteralStringContext *ctx) {
+        // ANTLR does a good job in escaping backslashes and other chars
+        // so I just retrieve the value as is
+        // not sure if we'll have to do work to go back and account for escape sequences
 #ifdef DEBUG
         std::cout << "visitLiteralString" << ctx->getText() << std::endl;
 #endif
