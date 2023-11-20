@@ -110,6 +110,7 @@ set(
         ../include/ASTNode/Expr/Literal/MatrixNode.h
         SyntaxWalker.cpp
         ../include/SyntaxWalker.h
+        ASTNode/Expr/Literal/StringNode.cpp
 )
 
 # Build our executable from the source files.
