@@ -32,7 +32,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op);
 
 // index a type
-commonType* indexCommonType(commonType* indexee, int indexor);
+commonType* indexCommonType(commonType* indexee, commonType* indexor);
 
 // turn into bool for llvm control flow
 bool commonTypeToBool(commonType* val);
@@ -432,9 +432,9 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 }
 
 // assume we are indexing a tuploe item
-commonType* indexCommonType(commonType* indexee, int indexor) {
+commonType* indexCommonType(commonType* indexee, commonType* indexor) {
   list* list = indexee->value;
-  return list->values[indexor];
+  return list->values[*(int*)indexor->value];
 }
 
 // https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar
