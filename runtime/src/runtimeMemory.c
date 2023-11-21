@@ -26,6 +26,7 @@ typedef struct list {
 commonType* allocateCommonType(void* value, enum TYPE type);
 commonType* allocateListOfSize(int size);
 list* allocateList(int size);
+list* allocateListFromCommon(commonType* size);
 void appendList(list* list, commonType *value);
 void appendCommon(commonType* list, commonType *value);
 void extractAndAssignValue(void* value, commonType *dest);
@@ -220,6 +221,10 @@ list* allocateList(int size) {
   
   return newList;
 };
+
+list* allocateListFromCommon(commonType* size) {
+  return allocateList(*(int*)size->value);
+}
 
 /**
  * Add item to our tuple, we can potentially go over bounds....

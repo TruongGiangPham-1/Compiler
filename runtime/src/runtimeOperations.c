@@ -466,7 +466,7 @@ commonType* __length(commonType* vector)  {
     UnsupportedTypeError("Trying to take length of non-vector type");
   }
 
-  int length = ((list*)vector->value)->size;
+  int length = ((list*)vector->value)->currentSize;
 
   return allocateCommonType(&length, INTEGER);
 }

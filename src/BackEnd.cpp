@@ -55,10 +55,6 @@ void BackEnd::init() {
 
   auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
 
-  // override handler to not output to stderr
-  context.getDiagEngine().registerHandler([](mlir::Diagnostic &diag) {
-    return;
-  });
 
   functionStack.push_back(mainFunc);
   mainEntry = mainFunc.addEntryBlock();
@@ -190,6 +186,7 @@ void BackEnd::setupCommonTypeRuntime() {
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr});
 
   auto allocateListType = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {intType});
+  auto allocateListFromCommon = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {commonTypeAddr});
   auto appendListType = mlir::LLVM::LLVMFunctionType::get(intType, {listTypeAddr, commonTypeAddr});
   auto appendCommon = mlir::LLVM::LLVMFunctionType::get(intType, {commonTypeAddr, commonTypeAddr});
   auto indexCommonType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr});
@@ -230,6 +227,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
                                             allocateListType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateListFromCommon",
+                                            allocateListFromCommon);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateFromRange",
                                             allocateFromRange);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendList",
@@ -475,9 +474,10 @@ mlir::Value BackEnd::generateValue(std::string value) {
 /**
  * empty vector so we can append to it. For filters and generators
  * */
-mlir::Value BackEnd::generateValue(unsigned length) {
-  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateList");
-  auto list = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger((int) length)})).getResult();
+mlir::Value BackEnd::generateValue(mlir::Value length) {
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateListFromCommon");
+  auto list = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({length})).getResult();
+
   return this->generateCommonType(list, VECTOR);
 }
 
@@ -726,17 +726,6 @@ void BackEnd::setBuilderInsertionPoint(
   builder->setInsertionPointToEnd(block);
 }
 
-mlir::Value BackEnd::generateIndexWithInteger(mlir::Value vector,
-                                              mlir::Value index) {
-  // result is sizeof indexor
-  auto vectorToIntegerIndex =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("vectorToIntegerIndex");
-  return builder
-      ->create<mlir::LLVM::CallOp>(loc, vectorToIntegerIndex,
-                                   mlir::ValueRange({vector, index}))
-      .getResult();
-}
-
 /*
  * Given an MLIR Value of a commonType,
  * returns an MLIR value of the downcasted boolean value as an i1 type
@@ -747,98 +736,6 @@ mlir::Value BackEnd::downcastToBool(mlir::Value val) {
                                              downcastFunc,
                                              mlir::ValueRange({val})
   ).getResult();
-}
-
-/*
- * @param: domainVecAddr
- * size = domainVecAddr->vectorObj->size
- * Global domainVar = *(rangeVecAddr->vector)   // need to define this in global
- * variable i = 0  // this needs to be malloced cuz we cannot changed the
- * constant once declaed
- */
-mlir::Value BackEnd::generateGeneratorBegin(mlir::Value domainVecAddr,
-                                            std::string domainVar) {
-  mlir::Type intType = builder->getI32Type();
-  mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(intType, 0));
-
-  return zero;
-}
-
-mlir::Value BackEnd::getVectorSize(mlir::Value vectorAddr) {
-  mlir::Type intType = builder->getI32Type();
-  mlir::Value zero = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(intType, 0));
-  mlir::Value one = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(intType, 1));
-
-  mlir::Value sizeAddr = builder->create<mlir::LLVM::GEPOp>(
-      loc, mlir::LLVM::LLVMPointerType::get(intType), vectorAddr,
-      mlir::ValueRange({zero, one}));
-  mlir::Value size = builder->create<mlir::LLVM::LoadOp>(loc, sizeAddr);
-  return size;
-}
-
-void BackEnd::generateStoreValueInVector(mlir::Value vectorAddr,
-                                         mlir::Value index,
-                                         mlir::Value exprResult) {
-  // store
-  auto vectorStoreValueAtIndexFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("vectorStoreValueAtIndex");
-  builder->create<mlir::LLVM::CallOp>(
-      loc, vectorStoreValueAtIndexFunc,
-      mlir::ValueRange({vectorAddr, index, exprResult}));
-  // increment i;
-}
-
-/*
- * @param: indexAddr
- * load i, (indexArr)
- * i = i + 1
- * store i, (indexArr)
- */
-void BackEnd::generateIncrementIndex(mlir::Value indexAddr) {
-  mlir::Value one = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(builder->getI32Type(), 1));
-  mlir::Value index = builder->create<mlir::LLVM::LoadOp>(loc, indexAddr);
-  mlir::Value nextIndex =
-      builder->create<mlir::LLVM::AddOp>(loc, index, one); // i = i + 1;
-
-  builder->create<mlir::LLVM::StoreOp>(
-      loc, nextIndex, indexAddr); // upadte the indexAddr to next in
-}
-
-/*
- * @param: domainVecAddr: address to the domain vector
- * @indexAddr: index addr
- * @domainVar: the domain variable already declared in global
- *
- * update the domainVar, whose declared on global, to the next value taken from
- * rangevector. i.e @DomainVar = rangeVec[++i]
- */
-void BackEnd::generateUpdateDomainVar(mlir::Value domainVecAddr,
-                                      mlir::Value indexAddr,
-                                      std::string domainVar) {
-  mlir::Value index = builder->create<mlir::LLVM::LoadOp>(loc, indexAddr);
-  auto vectorLoadValueAtIndexFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("vectorLoadValueAtIndex");
-  mlir::Value elementAtIndex =
-      builder
-          ->create<mlir::LLVM::CallOp>(loc, vectorLoadValueAtIndexFunc,
-                                       mlir::ValueRange({domainVecAddr, index}))
-          .getResult();
-  this->generateAssignment(
-      domainVar, elementAtIndex); // update the domainVar to hold the next
-}
-
-mlir::Value BackEnd::generateValuePtr(mlir::Value value) {
-  mlir::Value one = builder->create<mlir::LLVM::ConstantOp>(
-      loc, builder->getIntegerAttr(builder->getI32Type(), 1));
-  mlir::Value indexAddr = builder->create<mlir::LLVM::AllocaOp>(
-      loc, mlir::LLVM::LLVMPointerType::get(value.getType()), one, 0);
-
-  builder->create<mlir::LLVM::StoreOp>(loc, value, indexAddr);
-  return indexAddr;
 }
 
 mlir::Value BackEnd::generateLoadIdentifierPtr(std::string varName) {

@@ -80,6 +80,7 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   if (tree->sym->index >= 0) {
     return codeGenerator.generateLoadArgument(tree->sym->index);
   } else {
+    std::cout << "trying to load " << tree->sym->mlirName << std::endl;
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
 }
@@ -180,28 +181,49 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 }
 
 std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
-  auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVecNode()));
 
-  // we do a little indexing
-  auto index = codeGenerator.generateValue(0);
+  if (tree->getVectDomain()) {
+    auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVectDomain()));
 
-  // build arg list
-  std::vector<mlir::Value> argument;
-  argument.push_back(baseVec);
+    // we do a little indexing
+    auto index = codeGenerator.generateValue(0);
+    auto domain = codeGenerator.generateValue(0);
+    auto one = codeGenerator.generateValue(1);
 
-  auto vecSize = codeGenerator.generateCallNamed("length", argument);
+    // build arg list
+    std::vector<mlir::Value> argument;
+    argument.push_back(baseVec);
 
-  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
-  mlir::Block *trueBlock = codeGenerator.generateBlock();
-  mlir::Block *exitBlock = codeGenerator.generateBlock();
+    codeGenerator.generateDeclaration(tree->domainVar1Sym->mlirName, domain);
 
-  codeGenerator.generateEnterBlock(loopBeginBlock);
-  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+    auto length = codeGenerator.generateCallNamed("length", argument);
+    auto generatorVector = codeGenerator.generateValue(length);
 
-  auto inBounds = codeGenerator.performBINOP(index, vecSize, LTHAN);
+    mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+    mlir::Block *trueBlock = codeGenerator.generateBlock();
+    mlir::Block *exitBlock = codeGenerator.generateBlock();
 
-  auto indexedItem = codeGenerator.indexCommonType(baseVec, index);
+    codeGenerator.generateEnterBlock(loopBeginBlock);
+    codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+ 
+    auto inBounds = codeGenerator.performBINOP(index, length, LTHAN);
 
+    codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds)); 
+
+    codeGenerator.setBuilderInsertionPoint(trueBlock);
+    auto indexedVal = codeGenerator.indexCommonType(baseVec, index);
+    codeGenerator.generateAssignment(domain, indexedVal);
+
+    auto result = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+
+    codeGenerator.appendCommon(generatorVector, result);
+    codeGenerator.generateAssignment(index, codeGenerator.performBINOP(index, one, ADD));
+
+    codeGenerator.generateEnterBlock(loopBeginBlock);
+    codeGenerator.setBuilderInsertionPoint(exitBlock);
+
+    return generatorVector;
+  }
 
   throw std::runtime_error("Not implemented!");
   return walkChildren(tree);
