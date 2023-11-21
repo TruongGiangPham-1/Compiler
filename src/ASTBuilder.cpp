@@ -188,6 +188,12 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitInt " << ctx->getText() << std::endl;
 #endif
+        try {
+            std::stoi(ctx->getText());
+        } catch (std::out_of_range &e) {
+            throw LiteralError(ctx->getStart()->getLine(), "integer literal out of range " + ctx->getText());
+        }
+
         std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
@@ -243,6 +249,21 @@ namespace gazprea {
             auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
             return std::dynamic_pointer_cast<ASTNode>(t);
         }
+    }
+
+    std::any ASTBuilder::visitLiteralString(GazpreaParser::LiteralStringContext *ctx) {
+        // ANTLR does a good job in escaping backslashes and other chars
+        // so I just retrieve the value as is
+        // not sure if we'll have to do work to go back and account for escape sequences
+#ifdef DEBUG
+        std::cout << "visitLiteralString" << ctx->getText() << std::endl;
+#endif
+        auto t = std::make_shared<StringNode>(ctx->getStart()->getLine());
+
+        std::string val = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+        t->val = val;
+
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     std::any ASTBuilder::visitLiteralVector(GazpreaParser::LiteralVectorContext *ctx) {
@@ -650,7 +671,7 @@ namespace gazprea {
 #endif
       auto funcSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto functionNode = std::make_shared<FunctionNode>(ctx->getStart()->getLine(), funcSymbol);
-      for (auto arg : ctx->parameter()) {
+      for (auto arg : ctx->funcParameter()) {
         auto argResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
 
         functionNode->orderedArgs.push_back(argResult);
@@ -697,6 +718,24 @@ namespace gazprea {
       }
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
+    }
+
+    std::any ASTBuilder::visitFuncParameter(GazpreaParser::FuncParameterContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting function parameter" << std::endl;
+#endif
+
+        auto argNode = std::make_shared<ArgNode>(ctx->getStart()->getLine());
+
+        std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
+
+        auto typeNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+
+        argNode->idSym = identifierSymbol;
+        argNode->type = typeNode;
+        argNode->qualifier = QUALIFIER::CONST;
+
+        return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
     std::any ASTBuilder::visitFuncCall(GazpreaParser::FuncCallContext *ctx) {
         // this is #funcCall rule in expr rule
@@ -746,4 +785,24 @@ namespace gazprea {
       return std::dynamic_pointer_cast<ASTNode>(returnNode);
     }
 
+    std::any ASTBuilder::visitGenerator(GazpreaParser::GeneratorContext *ctx) {
+        std::string domainVar1 = ctx->ID(0)->getSymbol()->getText();
+        std::string domainVar2 = "";
+        if (ctx->ID().size() == 2) domainVar2 = ctx->ID(1)->getSymbol()->getText();
+        std::shared_ptr<GeneratorNode> gNode = std::make_shared<GeneratorNode>(domainVar1,domainVar2, ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            gNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(gNode);
+    }
+
+    std::any ASTBuilder::visitFilter(GazpreaParser::FilterContext *ctx) {
+        std::string domainVar = ctx->ID()->getSymbol()->getText();
+        std::shared_ptr<FilterNode> fNode = std::make_shared<FilterNode>(domainVar, ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            fNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(fNode);
+    }
 }
+

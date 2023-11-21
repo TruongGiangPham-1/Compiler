@@ -614,6 +614,31 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
+        // filter is just an integer tuple right?
+        walkChildren(tree);
+        auto tupleSize = tree->getExprList().size() + 1;  // + 1 for the last vector that did not satisfy any condition
+        auto tupleType = std::make_shared<AdvanceType>("tuple");
+        for (int i = 0; i < tupleSize; i++) {
+            tupleType->tupleChildType.push_back(std::make_pair("", currentScope->resolveType("integer")));
+        }
+        tree->evaluatedType = tupleType;
+        return nullptr;
+    }
+    std::any TypeWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
+        walkChildren(tree);
+        tree->evaluatedType = tree->getExpr()->evaluatedType;
+        tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
+        walkChildren(tree);
+        tree->evaluatedType = tree->getStart()->evaluatedType;
+        tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
+        return nullptr;
+    }
+
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
             case TYPE::BOOLEAN:

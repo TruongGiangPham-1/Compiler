@@ -6,7 +6,7 @@ class StringNode: public ExprNode {
 public:
     std::string val;
 
-    StringNode(int line, std::string val) : ExprNode(line), val(val) {};
+    StringNode(int line);
 
     std::string toString() override;
     std::string getVal();
