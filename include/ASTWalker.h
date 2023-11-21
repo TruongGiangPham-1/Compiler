@@ -14,6 +14,7 @@
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
+#include "ASTNode/Expr/Literal/StringNode.h"
 #include "ASTNode/Expr/Literal/TupleNode.h"
 #include "ASTNode/Expr/Literal/VectorNode.h"
 #include "ASTNode/Expr/Literal/MatrixNode.h"
@@ -63,6 +64,7 @@ namespace gazprea {
         virtual std::any visitReal(std::shared_ptr<RealNode> tree);
         virtual std::any visitTuple(std::shared_ptr<TupleNode> tree);
         virtual std::any visitChar(std::shared_ptr<CharNode> tree);
+        virtual std::any visitString(std::shared_ptr<StringNode> tree);
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
         virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
         virtual std::any visitVector(std::shared_ptr<VectorNode> tree);

@@ -133,6 +133,11 @@ namespace gazprea {
             std::cout << "about to visit Char" << std::endl;
 #endif // DEBUG
             return this->visitChar(std::dynamic_pointer_cast<CharNode>(tree));
+        } else if (std::dynamic_pointer_cast<StringNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit String" << std::endl;
+#endif // DEBUG
+            return this->visitString(std::dynamic_pointer_cast<StringNode>(tree));
 
         }else if (std::dynamic_pointer_cast<BinaryArithNode>(tree)) {
 #ifdef DEBUG
@@ -325,6 +330,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitChar(std::shared_ptr<CharNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitString(std::shared_ptr<StringNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitVector(std::shared_ptr<VectorNode> tree) {
