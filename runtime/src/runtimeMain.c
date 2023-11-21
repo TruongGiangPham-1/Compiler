@@ -117,7 +117,25 @@ void streamOut(commonType *type) {
   printType(type, false);
 }
 
-void streamIn(commonType *type) {
+enum StreamStateErr {
+  STREAM_STATE_ERR = 1,
+  STREAM_STATE_EOF = 2,
+};
+
+void setStreamState(int* state, enum StreamStateErr err, commonType *type) {
+    // given the streamState error and the type, set the streamState
+    if (type->type == CHAR) {
+        // the only possible error for a char is EOF, where we set streamState to 0
+        *state = 0;
+        return;
+    } else {
+        // in all other cases, set the state to the integer value of the streamStateErr
+        *state = err;
+    }
+}
+
+
+void streamIn(commonType *type, int* streamState) {
   // to handle scanf errors, we check the return value
   // the return value of scanf is the number of validly converted args
   // https://stackoverflow.com/a/5969152
@@ -158,14 +176,21 @@ void streamIn(commonType *type) {
 
     // check end of file (for char)
     // https://stackoverflow.com/a/1428924
-    if (feof(stdin) && type->type == CHAR) {
-      // val is now -1
-      *(char*)type->value = -1;
-      return;
+    if (feof(stdin)) {
+      if (type->type == CHAR) {
+          // if a char encounters a streamState, set to -1
+          // val is now -1
+          *(char *) type->value = -1;
+          return;
+      }
+
+      // set new streamState
+      setStreamState(streamState, STREAM_STATE_EOF, type);
     }
 
     // in all other cases, set to the "default" value of the type
     setToNullValue(type);
+    setStreamState(streamState, STREAM_STATE_ERR, type);
   }
 }
 

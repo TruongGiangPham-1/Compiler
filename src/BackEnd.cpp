@@ -136,6 +136,7 @@ void BackEnd::functionShowcase() {
     // lookup getStreamState runtime function
     auto getStreamStateFunc= module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("getStreamState");
     builder->create<mlir::LLVM::CallOp>(loc, getStreamStateFunc, mlir::ValueRange({streamStatePtr}));
+    builder->create<mlir::LLVM::CallOp>(loc, getStreamStateFunc, mlir::ValueRange({streamStatePtr}));
 }
 
 BackEnd::BackEnd(std::ostream &out)
@@ -193,6 +194,8 @@ void BackEnd::setupCommonTypeRuntime() {
 
   auto printType = mlir::LLVM::LLVMFunctionType::get(
       voidType, {commonTypeAddr});
+  auto streamInType = mlir::LLVM::LLVMFunctionType::get(
+      voidType, {commonTypeAddr, intPtrType});
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
   auto allocateListType = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {intType});
@@ -217,7 +220,7 @@ void BackEnd::setupCommonTypeRuntime() {
                                             printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamOut",
                                           printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", printType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", streamInType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
@@ -359,9 +362,14 @@ void BackEnd::streamOut(mlir::Value value) {
  * Reads from stdin (based on the type of the value) and assigns
  */
 void BackEnd::streamIn(mlir::Value value) {
+    // run getStreamState with streamStatePtr
+    auto streamState = module.lookupSymbol<mlir::LLVM::GlobalOp>("streamState");
+    // MLIR doesn't allow direct access to globals, so we have to use an addressof
+    auto streamStatePtr = builder->create<mlir::LLVM::AddressOfOp>(loc, streamState);
+
     mlir::LLVM::LLVMFuncOp streamInFunc =
             module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamIn");
-    builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, value);
+    builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, mlir::ValueRange({value, streamStatePtr}));
 }
 
 // === === === TYPEs === === === 
