@@ -1,0 +1,5 @@
+function pythag(const real a, real b) returns real = (a^2 + b^2)^(1./2);
+
+procedure main() returns integer {
+    return 0;
+}

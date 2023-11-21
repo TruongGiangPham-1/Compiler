@@ -22,11 +22,11 @@ class ErrorListener : public antlr4::BaseErrorListener {
 
         // reverse the grammar stack
         std::reverse(rule_stack.begin(), rule_stack.end());
-        std::cout << "rule stack: [";
-        for (auto str: rule_stack) {
-            std::cout << " " << str;
-        }
-        std::cout <<  "]\n";
+//        std::cout << "rule stack: [";
+//        for (auto str: rule_stack) {
+//            std::cout << " " << str;
+//        }
+//        std::cout <<  "]\n";
         //TODO: what else to print?
         throw SyntaxError(line,
                           msg); // Throw antlr syntax error and crash program

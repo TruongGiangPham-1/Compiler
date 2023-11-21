@@ -656,7 +656,7 @@ namespace gazprea {
 #endif
       auto funcSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
       auto functionNode = std::make_shared<FunctionNode>(ctx->getStart()->getLine(), funcSymbol);
-      for (auto arg : ctx->parameter()) {
+      for (auto arg : ctx->funcParameter()) {
         auto argResult = std::any_cast<std::shared_ptr<ASTNode>>(visit(arg));
 
         functionNode->orderedArgs.push_back(argResult);
@@ -703,6 +703,24 @@ namespace gazprea {
       }
 
       return std::dynamic_pointer_cast<ASTNode>(argNode);
+    }
+
+    std::any ASTBuilder::visitFuncParameter(GazpreaParser::FuncParameterContext *ctx) {
+#ifdef DEBUG
+        std::cout << "Visiting function parameter" << std::endl;
+#endif
+
+        auto argNode = std::make_shared<ArgNode>(ctx->getStart()->getLine());
+
+        std::shared_ptr<Symbol> identifierSymbol = std::make_shared<Symbol>(ctx->ID()->getText());
+
+        auto typeNode = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+
+        argNode->idSym = identifierSymbol;
+        argNode->type = typeNode;
+        argNode->qualifier = QUALIFIER::CONST;
+
+        return std::dynamic_pointer_cast<ASTNode>(argNode);
     }
     std::any ASTBuilder::visitFuncCall(GazpreaParser::FuncCallContext *ctx) {
         // this is #funcCall rule in expr rule
