@@ -658,6 +658,32 @@ namespace gazprea {
 
         return 0;
     }
+    std::any Ref::visitFilter(std::shared_ptr<FilterNode> tree) {
+        walk(tree->getDomain());
+
+        auto scopeName = "filterScope" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(scopeName, currentScope);
+        // define domain var
+        auto intType = currentScope->resolveType("integer");  // domain var is just int right?
+        auto domainVarSym = std::make_shared<VariableSymbol>(tree->domainVar, intType);
+        domainVarSym->scope = currentScope;
+        domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
+        currentScope->define(domainVarSym);
+        tree->domainVarSym = domainVarSym;
+#ifdef DEBUG
+        std::cout << "in line " << tree->loc()
+                      << "domainVar=" << tree->domainVar << " defined as "
+                      << domainVarSym->mlirName << std::endl;
+#endif
+
+        for (auto &expr: tree->getExprList()) {
+            walk(expr);
+        }
+
+        currentScope = symtab->exitScope(currentScope);
+
+        return 0;
+    }
 
 
 

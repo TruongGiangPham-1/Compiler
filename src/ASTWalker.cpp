@@ -446,4 +446,5 @@ namespace gazprea {
     std::any ASTWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
         return this->walkChildren(tree);
     }
+
 }

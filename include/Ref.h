@@ -74,6 +74,7 @@ namespace gazprea {
 
 
         std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
+        std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
         // miscaleous function
         void printTupleType(std::shared_ptr<Type> ty);
 
