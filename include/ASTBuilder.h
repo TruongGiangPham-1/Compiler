@@ -122,8 +122,8 @@ namespace gazprea {
         std::any visitStreamOut(GazpreaParser::StreamOutContext *ctx) override;
 
         std::any visitRange(GazpreaParser::RangeContext *ctx) override;
-        //std::any visitGenerator(GazpreaParser::GeneratorContext *ctx) override;
-        //std::any visitFilter(GazpreaParser::FilterContext *ctx) override;
+        std::any visitGenerator(GazpreaParser::GeneratorContext *ctx) override;
+        std::any visitFilter(GazpreaParser::FilterContext *ctx) override;
     };
 
 }

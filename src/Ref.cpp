@@ -603,6 +603,61 @@ namespace gazprea {
             }
         }
     }
+    std::any Ref::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
+        if (tree->domainVar1 == tree->domainVar2) throw  SymbolError(tree->loc(), "redefinition of domainVar");
+        int isVec = 1;
+        // walk the domain var to resolve them first
+        if (tree->getVectDomain()) {
+            // this is a vector generator
+            walk(tree->getVectDomain());
+        } else {
+            // this is a matrix generator
+            isVec = 0;
+            auto domainPair = tree->getMatrixDomain();
+            walk(domainPair.first);
+            walk(domainPair.second);
+        }
+
+        auto scopeName = "generatorScope" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(scopeName, currentScope);
+
+        // define domain var
+        auto intType = currentScope->resolveType("integer");  // domain var is just int right?
+        auto domainVar1Sym = std::make_shared<VariableSymbol>(tree->domainVar1, intType);
+        auto domainVar2Sym = std::make_shared<VariableSymbol>(tree->domainVar2, intType);
+        domainVar1Sym->scope = currentScope;
+        domainVar1Sym->mlirName = "VAR_DEF" + std::to_string(getNextId());
+        tree->scope = currentScope;
+        if (isVec) {
+            currentScope->define(domainVar1Sym);
+            tree->domainVar1Sym = domainVar1Sym;
+#ifdef DEBUG
+            std::cout << "in line " << tree->loc()
+                      << "domainVar1=" << tree->domainVar1 << " defined as "
+                      << domainVar1Sym->mlirName << std::endl;
+#endif
+        } else {
+            domainVar2Sym->scope = currentScope;
+            domainVar2Sym->mlirName = "VAR_DEF" + std::to_string(getNextId());
+            currentScope->define(domainVar1Sym);
+            currentScope->define(domainVar2Sym);
+            tree->domainVar1Sym = domainVar1Sym;
+            tree->domainVar2Sym = domainVar2Sym;
+#ifdef DEBUG
+            std::cout << "in line " << tree->loc()
+              << "domainVar1=" << tree->domainVar1 << " defined as "
+              << domainVar1Sym->mlirName <<  " domainVar2=" << tree->domainVar2 << " defined as "
+              << domainVar2Sym->mlirName <<
+              std::endl;
+#endif
+        }
+
+        // walk expr
+        walk(tree->getExpr());
+        currentScope = symtab->exitScope(currentScope);
+
+        return 0;
+    }
 
 
 

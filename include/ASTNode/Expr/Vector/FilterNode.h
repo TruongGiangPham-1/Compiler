@@ -11,6 +11,6 @@ public:
 
     std::string toString() override;
 
-    std::shared_ptr<ASTNode> getVecNode();
-    std::shared_ptr<ASTNode> getExpr();
+    std::shared_ptr<ASTNode> getDomain();
+    std::vector<std::shared_ptr<ASTNode>> getExprList();
 };

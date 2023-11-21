@@ -73,6 +73,7 @@ namespace gazprea {
         std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
 
 
+        std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
         // miscaleous function
         void printTupleType(std::shared_ptr<Type> ty);
 

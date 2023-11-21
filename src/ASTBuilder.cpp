@@ -746,4 +746,24 @@ namespace gazprea {
       return std::dynamic_pointer_cast<ASTNode>(returnNode);
     }
 
+    std::any ASTBuilder::visitGenerator(GazpreaParser::GeneratorContext *ctx) {
+        std::string domainVar1 = ctx->ID(0)->getSymbol()->getText();
+        std::string domainVar2 = "";
+        if (ctx->ID().size() == 2) domainVar2 = ctx->ID(1)->getSymbol()->getText();
+        std::shared_ptr<GeneratorNode> gNode = std::make_shared<GeneratorNode>(domainVar1,domainVar2, ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            gNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(gNode);
+    }
+
+    std::any ASTBuilder::visitFilter(GazpreaParser::FilterContext *ctx) {
+        std::string domainVar = ctx->ID()->getSymbol()->getText();
+        std::shared_ptr<FilterNode> fNode = std::make_shared<FilterNode>(domainVar, ctx->getStart()->getLine());
+        for (auto expr: ctx->expression()) {
+            fNode->addChild(visit(expr));
+        }
+        return std::dynamic_pointer_cast<ASTNode>(fNode);
+    }
 }
+
