@@ -155,7 +155,13 @@ namespace gazprea {
             std::cout << "about to visit literal Matrix" << std::endl;
 #endif // DEBUG
             return this->visitMatrix(std::dynamic_pointer_cast<MatrixNode>(tree));
-        } else if (std::dynamic_pointer_cast<BinaryCmpNode>(tree)) {
+        }  else if (std::dynamic_pointer_cast<GeneratorNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit generator" << std::endl;
+#endif // DEBUG
+            return this->visitGenerator(std::dynamic_pointer_cast<GeneratorNode>(tree));
+        }
+        else if (std::dynamic_pointer_cast<BinaryCmpNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Cmp" << std::endl;
 #endif // DEBUG
@@ -448,4 +454,5 @@ namespace gazprea {
     std::any ASTWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
         return this->walkChildren(tree);
     }
+
 }

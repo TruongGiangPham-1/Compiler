@@ -76,6 +76,12 @@ namespace gazprea {
 
         std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
         std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
+
+
+
+        std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
+        std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
+        std::any visitRangeVec(std::shared_ptr<RangeVecNode> tree) override;
         std::string typeEnumToString(TYPE t);
 
 
