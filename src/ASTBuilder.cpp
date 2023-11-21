@@ -188,6 +188,12 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitInt " << ctx->getText() << std::endl;
 #endif
+        try {
+            std::stoi(ctx->getText());
+        } catch (std::out_of_range &e) {
+            throw LiteralError(ctx->getStart()->getLine(), "integer literal out of range " + ctx->getText());
+        }
+
         std::shared_ptr<ASTNode> t = std::make_shared<IntNode>(ctx->getStart()->getLine(),std::stoi(ctx->getText()));
 
         return std::dynamic_pointer_cast<ASTNode>(t);
