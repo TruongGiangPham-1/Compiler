@@ -118,6 +118,7 @@ protected:
   void setupPrint();
   void setupPrintVec();
   void setupVectorRuntime();
+  void setupStreamRuntime();
   void setupCommonTypeRuntime();
   mlir::Value translateToMLIRType(TYPE type);
   int writeLLVMIR();

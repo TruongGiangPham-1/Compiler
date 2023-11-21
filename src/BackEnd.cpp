@@ -126,6 +126,18 @@ int BackEnd::writeLLVMIR() {
   return 0;
 }
 
+void BackEnd::functionShowcase() {
+    // run getStreamState with streamStatePtr
+    auto streamState = module.lookupSymbol<mlir::LLVM::GlobalOp>("streamState");
+
+    // MLIR doesn't allow direct access to globals, so we have to use an addressof
+    auto streamStatePtr = builder->create<mlir::LLVM::AddressOfOp>(loc, streamState);
+
+    // lookup getStreamState runtime function
+    auto getStreamStateFunc= module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("getStreamState");
+    builder->create<mlir::LLVM::CallOp>(loc, getStreamStateFunc, mlir::ValueRange({streamStatePtr}));
+}
+
 BackEnd::BackEnd(std::ostream &out)
     : out(out), loc(mlir::UnknownLoc::get(&context)) {
   context.loadDialect<mlir::LLVM::LLVMDialect>();
@@ -137,6 +149,7 @@ BackEnd::BackEnd(std::ostream &out)
   builder->setInsertionPointToStart(module.getBody());
 
   setupCommonTypeRuntime();
+  setupStreamRuntime();
 }
 
 int BackEnd::emitMain() {
@@ -218,6 +231,22 @@ void BackEnd::setupCommonTypeRuntime() {
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
 }
 
+void BackEnd::setupStreamRuntime() {
+  // setup a global (int) variable called streamState
+  auto intType = builder->getI32Type();
+  auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
+  auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+
+  auto streamState = builder->create<mlir::LLVM::GlobalOp>(
+          loc, intType, false, mlir::LLVM::Linkage::Internal,
+          "streamState", builder->getIntegerAttr(intType, 0));
+
+  // setup runtime getStreamState function
+  auto getStreamStateType = mlir::LLVM::LLVMFunctionType::get(voidType, {intPtrType});
+  auto getStreamStateFunc = builder->create<mlir::LLVM::LLVMFuncOp>(
+        loc, "getStreamState", getStreamStateType);
+}
+
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
   mlir::LLVM::LLVMFuncOp binopFunc=
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("performCommonTypeBINOP");
@@ -226,7 +255,7 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
       binopFunc, 
       mlir::ValueRange({
         left, 
-        right, 
+        right,
         generateInteger(op)})
       ).getResult();
 
