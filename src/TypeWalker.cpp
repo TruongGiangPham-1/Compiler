@@ -213,6 +213,30 @@ namespace gazprea {
         exprNode->evaluatedType->setName(assignType->getBaseTypeEnumName());  // set the string evaluated type
     }
 
+    std::shared_ptr<Type> PromotedType::getDominantTypeFromVector(std::shared_ptr<VectorNode> tree) {
+        std::shared_ptr<Type>bestType = nullptr;
+        for (int i = 0; i < tree->getSize(); i++) {
+            auto promoteTo = tree->getElement(i)->evaluatedType;
+            int isDominant = 1;   // gonna chekc if all the other element can promote to this type
+            for (int j = 0; j < tree->getSize(); j++) {
+                if (i == j) continue;
+                auto promoteFrom = tree->getElement(j)->evaluatedType;
+                if (getPromotedTypeString(promotionTable, promoteFrom, promoteTo).empty()){
+                    //
+                    isDominant = 0;
+                }
+            }
+            if (isDominant) {
+                // this is the dominant type
+                bestType = promoteTo;
+            }
+        }
+        if (bestType == nullptr) {
+            throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
+        }
+        return bestType;
+    }
+
 
     TypeWalker::TypeWalker(std::shared_ptr<SymbolTable> symtab, std::shared_ptr<PromotedType> promotedType) : symtab(symtab), currentScope(symtab->globalScope), promotedType(promotedType) {}
     TypeWalker::~TypeWalker() {}
@@ -694,6 +718,9 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
+        // promote everything to max
+        auto bestType = promotedType->getDominantTypeFromVector(tree);
+        promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
         // this string name will be modified in visitDecl if we need to promote elements. rn assume that all elements same type
         tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
