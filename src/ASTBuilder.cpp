@@ -150,6 +150,26 @@ namespace gazprea {
         return t;
     }
 
+    std::any ASTBuilder::visitStreamStateFunctionCall(GazpreaParser::StreamStateFunctionCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitStreamStateFunctionCall" << std::endl;
+#endif
+        // this is a regular function call but with the name "streamState"
+        std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> funcName = std::make_shared<Symbol>("streamState");
+
+        callNode->CallName = funcName;
+
+        // no params. The only possible parameter is the std_input
+        return std::dynamic_pointer_cast<ASTNode>(callNode);
+    }
+
+    std::any ASTBuilder::visitStreamStateProcedureCall(GazpreaParser::StreamStateProcedureCallContext *ctx) {
+        // a procedure call to streamState is a NoOp
+        // thus, do nothing
+        return std::make_shared<ASTNode>();
+    }
+
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
 #ifdef DEBUG
         std::cout << "visitIdentity " << ctx->getText() << std::endl;
@@ -742,7 +762,7 @@ namespace gazprea {
         return visit(ctx->functionCall());
     }
 
-    std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
+    std::any ASTBuilder::visitNormalFunctionCall(GazpreaParser::NormalFunctionCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting function call" << std::endl;
 #endif
@@ -759,7 +779,7 @@ namespace gazprea {
 
     }
 
-    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+    std::any ASTBuilder::visitNormalProcedureCall(GazpreaParser::NormalProcedureCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure call" << std::endl;
 #endif
