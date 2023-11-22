@@ -58,7 +58,7 @@ void printType(commonType *type, bool nl) {
         printf("Printing tuple %p\n", mTuple);
         #endif
         printf("(");
-        for (int i = 0 ; i < mTuple->size ; i++) {
+        for (int i = 0 ; i < mTuple->currentSize; i++) {
           #ifdef DEBUGTUPLE
           printf("\nprinting tuple value at %p\n", &mTuple->values[i]);
           #endif

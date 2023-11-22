@@ -499,9 +499,9 @@ commonType* allocateFromRange(commonType* lower, commonType* upper) {
   int upperVal = *(int*)castedUpper->value;
 
   // allocate of size 1 if nothing. 1 just lets us stay consistent with de-alloc
-  list* newList = allocateList(upperVal - lowerVal <= 0 ? 1 : upperVal - lowerVal);
+  list* newList = allocateList(upperVal - lowerVal + 1<= 0 ? 1 : upperVal - lowerVal + 1);
 
-  for (int i = lowerVal ; i < upperVal ; i++) {
+  for (int i = lowerVal ; i <= upperVal ; i++) {
     commonType* newItem = allocateCommonType(&i, INTEGER);
 
     appendList(newList, newItem);

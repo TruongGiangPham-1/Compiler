@@ -55,6 +55,10 @@ void BackEnd::init() {
 
   auto mainFunc = builder->create<mlir::LLVM::LLVMFuncOp>(loc, "main", mainType);
 
+  // override handler to not output to stderr
+   context.getDiagEngine().registerHandler([](mlir::Diagnostic &diag) {
+     return;
+   });
 
   functionStack.push_back(mainFunc);
   mainEntry = mainFunc.addEntryBlock();
@@ -202,8 +206,7 @@ void BackEnd::setupCommonTypeRuntime() {
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
                                             lengthType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType",
-                                            copy);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType", copy);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__columns",
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
