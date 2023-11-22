@@ -718,14 +718,14 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
-        // promote everything to max
-        auto bestType = promotedType->getDominantTypeFromVector(tree);
-        promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
-        // this string name will be modified in visitDecl if we need to promote elements. rn assume that all elements same type
         tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
         tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
         tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
+        // promote every element to the dominant type
+        auto bestType = promotedType->getDominantTypeFromVector(tree);
+        promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
+        promotedType->updateVectorNodeEvaluatedType(bestType, tree);
         return nullptr;
     }
     std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {

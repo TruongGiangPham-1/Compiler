@@ -1,0 +1,4 @@
+procedure main() returns integer {
+    [1, 1, 'c'] -> std_output;  // this vector literal cannot be promoted type err on line2
+    return 0;
+}
