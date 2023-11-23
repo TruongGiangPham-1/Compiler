@@ -502,6 +502,11 @@ namespace gazprea {
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
 
+        if (ctx->expr().size() == 3) {
+            // this is matrix index
+            t->addChild(visit(ctx->expr(2)));
+        }
+
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 

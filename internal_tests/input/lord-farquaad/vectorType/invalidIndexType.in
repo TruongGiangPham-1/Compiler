@@ -1,0 +1,5 @@
+procedure main() returns integer {
+    integer[2] a = [1, 2];
+    a[1.0] -> std_output;  // cannot index with non integer
+    return 0;
+}

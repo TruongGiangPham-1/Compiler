@@ -814,6 +814,41 @@ namespace gazprea {
         tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
         return nullptr;
     }
+    std::any TypeWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
+        walkChildren(tree);  // if a[b, c]. indexee=a, indexor1=b, indexor2=c
+
+        auto indexee = tree->getIndexee();
+        auto indexor1 = tree->getIndexor1();
+        auto indexor2 = tree->getIndexor2();
+        if (indexor2 == nullptr) {
+            if (indexor1->evaluatedType->baseTypeEnum != INTEGER || indexor1->evaluatedType->vectorOrMatrixEnum != NONE) {
+                throw TypeError(tree->loc(), "can only index vector using integer literal");
+            }
+        } else {
+            if (indexor1->evaluatedType->baseTypeEnum != INTEGER || indexor1->evaluatedType->vectorOrMatrixEnum != NONE
+               || indexor2->evaluatedType->baseTypeEnum != INTEGER || indexor2->evaluatedType->vectorOrMatrixEnum != NONE) {
+                throw TypeError(tree->loc(), "can only index matrix using integer literal");
+            }
+        }
+
+        if (indexee->evaluatedType->dims.size() == 1) {  // case: its a vector index
+            auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
+            tree->evaluatedType = typeCopy;
+            tree->evaluatedType->vectorOrMatrixEnum = NONE;
+            tree->evaluatedType->dims.clear();    // evaluted type is just a non vector literal with no dimention
+        } else if (indexee->evaluatedType->dims.size() == 2) {  // case: its a matrix indx
+            auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
+            tree->evaluatedType = typeCopy;
+            tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
+            int colSize = indexee->evaluatedType->dims[1];
+            tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
+            tree->evaluatedType->dims.push_back(colSize);
+        } else {
+            assert(indexee->evaluatedType->dims.empty());
+            throw SyntaxError(tree->loc(), "cannot index non vector or matrices");  // TODO is this the correct error
+        }
+        return nullptr;
+    }
 
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
