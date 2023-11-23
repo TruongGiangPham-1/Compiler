@@ -33,7 +33,8 @@ namespace gazprea {
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
 
-        std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);  // create copy of the type obj
+        // create copy of the type obj. only used in promoteLiteralToArray
+        std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);
 
         // return string form of promotionTable[left][right]
         std::string getPromotedTypeString(std::string table[7][7], std::shared_ptr<Type> left, std::shared_ptr<Type>right);

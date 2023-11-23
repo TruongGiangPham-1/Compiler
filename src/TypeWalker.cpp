@@ -109,7 +109,8 @@ namespace gazprea {
         if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
                                            std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
             assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
-            return left->evaluatedType;
+            auto typeCopy = getTypeCopy(left->evaluatedType);
+            return typeCopy;  // return copy of the type
         }
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getBaseTypeEnumName() << ", " << right->evaluatedType->getBaseTypeEnumName() << "\n";
@@ -348,22 +349,23 @@ namespace gazprea {
         // CASE: both lhs and rhs is none vector
         auto l = tree->getLHS();
         auto r = tree->getRHS();
-        promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+        promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
-        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
+        tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
         if (tree->getLHS()->evaluatedType->vectorOrMatrixEnum == NONE && tree->getRHS()->evaluatedType->vectorOrMatrixEnum == NONE) {
             // concat between 2 non vector. we have to promote them all to vector
             auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
             vectorType->vectorOrMatrixEnum = VECTOR;
             promotedType->promoteLiteralToArray(vectorType, tree->getLHS());  // promote both of em to vector
             promotedType->promoteLiteralToArray(vectorType, tree->getRHS());
-            tree->evaluatedType = tree->getLHS()->evaluatedType;  // re assign evaluatoin type
+            auto typeCopy = promotedType->getTypeCopy(tree->getLHS()->evaluatedType);   // create a copy
+            tree->evaluatedType = typeCopy;  // re assign evaluatoin type
         }
-        // feel like the size recomputation should be done in backend
-        // todo, i cant modify  size, I reazlied that type is  a sharedpointer
-        //if (!tree->getLHS()->evaluatedType->dims.empty() && !tree->getRHS()->evaluatedType->dims.empty()) {
-        //    tree->evaluatedType->dims[0]=(tree->getLHS()->evaluatedType->dims[0] + tree->getRHS()->evaluatedType->dims[0]);  // update dim
-        //}
+        // size of concat is size of the sum of both side
+        if (!tree->getLHS()->evaluatedType->dims.empty() && !tree->getRHS()->evaluatedType->dims.empty()) {
+            tree->evaluatedType->dims.clear();
+            tree->evaluatedType->dims.push_back(tree->getLHS()->evaluatedType->dims[0] + tree->getRHS()->evaluatedType->dims[0]);  // update dim
+        }
         return nullptr;
     }
 
