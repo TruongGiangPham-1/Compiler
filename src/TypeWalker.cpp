@@ -135,8 +135,12 @@ namespace gazprea {
     }
     void PromotedType::promoteLiteralToArray(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> literalNode) {
         if (literalNode->evaluatedType->baseTypeEnum == TUPLE) throw TypeError(literalNode->loc(), "cannot promote tuple to array");
+        if (literalNode->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+            return;
+        }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
             literalNode->evaluatedType = promoteTo;
+            literalNode->evaluatedType->dims.push_back(1);  // size 1 vector
         } else {
 
         }
@@ -168,6 +172,7 @@ namespace gazprea {
             // case everything else. like base type
             promoteNode->evaluatedType = dominantType;
         }
+
     }
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
@@ -235,6 +240,12 @@ namespace gazprea {
             throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
         }
         return bestType;
+    }
+
+    void PromotedType::assertVector(std::shared_ptr<ASTNode> tree) {
+        if (tree->evaluatedType->vectorOrMatrixEnum == NONE) {
+            throw TypeError(tree->loc(), "must be vector");
+        }
     }
 
 
@@ -315,6 +326,33 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+        // separate switch cuz concat can be difrent size
+        // need to handle literal promote
+        walkChildren(tree);
+
+        // CASE: both lhs and rhs is none vector
+        auto r = tree->getLHS();
+        auto l = tree->getRHS();
+        promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+        assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
+        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
+        if (tree->getLHS()->evaluatedType->vectorOrMatrixEnum == NONE && tree->getRHS()->evaluatedType->vectorOrMatrixEnum == NONE) {
+            // concat between 2 non vector. we have to promote them all to vector
+            auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
+            vectorType->vectorOrMatrixEnum = VECTOR;
+            promotedType->promoteLiteralToArray(vectorType, tree->getLHS());  // promote both of em to vector
+            promotedType->promoteLiteralToArray(vectorType, tree->getRHS());
+            tree->evaluatedType = tree->getLHS()->evaluatedType;  // re assign evaluatoin type
+        }
+        // feel like the size recomputation should be done in backend
+        // todo, i cant modify  size, I reazlied that type is  a sharedpointer
+        //if (!tree->getLHS()->evaluatedType->dims.empty() && !tree->getRHS()->evaluatedType->dims.empty()) {
+        //    tree->evaluatedType->dims[0]=(tree->getLHS()->evaluatedType->dims[0] + tree->getRHS()->evaluatedType->dims[0]);  // update dim
+        //}
+        return nullptr;
+    }
+
     std::any TypeWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
         walkChildren(tree);
         auto lhsType = tree->getLHS()->evaluatedType;
@@ -333,6 +371,7 @@ namespace gazprea {
                 promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
+
         }
         return nullptr;
     }
@@ -718,14 +757,13 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
-        tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());
+        tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
-        tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
-        tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
         promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
-        promotedType->updateVectorNodeEvaluatedType(bestType, tree);
+        tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
         return nullptr;
     }
     std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {

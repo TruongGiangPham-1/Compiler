@@ -144,7 +144,15 @@ namespace gazprea {
             std::cout << "about to visit Arith" << std::endl;
 #endif // DEBUG
             return this->visitArith(std::dynamic_pointer_cast<BinaryArithNode>(tree));
-        } else if (std::dynamic_pointer_cast<VectorNode>(tree)) {
+        }
+
+        else if (std::dynamic_pointer_cast<ConcatNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit concat" << std::endl;
+#endif // DEBUG
+           return this->visitConcat(std::dynamic_pointer_cast<ConcatNode>(tree));
+        }
+        else if (std::dynamic_pointer_cast<VectorNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit literal Vector" << std::endl;
 #endif // DEBUG
@@ -452,6 +460,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
         return this->walkChildren(tree);
     }
 

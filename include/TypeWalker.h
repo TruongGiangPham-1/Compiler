@@ -32,9 +32,15 @@ namespace gazprea {
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
+
+        // return string form of promotionTable[left][right]
         std::string getPromotedTypeString(std::string table[7][7], std::shared_ptr<Type> left, std::shared_ptr<Type>right);
+
+        // get the most dominant type fomr the vector onde, raise error otherwise
         std::shared_ptr<Type>getDominantTypeFromVector(std::shared_ptr<VectorNode> tree);
 
+        // throw error if tree was node a vectornode
+        void assertVector(std::shared_ptr<ASTNode> tree);
         PromotedType(std::shared_ptr<SymbolTable> symtab);
         ~PromotedType();
     };
@@ -66,7 +72,7 @@ namespace gazprea {
         std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
-
+        std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
         // streams
         std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;

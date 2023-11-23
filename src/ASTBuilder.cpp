@@ -804,5 +804,14 @@ namespace gazprea {
         }
         return std::dynamic_pointer_cast<ASTNode>(fNode);
     }
+
+    std::any ASTBuilder::visitConcatenation(GazpreaParser::ConcatenationContext *ctx) {
+        auto concatNode = std::make_shared<ConcatNode>(ctx->getStart()->getLine());
+        concatNode->op = CONCAT;
+
+        concatNode->addChild(visit(ctx->expr(0)));
+        concatNode->addChild(visit(ctx->expr(1)));
+        return std::dynamic_pointer_cast<ASTNode>(concatNode);
+    }
 }
 

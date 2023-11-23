@@ -40,3 +40,8 @@ class IndexNode : public BinaryExpr {
 public:
     IndexNode(int line) : BinaryExpr(line){}
 };
+
+class ConcatNode: public BinaryExpr {
+public:
+    ConcatNode(int line): BinaryExpr(line) {}
+};

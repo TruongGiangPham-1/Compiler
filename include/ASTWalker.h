@@ -77,6 +77,7 @@ namespace gazprea {
         virtual std::any visitIndex(std::shared_ptr<IndexNode> tree);
         virtual std::any visitCast(std::shared_ptr<CastNode> tree);
         virtual std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree);
+        virtual std::any visitConcat(std::shared_ptr<ConcatNode> tree);
         // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);
         virtual std::any visitGenerator(std::shared_ptr<GeneratorNode> tree);
