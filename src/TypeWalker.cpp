@@ -73,6 +73,18 @@ namespace gazprea {
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
 
+    std::shared_ptr<Type> PromotedType::getTypeCopy(std::shared_ptr<Type> type) {
+        // returns a copy of the type
+        auto newtype = std::make_shared<AdvanceType>(type->getBaseTypeEnumName());
+        newtype->baseTypeEnum = type->baseTypeEnum;
+        if (type->vectorOrMatrixEnum != NONE){
+            newtype->vectorOrMatrixEnum = type->vectorOrMatrixEnum;
+        }
+        if (!type->dims.empty()){
+            newtype->dims = type->dims;
+        }
+        return newtype;
+    }
     std::shared_ptr<Type> PromotedType::getType(std::string table[7][7], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
         if (left->evaluatedType == nullptr || right->evaluatedType == nullptr) {
             return nullptr;
@@ -139,7 +151,9 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            literalNode->evaluatedType = promoteTo;
+            auto typeCopy = getTypeCopy(promoteTo);
+            literalNode->evaluatedType = typeCopy;  // to make sure it gets its own copy
+            literalNode->evaluatedType->dims.clear();
             literalNode->evaluatedType->dims.push_back(1);  // size 1 vector
         } else {
 
@@ -332,8 +346,8 @@ namespace gazprea {
         walkChildren(tree);
 
         // CASE: both lhs and rhs is none vector
-        auto r = tree->getLHS();
-        auto l = tree->getRHS();
+        auto l = tree->getLHS();
+        auto r = tree->getRHS();
         promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
         tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
