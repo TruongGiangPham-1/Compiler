@@ -510,7 +510,8 @@ namespace gazprea {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
             promotedType->promoteVectorElements(lType, tree->getExprNode());
             promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
-            tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
+            auto typeCopy = promotedType->getTypeCopy(tree->getExprNode()->evaluatedType);  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
+            tree->evaluatedType = typeCopy;
             tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
             return nullptr;
         }
