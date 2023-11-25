@@ -810,8 +810,9 @@ namespace gazprea {
 
     std::any TypeWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
         walkChildren(tree);
-        tree->evaluatedType = tree->getStart()->evaluatedType;
-        tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
+        auto typeCopy = promotedType->getTypeCopy(tree->getStart()->evaluatedType);  // returns an integer type
+        typeCopy->vectorOrMatrixEnum = VECTOR;
+        tree->evaluatedType = typeCopy;
         return nullptr;
     }
     std::any TypeWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
@@ -831,7 +832,7 @@ namespace gazprea {
             }
         }
 
-        if (indexee->evaluatedType->dims.size() == 1) {  // case: its a vector index
+        if (indexee->evaluatedType->dims.size() == 1 || indexee->evaluatedType->vectorOrMatrixEnum == VECTOR) {  // case: its a vector index
             auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
             tree->evaluatedType = typeCopy;
             tree->evaluatedType->vectorOrMatrixEnum = NONE;
