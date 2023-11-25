@@ -77,6 +77,8 @@ namespace gazprea {
         if (left->evaluatedType == nullptr || right->evaluatedType == nullptr) {
             return nullptr;
         }
+
+
         // TODO: identity and null handling
         auto leftIndex = this->getTypeIndex(left->evaluatedType->getBaseTypeEnumName());
         auto rightIndex = this->getTypeIndex(right->evaluatedType->getBaseTypeEnumName());
@@ -91,13 +93,25 @@ namespace gazprea {
         }
 
         auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
-
+        // HERE vector should have identical types because possiblyPromoteBinop have make sure both vectors are same types.
+        if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
+                                           std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
+            assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
+            return left->evaluatedType;
+        }
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getBaseTypeEnumName() << ", " << right->evaluatedType->getBaseTypeEnumName() << "\n";
                 std::cout << "result: " <<  resultType->getBaseTypeEnumName() << "\n";
         #endif
         assert(resultType);
         return resultType;
+    }
+
+    std::string PromotedType::getPromotedTypeString( std::string table[7][7], std::shared_ptr<Type> left, std::shared_ptr<Type> right) {
+        auto leftIndex = this->getTypeIndex(left->getBaseTypeEnumName());
+        auto rightIndex = this->getTypeIndex(right->getBaseTypeEnumName());
+        std::string resultTypeString = table[leftIndex][rightIndex];
+        return resultTypeString;
     }
 
     int PromotedType::getTypeIndex(const std::string type) {
@@ -119,15 +133,66 @@ namespace gazprea {
                 throw std::runtime_error("Unknown type");
         }
     }
+    void PromotedType::promoteLiteralToArray(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> literalNode) {
+        if (literalNode->evaluatedType->baseTypeEnum == TUPLE) throw TypeError(literalNode->loc(), "cannot promote tuple to array");
+        if (promoteTo->vectorOrMatrixEnum == VECTOR) {
+            literalNode->evaluatedType = promoteTo;
+        } else {
+
+        }
+    }
+    /*
+     * given left and right binop node
+     * try to promote one side with another, vice vcerssa
+     * eg: left =int vector , right =  real vector, i will promote left to a real vector
+     * TODO: i only implement this for vector binops for far. so future ill try to generalize this to all type?
+     */
+    void PromotedType::possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right) {
+        auto LtoRpromotion = getPromotedTypeString(promotionTable, left->evaluatedType, right->evaluatedType);
+        auto RtoLpromotion = getPromotedTypeString(promotionTable, right->evaluatedType, left->evaluatedType);
+        if (LtoRpromotion.empty() && RtoLpromotion.empty())  throw TypeError(left->loc(), "invalid vectors type binop");
+
+        std::shared_ptr<Type> dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
+        std::shared_ptr<ASTNode> promoteNode = !LtoRpromotion.empty()? left: right; // l to r promotion valid so promote left node, vice versa
+        // vector handling
+        if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+            //if (left->evaluatedType->dims[0] != right->evaluatedType->dims[0]) throw SizeError(left->loc(), "incompatible size binop");
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == NONE) {
+            promoteLiteralToArray(left->evaluatedType, right);
+        } else if (right->evaluatedType->vectorOrMatrixEnum == VECTOR && left->evaluatedType->vectorOrMatrixEnum == NONE){
+            // none vector
+            promoteLiteralToArray(right->evaluatedType, left);
+        } else{
+            // case everything else. like base type
+            promoteNode->evaluatedType = dominantType;
+        }
+    }
+    void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
+        if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
+            identityNode->evaluatedType = promoteTo;
+        } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
+
+        } else {
+            identityNode->evaluatedType = promoteTo;
+        }
+        return;
+    }
+
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
-        // only care about vector expr node
-        if (exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::NONE) {
+        if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY || exprNode->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+            promoteIdentityAndNull(promoteTo, exprNode);
             return;
         }
         assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
-        auto exprNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
+        auto vectNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
+        if (vectNodeCast == nullptr) {
+            // this is not a vector literal. so we simply do nothing since no child to promote
+            return;
+        }
         // promote each vector elements
-        for (auto &child: exprNodeCast->getElements()) {
+        for (auto &child: vectNodeCast->getElements()) {
             auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
             auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
             auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
@@ -139,6 +204,15 @@ namespace gazprea {
             child->evaluatedType = resultType;  // set each vector element node to its promoted type
         }
     }
+    /*
+     *  update a node's evaluated type by copying over attributes that matters. do not modify the type->dims(which was set in visitVector)
+     */
+    void PromotedType::updateVectorNodeEvaluatedType(std::shared_ptr<Type> assignType, std::shared_ptr<ASTNode> exprNode) {
+        exprNode->evaluatedType->baseTypeEnum = assignType->baseTypeEnum;  // set the LHS vector literal type. int?real?
+        exprNode->evaluatedType->vectorOrMatrixEnum = assignType->vectorOrMatrixEnum;
+        exprNode->evaluatedType->setName(assignType->getBaseTypeEnumName());  // set the string evaluated type
+    }
+
 
     TypeWalker::TypeWalker(std::shared_ptr<SymbolTable> symtab, std::shared_ptr<PromotedType> promotedType) : symtab(symtab), currentScope(symtab->globalScope), promotedType(promotedType) {}
     TypeWalker::~TypeWalker() {}
@@ -200,6 +274,7 @@ namespace gazprea {
             case BINOP::EXP:
             case BINOP::SUB:
             case BINOP::REM:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
@@ -207,6 +282,7 @@ namespace gazprea {
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
@@ -225,10 +301,12 @@ namespace gazprea {
             case BINOP::GTHAN:
             case BINOP::LEQ:
             case BINOP::GEQ:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->comparisonResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
             case BINOP::EQUAL:
             case BINOP::NEQUAL:
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
         }
@@ -237,6 +315,13 @@ namespace gazprea {
 
     std::any TypeWalker::visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) {
         walkChildren(tree);
+        switch (tree->op) {
+            case NOT: {
+                if (tree->getExpr()->evaluatedType->baseTypeEnum != BOOLEAN) {
+                    throw TypeError(tree->loc(), "cannot apply unaryNot on non boolean");
+                }
+            }
+        }
         tree->evaluatedType = tree->getExpr()->evaluatedType;
         return nullptr;
     }
@@ -341,16 +426,18 @@ namespace gazprea {
                 }
             }
             tree->evaluatedType = rType;
-        } else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
-            tree->evaluatedType = lType;  //
-            tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
+
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
             promotedType->promoteVectorElements(lType, tree->getExprNode());
-            tree->getExprNode()->evaluatedType->baseTypeEnum = lType->baseTypeEnum;  // set the LHS vector literal type. int?real?
-            tree->getExprNode()->evaluatedType->setName(lType->getBaseTypeEnumName());  // set the string evaluated type
-            tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node
+            promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
+            tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
             tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
+            return nullptr;
+        }
+        else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
+            tree->evaluatedType = lType;  //
+            promotedType->promoteIdentityAndNull(lType, tree->getExprNode());
         }
         else if (lType->getBaseTypeEnumName() != rType->getBaseTypeEnumName()) {
             auto leftIndex = promotedType->getTypeIndex(rType->getBaseTypeEnumName());
@@ -436,9 +523,16 @@ namespace gazprea {
                             }
                         }
                         tree->evaluatedType = lvalue->evaluatedType;
-                    } else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
+                    } else if (lvalue->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR) {
+                        // handle vector literal. promote rhs
+                        promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
+                        promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;  // update the tree evaluated type with promoted
+                        return nullptr;
+                    }
+                    else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
                         tree->evaluatedType = lvalue->evaluatedType;  //
-                        tree->getRvalue()->evaluatedType = lvalue->evaluatedType;  // set identity/null node type to this type for promotion
+                        promotedType->promoteIdentityAndNull(lvalue->evaluatedType, tree->getRvalue());
                     }
 
                     if (tree->getRvalue()->evaluatedType->getBaseTypeEnumName() != tree->getLvalue()->children[0]->evaluatedType->getBaseTypeEnumName())
