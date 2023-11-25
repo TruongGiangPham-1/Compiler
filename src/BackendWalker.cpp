@@ -172,7 +172,15 @@ std::any BackendWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
 }
 
 std::any BackendWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
-  return 0;
+  auto indexee = std::any_cast<mlir::Value>(walk(tree->getIndexee()));
+
+  // im sad we don't use recursion more
+  for (int i = 1 ; i < tree->children.size() ; i ++) {
+    auto indexor = std::any_cast<mlir::Value>(walk(tree->children[i]));
+    indexee = codeGenerator.indexCommonType(indexee, indexor);
+  }
+
+  return indexee;
 }
 
 // Expr/Vector

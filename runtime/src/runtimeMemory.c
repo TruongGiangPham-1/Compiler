@@ -254,7 +254,7 @@ void appendCommon(commonType* list, commonType *value) {
 list* copyList(list* copyFrom) {
   list* copiedTo = allocateList(copyFrom->size);
 
-  for (int i = 0 ; i < copyFrom->size ; i ++) {
+  for (int i = 0 ; i < copyFrom->currentSize; i ++) {
     commonType* newVal = copyCommonType(copyFrom->values[i]);
     appendList(copiedTo, newVal);
   }
