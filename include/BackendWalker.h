@@ -39,6 +39,7 @@ private:
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
   std::any visitCast(std::shared_ptr<CastNode> tree) override;
   std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
+  std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
 
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;

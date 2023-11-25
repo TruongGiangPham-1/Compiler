@@ -158,20 +158,26 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
   }
 }
 
+list* listify(commonType* item) {
+  list* newList = allocateList(1);
+  appendList(newList, copyCommonType(item));
+  return newList;
+}
+
 list* concat(list* l, list* r) {
   int concatenatedSize = l->size + r->size;
   list* newList = allocateList(concatenatedSize);
 
   for (int i = 0; i < l->size ; i ++) {
     
-    commonType* result = (r->size > 0) ? promotion(l->values[i], r->values[0]) : copyCommonType(result);
+    commonType* result = (r->size > 0) ? promotion(l->values[i], r->values[0]) : copyCommonType(l->values[i]);
 
     appendList(newList, result);
   }
 
   for (int i = 0; i < r->size ; i ++) {
 
-    commonType* result = (l->size > 0) ? promotion(l->values[i], l->values[0]) : copyCommonType(result);
+    commonType* result = (l->size > 0) ? promotion(r->values[i], l->values[0]) : copyCommonType(r->values[i]);
 
     appendList(newList, result);
   }
@@ -195,18 +201,6 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   }
 
   switch (op) {
-    case CONCAT:
-    {
-      if (!isCompositeType(l->type) || !isCompositeType(r->type)) {
-        UnsupportedTypeError("Trying to concatenate non-list types");
-      }
-
-      list* newlist = concat((list*)l->value, (list*)r->value);
-
-      // concat should be between vectors or strings
-      // TODO: leaking here 
-      return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR);
-    }
     case STRIDE:
     {
       commonType* castedRight = cast(r, INTEGER);
@@ -297,13 +291,31 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     UnsupportedTypeError("BINOP recieved a type it could not recognize");
   }
 
-  // composites treated differenly
+  commonType* result;
+  // kind of ugly to put here but i am exhausted
+  if (op == CONCAT) {
+    list* l = isCompositeType(left->type) ? (list*)left->value : listify(left);
+    list* r = isCompositeType(right->type) ? (list*)right->value : listify(right);
+
+    list* newlist = concat((list*)l, (list*)r);
+
+    // concat should be between vectors or strings
+    // TODO: leaking here 
+    result = allocateCommonType(&newlist, (left->type == STRING || right->type == STRING) ? STRING : VECTOR);
+    if (!isCompositeType(left->type)) {
+      deallocateList(l);
+    }
+    if (!isCompositeType(right->type)) {
+      deallocateList(r);
+    }
+    return result;
+  }
+
   if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
     promotedLeft = promotion(left,right);
     promotedRight = promotion(right,left);
   }
   
-  commonType* result;
     
   if (op == RANGE) {
     return vectorFromRange(left, right);

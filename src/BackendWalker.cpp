@@ -9,7 +9,6 @@
 #include <stdexcept>
 //#define DEBUG
 
-
 std::any BackendWalker::walk(std::shared_ptr<ASTNode> tree) {
   // stop reading code if theres a return won't be reached
   if (!this->returnDropped) {
@@ -592,3 +591,11 @@ std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   codeGenerator.popScope();
   return returnVal;
 }
+
+std::any BackendWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+  auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
+  auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
+
+  return codeGenerator.performBINOP(lhs, rhs, CONCAT);
+}
+
