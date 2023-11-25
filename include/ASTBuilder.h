@@ -97,6 +97,7 @@ namespace gazprea {
         std::any visitIndex(GazpreaParser::IndexContext *ctx) override;
         std::any visitCast(GazpreaParser::CastContext *ctx) override;
 
+        std::any visitConcatenation(GazpreaParser::ConcatenationContext *ctx) override;
         // functions
         std::any visitProcedure(GazpreaParser::ProcedureContext *ctx) override;
         std::any visitFunction(GazpreaParser::FunctionContext *ctx) override;
