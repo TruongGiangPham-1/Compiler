@@ -779,6 +779,7 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
@@ -793,25 +794,25 @@ namespace gazprea {
         tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
         return nullptr;
     }
-    std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
-        // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
-        // NOTE: empty matrices will not gonna be here
-        int maxsize = INT32_MIN;
-        for (auto &vec: tree->getElements()) {
-            maxsize = std::max(maxsize, vec->getSize());  // get the largest inner vector size
-        }
+    //std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
+    //    // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+    //    // NOTE: empty matrices will not gonna be here
+    //    int maxsize = INT32_MIN;
+    //    for (auto &vec: tree->getElements()) {
+    //        maxsize = std::max(maxsize, vec->getSize());  // get the largest inner vector size
+    //    }
 
-        walkChildren(tree);  // populate all the evaluated type
+    //    walkChildren(tree);  // populate all the evaluated type
 
-        tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
-        tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
-        // function to make sure all inner vectors have same type
+    //    tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
+    //    tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+    //    // function to make sure all inner vectors have same type
 
-        // promote all elements
-        tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
-        tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
-        return nullptr;
-    }
+    //    // promote all elements
+    //    tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
+    //    tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
+    //    return nullptr;
+    //}
 
     std::any TypeWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
         // filter is just an integer tuple right?
