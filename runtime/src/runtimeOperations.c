@@ -390,6 +390,33 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
   return result;
 }
+commonType* listUNARYOP(commonType* l, enum UNARYOP op) {
+  if (!isCompositeType(l->type)) {
+    UnsupportedTypeError("Reached list unaryop, but neither operand is listable type");
+  }
+
+  switch (op) {
+    case NEGATE:
+    case NOT:
+    {
+      // if not one then the other
+      int listSize = ((list*) l->value)->currentSize;
+      list *mlist = allocateList(listSize);
+
+      for (int i = 0 ; i < listSize ; i ++) {
+        commonType* newItem = performCommonTypeUNARYOP(((list*) l->value)->values[i], op);
+        appendList(mlist, newItem);
+      }
+
+      enum TYPE resultingType = l->type;
+      commonType *result = allocateCommonType(&mlist, resultingType);
+
+      return result;
+    }
+    default:
+    RuntimeOPError("Unknown unary operation on list");
+  }
+}
 
 bool boolUNARYOP(bool val, enum UNARYOP op) {
   // implement once we have UNARYOP::NOT
@@ -422,8 +449,12 @@ float floatUNARYOP(float val, enum UNARYOP op) {
 
 commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
   commonType* result;
+  
+  if (isCompositeType(val->type)) {
 
-  if (val->type == BOOLEAN) {
+    result = listUNARYOP(val, op);
+
+  } else if (val->type == BOOLEAN) {
 
     bool tempBool = boolUNARYOP(*(bool*)val->value, op);
     result = allocateCommonType(&tempBool, BOOLEAN);
