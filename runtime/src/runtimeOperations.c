@@ -505,7 +505,7 @@ bool commonTypeToBool(commonType* val) {
 // STANDARD LIBRARY. They are prefixed with __ because they can be called with regular
 // function calls in the walker.
 commonType* __length(commonType* vector)  {
-  if (vector->type != VECTOR) {
+  if (!isCompositeType(vector->type)) {
     UnsupportedTypeError("Trying to take length of non-vector type");
   }
 
@@ -516,7 +516,7 @@ commonType* __length(commonType* vector)  {
 
 commonType* __rows(commonType* matrix) {
   // we don't differnetiate matrices and vectors
-  if (matrix->type != VECTOR) {
+  if (!isCompositeType(matrix->type)) {
     UnsupportedTypeError("Trying to take row of non-matrix type");
   }
 
@@ -525,13 +525,28 @@ commonType* __rows(commonType* matrix) {
 
 commonType* __columns(commonType* matrix) {
   // we don't differnetiate matrices and vectors
-  if (matrix->type != VECTOR) {
+  if (!isCompositeType(matrix->type)) {
     UnsupportedTypeError("Trying to take column of non-matrix type");
   }
 
   commonType* row = ((list*)matrix->value)->values[0];
 
   return __length(row);
+}
+
+commonType* __reverse(commonType* vector)  {
+  if (!isCompositeType(vector->type)) {
+    UnsupportedTypeError("Trying to take length of non-vector type");
+  }
+
+  list* mlist = (list*)vector->value;
+  list* newList = allocateList(mlist->currentSize);
+
+  for (int i = mlist->currentSize ; i >= 0 ; i--) {
+    appendList(newList,copyCommonType(mlist->values[i]));
+  }
+
+  return allocateCommonType(&newList, VECTOR);
 }
 
 commonType* allocateFromRange(commonType* lower, commonType* upper) {
