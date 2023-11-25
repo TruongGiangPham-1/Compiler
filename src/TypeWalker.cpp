@@ -73,6 +73,18 @@ namespace gazprea {
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
 
+    std::shared_ptr<Type> PromotedType::getTypeCopy(std::shared_ptr<Type> type) {
+        // returns a copy of the type
+        auto newtype = std::make_shared<AdvanceType>(type->getBaseTypeEnumName());
+        newtype->baseTypeEnum = type->baseTypeEnum;
+        if (type->vectorOrMatrixEnum != NONE){
+            newtype->vectorOrMatrixEnum = type->vectorOrMatrixEnum;
+        }
+        if (!type->dims.empty()){
+            newtype->dims = type->dims;
+        }
+        return newtype;
+    }
     std::shared_ptr<Type> PromotedType::getType(std::string table[7][7], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
         if (left->evaluatedType == nullptr || right->evaluatedType == nullptr) {
             return nullptr;
@@ -97,7 +109,8 @@ namespace gazprea {
         if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
                                            std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
             assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
-            return left->evaluatedType;
+            auto typeCopy = getTypeCopy(left->evaluatedType);
+            return typeCopy;  // return copy of the type
         }
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getBaseTypeEnumName() << ", " << right->evaluatedType->getBaseTypeEnumName() << "\n";
@@ -135,8 +148,14 @@ namespace gazprea {
     }
     void PromotedType::promoteLiteralToArray(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> literalNode) {
         if (literalNode->evaluatedType->baseTypeEnum == TUPLE) throw TypeError(literalNode->loc(), "cannot promote tuple to array");
+        if (literalNode->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+            return;
+        }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            literalNode->evaluatedType = promoteTo;
+            auto typeCopy = getTypeCopy(promoteTo);
+            literalNode->evaluatedType = typeCopy;  // to make sure it gets its own copy
+            literalNode->evaluatedType->dims.clear();
+            literalNode->evaluatedType->dims.push_back(1);  // size 1 vector
         } else {
 
         }
@@ -168,6 +187,7 @@ namespace gazprea {
             // case everything else. like base type
             promoteNode->evaluatedType = dominantType;
         }
+
     }
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
@@ -211,6 +231,36 @@ namespace gazprea {
         exprNode->evaluatedType->baseTypeEnum = assignType->baseTypeEnum;  // set the LHS vector literal type. int?real?
         exprNode->evaluatedType->vectorOrMatrixEnum = assignType->vectorOrMatrixEnum;
         exprNode->evaluatedType->setName(assignType->getBaseTypeEnumName());  // set the string evaluated type
+    }
+
+    std::shared_ptr<Type> PromotedType::getDominantTypeFromVector(std::shared_ptr<VectorNode> tree) {
+        std::shared_ptr<Type>bestType = nullptr;
+        for (int i = 0; i < tree->getSize(); i++) {
+            auto promoteTo = tree->getElement(i)->evaluatedType;
+            int isDominant = 1;   // gonna chekc if all the other element can promote to this type
+            for (int j = 0; j < tree->getSize(); j++) {
+                if (i == j) continue;
+                auto promoteFrom = tree->getElement(j)->evaluatedType;
+                if (getPromotedTypeString(promotionTable, promoteFrom, promoteTo).empty()){
+                    //
+                    isDominant = 0;
+                }
+            }
+            if (isDominant) {
+                // this is the dominant type
+                bestType = promoteTo;
+            }
+        }
+        if (bestType == nullptr) {
+            throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
+        }
+        return bestType;
+    }
+
+    void PromotedType::assertVector(std::shared_ptr<ASTNode> tree) {
+        if (tree->evaluatedType->vectorOrMatrixEnum == NONE) {
+            throw TypeError(tree->loc(), "must be vector");
+        }
     }
 
 
@@ -291,6 +341,34 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+        // separate switch cuz concat can be difrent size
+        // need to handle literal promote
+        walkChildren(tree);
+
+        // CASE: both lhs and rhs is none vector
+        auto l = tree->getLHS();
+        auto r = tree->getRHS();
+        promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
+        assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
+        tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
+        if (tree->getLHS()->evaluatedType->vectorOrMatrixEnum == NONE && tree->getRHS()->evaluatedType->vectorOrMatrixEnum == NONE) {
+            // concat between 2 non vector. we have to promote them all to vector
+            auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
+            vectorType->vectorOrMatrixEnum = VECTOR;
+            promotedType->promoteLiteralToArray(vectorType, tree->getLHS());  // promote both of em to vector
+            promotedType->promoteLiteralToArray(vectorType, tree->getRHS());
+            auto typeCopy = promotedType->getTypeCopy(tree->getLHS()->evaluatedType);   // create a copy
+            tree->evaluatedType = typeCopy;  // re assign evaluatoin type
+        }
+        // size of concat is size of the sum of both side
+        if (!tree->getLHS()->evaluatedType->dims.empty() && !tree->getRHS()->evaluatedType->dims.empty()) {
+            tree->evaluatedType->dims.clear();
+            tree->evaluatedType->dims.push_back(tree->getLHS()->evaluatedType->dims[0] + tree->getRHS()->evaluatedType->dims[0]);  // update dim
+        }
+        return nullptr;
+    }
+
     std::any TypeWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
         walkChildren(tree);
         auto lhsType = tree->getLHS()->evaluatedType;
@@ -309,6 +387,7 @@ namespace gazprea {
                 promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
+
         }
         return nullptr;
     }
@@ -431,7 +510,8 @@ namespace gazprea {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
             promotedType->promoteVectorElements(lType, tree->getExprNode());
             promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
-            tree->evaluatedType = tree->getExprNode()->evaluatedType;  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
+            auto typeCopy = promotedType->getTypeCopy(tree->getExprNode()->evaluatedType);  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
+            tree->evaluatedType = typeCopy;
             tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
             return nullptr;
         }
@@ -694,9 +774,11 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
-        // this string name will be modified in visitDecl if we need to promote elements. rn assume that all elements same type
-        tree->evaluatedType = std::make_shared<AdvanceType>(tree->getElement(0)->evaluatedType->getBaseTypeEnumName());
+        tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        // promote every element to the dominant type
+        auto bestType = promotedType->getDominantTypeFromVector(tree);
+        promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
         tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
         tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
         return nullptr;
@@ -730,6 +812,41 @@ namespace gazprea {
         walkChildren(tree);
         tree->evaluatedType = tree->getStart()->evaluatedType;
         tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
+        return nullptr;
+    }
+    std::any TypeWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
+        walkChildren(tree);  // if a[b, c]. indexee=a, indexor1=b, indexor2=c
+
+        auto indexee = tree->getIndexee();
+        auto indexor1 = tree->getIndexor1();
+        auto indexor2 = tree->getIndexor2();
+        if (indexor2 == nullptr) {
+            if (indexor1->evaluatedType->baseTypeEnum != INTEGER || indexor1->evaluatedType->vectorOrMatrixEnum != NONE) {
+                throw TypeError(tree->loc(), "can only index vector using integer literal");
+            }
+        } else {
+            if (indexor1->evaluatedType->baseTypeEnum != INTEGER || indexor1->evaluatedType->vectorOrMatrixEnum != NONE
+               || indexor2->evaluatedType->baseTypeEnum != INTEGER || indexor2->evaluatedType->vectorOrMatrixEnum != NONE) {
+                throw TypeError(tree->loc(), "can only index matrix using integer literal");
+            }
+        }
+
+        if (indexee->evaluatedType->dims.size() == 1) {  // case: its a vector index
+            auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
+            tree->evaluatedType = typeCopy;
+            tree->evaluatedType->vectorOrMatrixEnum = NONE;
+            tree->evaluatedType->dims.clear();    // evaluted type is just a non vector literal with no dimention
+        } else if (indexee->evaluatedType->dims.size() == 2) {  // case: its a matrix indx
+            auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
+            tree->evaluatedType = typeCopy;
+            tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
+            int colSize = indexee->evaluatedType->dims[1];
+            tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
+            tree->evaluatedType->dims.push_back(colSize);
+        } else {
+            assert(indexee->evaluatedType->dims.empty());
+            throw SyntaxError(tree->loc(), "cannot index non vector or matrices");  // TODO is this the correct error
+        }
         return nullptr;
     }
 

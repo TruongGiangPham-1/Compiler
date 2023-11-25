@@ -502,6 +502,11 @@ namespace gazprea {
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
 
+        if (ctx->expr().size() == 3) {
+            // this is matrix index
+            t->addChild(visit(ctx->expr(2)));
+        }
+
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
@@ -803,6 +808,15 @@ namespace gazprea {
             fNode->addChild(visit(expr));
         }
         return std::dynamic_pointer_cast<ASTNode>(fNode);
+    }
+
+    std::any ASTBuilder::visitConcatenation(GazpreaParser::ConcatenationContext *ctx) {
+        auto concatNode = std::make_shared<ConcatNode>(ctx->getStart()->getLine());
+        concatNode->op = CONCAT;
+
+        concatNode->addChild(visit(ctx->expr(0)));
+        concatNode->addChild(visit(ctx->expr(1)));
+        return std::dynamic_pointer_cast<ASTNode>(concatNode);
     }
 }
 

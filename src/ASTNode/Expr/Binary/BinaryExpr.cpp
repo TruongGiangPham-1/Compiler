@@ -42,3 +42,19 @@ std::shared_ptr<ExprNode> BinaryExpr::getLHS() {
 std::shared_ptr<ExprNode> BinaryExpr::getRHS() {
     return std::dynamic_pointer_cast<ExprNode>(children[1]);
 }
+
+std::shared_ptr<ExprNode> IndexNode::getIndexee() {
+    return std::dynamic_pointer_cast<ExprNode>(children[0]);
+}
+std::shared_ptr<ExprNode> IndexNode::getIndexor1() {
+    return std::dynamic_pointer_cast<ExprNode>(children[1]);
+}
+
+std::shared_ptr<ExprNode> IndexNode::getIndexor2() {
+    if (children.size() == 3) {
+        return std::dynamic_pointer_cast<ExprNode>(children[2]);
+    } else {
+        return nullptr;
+    }
+
+}
