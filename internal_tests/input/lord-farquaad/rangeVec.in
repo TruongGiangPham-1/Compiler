@@ -1,0 +1,10 @@
+procedure main() returns integer {
+  1..10 -> std_output;
+  '\n' -> std_output;
+  (10-8)..(9+2) -> std_output;
+  '\n' -> std_output;
+  (-4)..5 -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
