@@ -424,6 +424,7 @@ bool boolUNARYOP(bool val, enum UNARYOP op) {
     case NOT:
       return !val;
     default:
+      RuntimeOPError("Unknown unary operation on bool");
       return val;
   }
 }
@@ -434,6 +435,7 @@ int intUNARYOP(int val, enum UNARYOP op) {
       return -val;
       // op should never be NOT, since this would have been handled in Typecheck
     default:
+      RuntimeOPError("Unknown unary operation on int");
       return val;
   }
 }
@@ -443,6 +445,7 @@ float floatUNARYOP(float val, enum UNARYOP op) {
     case NEGATE:
       return -val;
     default:
+      RuntimeOPError("Unknown unary operation on float");
       return val;
   }
 }
