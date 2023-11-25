@@ -472,6 +472,10 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
     int tempInt = intUNARYOP(*(int*)val->value, op);
     result = allocateCommonType(&tempInt, INTEGER);
 
+  } else {
+
+    RuntimeOPError("Unknown unary operation");
+
   }
 
   return result;
