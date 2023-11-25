@@ -73,6 +73,15 @@ namespace gazprea {
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
 
+    void PromotedType::addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree) {
+        // used when there are matrix rows that are shorter size the
+        while (howMuch--) {
+            std::shared_ptr<NullNode> nullNode = std::make_shared<NullNode>(tree->loc());
+            tree->addChild(std::dynamic_pointer_cast<ASTNode>(nullNode));
+        }
+
+        return;
+    }
     std::shared_ptr<Type> PromotedType::getTypeCopy(std::shared_ptr<Type> type) {
         // returns a copy of the type
         auto newtype = std::make_shared<AdvanceType>(type->getBaseTypeEnumName());
@@ -776,6 +785,7 @@ namespace gazprea {
         }
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        // TODO handle empty vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
         promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
@@ -785,6 +795,19 @@ namespace gazprea {
     }
     std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+        // NOTE: empty matrices will not gonna be here
+        int maxsize = INT32_MIN;
+        for (auto &vec: tree->getElements()) {
+            maxsize = std::max(maxsize, vec->getSize());  // get the largest inner vector size
+        }
+
+        walkChildren(tree);  // populate all the evaluated type
+
+        tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
+        tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        // function to make sure all inner vectors have same type
+
+        // promote all elements
         tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
         return nullptr;
