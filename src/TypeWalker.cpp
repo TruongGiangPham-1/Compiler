@@ -290,7 +290,8 @@ namespace gazprea {
                 if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
                 // promote all the inner types
                 auto promotedType = promoteVectorTypeObj(promoteTo, exprNode->evaluatedType, exprNode->loc());  // promote the old evaluted type
-                exprNode->evaluatedType = getTypeCopy(promoteTo);  // create copy of the pormoted type
+                //exprNode->evaluatedType = getTypeCopy(promoteTo);  // create copy of the pormoted type
+                exprNode->evaluatedType = promotedType;  // promteType promtes all innerchildToo
                 exprNode->evaluatedType->vectorOrMatrixEnum = VECTOR;   // assign correct attribute
                 exprNode->evaluatedType->dims.clear();
                 exprNode->evaluatedType->dims = sizeVec;                //reassign size
@@ -325,6 +326,7 @@ namespace gazprea {
                 child->evaluatedType = promoteVectorTypeObj(promoteTo, child->evaluatedType, exprNode->loc());
             }
         }
+
     }
     /*
      *  update a node's evaluated type by copying over attributes that matters. do not modify the type->dims(which was set in visitVector)
@@ -333,6 +335,10 @@ namespace gazprea {
         exprNode->evaluatedType->baseTypeEnum = assignType->baseTypeEnum;  // set the LHS vector literal type. int?real?
         exprNode->evaluatedType->vectorOrMatrixEnum = assignType->vectorOrMatrixEnum;
         exprNode->evaluatedType->setName(assignType->getBaseTypeEnumName());  // set the string evaluated type
+        exprNode->evaluatedType->vectorInnerTypes.clear();
+        for (auto&inner: assignType->vectorInnerTypes) {
+            exprNode->evaluatedType->vectorInnerTypes.push_back(getTypeCopy(inner));
+        }
     }
 
     std::shared_ptr<Type> PromotedType::getDominantTypeFromVector(std::shared_ptr<VectorNode> tree) {
