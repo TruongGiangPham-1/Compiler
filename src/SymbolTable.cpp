@@ -82,7 +82,7 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>("vector");
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
-        resolvedType->vectorOrMatrixEnum = TYPE::MATRIX;
+        resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;  //  matrices is just vector of vector
         return resolvedType;
 
     } else if (std::dynamic_pointer_cast<StringTypeNode>(typeNode)){

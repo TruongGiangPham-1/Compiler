@@ -33,10 +33,11 @@ namespace gazprea {
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
-
+        void populateInnerTypes(std::shared_ptr<Type>type, std::shared_ptr<VectorNode>tree);
+        std::shared_ptr<Type> promoteVectorTypeObj(std::shared_ptr<Type>promoteTo, std::shared_ptr<Type> promotedType, int line);
         // matrices helper
         void addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree);
-
+        void possiblyPaddMatrix(std::shared_ptr<VectorNode> tree);
         // create copy of the type obj. only used in promoteLiteralToArray
         std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);
 

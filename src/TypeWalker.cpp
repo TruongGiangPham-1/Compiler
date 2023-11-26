@@ -72,7 +72,38 @@ namespace gazprea {
 /*null*/         {"",  "", "", "", "" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
-
+    void PromotedType::populateInnerTypes(std::shared_ptr<Type> type, std::shared_ptr<VectorNode> tree) {
+        // given a vector nodes, just simply add to innerType array in type
+        type->vectorInnerTypes.clear();
+        for (auto&child: tree->getElements()) {
+            type->vectorInnerTypes.push_back(getTypeCopy(child->evaluatedType));
+        }
+    }
+    void PromotedType::possiblyPaddMatrix(std::shared_ptr<VectorNode> tree) {
+        // given a node, possibly padd them with null node
+        int isMatrix = 0;
+        for (auto& child: tree->getElements()) {
+            if (child->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+                isMatrix = 1;
+            }
+        }
+        if (!isMatrix) {  // case: this is not a vector so we dont need to pad
+            return;
+        }
+        int maxSizeRow = INT32_MIN;
+        for (auto &child: tree->getElements()) {
+            maxSizeRow = std::max(maxSizeRow, child->evaluatedType->dims[0]);
+        }
+        for (auto & child: tree->getElements()) {
+            int howMuch = maxSizeRow - child->evaluatedType->dims[0];
+            if (std::dynamic_pointer_cast<VectorNode>(child)) {
+                addNullNodesToVector(maxSizeRow, std::dynamic_pointer_cast<VectorNode>(child));  //
+            } else {
+                // its an ID node
+            }
+        }
+        return;
+    }
     void PromotedType::addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree) {
         // used when there are matrix rows that are shorter size the
         while (howMuch--) {
@@ -91,6 +122,9 @@ namespace gazprea {
         }
         if (!type->dims.empty()){
             newtype->dims = type->dims;
+        }
+        for (auto &innerType: type->vectorInnerTypes) {
+            newtype->vectorInnerTypes.push_back(getTypeCopy(innerType));
         }
         return newtype;
     }
@@ -208,6 +242,23 @@ namespace gazprea {
         }
         return;
     }
+    std::shared_ptr<Type> PromotedType::promoteVectorTypeObj(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type> promotedType, int line) {
+        // symmetric to promoteVectorElements, but do it on Type obj instead of ASTNode
+        auto promotedTypeCop = getTypeCopy(promotedType);
+        if (promotedTypeCop->vectorInnerTypes.empty()) {
+            // basecase
+            assert(promotedTypeCop->vectorOrMatrixEnum == NONE);
+            auto str = getPromotedTypeString(promotionTable, promotedTypeCop, promoteTo);
+            if (str.empty())  throw  TypeError(line, "cannot promote vector element");
+            promotedTypeCop->baseTypeEnum = promoteTo->baseTypeEnum;
+            return promotedTypeCop;
+        }
+        for (int i = 0; i < promotedTypeCop->vectorInnerTypes.size(); i++) {
+            promotedTypeCop->vectorInnerTypes[i] = promoteVectorTypeObj(promoteTo, promotedTypeCop->vectorInnerTypes[i], line);
+        }
+        promotedTypeCop->baseTypeEnum = promoteTo->baseTypeEnum;
+        return promotedTypeCop;
+    }
 
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY || exprNode->evaluatedType->baseTypeEnum == TYPE::NULL_) {
@@ -237,6 +288,8 @@ namespace gazprea {
                 auto sizeVec= exprNode->evaluatedType->dims;  // vector of size
                 auto promoteTypeString= getPromotedTypeString(promotionTable, exprNode->evaluatedType, promoteTo);
                 if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+                // promote all the inner types
+                auto promotedType = promoteVectorTypeObj(promoteTo, exprNode->evaluatedType, exprNode->loc());  // promote the old evaluted type
                 exprNode->evaluatedType = getTypeCopy(promoteTo);  // create copy of the pormoted type
                 exprNode->evaluatedType->vectorOrMatrixEnum = VECTOR;   // assign correct attribute
                 exprNode->evaluatedType->dims.clear();
@@ -254,9 +307,11 @@ namespace gazprea {
                 // this means that vector is recursive
                 if (child->evaluatedType->baseTypeEnum == VECTOR) throw SyntaxError(exprNode->loc(), "invalid matrix");
 
-                promoteVectorElements(promoteTo, child);  // promote the children first
                 auto sizeVec = child->evaluatedType->dims;
-                child->evaluatedType = getTypeCopy(promoteTo);
+                auto promotedType = promoteVectorTypeObj(promoteTo, child->evaluatedType, exprNode->loc());  // promote the old evaluted type
+                promoteVectorElements(promoteTo, child);  // promote the children first
+                //child->evaluatedType = getTypeCopy(promoteTo);
+                child->evaluatedType = promotedType;
                 child->evaluatedType->dims.clear();
                 child->evaluatedType->dims = sizeVec;  // just reasign old size
 
@@ -266,7 +321,8 @@ namespace gazprea {
                 auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
                 if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
                 auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
-                child->evaluatedType = resultType;  // set each vector element node to its promoted type
+                //child->evaluatedType = resultType;  // set each vector element node to its promoted type
+                child->evaluatedType = promoteVectorTypeObj(promoteTo, child->evaluatedType, exprNode->loc());
             }
         }
     }
@@ -653,7 +709,7 @@ namespace gazprea {
                         // handle vector literal. promote rhs
                         promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
                         promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
-                        tree->evaluatedType = tree->getRvalue()->evaluatedType;  // update the tree evaluated type with promoted
+                        tree->evaluatedType = promotedType->getTypeCopy(tree->getRvalue()->evaluatedType);  // update the tree evaluated type with promoted
                         return nullptr;
                     }
                     else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
@@ -818,6 +874,7 @@ namespace gazprea {
     std::any TypeWalker::visitVector(std::shared_ptr<VectorNode> tree) {
         // check if this is a matrix or vector
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+
         int temp = 0;
         if (std::dynamic_pointer_cast<VectorNode>(tree->getElement(1))) {
             temp = 1;
@@ -825,6 +882,7 @@ namespace gazprea {
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
+
         if (temp) {
             int temp2 = 0;
         }
@@ -836,7 +894,15 @@ namespace gazprea {
         auto bestType = promotedType->getDominantTypeFromVector(tree);
         promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
         tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
-        tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
+
+        // add the inner types to type class
+        promotedType->populateInnerTypes(tree->evaluatedType, tree);
+
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the row size of this vector
+        if (tree->getElement(0)->evaluatedType->vectorOrMatrixEnum == VECTOR) {  // pul column size of there is any
+            assert(!tree->getElement(0)->evaluatedType->dims.empty());
+            tree->evaluatedType->dims.push_back(tree->getElement(0)->evaluatedType->dims[0]);  // TODO:
+        }
         return nullptr;
     }
     //std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
