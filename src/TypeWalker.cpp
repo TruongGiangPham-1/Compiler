@@ -228,11 +228,24 @@ namespace gazprea {
             exprNode->evaluatedType = resultType;  // set each vector element node to its promoted type
             return;
         }
-
         // recursively promote inner vector nodes
         auto vectNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
         if (vectNodeCast == nullptr) {
             // this is not a vector literal. so we simply do nothing since no child to promote
+            if (std::dynamic_pointer_cast<IDNode>(exprNode)) {
+                //
+                auto sizeVec= exprNode->evaluatedType->dims;  // vector of size
+                auto promoteTypeString= getPromotedTypeString(promotionTable, exprNode->evaluatedType, promoteTo);
+                if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+                exprNode->evaluatedType = getTypeCopy(promoteTo);  // create copy of the pormoted type
+                exprNode->evaluatedType->vectorOrMatrixEnum = VECTOR;   // assign correct attribute
+                exprNode->evaluatedType->dims.clear();
+                exprNode->evaluatedType->dims = sizeVec;                //reassign size
+
+            } else {
+                // case: exprNode that is not an IDnode AND it is not a vectorNode
+                throw SyntaxError(exprNode->loc(), "invalid matrix/vector element");
+            }
             return;
         }
         // promote each vector elements
@@ -240,10 +253,12 @@ namespace gazprea {
             if (child->evaluatedType->vectorOrMatrixEnum == VECTOR) {
                 // this means that vector is recursive
                 if (child->evaluatedType->baseTypeEnum == VECTOR) throw SyntaxError(exprNode->loc(), "invalid matrix");
+
                 promoteVectorElements(promoteTo, child);  // promote the children first
+                auto sizeVec = child->evaluatedType->dims;
                 child->evaluatedType = getTypeCopy(promoteTo);
                 child->evaluatedType->dims.clear();
-                child->evaluatedType->dims.push_back(std::dynamic_pointer_cast<VectorNode>(child)->getSize());
+                child->evaluatedType->dims = sizeVec;  // just reasign old size
 
             } else {  // child is not a vector
                 auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
@@ -804,7 +819,7 @@ namespace gazprea {
         // check if this is a matrix or vector
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
         int temp = 0;
-        if (std::dynamic_pointer_cast<VectorNode>(tree->getElement(0))) {
+        if (std::dynamic_pointer_cast<VectorNode>(tree->getElement(1))) {
             temp = 1;
         }
         for (auto &exprNode: tree->getElements()) {
