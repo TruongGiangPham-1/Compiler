@@ -233,22 +233,26 @@ namespace gazprea {
         auto vectNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
         if (vectNodeCast == nullptr) {
             // this is not a vector literal. so we simply do nothing since no child to promote
-            if (std::dynamic_pointer_cast<IDNode>(exprNode)) {
-                // vector node can be an ID node
-
-            }
             return;
         }
         // promote each vector elements
         for (auto &child: vectNodeCast->getElements()) {
-            //auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
-            //auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
-            //auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
-            //if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
-            //auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
-            //child->evaluatedType = resultType;  // set each vector element node to its promoted type
-            promoteVectorElements(promoteTo, child);
+            if (child->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+                // this means that vector is recursive
+                if (child->evaluatedType->baseTypeEnum == VECTOR) throw SyntaxError(exprNode->loc(), "invalid matrix");
+                promoteVectorElements(promoteTo, child);  // promote the children first
+                child->evaluatedType = getTypeCopy(promoteTo);
+                child->evaluatedType->dims.clear();
+                child->evaluatedType->dims.push_back(std::dynamic_pointer_cast<VectorNode>(child)->getSize());
 
+            } else {  // child is not a vector
+                auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
+                auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
+                auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
+                if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+                auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
+                child->evaluatedType = resultType;  // set each vector element node to its promoted type
+            }
         }
     }
     /*
