@@ -8,6 +8,8 @@
 #include "Scope.h"
 
 class ScopedSymbol: public Symbol, public Scope{
+protected:
+    bool isBuiltin;
 public:
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;
@@ -15,7 +17,9 @@ public:
     std::vector<std::shared_ptr<ASTNode>>forwardDeclArgs;  // arguments of the forward declared
 
     ScopedSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope)
-            : Symbol(symName, retType), enclosingScope(enclosingScope) {};
+            : Symbol(symName, retType), enclosingScope(enclosingScope), isBuiltin(false) {};
+    ScopedSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, bool isBuiltin)
+            : Symbol(symName, retType), enclosingScope(enclosingScope), isBuiltin(isBuiltin) {};
     // from Scope.h
     std::shared_ptr<Symbol> resolve(const std::string &name) override;
     void define(std::shared_ptr<Symbol> sym) override;
@@ -30,6 +34,8 @@ public:
     std::string getName() override;
     std::string toString() override;
 
+    bool isBuiltIn() const;
+
 };
 // TODO: are they the same?
 class FunctionSymbol: public ScopedSymbol {
@@ -38,6 +44,8 @@ public:
     int line;
     FunctionSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line):
             ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName), line(line) {};
+    FunctionSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line, bool isBuiltin):
+            ScopedSymbol(symName, scopeName, retType, enclosingScope, isBuiltin), scopeName(scopeName), line(line) {};
 
     std::string getScopeName() override {
         return scopeName;
@@ -52,6 +60,9 @@ public:
 
     ProcedureSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line):
     ScopedSymbol(symName, scopeName, retType, enclosingScope), scopeName(scopeName), line(line) {};
+    ProcedureSymbol(std::string symName, std::string scopeName, std::shared_ptr<Type> retType, std::shared_ptr<Scope> enclosingScope, int line, bool isBuiltin):
+            ScopedSymbol(symName, scopeName, retType, enclosingScope, isBuiltin), scopeName(scopeName), line(line) {};
+
     std::string getScopeName() override {
         return  scopeName;
     };

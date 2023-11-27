@@ -50,3 +50,7 @@ std::string ScopedSymbol::toString() {
     str << "}";
     return str.str();
 }
+
+bool ScopedSymbol::isBuiltIn() const {
+    return isBuiltin;
+}
