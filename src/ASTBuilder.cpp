@@ -284,19 +284,19 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
-#endif
-        auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
-
-        auto matrixCtx = ctx->literal_matrix();
-        for (auto vectorCtx : matrixCtx->literal_vector()) {
-            t->addChild(visit(vectorCtx));
-        }
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
+//    std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
+//#ifdef DEBUG
+//        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
+//#endif
+//        auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
+//
+//        auto matrixCtx = ctx->literal_matrix();
+//        for (auto vectorCtx : matrixCtx->literal_vector()) {
+//            t->addChild(visit(vectorCtx));
+//        }
+//
+//        return std::dynamic_pointer_cast<ASTNode>(t);
+//    }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
 #ifdef DEBUG

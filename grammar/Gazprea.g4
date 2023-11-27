@@ -147,14 +147,13 @@ expr
     | INT                                                                                               #literalInt
     | literal_real                                                                                      #literalReal
     | '(' expr (',' expr )+ ')'                                                                         #literalTuple
-    | literal_matrix                                                                                    #literalMatrix
+ //   | literal_matrix                                                                                    #literalMatrix
     | literal_vector                                                                                    #literalVector
     | LITERAL_STRING                                                                                    #literalString
     ;
 
-
 literal_vector: '[' (expression (',' expression)*)? ']'; // empty vectors allowed
-literal_matrix: '[' literal_vector (',' literal_vector)* ']'; // empty matrices allowed
+//literal_matrix: '[' literal_vector (',' literal_vector)* ']'; // empty matrices allowed
 literal_real
     : INT DOT INT EXPONENT?
     | DOT INT EXPONENT?
