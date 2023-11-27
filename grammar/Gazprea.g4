@@ -125,7 +125,7 @@ expr
     | cast                                                                                              #typeCast
     | functionCall                                                                                      #funcCall
     | expr '[' expr (',' expr)? ']'                                                                     #index
-    | ID DOT (INT | ID)                                                                                 #tupleIndex //need to fix this. no time
+    | ID DOT (INT | ID)                                                                                 #tupleIndex
     | expr RANGE_OPERATOR expr                                                                          #range
     | '[' ID RESERVED_IN expression (',' ID RESERVED_IN expression)? GENERATOR_OPERATOR expression ']'  #generator
     | '[' ID RESERVED_IN expression FILTER_OPERATOR expression (',' expression)* ']'                    #filter
