@@ -219,7 +219,7 @@ void BackEnd::setupCommonTypeRuntime() {
 
   // builtin functions
   // TODO: delete "silly" function once we have a proper stdlib
-   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__silly", mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr}));
+//   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__silly", mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr}));
 }
 
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
