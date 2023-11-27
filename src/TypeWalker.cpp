@@ -1073,15 +1073,19 @@ namespace gazprea {
             }
         }
 
-        if (indexee->evaluatedType->dims.size() == 1 || indexee->evaluatedType->vectorOrMatrixEnum == VECTOR) {  // case: its a vector index
+        if (promotedType->isVector(indexee->evaluatedType)) {  // case: its a vector index
             auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
             tree->evaluatedType = typeCopy;
             tree->evaluatedType->vectorOrMatrixEnum = NONE;
             tree->evaluatedType->dims.clear();    // evaluted type is just a non vector literal with no dimention
-        } else if (indexee->evaluatedType->dims.size() == 2) {  // case: its a matrix indx
+        } else if (promotedType->isMatrix(indexee->evaluatedType)) {  // case: its a matrix indx
             auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
+            for (int i = 0; i < typeCopy->vectorInnerTypes.size(); i++) {
+                typeCopy->vectorInnerTypes[i] = promotedType->getTypeCopy(currentScope->resolveType(typeCopy->getBaseTypeEnumName()));
+            }
             tree->evaluatedType = typeCopy;
             tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
+            assert(indexee->evaluatedType->dims.size() == 2);
             int colSize = indexee->evaluatedType->dims[1];
             tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
             tree->evaluatedType->dims.push_back(colSize);
