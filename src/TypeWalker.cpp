@@ -152,8 +152,12 @@ namespace gazprea {
         if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
                                            std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
             assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
-            auto typeCopy = getTypeCopy(left->evaluatedType);
-            return typeCopy;  // return copy of the type
+            auto typeCopyl= getTypeCopy(left->evaluatedType);
+            auto typeCopyr = getTypeCopy(right->evaluatedType);
+            if (typeCopyl->vectorInnerTypes.size() > typeCopyr->vectorInnerTypes.size()) {
+                return  typeCopyl;
+            } else  return typeCopyr;  // return copy of the type
+
         }
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getBaseTypeEnumName() << ", " << right->evaluatedType->getBaseTypeEnumName() << "\n";
@@ -231,8 +235,19 @@ namespace gazprea {
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(right->evaluatedType) && isVector(left->evaluatedType)) {
             possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType);  // update left->evaltype ot matrix
+            auto r = left->evaluatedType;
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (isMatrix(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
+            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType);  // update left->evaltype ot matrix
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (isMatrix(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE) {
+            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType);  // update left->evaltype ot matrix
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+            auto l = left->evaluatedType;
+
         }
         else if (isVector(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
             promoteLiteralToArray(left->evaluatedType, right);
@@ -271,10 +286,6 @@ namespace gazprea {
         // promoteTo should be a matrix type
         // if promteTo is matrix and promotedType is vector, promote vector->matrix
         // if promoteTo is matrix and promotedType is scalar, prmote scalar->matrix
-        if (promoteTo->vectorInnerTypes.size() != promotedType->vectorInnerTypes.size()) {
-            // TODO: .size() might be tricky if promted type used to be identity/null because it can
-            throw TypeError(1, "cannot promote to matrix");
-        }
         int vecToMatrixPromo = isMatrix(promoteTo) && isVector(promotedType);
         int scalarToMatrixPromo = isMatrix(promoteTo)
                                && promotedType->vectorOrMatrixEnum == NONE;
@@ -287,6 +298,9 @@ namespace gazprea {
             for (int i = 0; i < promotedType->vectorInnerTypes.size(); i++) {
                 promotedType->vectorInnerTypes[i] = getTypeCopy(itself);
             }
+            promotedType->dims.push_back(promotedType->vectorInnerTypes.size());
+            // should create a square matrix
+            assert(promotedType->dims[0] ==  promotedType->dims[1] == 1);
             return;
         }
         if (scalarToMatrixPromo)  {
@@ -299,7 +313,20 @@ namespace gazprea {
             itself->vectorOrMatrixEnum = VECTOR;
             promotedType->vectorInnerTypes.push_back(itself);
             promotedType->vectorOrMatrixEnum = VECTOR;
+            promotedType->dims.push_back(1);  // should be (1, 1) matrix
+            promotedType->dims.push_back(1);  // should be (1, 1) matrix
+            assert(promotedType->dims[0] == 1 && promotedType->dims[1] == 1);
         }
+
+        //if (promoteTo->vectorInnerTypes[0]->size() != promotedType->vectorInnerTypes.size()) {
+        //    // TODO: .size() might be tricky if promted type used to be identity/null because it can
+        //    throw TypeError(1, "cannot promote to matrix");
+        //}
+        /*
+         * Note to myself.
+         * Matrix[3, 2] a = [1, 2], i cannot promote rhs to [[1, 2], [1, 2], [1, 2]] since i dont know the size, im just making [[1, 2], [1, 2]] for now
+         *
+         */
         return;
     }
     std::shared_ptr<Type> PromotedType::promoteVectorTypeObj(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type> promotedType, int line) {
