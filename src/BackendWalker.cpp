@@ -364,11 +364,8 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
     arguments.push_back(std::any_cast<mlir::Value>(walk(argument)));
   }
 
-  if (tree->MethodRef->isBuiltIn()) {
-    return codeGenerator.generateCallBuiltin(tree->MethodRef->name, arguments);
-  } else {
-    return codeGenerator.generateCallNamed(tree->CallName->name, arguments);
-  }
+  std::string funcSymbol = (tree->MethodRef->isBuiltIn()) ? tree->MethodRef->name : tree->CallName->name;
+  return codeGenerator.generateCallNamed(funcSymbol, arguments);
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {

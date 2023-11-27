@@ -38,7 +38,6 @@ public:
   mlir::Value performBINOP(mlir::Value left, mlir::Value right, BINOP op);
   mlir::Value performUNARYOP(mlir::Value value, UNARYOP op);
   mlir::Value generateCallNamed(std::string signature, std::vector<mlir::Value> arguments);
-  mlir::Value generateCallBuiltin(std::string funcName, std::vector<mlir::Value> arguments);
 
   mlir::Value generateValuePtr(mlir::Value value);
   mlir::Value generateRange(mlir::Value lower, mlir::Value upper);

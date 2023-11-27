@@ -42,9 +42,9 @@ void Def::defineBuiltins() {
     // define a vustom function silly() that returns an integer (no args)
     // to define args, use sillyDef->orderedArgs.push_back();
 
-    // auto sillyDef = std::make_shared<FunctionSymbol>("silly", "Global", symtab->globalScope->resolveType("integer"), symtab->globalScope, -1, true);
-    // sillyDef->orderedArgs.push_back(std::make_shared<Symbol>("arg1", resolvedInt, 0));
-    // symtab->globalScope->define(sillyDef);
+     auto sillyDef = std::make_shared<FunctionSymbol>("silly", "Global", symtab->globalScope->resolveType("integer"), symtab->globalScope, -1, true);
+     sillyDef->orderedArgs.push_back(std::make_shared<Symbol>("arg1", resolvedInt, 0));
+     symtab->globalScope->define(sillyDef);
 }
 
 
