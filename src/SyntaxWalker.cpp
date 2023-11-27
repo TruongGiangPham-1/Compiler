@@ -204,14 +204,14 @@ namespace gazprea {
                   << " inside global scope: " << debugGlobalScope() << debugContext() << std::endl;
 #endif
         // if we are already in a vector, this is an error
-        if (inContext(CONTEXT::VECTOR_LITERAL)) {
-            throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
-        }
+        //if (inContext(CONTEXT::VECTOR_LITERAL)) {
+        //    throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
+        //}
 
-        // else, we are in a vector. Go through children
-        contexts.push_back(CONTEXT::VECTOR_LITERAL);
-        walkChildren(tree);
-        contexts.pop_back();
+        //// else, we are in a vector. Go through children
+        //contexts.push_back(CONTEXT::VECTOR_LITERAL);
+        //walkChildren(tree);
+        //contexts.pop_back();
 
         return 0;
     }
