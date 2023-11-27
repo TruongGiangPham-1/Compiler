@@ -980,16 +980,8 @@ namespace gazprea {
         // check if this is a matrix or vector
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
 
-        int temp = 0;
-        if (std::dynamic_pointer_cast<VectorNode>(tree->getElement(1))) {
-            temp = 1;
-        }
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
-        }
-
-        if (temp) {
-            int temp2 = 0;
         }
 
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
