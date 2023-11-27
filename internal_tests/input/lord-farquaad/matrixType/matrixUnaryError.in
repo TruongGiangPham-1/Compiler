@@ -1,0 +1,5 @@
+procedure main() returns integer {
+    character[2 , 2] A = [['a', 'b'], ['c', 'd']];
+    not A -> std_output;   // error, cannot apply not on non boolean
+    return 0;
+}
