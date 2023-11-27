@@ -230,20 +230,20 @@ namespace gazprea {
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(left->evaluatedType) && isVector(right->evaluatedType)) {
-            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType);  // update right->Evaltype to matrix
+            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update right->Evaltype to matrix
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(right->evaluatedType) && isVector(left->evaluatedType)) {
-            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType);  // update left->evaltype ot matrix
+            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
             auto r = left->evaluatedType;
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
-            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType);  // update left->evaltype ot matrix
+            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE) {
-            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType);  // update left->evaltype ot matrix
+            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
             auto l = left->evaluatedType;
@@ -262,11 +262,11 @@ namespace gazprea {
     }
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
-            identityNode->evaluatedType = promoteTo;
+            identityNode->evaluatedType = getTypeCopy(promoteTo);
         } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
 
         } else {
-            identityNode->evaluatedType = promoteTo;
+            identityNode->evaluatedType = getTypeCopy(promoteTo);
         }
         return;
     }
@@ -282,13 +282,14 @@ namespace gazprea {
     }
 
     void PromotedType::possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo,
-                                                     std::shared_ptr<Type> promotedType) {
+                                                     std::shared_ptr<Type> promotedType, int line) {
         // promoteTo should be a matrix type
         // if promteTo is matrix and promotedType is vector, promote vector->matrix
         // if promoteTo is matrix and promotedType is scalar, prmote scalar->matrix
         int vecToMatrixPromo = isMatrix(promoteTo) && isVector(promotedType);
         int scalarToMatrixPromo = isMatrix(promoteTo)
                                && promotedType->vectorOrMatrixEnum == NONE;
+        int scalarToVectorPromo = isVector(promoteTo) && promotedType->vectorOrMatrixEnum == NONE;
         if (vecToMatrixPromo) {
             /*
              *   [int, int] -> [intvect, intvect]
@@ -316,6 +317,16 @@ namespace gazprea {
             promotedType->dims.push_back(1);  // should be (1, 1) matrix
             promotedType->dims.push_back(1);  // should be (1, 1) matrix
             assert(promotedType->dims[0] == 1 && promotedType->dims[1] == 1);
+            return;
+        }
+        if (scalarToVectorPromo) {
+            if (promotedType->baseTypeEnum == TUPLE) throw TypeError(line, "cannot promote tuple to array");
+            // just create size 1 vector
+            auto itself = getTypeCopy(promotedType);  // copy itself
+            promotedType->vectorInnerTypes.push_back(itself);
+            promotedType->vectorOrMatrixEnum = VECTOR;
+            promotedType->dims.clear();
+            promotedType->dims.push_back(1);
         }
 
         //if (promoteTo->vectorInnerTypes[0]->size() != promotedType->vectorInnerTypes.size()) {
@@ -997,6 +1008,7 @@ namespace gazprea {
             assert(!tree->getElement(0)->evaluatedType->dims.empty());
             tree->evaluatedType->dims.push_back(tree->getElement(0)->evaluatedType->dims[0]);  // TODO:
         }
+        // TODO: make sure that matrix element must be vector
         return nullptr;
     }
     //std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
