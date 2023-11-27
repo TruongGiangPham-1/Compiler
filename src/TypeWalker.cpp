@@ -504,7 +504,7 @@ namespace gazprea {
                     }
                 }
             }
-            tree->evaluatedType = rType;
+            tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
 
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
