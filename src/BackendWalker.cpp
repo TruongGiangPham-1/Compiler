@@ -120,6 +120,10 @@ std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
   return codeGenerator.generateValue(values);
 }
 
+std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
+  return codeGenerator.generateValue(tree->getVal());
+}
+
 std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
   std::vector<mlir::Value> values;
 
@@ -196,7 +200,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
   auto domain = codeGenerator.generateValue(0);
-  codeGenerator.generateDeclaration(tree->domainVarSym->mlirName, domain); 
+  codeGenerator.generateDeclaration(tree->domainVarSym->mlirName, domain);
 
   auto maxVectorSize = codeGenerator.generateCallNamed("length", argument);
 
@@ -210,10 +214,10 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
     codeGenerator.generateEnterBlock(loopBeginBlock);
     codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
- 
+
     auto inBounds = codeGenerator.performBINOP(index, maxVectorSize, LTHAN);
 
-    codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds)); 
+    codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
     codeGenerator.setBuilderInsertionPoint(trueBlock);
     auto indexedVal = codeGenerator.indexCommonType(filteree, index);
@@ -225,7 +229,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
     mlir::Block *trueResult = codeGenerator.generateBlock();
     mlir::Block *falseResult= codeGenerator.generateBlock();
     codeGenerator.generateCompAndJump(trueResult, falseResult, codeGenerator.downcastToBool(result)) ;
-    
+
     codeGenerator.setBuilderInsertionPoint(trueResult);
 
     codeGenerator.appendCommon(newVector, indexedVal);
@@ -268,10 +272,10 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.generateEnterBlock(loopBeginBlock);
     codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
- 
+
     auto inBounds = codeGenerator.performBINOP(index, length, LTHAN);
 
-    codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds)); 
+    codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
     codeGenerator.setBuilderInsertionPoint(trueBlock);
     auto indexedVal = codeGenerator.indexCommonType(baseVec, index);
@@ -319,7 +323,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     codeGenerator.generateEnterBlock(matrixBeginBlock);
     codeGenerator.setBuilderInsertionPoint(matrixBeginBlock);
     auto inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LTHAN);
-    codeGenerator.generateCompAndJump(matrixTrueBlock, matrixExitBlock, codeGenerator.downcastToBool(inBoundsRow)); 
+    codeGenerator.generateCompAndJump(matrixTrueBlock, matrixExitBlock, codeGenerator.downcastToBool(inBoundsRow));
     codeGenerator.setBuilderInsertionPoint(matrixTrueBlock);
 
     codeGenerator.appendCommon(generatorVector, codeGenerator.generateValue(colLength));
@@ -336,9 +340,9 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.generateEnterBlock(rowBeginBlock);
     codeGenerator.setBuilderInsertionPoint(rowBeginBlock);
- 
+
     inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LTHAN);
-    codeGenerator.generateCompAndJump(rowTrueBlock, rowExitBlock, codeGenerator.downcastToBool(inBoundsRow)); 
+    codeGenerator.generateCompAndJump(rowTrueBlock, rowExitBlock, codeGenerator.downcastToBool(inBoundsRow));
     codeGenerator.setBuilderInsertionPoint(rowTrueBlock);
     auto colIndex = codeGenerator.generateValue(0);
 
@@ -351,13 +355,13 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
       codeGenerator.setBuilderInsertionPoint(colBeginBlock);
 
       auto inBoundsCol = codeGenerator.performBINOP(colIndex, colLength, LTHAN);
-      codeGenerator.generateCompAndJump(colTrueBlock, colExitBlock, codeGenerator.downcastToBool(inBoundsCol)); 
+      codeGenerator.generateCompAndJump(colTrueBlock, colExitBlock, codeGenerator.downcastToBool(inBoundsCol));
 
       codeGenerator.setBuilderInsertionPoint(colTrueBlock);
 
       auto indexedRow = codeGenerator.indexCommonType(row, rowIndex);
       auto indexedCol = codeGenerator.indexCommonType(column, colIndex);
-    
+
       codeGenerator.generateAssignment(rowDomain, indexedRow);
       codeGenerator.generateAssignment(colDomain, indexedCol);
 

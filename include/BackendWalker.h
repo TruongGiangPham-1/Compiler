@@ -27,6 +27,7 @@ private:
   std::any visitInt(std::shared_ptr<IntNode> tree) override;
   std::any visitReal(std::shared_ptr<RealNode> tree) override;
   std::any visitChar(std::shared_ptr<CharNode> tree) override;
+  std::any visitString(std::shared_ptr<StringNode> tree) override;
   std::any visitBool(std::shared_ptr<BoolNode> tree) override;
   std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
   std::any visitVector(std::shared_ptr<VectorNode> tree) override;
