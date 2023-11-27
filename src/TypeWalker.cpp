@@ -219,6 +219,7 @@ namespace gazprea {
         // vector handling
         if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR) {
             //if (left->evaluatedType->dims[0] != right->evaluatedType->dims[0]) throw SizeError(left->loc(), "incompatible size binop");
+
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == NONE) {
@@ -242,6 +243,35 @@ namespace gazprea {
         }
         return;
     }
+    void PromotedType::possiblyPromoteVectorToMatrix(std::shared_ptr<Type> promoteTo,
+                                                     std::shared_ptr<Type> promotedType) {
+        // if promteTo is matrix and promotedType is vector, promote vector->matrix
+        // if promoteTo is matrix and promotedType is scalar, prmote scalar->matrix
+        if (promoteTo->vectorInnerTypes.size() != promotedType->vectorInnerTypes.size()) {
+            // TODO: .size() might be tricky if promted type used to be identity/null because it can
+            throw TypeError(1, "cannot promote to matrix");
+        }
+        int vecToMatrixPromo = !promoteTo->vectorInnerTypes.empty() && promoteTo->vectorInnerTypes[0]->vectorOrMatrixEnum == VECTOR
+                       && promotedType->vectorOrMatrixEnum == VECTOR
+                       && promotedType->vectorInnerTypes[0]->vectorOrMatrixEnum == NONE;
+        int isVector = !promoteTo->vectorInnerTypes.empty() && promoteTo->vectorInnerTypes[0]->vectorOrMatrixEnum ==NONE
+                       && promotedType->vectorOrMatrixEnum == VECTOR;
+        int isScaler = promotedType->vectorOrMatrixEnum == NONE;
+        int scalarToMatrixPromo = !promoteTo->vectorInnerTypes.empty() && promoteTo->vectorInnerTypes[0]->vectorOrMatrixEnum == VECTOR
+                               && promotedType->vectorOrMatrixEnum == VECTOR
+                               && promotedType->vectorInnerTypes[0]->vectorOrMatrixEnum == NONE;
+        if (vecToMatrixPromo) {
+            /*
+             *   [int, int] -> [intvect, intvect]
+             *
+             */
+            auto itself = getTypeCopy(promotedType);  // copy itself
+            for (int i = 0; i < promotedType->vectorInnerTypes.size(); i++) {
+                promotedType->vectorInnerTypes[i] = getTypeCopy(itself);
+            }
+        }
+        return;
+    }
     std::shared_ptr<Type> PromotedType::promoteVectorTypeObj(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type> promotedType, int line) {
         // symmetric to promoteVectorElements, but do it on Type obj instead of ASTNode
         auto promotedTypeCop = getTypeCopy(promotedType);
@@ -260,11 +290,13 @@ namespace gazprea {
         return promotedTypeCop;
     }
 
+    // promote all evaluatedType of a vector tree node
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY || exprNode->evaluatedType->baseTypeEnum == TYPE::NULL_) {
             promoteIdentityAndNull(promoteTo, exprNode);
             return;
         }
+
         //assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
         if (exprNode->evaluatedType->vectorOrMatrixEnum == NONE) {
             // this is a vector element node. one of base case of recursion
@@ -326,7 +358,10 @@ namespace gazprea {
                 child->evaluatedType = promoteVectorTypeObj(promoteTo, child->evaluatedType, exprNode->loc());
             }
         }
-
+        // update the root node's evaluated type
+        for (int i = 0; i < vectNodeCast->evaluatedType->vectorInnerTypes.size(); i++) {
+            vectNodeCast->evaluatedType->vectorInnerTypes[i] = getTypeCopy(vectNodeCast->getElement(i)->evaluatedType);
+        }
     }
     /*
      *  update a node's evaluated type by copying over attributes that matters. do not modify the type->dims(which was set in visitVector)
@@ -335,10 +370,6 @@ namespace gazprea {
         exprNode->evaluatedType->baseTypeEnum = assignType->baseTypeEnum;  // set the LHS vector literal type. int?real?
         exprNode->evaluatedType->vectorOrMatrixEnum = assignType->vectorOrMatrixEnum;
         exprNode->evaluatedType->setName(assignType->getBaseTypeEnumName());  // set the string evaluated type
-        exprNode->evaluatedType->vectorInnerTypes.clear();
-        for (auto&inner: assignType->vectorInnerTypes) {
-            exprNode->evaluatedType->vectorInnerTypes.push_back(getTypeCopy(inner));
-        }
     }
 
     std::shared_ptr<Type> PromotedType::getDominantTypeFromVector(std::shared_ptr<VectorNode> tree) {
