@@ -32,20 +32,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op);
 
 // index a type
-commonType* indexCommonType(commonType* indexee, int indexor);
-
-// 'composite'. internally, it holds a list of commonTypes
-bool isCompositeType(enum TYPE type) {
-  switch (type) {
-    case STRING:
-    case VECTOR:
-    case MATRIX:
-    case TUPLE:
-    return true;
-    default:
-    return false;
-  }
-}
+commonType* indexCommonType(commonType* indexee, commonType* indexor);
 
 // turn into bool for llvm control flow
 bool commonTypeToBool(commonType* val);
@@ -171,20 +158,26 @@ bool boolBINOP(bool l, bool r, enum BINOP op) {
   }
 }
 
+list* listify(commonType* item) {
+  list* newList = allocateList(1);
+  appendList(newList, copyCommonType(item));
+  return newList;
+}
+
 list* concat(list* l, list* r) {
   int concatenatedSize = l->size + r->size;
   list* newList = allocateList(concatenatedSize);
 
   for (int i = 0; i < l->size ; i ++) {
     
-    commonType* result = (r->size > 0) ? promotion(l->values[i], r->values[0]) : copyCommonType(result);
+    commonType* result = (r->size > 0) ? promotion(l->values[i], r->values[0]) : copyCommonType(l->values[i]);
 
     appendList(newList, result);
   }
 
   for (int i = 0; i < r->size ; i ++) {
 
-    commonType* result = (l->size > 0) ? promotion(l->values[i], l->values[0]) : copyCommonType(result);
+    commonType* result = (l->size > 0) ? promotion(r->values[i], l->values[0]) : copyCommonType(r->values[i]);
 
     appendList(newList, result);
   }
@@ -208,18 +201,6 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   }
 
   switch (op) {
-    case CONCAT:
-    {
-      if (!isCompositeType(l->type) || !isCompositeType(r->type)) {
-        UnsupportedTypeError("Trying to concatenate non-list types");
-      }
-
-      list* newlist = concat((list*)l->value, (list*)r->value);
-
-      // concat should be between vectors or strings
-      // TODO: leaking here 
-      return allocateCommonType(&newlist, (l->type == STRING || r->type == STRING) ? STRING : VECTOR);
-    }
     case STRIDE:
     {
       commonType* castedRight = cast(r, INTEGER);
@@ -310,13 +291,31 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     UnsupportedTypeError("BINOP recieved a type it could not recognize");
   }
 
-  // composites treated differenly
+  commonType* result;
+  // kind of ugly to put here but i am exhausted
+  if (op == CONCAT) {
+    list* l = isCompositeType(left->type) ? (list*)left->value : listify(left);
+    list* r = isCompositeType(right->type) ? (list*)right->value : listify(right);
+
+    list* newlist = concat((list*)l, (list*)r);
+
+    // concat should be between vectors or strings
+    // TODO: leaking here 
+    result = allocateCommonType(&newlist, (left->type == STRING || right->type == STRING) ? STRING : VECTOR);
+    if (!isCompositeType(left->type)) {
+      deallocateList(l);
+    }
+    if (!isCompositeType(right->type)) {
+      deallocateList(r);
+    }
+    return result;
+  }
+
   if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
     promotedLeft = promotion(left,right);
     promotedRight = promotion(right,left);
   }
   
-  commonType* result;
     
   if (op == RANGE) {
     return vectorFromRange(left, right);
@@ -391,6 +390,33 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
   return result;
 }
+commonType* listUNARYOP(commonType* l, enum UNARYOP op) {
+  if (!isCompositeType(l->type)) {
+    UnsupportedTypeError("Reached list unaryop, but neither operand is listable type");
+  }
+
+  switch (op) {
+    case NEGATE:
+    case NOT:
+    {
+      // if not one then the other
+      int listSize = ((list*) l->value)->currentSize;
+      list *mlist = allocateList(listSize);
+
+      for (int i = 0 ; i < listSize ; i ++) {
+        commonType* newItem = performCommonTypeUNARYOP(((list*) l->value)->values[i], op);
+        appendList(mlist, newItem);
+      }
+
+      enum TYPE resultingType = l->type;
+      commonType *result = allocateCommonType(&mlist, resultingType);
+
+      return result;
+    }
+    default:
+    RuntimeOPError("Unknown unary operation on list");
+  }
+}
 
 bool boolUNARYOP(bool val, enum UNARYOP op) {
   // implement once we have UNARYOP::NOT
@@ -398,6 +424,7 @@ bool boolUNARYOP(bool val, enum UNARYOP op) {
     case NOT:
       return !val;
     default:
+      RuntimeOPError("Unknown unary operation on bool");
       return val;
   }
 }
@@ -408,6 +435,7 @@ int intUNARYOP(int val, enum UNARYOP op) {
       return -val;
       // op should never be NOT, since this would have been handled in Typecheck
     default:
+      RuntimeOPError("Unknown unary operation on int");
       return val;
   }
 }
@@ -417,14 +445,19 @@ float floatUNARYOP(float val, enum UNARYOP op) {
     case NEGATE:
       return -val;
     default:
+      RuntimeOPError("Unknown unary operation on float");
       return val;
   }
 }
 
 commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
   commonType* result;
+  
+  if (isCompositeType(val->type)) {
 
-  if (val->type == BOOLEAN) {
+    result = listUNARYOP(val, op);
+
+  } else if (val->type == BOOLEAN) {
 
     bool tempBool = boolUNARYOP(*(bool*)val->value, op);
     result = allocateCommonType(&tempBool, BOOLEAN);
@@ -439,15 +472,19 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
     int tempInt = intUNARYOP(*(int*)val->value, op);
     result = allocateCommonType(&tempInt, INTEGER);
 
+  } else {
+
+    RuntimeOPError("Unknown unary operation");
+
   }
 
   return result;
 }
 
 // assume we are indexing a tuploe item
-commonType* indexCommonType(commonType* indexee, int indexor) {
+commonType* indexCommonType(commonType* indexee, commonType* indexor) {
   list* list = indexee->value;
-  return list->values[indexor];
+  return list->values[*(int*)indexor->value];
 }
 
 // https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar
@@ -472,4 +509,71 @@ bool commonTypeToBool(commonType* val) {
   }
 }
 
+// STANDARD LIBRARY. They are prefixed with __ because they can be called with regular
+// function calls in the walker.
+commonType* __length(commonType* vector)  {
+  if (!isCompositeType(vector->type)) {
+    UnsupportedTypeError("Trying to take length of non-vector type");
+  }
 
+  int length = ((list*)vector->value)->currentSize;
+
+  return allocateCommonType(&length, INTEGER);
+}
+
+commonType* __rows(commonType* matrix) {
+  // we don't differnetiate matrices and vectors
+  if (!isCompositeType(matrix->type)) {
+    UnsupportedTypeError("Trying to take row of non-matrix type");
+  }
+
+  return __length(matrix);
+}
+
+commonType* __columns(commonType* matrix) {
+  // we don't differnetiate matrices and vectors
+  if (!isCompositeType(matrix->type)) {
+    UnsupportedTypeError("Trying to take column of non-matrix type");
+  }
+
+  commonType* row = ((list*)matrix->value)->values[0];
+
+  return __length(row);
+}
+
+commonType* __reverse(commonType* vector)  {
+  if (!isCompositeType(vector->type)) {
+    UnsupportedTypeError("Trying to take length of non-vector type");
+  }
+
+  list* mlist = (list*)vector->value;
+  list* newList = allocateList(mlist->currentSize);
+
+  for (int i = mlist->currentSize ; i >= 0 ; i--) {
+    appendList(newList,copyCommonType(mlist->values[i]));
+  }
+
+  return allocateCommonType(&newList, VECTOR);
+}
+
+commonType* allocateFromRange(commonType* lower, commonType* upper) {
+  commonType* castedLower = cast(lower, INTEGER);
+  commonType* castedUpper = cast(upper, INTEGER);
+
+  int lowerVal = *(int*)castedLower->value;
+  int upperVal = *(int*)castedUpper->value;
+
+  // allocate of size 1 if nothing. 1 just lets us stay consistent with de-alloc
+  list* newList = allocateList(upperVal - lowerVal + 1<= 0 ? 1 : upperVal - lowerVal + 1);
+
+  for (int i = lowerVal ; i <= upperVal ; i++) {
+    commonType* newItem = allocateCommonType(&i, INTEGER);
+
+    appendList(newList, newItem);
+  }
+
+  deallocateCommonType(castedLower);
+  deallocateCommonType(castedUpper);
+
+  return allocateCommonType(&newList, VECTOR);
+}
