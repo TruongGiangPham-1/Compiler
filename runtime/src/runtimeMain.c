@@ -169,7 +169,9 @@ void streamIn(commonType *type) {
   }
 }
 
-commonType* silly() {
-  int ret = 99;
-  return allocateCommonType(&ret, INTEGER);
+commonType* silly(commonType* toPrint) {
+    printf("Silly called with ");
+    printCommonType(toPrint);
+    printf("\n");
+    return toPrint;
 }

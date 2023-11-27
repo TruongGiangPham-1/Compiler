@@ -218,7 +218,7 @@ void BackEnd::setupCommonTypeRuntime() {
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
 
   // builtin functions
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "silly", mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {}));
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "silly", mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr}));
 }
 
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
@@ -313,7 +313,7 @@ mlir::Value BackEnd::generateCallBuiltin(std::string funcName, std::vector<mlir:
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(funcName);
 
-  return builder->create<mlir::LLVM::CallOp>(loc, function, mlir::ValueRange{}).getResult();
+  return builder->create<mlir::LLVM::CallOp>(loc, function, arguments).getResult();
 }
 
 // === === === Printing === === ===
