@@ -30,6 +30,8 @@ private:
   std::any visitString(std::shared_ptr<StringNode> tree) override;
   std::any visitBool(std::shared_ptr<BoolNode> tree) override;
   std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
+  std::any visitVector(std::shared_ptr<VectorNode> tree) override;
+
 
   // Expr/Binary
   std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
@@ -38,6 +40,7 @@ private:
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
   std::any visitCast(std::shared_ptr<CastNode> tree) override;
   std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
+  std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
 
   // Expr/Vector
   std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
@@ -66,7 +69,9 @@ private:
   std::any visitNull(std::shared_ptr<NullNode> tree) override;
   std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
+  mlir::Value castType(mlir::Value, std::shared_ptr<Type> type);
 public:
   explicit BackendWalker(std::ofstream &out) : codeGenerator(out){};
+
   void generateCode(std::shared_ptr<ASTNode> tree);
 };
