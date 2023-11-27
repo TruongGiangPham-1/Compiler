@@ -313,7 +313,7 @@ mlir::Value BackEnd::generateCallBuiltin(std::string funcName, std::vector<mlir:
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>(funcName);
 
-  return builder->create<mlir::LLVM::CallOp>(loc, function, arguments).getResult();
+  return builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 }
 
 // === === === Printing === === ===

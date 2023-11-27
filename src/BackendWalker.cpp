@@ -365,12 +365,8 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
   }
 
   if (tree->MethodRef->isBuiltIn()) {
-    std::cout << tree->MethodRef->name << std::endl;
-    std::cout << arguments.size() << std::endl;
     return codeGenerator.generateCallBuiltin(tree->MethodRef->name, arguments);
   } else {
-    std::cout << "__" + tree->CallName->name << std::endl;
-    std::cout << arguments.size() << std::endl;
     return codeGenerator.generateCallNamed(tree->CallName->name, arguments);
   }
 }
