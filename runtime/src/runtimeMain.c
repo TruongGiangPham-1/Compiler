@@ -168,3 +168,8 @@ void streamIn(commonType *type) {
     setToNullValue(type);
   }
 }
+
+commonType* silly() {
+  int ret = 99;
+  return allocateCommonType(&ret, INTEGER);
+}
