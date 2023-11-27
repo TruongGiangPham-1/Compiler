@@ -108,6 +108,10 @@ std::any BackendWalker::visitBool(std::shared_ptr<BoolNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }
 
+std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
+  return codeGenerator.generateValue(tree->getVal());
+}
+
 std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
   std::vector<mlir::Value> values;
 

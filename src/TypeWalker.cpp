@@ -296,6 +296,12 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitString(std::shared_ptr<StringNode> tree) {
+        tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
+        tree->evaluatedType->baseTypeEnum = STRING;
+        return nullptr;
+    }
+
     std::any TypeWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
         for (auto expr: tree->val) {
             walk(expr);
