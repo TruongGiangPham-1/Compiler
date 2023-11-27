@@ -38,7 +38,9 @@ namespace gazprea {
         // matrices helper
         void addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree);
         void possiblyPaddMatrix(std::shared_ptr<VectorNode> tree);
-        void possiblyPromoteVectorToMatrix(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type>promotedType);
+        void possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type>promotedType);
+        int isMatrix(std::shared_ptr<Type> type);
+        int isVector(std::shared_ptr<Type> type);
         // create copy of the type obj. only used in promoteLiteralToArray
         std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);
 
