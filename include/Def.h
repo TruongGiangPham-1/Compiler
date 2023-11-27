@@ -13,6 +13,7 @@
 
 namespace gazprea {
     class Def : public ASTWalker {
+        void defineBuiltins();
     public:
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;

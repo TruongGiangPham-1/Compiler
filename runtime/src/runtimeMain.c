@@ -150,3 +150,12 @@ void streamIn(commonType *type) {
     setToNullValue(type);
   }
 }
+
+// STDLIB EXAMPLE: silly function
+// TODO: delete once we have a proper stdlib
+commonType* __silly(commonType* toPrint) {
+    printf("Silly called with ");
+    printCommonType(toPrint);
+    printf("\n");
+    return toPrint;
+}

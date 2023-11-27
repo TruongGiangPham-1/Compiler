@@ -31,6 +31,9 @@ public:
     Symbol(std::string name, std::shared_ptr<Type> type);
     Symbol(std::string name, std::shared_ptr<Type> type, std::shared_ptr<Scope> scope);
 
+    // when defining builtin type parameters, we need to initialize a different set of parameters
+    Symbol(std::string name, std::shared_ptr<Type> type, int index);
+
     virtual std::string getName();
 
     virtual std::string toString();
