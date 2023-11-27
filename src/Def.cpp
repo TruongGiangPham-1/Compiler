@@ -38,12 +38,13 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
 void Def::defineBuiltins() {
     auto resolvedInt = symtab->globalScope->resolveType("integer");
 
-
+    // EXAMPLE BUILTIN FUNCTION (TODO: delete once we have a proper stdlib)
     // define a vustom function silly() that returns an integer (no args)
     // to define args, use sillyDef->orderedArgs.push_back();
-    auto sillyDef = std::make_shared<FunctionSymbol>("silly", "Global", symtab->globalScope->resolveType("integer"), symtab->globalScope, -1, true);
-    sillyDef->orderedArgs.push_back(std::make_shared<Symbol>("arg1", resolvedInt, 0));
-    symtab->globalScope->define(sillyDef);
+
+    // auto sillyDef = std::make_shared<FunctionSymbol>("silly", "Global", symtab->globalScope->resolveType("integer"), symtab->globalScope, -1, true);
+    // sillyDef->orderedArgs.push_back(std::make_shared<Symbol>("arg1", resolvedInt, 0));
+    // symtab->globalScope->define(sillyDef);
 }
 
 
