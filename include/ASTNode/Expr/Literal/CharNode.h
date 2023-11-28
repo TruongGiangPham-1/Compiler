@@ -13,4 +13,6 @@ public:
 
     // Given a char after the slash, return the escape char (if valid)
     static std::optional<char> parseEscape(char c);
+
+    static std::pair<char, std::string> consumeChar(std::string s);
 };

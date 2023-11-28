@@ -4,7 +4,7 @@
 
 #include "ASTNode/Expr/Literal/StringNode.h"
 
-StringNode::StringNode(int line) : ExprNode(line), val("uninitialized!!") {}
+StringNode::StringNode(int line) : ExprNode(line), val("") {}
 
 std::string StringNode::toString() {
     return "StringNode: " + val;
