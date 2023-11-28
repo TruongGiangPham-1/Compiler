@@ -13,6 +13,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <limits.h>
 
 
 //#define DEBUGTUPLE
@@ -129,10 +131,53 @@ void streamIn(commonType *type, int* streamState) {
   // https://stackoverflow.com/a/5969152
   int check = 0;
 
+  // to implement the rewind buffer, we might want to make this a global var
+  // but the rewind buffer is another problem!
+  char buffer[1024]; // how big do I make this?
+
   switch (type->type) {
     case INTEGER:
 //      printf("Enter an int: ");
-      check = scanf("%d", (int*)type->value);
+      scanf("%s", buffer);
+      // convert string to an int
+      // https://stackoverflow.com/a/18544436
+      long lnum;
+      char* end;
+      errno = 0;
+
+#ifdef DEBUGSTREAM
+        printf("buffer: '%s'\n", buffer);
+#endif /* ifdef DEBUGSTREAM */
+
+      lnum = strtol(buffer, &end, 10);        //10 specifies base-10
+      if (end == buffer) {
+          // no digits consumed
+#ifdef DEBUGSTREAM
+          printf("ERROR: no digits were found\n");
+#endif /* ifdef DEBUGSTREAM */
+          check = 0;
+      } else if (*end != '\0') {
+          // extra characters at the end
+#ifdef DEBUGSTREAM
+          printf("ERROR: extra characters at the end\n");
+#endif /* ifdef DEBUGSTREAM */
+          check = 0;
+      } else if (((lnum == LONG_MAX || lnum == LONG_MIN) && errno == ERANGE) ||
+              (lnum > INT_MAX) || (lnum < INT_MIN)) {
+          // number is out of range
+#ifdef DEBUGSTREAM
+          printf("ERROR: input out of range");
+#endif /* ifdef DEBUGSTREAM */
+          check = 0;
+      } else {
+#ifdef DEBUGSTREAM
+          printf("Successful int read: %d\n", (int) lnum);
+#endif /* ifdef DEBUGSTREAM */
+
+          // number is valid
+          check = 1;
+          *(int *) type->value = (int) lnum;
+      }
       break;
     case CHAR:
 //      printf("Enter a char: ");
@@ -142,7 +187,6 @@ void streamIn(commonType *type, int* streamState) {
     case BOOLEAN: {
 //      printf("Enter a boolean value (T/F): ");
       // scan char. If it's T, true, else false
-      char buffer[1024]; // how big do I make this?
       check = scanf("%s", buffer);
 #ifdef DEBUGSTREAM
       printf("buffer: '%s'\n", buffer);
