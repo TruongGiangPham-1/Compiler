@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 commonType* cast(commonType* from, commonType* toType);
+commonType* promotion(commonType* from, commonType* to);
 bool isComparison(enum BINOP op) {
   switch (op) {
     case EQUAL:
@@ -38,6 +39,45 @@ bool ValidType(enum TYPE type) {
     default:
     return false;
   }
+}
+commonType* nullFrom(commonType* value) {
+  switch(value->type) {
+    case INTEGER:
+    {
+      int temp = 0;
+      return allocateCommonType(&temp, INTEGER);
+    }
+    case CHAR:
+    {
+      char temp = 0x0;
+      return allocateCommonType(&temp, CHAR);
+    }
+    case BOOLEAN:
+    {
+      bool temp = false;
+      return allocateCommonType(&temp, BOOLEAN);
+    }
+    case REAL:
+    {
+      float temp = 0.0;
+      return allocateCommonType(&temp, REAL);
+    }
+    case VECTOR:
+    case STRING:
+    {
+      list* oldList = ((list*)value->value);
+      list* nulledList = allocateList(oldList->currentSize);
+      for (int i = 0 ; i < oldList->currentSize ; i ++) {
+        appendList(nulledList, nullFrom(oldList->values[i]));
+      }
+      
+      return allocateCommonType(&nulledList, VECTOR);
+    }
+    default: 
+    RuntimeOPError("attempting to get null intialized value of unknown type");
+    return NULL;
+  }
+
 }
 
 commonType* castHelper(commonType* fromValue, enum TYPE type) {
@@ -92,6 +132,17 @@ commonType* boolCast(bool fromValue, commonType* toType) {
       char tempChar = fromValue;
       return allocateCommonType(&tempChar, CHAR);
     }
+    case VECTOR :
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+
+      for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, boolCast(fromValue, toList->values[i]));
+      }
+
+      return allocateCommonType(&newList, VECTOR);
+    }
     default:
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
@@ -124,6 +175,17 @@ commonType* intCast(int fromValue, commonType* toType) {
     {
       char tempChar =  ((unsigned int) fromValue) % 256;
       return allocateCommonType(&tempChar, CHAR);
+    }
+    case VECTOR:
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+
+      for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, intCast(fromValue, toList->values[i]));
+      }
+
+      return allocateCommonType(&newList, VECTOR);
     }
     default:
   #ifdef DEBUGTYPES
@@ -158,6 +220,17 @@ commonType* charCast(char fromValue, commonType* toType) {
     {
       return allocateCommonType(&fromValue, CHAR);
     }
+    case VECTOR:
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+
+      for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, charCast(fromValue, toList->values[i]));
+      }
+
+      return allocateCommonType(&newList, VECTOR);
+    }
     default:
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
@@ -187,6 +260,17 @@ commonType* realCast(float fromValue, commonType* toType) {
   #endif /* ifdef DEBUGTYPES */
       return allocateCommonType(&fromValue, REAL);
     }
+    case VECTOR:
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+
+      for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, realCast(fromValue, toList->values[i]));
+      }
+
+      return allocateCommonType(&newList, VECTOR);
+    }
     default:
   #ifdef DEBUGTYPES
     printf("Cast fail!\n");
@@ -206,7 +290,21 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
     case STRING:
     case VECTOR: 
     {
-      
+      list* toList = ((list*)toType->value);
+      int toSize = toList->currentSize;
+      list* newList = allocateList(toSize);
+      for (int i = 0 ; i < toSize ; i ++) {
+          commonType* promotedItem;
+          if (i < fromValue->currentSize) {
+            promotedItem = promotion(fromValue->values[i], toList->values[i]);
+          } else { 
+            // padding
+            promotedItem = nullFrom(toList->values[i]);
+          }
+          appendList(newList, promotedItem);
+      }
+
+      return allocateCommonType(&newList, VECTOR);
     }
     default:
     RuntimeOPError("wierd stuff goin on man");
@@ -388,6 +486,8 @@ commonType* promotion(commonType* from, commonType* to) {
     return charPromotion(from, to);
     case REAL:
     return realPromotion(from, to);
+    case VECTOR:
+    return vectorCast((list*)from->value, to);
     default:
     PromotionError("Attempting promotion on invalid or tuple type");
     return NULL;
