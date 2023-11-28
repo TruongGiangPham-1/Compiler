@@ -622,7 +622,15 @@ namespace gazprea {
     }
 
     std::any ASTBuilder::visitIteratorLoop(GazpreaParser::IteratorLoopContext *ctx) {
-
+        std::shared_ptr<IteratorLoopNode> t = std::make_shared<IteratorLoopNode>(ctx->getStart()->getLine());
+        // add the 1st domain
+        for (int i = 0; i < ctx->ID().size(); i++)  {
+            t->addChild(visit(ctx->expression(i)));
+            std::shared_ptr<Symbol> s = std::make_shared<Symbol>(ctx->ID(i)->getSymbol()->getText());
+            t->domainVars.push_back(s);
+        }
+        t->addChild(visit(ctx->bodyStatement()));
+        return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
     // Loop Control

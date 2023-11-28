@@ -461,7 +461,33 @@ namespace gazprea {
         return 0;
     }
 
+    std::any Ref::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
+        // resolve the domain 1st
+        for (auto &domain: tree->getConditions()) {
+            walk(domain);
+        }
 
+        auto scopeName = "iteratorLoop" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(scopeName, currentScope);
+
+        // define domainVar
+        auto intType = currentScope->resolveType("integer");  // domain var is just int right?
+        for (auto&domainV: tree->domainVars) {
+            domainV->mlirName = "VAR_DEF" + std::to_string(getNextId());
+            domainV->typeSym = intType;
+            domainV->scope = currentScope;
+            currentScope->define(domainV);
+#ifdef DEBUG
+            std::cout << "in line " << tree->loc()
+                      << "domainVar=" << domainV->getName() << " defined as "
+                      << domainV->mlirName << std::endl;
+#endif
+        }
+
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
 
 
     /*
