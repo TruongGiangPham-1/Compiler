@@ -138,7 +138,7 @@ void streamIn(commonType *type, int* streamState) {
   switch (type->type) {
     case INTEGER:
 //      printf("Enter an int: ");
-      scanf("%s", buffer);
+      check = scanf("%s", buffer);
       // convert string to an int
       // https://stackoverflow.com/a/18544436
       long lnum;
