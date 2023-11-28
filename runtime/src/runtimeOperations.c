@@ -203,7 +203,7 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   switch (op) {
     case STRIDE:
     {
-      commonType* castedRight = cast(r, INTEGER);
+      commonType* castedRight = castHelper(r, INTEGER);
 
       list* newlist = stride((list*)l->value, *(int*)castedRight->value);
 
@@ -270,8 +270,8 @@ commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
 }
 
 commonType* vectorFromRange(commonType* lower, commonType* upper) {
-  commonType* castedLower = cast(lower, INTEGER);
-  commonType* castedUpped = cast(upper, INTEGER);
+  commonType* castedLower = castHelper(lower, INTEGER);
+  commonType* castedUpped = castHelper(upper, INTEGER);
 
   list* newList = allocateList(*(int*)upper->value - *(int*)lower->value);
 
@@ -557,8 +557,9 @@ commonType* __reverse(commonType* vector)  {
 }
 
 commonType* allocateFromRange(commonType* lower, commonType* upper) {
-  commonType* castedLower = cast(lower, INTEGER);
-  commonType* castedUpper = cast(upper, INTEGER);
+
+  commonType* castedLower = castHelper(lower, INTEGER);
+  commonType* castedUpper = castHelper(upper, INTEGER);
 
   int lowerVal = *(int*)castedLower->value;
   int upperVal = *(int*)castedUpper->value;
