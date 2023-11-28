@@ -111,6 +111,7 @@ set(
         SyntaxWalker.cpp
         ../include/SyntaxWalker.h
         ASTNode/Expr/Literal/StringNode.cpp
+        ASTNode/Loop/IteratorLoopNode.cpp
         ../include/ASTNode/Expr/StdInputNode.h
 )
 
