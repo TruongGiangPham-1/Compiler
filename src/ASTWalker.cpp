@@ -157,6 +157,11 @@ namespace gazprea {
             std::cout << "about to visit literal Vector" << std::endl;
 #endif // DEBUG
             return this->visitVector(std::dynamic_pointer_cast<VectorNode>(tree));
+        } else if (std::dynamic_pointer_cast<StdInputNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit std input token (should only be in stream_state function)" << std::endl;
+#endif // DEBUG
+            return this->visitStdInputNode(std::dynamic_pointer_cast<StdInputNode>(tree));
 
         } else if (std::dynamic_pointer_cast<MatrixNode>(tree)) {
 #ifdef DEBUG
@@ -350,6 +355,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {

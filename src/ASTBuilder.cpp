@@ -4,6 +4,7 @@
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/Expr/TupleIndexNode.h"
+#include "ASTNode/Expr/StdInputNode.h"
 #include <memory>
 
 
@@ -160,7 +161,11 @@ namespace gazprea {
 
         callNode->CallName = funcName;
 
-        // no params. The only possible parameter is the std_input
+        // add dummy StdInput node
+        // this helps stream_state work with our current function call codegen
+        std::shared_ptr<ASTNode> stdInput = std::make_shared<StdInputNode>(ctx->getStart()->getLine());
+        callNode->addChild(stdInput);
+
         return std::dynamic_pointer_cast<ASTNode>(callNode);
     }
 

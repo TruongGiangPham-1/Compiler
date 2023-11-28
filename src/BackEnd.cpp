@@ -422,14 +422,21 @@ void BackEnd::streamOut(mlir::Value value) {
 }
 
 /*
+ * Returns (pointer to) global streamState variable (pointer to int)
+ */
+mlir::Value BackEnd::getStreamStateVar() {
+  // run getStreamState with streamStatePtr
+  auto streamState = module.lookupSymbol<mlir::LLVM::GlobalOp>("streamState");
+  // MLIR doesn't allow direct access to globals, so we have to use an addressof
+  auto streamStatePtr = builder->create<mlir::LLVM::AddressOfOp>(loc, streamState);
+  return streamStatePtr.getResult();
+}
+
+/*
  * Reads from stdin (based on the type of the value) and assigns
  */
 void BackEnd::streamIn(mlir::Value value) {
-    // run getStreamState with streamStatePtr
-    auto streamState = module.lookupSymbol<mlir::LLVM::GlobalOp>("streamState");
-    // MLIR doesn't allow direct access to globals, so we have to use an addressof
-    auto streamStatePtr = builder->create<mlir::LLVM::AddressOfOp>(loc, streamState);
-
+    auto streamStatePtr = getStreamStateVar();
     mlir::LLVM::LLVMFuncOp streamInFunc =
             module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamIn");
     builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, mlir::ValueRange({value, streamStatePtr}));

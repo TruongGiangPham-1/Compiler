@@ -111,6 +111,7 @@ set(
         SyntaxWalker.cpp
         ../include/SyntaxWalker.h
         ASTNode/Expr/Literal/StringNode.cpp
+        ../include/ASTNode/Expr/StdInputNode.h
 )
 
 # Build our executable from the source files.

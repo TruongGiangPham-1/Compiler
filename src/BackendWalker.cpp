@@ -147,6 +147,10 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
   return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index));
 }
 
+std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
+  return codeGenerator.getStreamStateVar();
+}
+
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
