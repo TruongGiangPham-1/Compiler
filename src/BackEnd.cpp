@@ -526,6 +526,16 @@ mlir::Value BackEnd::generateNullValue(std::shared_ptr<Type> type) {
       return this->generateValue(0);
     case REAL:
       return this->generateValue(0.0f);
+    case TUPLE:
+      {
+        std::vector<mlir::Value> children;
+        for (auto childType : type->tupleChildType) {
+          children.push_back(generateNullValue(childType.second));
+        }
+
+        // magic code
+        return this->generateValue(children);
+      }
     default:
       throw std::runtime_error("Identity not available");
   }
@@ -542,6 +552,15 @@ mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
     case REAL:
       return this->generateValue(1.0f);
     case TUPLE:
+      {
+        std::vector<mlir::Value> children;
+        for (auto childType : type->tupleChildType) {
+          children.push_back(generateIdentityValue(childType.second));
+        }
+
+        // magic code
+        return this->generateValue(children);
+      }
     default:
       throw std::runtime_error("Identity not available");
   }
