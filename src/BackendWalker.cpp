@@ -99,7 +99,6 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   if (tree->sym->index >= 0) {
     return codeGenerator.generateLoadArgument(tree->sym->index);
   } else {
-    std::cout << "trying to load " << tree->sym->mlirName << std::endl;
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
 }
