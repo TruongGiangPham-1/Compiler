@@ -195,6 +195,23 @@ commonType* realCast(float fromValue, commonType* toType) {
     return NULL;
   }
 }
+
+commonType* vectorCast(list* fromValue, commonType* toType) {
+#ifdef DEBUGTYPES
+  printf("Cast from vector\n");
+#endif /* ifdef DEBUGTYPES */
+
+  switch (toType->type) {
+    // vectors only castable to vectors. Otherwise something dangerous is going on. time to do a little manipulation
+    case STRING:
+    case VECTOR: 
+    {
+      
+    }
+    default:
+    RuntimeOPError("wierd stuff goin on man");
+  }
+}
 /*
  *
  */
@@ -235,6 +252,12 @@ commonType* cast(commonType* from, commonType* toType) {
 #endif /* ifdef DEBUGTYPES */
 
       return realCast(*(float*)from->value, toType);
+
+      case VECTOR:
+      case STRING:
+
+      return vectorCast((list*)from->value, toType);
+
       default:
 
 #ifdef DEBUGTYPES
@@ -255,6 +278,10 @@ commonType* boolPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("To bool!\n");
 #endif /* ifdef DEBUGTYPES */
+  return cast(fromValue, toType);
+
+  case VECTOR:
+
   return cast(fromValue, toType);
 
   default:
@@ -284,6 +311,9 @@ commonType* intPromotion(commonType* fromValue, commonType* toType) {
 #endif /* ifdef DEBUGTYPES */
     return cast(fromValue, fromValue);
 
+    case VECTOR:
+    return cast(fromValue, toType);
+
     default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
@@ -303,6 +333,10 @@ commonType* charPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
     printf("To char\n");
 #endif /* ifdef DEBUGTYPES */
+    return cast(fromValue, toType);
+
+    case VECTOR:
+
     return cast(fromValue, toType);
 
     default:
@@ -329,6 +363,11 @@ commonType* realPromotion(commonType* fromValue, commonType* toType) {
   printf("To real\n");
 #endif /* ifdef DEBUGTYPES */
     return cast(fromValue, fromValue);
+
+    case VECTOR:
+
+    return cast(fromValue, toType);
+
     default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
