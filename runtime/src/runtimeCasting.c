@@ -54,7 +54,7 @@ commonType* castHelper(commonType* fromValue, enum TYPE type) {
       }
     case REAL:
       {
-      char temp = 0.0;
+      float temp = 0.0;
       return cast(fromValue, allocateCommonType(&temp, REAL));
       }
     case BOOLEAN:
@@ -282,7 +282,7 @@ commonType* intPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("To int\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, toType);
+    return cast(fromValue, fromValue);
 
     default:
 #ifdef DEBUGTYPES
@@ -328,7 +328,7 @@ commonType* realPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("To real\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, toType);
+    return cast(fromValue, fromValue);
     default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
