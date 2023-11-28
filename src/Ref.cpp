@@ -324,6 +324,13 @@ namespace gazprea {
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
 
+        if (!tree->getTypeNode()) {
+            if (!tree->getExprNode()) {
+                // TODO: or if exprNode is identity or null
+                throw SyntaxError(tree->loc(), "Inferred declaration is missing expression.");
+            }
+        }
+
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
             if (resolveID->scope->getScopeName().find("iterator") == std::string::npos) {  // resolved ID is not in iterator scope then its error
