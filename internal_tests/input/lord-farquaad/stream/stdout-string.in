@@ -1,0 +1,5 @@
+procedure main() returns integer {
+  string cats_meow = "The cat said \"Meow!\"\nThat was a good day.\n";
+  cats_meow -> std_output;
+  return 0;
+}
