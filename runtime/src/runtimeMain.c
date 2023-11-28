@@ -21,7 +21,7 @@
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 //#define DEBUGPRINT
-//#define DEBUGSTREAM
+// #define DEBUGSTREAM
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
@@ -133,7 +133,7 @@ void streamIn(commonType *type, int* streamState) {
 
   // to implement the rewind buffer, we might want to make this a global var
   // but the rewind buffer is another problem!
-  char buffer[1024]; // how big do I make this?
+  char buffer[1024] = {0}; // how big do I make this?
 
   switch (type->type) {
     case INTEGER:
