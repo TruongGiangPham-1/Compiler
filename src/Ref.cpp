@@ -326,10 +326,10 @@ namespace gazprea {
 
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
-            //if (resolveID->scope->getScopeName().find("iterator") == std::string::npos) {  // resolved ID is not in iterator scope then its error
+            if (resolveID->scope->getScopeName().find("iterator") == std::string::npos) {  // resolved ID is not in iterator scope then its error
                 // this is resolved in the iterator domain var
                 throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
-            //}
+            }
             // else, any Identifier same name as one defined in iterator loop is ok
 
         }
@@ -370,8 +370,8 @@ namespace gazprea {
 
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
+        idSym->qualifier = tree->qualifier;
         currentScope->define(idSym);
-
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
         return 0;
