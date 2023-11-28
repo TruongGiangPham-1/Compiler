@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
+void printCommonType(commonType *type);
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 // defined binary operations between types
@@ -225,16 +226,14 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
       list *mlist = allocateList(listSize);
 
       for (int i = 0 ; i < listSize ; i ++) {
-        commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
-        commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
-
+        commonType* left = ((list*) l->value)->values[i];
+        commonType* right = ((list*) r->value)->values[i];
+        
         commonType* result = performCommonTypeBINOP(left, right, op);
         appendList(mlist, result);
       }
-
-      enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
+      enum TYPE resultingType = l->type;
       commonType *result = allocateCommonType(&mlist, resultingType);
-
       return result;
     }
     default:
@@ -313,7 +312,6 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
   promotedLeft = promotion(left,right);
   promotedRight = promotion(right,left);
-  
     
   if (op == RANGE) {
     return vectorFromRange(left, right);
@@ -324,7 +322,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
 
     if (isCompositeType(promotedLeft->type)) {
 
-      result = listBINOP(left, right, op);
+      result = listBINOP(promotedLeft, promotedRight, op);
 
     } else if(promotedLeft->type == BOOLEAN) {
 
@@ -347,9 +345,9 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
       result = allocateCommonType(&tempChar, CHAR);
     } 
   } else {
-    if (isCompositeType(left->type)) {
+    if (isCompositeType(promotedLeft->type)) {
 
-      result = listCOMP(left, right, op);
+      result = listCOMP(promotedLeft, promotedRight, op);
 
     } else if(promotedLeft->type == BOOLEAN) {
 

@@ -11,6 +11,7 @@
 #include <stdbool.h>
 commonType* cast(commonType* from, commonType* toType);
 commonType* promotion(commonType* from, commonType* to);
+void printCommonType(commonType *type);
 bool isComparison(enum BINOP op) {
   switch (op) {
     case EQUAL:
@@ -312,6 +313,28 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
 }
 
 commonType* vectorPromotion(list* from, commonType* to) {
+  list* toList = (list*)to->value;
+
+  if (from->currentSize > toList->currentSize) {
+
+    // if we're ever here, it should only be for vector
+    // binops, here the "from" is larger than the "to",
+    // pad to stay consistent with promotion framework, so cast doesn't
+    // think we're trying to downcast
+    
+    list* tempTo = allocateList(from->currentSize);
+    int i = 0;
+    for (; i < toList->currentSize ; i ++) {
+      appendList(tempTo,toList->values[i]);
+    }
+
+    for (; i < from->currentSize ; i ++) {
+      appendList(tempTo, nullFrom(tempTo->values[0]));
+    }
+    return vectorCast(from, allocateCommonType(&tempTo, VECTOR));
+  } else {
+    return vectorCast(from, to);
+  }
   return NULL;
 }
 /*
@@ -491,7 +514,7 @@ commonType* promotion(commonType* from, commonType* to) {
     case REAL:
     return realPromotion(from, to);
     case VECTOR:
-    return vectorCast((list*)from->value, to);
+    return vectorPromotion((list*)from->value, to);
     default:
     PromotionError("Attempting promotion on invalid or tuple type");
     return NULL;
