@@ -100,12 +100,13 @@ void streamOut(commonType *type) {
   printType(type, false);
 }
 
-enum StreamStateErr {
+enum StreamState {
+  STREAM_STATE_OK = 0,
   STREAM_STATE_ERR = 1,
   STREAM_STATE_EOF = 2,
 };
 
-void setStreamState(int* state, enum StreamStateErr err, commonType *type) {
+void setStreamState(int* state, int newState, commonType *type) {
 #ifdef DEBUGSTREAM
   printf("Setting streamState to %d\n", err);
 #endif /* ifdef DEBUGSTREAM */
@@ -117,7 +118,7 @@ void setStreamState(int* state, enum StreamStateErr err, commonType *type) {
         return;
     } else {
         // in all other cases, set the state to the integer value of the streamStateErr
-        *state = err;
+        *state = newState;
     }
 }
 
@@ -192,7 +193,7 @@ void streamIn(commonType *type, int* streamState) {
 
   } else {
     // valid input! reset stream_state to 0 (it might have been 1 before)
-    setStreamState(streamState, 0, type);
+    setStreamState(streamState, STREAM_STATE_OK, type);
   }
 }
 
