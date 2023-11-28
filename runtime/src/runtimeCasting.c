@@ -11,6 +11,7 @@
 #include <stdbool.h>
 commonType* cast(commonType* from, commonType* toType);
 commonType* promotion(commonType* from, commonType* to);
+bool isCompositeType(enum TYPE type);
 void printCommonType(commonType *type);
 bool isComparison(enum BINOP op) {
   switch (op) {
@@ -156,7 +157,7 @@ commonType* intCast(int fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Cast from int\n");
 #endif /* ifdef DEBUGTYPES */
-
+  
   switch (toType->type) {
     case BOOLEAN:
     {
@@ -265,8 +266,8 @@ commonType* realCast(float fromValue, commonType* toType) {
     {
       list* toList = (list*)toType->value;
       list* newList = allocateList(toList->currentSize);
-
-      for (int i = 0 ; i < toList->currentSize ; i++) {
+      
+        for (int i = 0 ; i < toList->currentSize ; i++) {
         appendList(newList, realCast(fromValue, toList->values[i]));
       }
 
@@ -315,26 +316,31 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
 commonType* vectorPromotion(list* from, commonType* to) {
   list* toList = (list*)to->value;
 
-  if (from->currentSize > toList->currentSize) {
+  if (isCompositeType(to->type)) {
+    if (from->currentSize > toList->currentSize) {
 
-    // if we're ever here, it should only be for vector
-    // binops, here the "from" is larger than the "to",
-    // pad to stay consistent with promotion framework, so cast doesn't
-    // think we're trying to downcast
-    
-    list* tempTo = allocateList(from->currentSize);
-    int i = 0;
-    for (; i < toList->currentSize ; i ++) {
-      appendList(tempTo,toList->values[i]);
-    }
+      list* tempTo = allocateList(from->currentSize);
+      int i = 0;
+      for (; i < toList->currentSize ; i ++) {
+        appendList(tempTo,toList->values[i]);
+      }
 
-    for (; i < from->currentSize ; i ++) {
-      appendList(tempTo, nullFrom(tempTo->values[0]));
+      for (; i < from->currentSize ; i ++) {
+        appendList(tempTo, nullFrom(tempTo->values[0]));
+      }
+      return vectorCast(from, allocateCommonType(&tempTo, VECTOR));
+    } else {
+      return vectorCast(from, to);
     }
-    return vectorCast(from, allocateCommonType(&tempTo, VECTOR));
   } else {
-    return vectorCast(from, to);
+    list* newList = allocateList(from->currentSize);
+    for (int i = 0 ; i < from->currentSize ; i++) {
+      appendList(newList, promotion(from->values[i], to));
+    }
+
+   return allocateCommonType(&newList, VECTOR);
   }
+  
   return NULL;
 }
 /*
@@ -406,9 +412,16 @@ commonType* boolPromotion(commonType* fromValue, commonType* toType) {
   return cast(fromValue, toType);
 
   case VECTOR:
+  {
+    list* toList = (list*)toType->value;
+    list* newList = allocateList(toList->currentSize);
+    
+      for (int i = 0 ; i < toList->currentSize ; i++) {
+      appendList(newList, boolPromotion(fromValue, toList->values[i]));
+    }
 
-  return cast(fromValue, toType);
-
+    return allocateCommonType(&newList, VECTOR);
+  }
   default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
@@ -437,8 +450,16 @@ commonType* intPromotion(commonType* fromValue, commonType* toType) {
     return cast(fromValue, fromValue);
 
     case VECTOR:
-    return cast(fromValue, toType);
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+      
+        for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, intPromotion(fromValue, toList->values[i]));
+      }
 
+      return allocateCommonType(&newList, VECTOR);
+    }
     default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
@@ -461,9 +482,16 @@ commonType* charPromotion(commonType* fromValue, commonType* toType) {
     return cast(fromValue, toType);
 
     case VECTOR:
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+      
+        for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, charPromotion(fromValue, toList->values[i]));
+      }
 
-    return cast(fromValue, toType);
-
+      return allocateCommonType(&newList, VECTOR);
+    }
     default:
 #ifdef DEBUGTYPES
     printf("Error! Promotion not possible\n");
@@ -490,9 +518,16 @@ commonType* realPromotion(commonType* fromValue, commonType* toType) {
     return cast(fromValue, fromValue);
 
     case VECTOR:
+    {
+      list* toList = (list*)toType->value;
+      list* newList = allocateList(toList->currentSize);
+      
+        for (int i = 0 ; i < toList->currentSize ; i++) {
+        appendList(newList, realPromotion(fromValue, toList->values[i]));
+      }
 
-    return cast(fromValue, toType);
-
+      return allocateCommonType(&newList, VECTOR);
+    }
     default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
