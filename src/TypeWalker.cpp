@@ -72,7 +72,47 @@ namespace gazprea {
 /*null*/         {"",  "", "", "", "" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
+    void PromotedType::populateInnerTypes(std::shared_ptr<Type> type, std::shared_ptr<VectorNode> tree) {
+        // given a vector nodes, just simply add to innerType array in type
+        type->vectorInnerTypes.clear();
+        for (auto&child: tree->getElements()) {
+            type->vectorInnerTypes.push_back(getTypeCopy(child->evaluatedType));
+        }
+    }
+    void PromotedType::possiblyPaddMatrix(std::shared_ptr<VectorNode> tree) {
+        // given a node, possibly padd them with null node
+        int isMatrix = 0;
+        for (auto& child: tree->getElements()) {
+            if (child->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+                isMatrix = 1;
+            }
+        }
+        if (!isMatrix) {  // case: this is not a vector so we dont need to pad
+            return;
+        }
+        int maxSizeRow = INT32_MIN;
+        for (auto &child: tree->getElements()) {
+            maxSizeRow = std::max(maxSizeRow, child->evaluatedType->dims[0]);
+        }
+        for (auto & child: tree->getElements()) {
+            int howMuch = maxSizeRow - child->evaluatedType->dims[0];
+            if (std::dynamic_pointer_cast<VectorNode>(child)) {
+                addNullNodesToVector(maxSizeRow, std::dynamic_pointer_cast<VectorNode>(child));  //
+            } else {
+                // its an ID node
+            }
+        }
+        return;
+    }
+    void PromotedType::addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree) {
+        // used when there are matrix rows that are shorter size the
+        while (howMuch--) {
+            std::shared_ptr<NullNode> nullNode = std::make_shared<NullNode>(tree->loc());
+            tree->addChild(std::dynamic_pointer_cast<ASTNode>(nullNode));
+        }
 
+        return;
+    }
     std::shared_ptr<Type> PromotedType::getTypeCopy(std::shared_ptr<Type> type) {
         // returns a copy of the type
         auto newtype = std::make_shared<AdvanceType>(type->getBaseTypeEnumName());
@@ -82,6 +122,9 @@ namespace gazprea {
         }
         if (!type->dims.empty()){
             newtype->dims = type->dims;
+        }
+        for (auto &innerType: type->vectorInnerTypes) {
+            newtype->vectorInnerTypes.push_back(getTypeCopy(innerType));
         }
         return newtype;
     }
@@ -109,8 +152,12 @@ namespace gazprea {
         if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
                                            std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
             assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
-            auto typeCopy = getTypeCopy(left->evaluatedType);
-            return typeCopy;  // return copy of the type
+            auto typeCopyl= getTypeCopy(left->evaluatedType);
+            auto typeCopyr = getTypeCopy(right->evaluatedType);
+            if (typeCopyl->vectorInnerTypes.size() > typeCopyr->vectorInnerTypes.size()) {
+                return  typeCopyl;
+            } else  return typeCopyr;  // return copy of the type
+
         }
         #ifdef DEBUG
                 std::cout << "type promotions between " <<  left->evaluatedType->getBaseTypeEnumName() << ", " << right->evaluatedType->getBaseTypeEnumName() << "\n";
@@ -174,13 +221,37 @@ namespace gazprea {
         std::shared_ptr<Type> dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
         std::shared_ptr<ASTNode> promoteNode = !LtoRpromotion.empty()? left: right; // l to r promotion valid so promote left node, vice versa
         // vector handling
-        if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+        if (isVector(left->evaluatedType) && isVector(right->evaluatedType)) {
             //if (left->evaluatedType->dims[0] != right->evaluatedType->dims[0]) throw SizeError(left->loc(), "incompatible size binop");
+
             promoteVectorElements(dominantType, promoteNode);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
-        } else if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == NONE) {
+        } else if (isMatrix(left->evaluatedType) && isMatrix(right->evaluatedType)) {
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (isMatrix(left->evaluatedType) && isVector(right->evaluatedType)) {
+            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update right->Evaltype to matrix
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (isMatrix(right->evaluatedType) && isVector(left->evaluatedType)) {
+            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            auto r = left->evaluatedType;
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (isMatrix(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
+            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+        } else if (isMatrix(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE) {
+            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            promoteVectorElements(dominantType, promoteNode);
+            updateVectorNodeEvaluatedType(dominantType, promoteNode);
+            auto l = left->evaluatedType;
+
+        }
+        else if (isVector(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
             promoteLiteralToArray(left->evaluatedType, right);
-        } else if (right->evaluatedType->vectorOrMatrixEnum == VECTOR && left->evaluatedType->vectorOrMatrixEnum == NONE){
+        } else if (isVector(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE){
             // none vector
             promoteLiteralToArray(right->evaluatedType, left);
         } else{
@@ -191,29 +262,113 @@ namespace gazprea {
     }
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
-            identityNode->evaluatedType = promoteTo;
+            identityNode->evaluatedType = getTypeCopy(promoteTo);
         } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
 
         } else {
-            identityNode->evaluatedType = promoteTo;
+            identityNode->evaluatedType = getTypeCopy(promoteTo);
         }
         return;
     }
+    int PromotedType::isMatrix(std::shared_ptr<Type> type) {
+        int t =  !type->vectorInnerTypes.empty() && type->vectorOrMatrixEnum == VECTOR &&
+                  type->vectorInnerTypes[0]->vectorOrMatrixEnum == VECTOR;
+        return t;
+    }
+    int PromotedType::isVector(std::shared_ptr<Type> type) {
+        int t =  !type->vectorInnerTypes.empty() && type->vectorOrMatrixEnum == VECTOR &&
+                 type->vectorInnerTypes[0]->vectorOrMatrixEnum == NONE;
+        return t;
+    }
 
+    void PromotedType::possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo,
+                                                     std::shared_ptr<Type> promotedType, int line) {
+        // promoteTo should be a matrix type
+        // if promteTo is matrix and promotedType is vector, promote vector->matrix
+        // if promoteTo is matrix and promotedType is scalar, prmote scalar->matrix
+        int vecToMatrixPromo = isMatrix(promoteTo) && isVector(promotedType);
+        int scalarToMatrixPromo = isMatrix(promoteTo)
+                               && promotedType->vectorOrMatrixEnum == NONE;
+        int scalarToVectorPromo = isVector(promoteTo) && promotedType->vectorOrMatrixEnum == NONE;
+        if (vecToMatrixPromo) {
+            /*
+             *   [int, int] -> [intvect, intvect]
+             *
+             */
+            auto itself = getTypeCopy(promotedType);  // copy itself
+            for (int i = 0; i < promotedType->vectorInnerTypes.size(); i++) {
+                promotedType->vectorInnerTypes[i] = getTypeCopy(itself);
+            }
+            promotedType->dims.push_back(promotedType->vectorInnerTypes.size());
+            // should create a square matrix
+            assert(promotedType->dims[0] ==  promotedType->dims[1] == 1);
+            return;
+        }
+        if (scalarToMatrixPromo)  {
+            /*
+             * int -> [int] -> [[int]]
+             *
+             */
+            auto itself = getTypeCopy(promotedType);  // copy itself
+            itself->vectorInnerTypes.push_back(getTypeCopy(itself));
+            itself->vectorOrMatrixEnum = VECTOR;
+            promotedType->vectorInnerTypes.push_back(itself);
+            promotedType->vectorOrMatrixEnum = VECTOR;
+            promotedType->dims.push_back(1);  // should be (1, 1) matrix
+            promotedType->dims.push_back(1);  // should be (1, 1) matrix
+            assert(promotedType->dims[0] == 1 && promotedType->dims[1] == 1);
+            return;
+        }
+        if (scalarToVectorPromo) {
+            if (promotedType->baseTypeEnum == TUPLE) throw TypeError(line, "cannot promote tuple to array");
+            // just create size 1 vector
+            auto itself = getTypeCopy(promotedType);  // copy itself
+            promotedType->vectorInnerTypes.push_back(itself);
+            promotedType->vectorOrMatrixEnum = VECTOR;
+            promotedType->dims.clear();
+            promotedType->dims.push_back(1);
+        }
+
+        //if (promoteTo->vectorInnerTypes[0]->size() != promotedType->vectorInnerTypes.size()) {
+        //    // TODO: .size() might be tricky if promted type used to be identity/null because it can
+        //    throw TypeError(1, "cannot promote to matrix");
+        //}
+        /*
+         * Note to myself.
+         * Matrix[3, 2] a = [1, 2], i cannot promote rhs to [[1, 2], [1, 2], [1, 2]] since i dont know the size, im just making [[1, 2], [1, 2]] for now
+         *
+         */
+        return;
+    }
+    std::shared_ptr<Type> PromotedType::promoteVectorTypeObj(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type> promotedType, int line) {
+        // symmetric to promoteVectorElements, but do it on Type obj instead of ASTNode
+        auto promotedTypeCop = getTypeCopy(promotedType);
+        if (promotedTypeCop->vectorInnerTypes.empty()) {
+            // basecase
+            assert(promotedTypeCop->vectorOrMatrixEnum == NONE);
+            auto str = getPromotedTypeString(promotionTable, promotedTypeCop, promoteTo);
+            if (str.empty())  throw  TypeError(line, "cannot promote vector element");
+            promotedTypeCop->baseTypeEnum = promoteTo->baseTypeEnum;
+            return promotedTypeCop;
+        }
+        for (int i = 0; i < promotedTypeCop->vectorInnerTypes.size(); i++) {
+            promotedTypeCop->vectorInnerTypes[i] = promoteVectorTypeObj(promoteTo, promotedTypeCop->vectorInnerTypes[i], line);
+        }
+        promotedTypeCop->baseTypeEnum = promoteTo->baseTypeEnum;
+        return promotedTypeCop;
+    }
+
+    // promote all evaluatedType of a vector tree node
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY || exprNode->evaluatedType->baseTypeEnum == TYPE::NULL_) {
             promoteIdentityAndNull(promoteTo, exprNode);
             return;
         }
-        assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
-        auto vectNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
-        if (vectNodeCast == nullptr) {
-            // this is not a vector literal. so we simply do nothing since no child to promote
-            return;
-        }
-        // promote each vector elements
-        for (auto &child: vectNodeCast->getElements()) {
-            auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
+
+        //assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
+        if (exprNode->evaluatedType->vectorOrMatrixEnum == NONE) {
+            // this is a vector element node. one of base case of recursion
+            auto rhsIndex = getTypeIndex(exprNode->evaluatedType->getBaseTypeEnumName());
             auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
             auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
             if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
@@ -221,7 +376,59 @@ namespace gazprea {
 #ifdef DEBUG
             std::cout << "promoted vector element " << child->evaluatedType->getBaseTypeEnumName() << "to " << promoteTo->getBaseTypeEnumName() << "\n";
 #endif
-            child->evaluatedType = resultType;  // set each vector element node to its promoted type
+            exprNode->evaluatedType = resultType;  // set each vector element node to its promoted type
+            return;
+        }
+        // recursively promote inner vector nodes
+        auto vectNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
+        if (vectNodeCast == nullptr) {
+            // this is not a vector literal. so we simply do nothing since no child to promote
+            if (std::dynamic_pointer_cast<IDNode>(exprNode)) {
+                //
+                auto sizeVec= exprNode->evaluatedType->dims;  // vector of size
+                auto promoteTypeString= getPromotedTypeString(promotionTable, exprNode->evaluatedType, promoteTo);
+                if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+                // promote all the inner types
+                auto promotedType = promoteVectorTypeObj(promoteTo, exprNode->evaluatedType, exprNode->loc());  // promote the old evaluted type
+                //exprNode->evaluatedType = getTypeCopy(promoteTo);  // create copy of the pormoted type
+                exprNode->evaluatedType = promotedType;  // promteType promtes all innerchildToo
+                exprNode->evaluatedType->vectorOrMatrixEnum = VECTOR;   // assign correct attribute
+                exprNode->evaluatedType->dims.clear();
+                exprNode->evaluatedType->dims = sizeVec;                //reassign size
+
+            } else {
+                // case: exprNode that is not an IDnode AND it is not a vectorNode
+                throw SyntaxError(exprNode->loc(), "invalid matrix/vector element");
+            }
+            return;
+        }
+        // promote each vector elements
+        for (auto &child: vectNodeCast->getElements()) {
+            if (child->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+                // this means that vector is recursive
+                if (child->evaluatedType->baseTypeEnum == VECTOR) throw SyntaxError(exprNode->loc(), "invalid matrix");
+
+                auto sizeVec = child->evaluatedType->dims;
+                auto promotedType = promoteVectorTypeObj(promoteTo, child->evaluatedType, exprNode->loc());  // promote the old evaluted type
+                promoteVectorElements(promoteTo, child);  // promote the children first
+                //child->evaluatedType = getTypeCopy(promoteTo);
+                child->evaluatedType = promotedType;
+                child->evaluatedType->dims.clear();
+                child->evaluatedType->dims = sizeVec;  // just reasign old size
+
+            } else {  // child is not a vector
+                auto rhsIndex = getTypeIndex(child->evaluatedType->getBaseTypeEnumName());
+                auto lhsIndex = getTypeIndex(promoteTo->getBaseTypeEnumName());
+                auto promoteTypeString = promotionTable[rhsIndex][lhsIndex];
+                if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
+                auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
+                //child->evaluatedType = resultType;  // set each vector element node to its promoted type
+                child->evaluatedType = promoteVectorTypeObj(promoteTo, child->evaluatedType, exprNode->loc());
+            }
+        }
+        // update the root node's evaluated type
+        for (int i = 0; i < vectNodeCast->evaluatedType->vectorInnerTypes.size(); i++) {
+            vectNodeCast->evaluatedType->vectorInnerTypes[i] = getTypeCopy(vectNodeCast->getElement(i)->evaluatedType);
         }
     }
     /*
@@ -293,6 +500,12 @@ namespace gazprea {
     }
     std::any TypeWalker::visitNull(std::shared_ptr<NullNode> tree) {
         tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("null"));
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitString(std::shared_ptr<StringNode> tree) {
+        tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
+        tree->evaluatedType->baseTypeEnum = STRING;
         return nullptr;
     }
 
@@ -607,7 +820,7 @@ namespace gazprea {
                         // handle vector literal. promote rhs
                         promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
                         promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
-                        tree->evaluatedType = tree->getRvalue()->evaluatedType;  // update the tree evaluated type with promoted
+                        tree->evaluatedType = promotedType->getTypeCopy(tree->getRvalue()->evaluatedType);  // update the tree evaluated type with promoted
                         return nullptr;
                     }
                     else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
@@ -770,25 +983,51 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        // check if this is a matrix or vector
         // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
         }
+
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        // TODO handle empty vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
         promotedType->promoteVectorElements(bestType, tree);  // now every elements of vector have same type
         tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
-        tree->evaluatedType->dims.push_back(tree->getSize());  // the size of this vector
+
+        // add the inner types to type class
+        promotedType->populateInnerTypes(tree->evaluatedType, tree);
+
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the row size of this vector
+        if (tree->getElement(0)->evaluatedType->vectorOrMatrixEnum == VECTOR) {  // pul column size of there is any
+            assert(!tree->getElement(0)->evaluatedType->dims.empty());
+            tree->evaluatedType->dims.push_back(tree->getElement(0)->evaluatedType->dims[0]);  // TODO:
+        }
+        // TODO: make sure that matrix element must be vector
         return nullptr;
     }
-    std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
-        // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
-        tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
-        tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
-        return nullptr;
-    }
+    //std::any TypeWalker::visitMatrix(std::shared_ptr<MatrixNode> tree) {
+    //    // innertype(evaluatedType->baseTypeEnum) will be set by the declaration node
+    //    // NOTE: empty matrices will not gonna be here
+    //    int maxsize = INT32_MIN;
+    //    for (auto &vec: tree->getElements()) {
+    //        maxsize = std::max(maxsize, vec->getSize());  // get the largest inner vector size
+    //    }
+
+    //    walkChildren(tree);  // populate all the evaluated type
+
+    //    tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
+    //    tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+    //    // function to make sure all inner vectors have same type
+
+    //    // promote all elements
+    //    tree->evaluatedType = std::make_shared<AdvanceType>("matrix");
+    //    tree->evaluatedType->vectorOrMatrixEnum = TYPE::MATRIX;
+    //    return nullptr;
+    //}
 
     std::any TypeWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
         // filter is just an integer tuple right?
@@ -832,15 +1071,19 @@ namespace gazprea {
             }
         }
 
-        if (indexee->evaluatedType->dims.size() == 1 || indexee->evaluatedType->vectorOrMatrixEnum == VECTOR) {  // case: its a vector index
+        if (promotedType->isVector(indexee->evaluatedType)) {  // case: its a vector index
             auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
             tree->evaluatedType = typeCopy;
             tree->evaluatedType->vectorOrMatrixEnum = NONE;
             tree->evaluatedType->dims.clear();    // evaluted type is just a non vector literal with no dimention
-        } else if (indexee->evaluatedType->dims.size() == 2) {  // case: its a matrix indx
+        } else if (promotedType->isMatrix(indexee->evaluatedType)) {  // case: its a matrix indx
             auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
+            for (int i = 0; i < typeCopy->vectorInnerTypes.size(); i++) {
+                typeCopy->vectorInnerTypes[i] = promotedType->getTypeCopy(currentScope->resolveType(typeCopy->getBaseTypeEnumName()));
+            }
             tree->evaluatedType = typeCopy;
             tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
+            assert(indexee->evaluatedType->dims.size() == 2);
             int colSize = indexee->evaluatedType->dims[1];
             tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
             tree->evaluatedType->dims.push_back(colSize);

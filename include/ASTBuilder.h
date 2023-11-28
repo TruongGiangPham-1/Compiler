@@ -85,7 +85,7 @@ namespace gazprea {
         std::any visitLiteralID(GazpreaParser::LiteralIDContext *ctx) override;
         std::any visitLiteralString(GazpreaParser::LiteralStringContext *ctx) override;
         std::any visitLiteralVector(GazpreaParser::LiteralVectorContext *ctx) override;
-        std::any visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) override;
+        //std::any visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) override;
         std::any visitLiteral_vector(GazpreaParser::Literal_vectorContext *ctx) override;
 
         // operations

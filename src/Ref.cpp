@@ -275,7 +275,8 @@ namespace gazprea {
             // valid
             std::shared_ptr<FunctionSymbol> cast = std::dynamic_pointer_cast<FunctionSymbol>(sym);
             // check if it is called before declaration/definition
-            if (tree->loc() < (size_t) cast->line) {
+            // but if the function is a builtin function, skip this check
+            if (tree->loc() < (size_t) cast->line && !cast->isBuiltIn()) {
                 throw SymbolError(tree->loc(), "function " + cast->getName() + " not defined at this point");
             } else {
 #ifdef DEBUG

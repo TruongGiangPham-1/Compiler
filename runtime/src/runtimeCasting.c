@@ -167,47 +167,69 @@ commonType* realCast(float fromValue, enum TYPE toType) {
     return NULL;
   }
 }
+commonType* cast(commonType* from, enum TYPE toType);
+/*
+ *
+ */
+commonType* listCast(commonType* from, enum TYPE toType) {
+  list* mlist = (list*)from->value;
+
+  for (int i = 0 ; i < mlist->size ; i++) {
+    commonType* casted = cast(mlist->values[i], toType);
+    appendList(mlist, casted);
+  }
+
+  return allocateCommonType(mlist, VECTOR);
+}
 
 commonType* cast(commonType* from, enum TYPE toType) {
   if (!ValidType(toType)) {
     UnsupportedTypeError("Cast recieved a type it could not recognize");
   }
-#ifdef DEBUGTYPES
-    printf("Choosing appropriate case...\n");
-#endif /* ifdef DEBUGTYPES */
+
   switch (from->type) {
-    case BOOLEAN:
-#ifdef DEBUGTYPES
-    printf("Bool!\n");
-#endif /* ifdef DEBUGTYPES */
-    return boolCast(*(bool*)from->value, toType);
-
-    case INTEGER:
-#ifdef DEBUGTYPES
-    printf("Int!\n");
-#endif /* ifdef DEBUGTYPES */
-    return intCast(*(int*)from->value, toType);
-
-    case CHAR:
-#ifdef DEBUGTYPES
-    printf("Char!\n");
-#endif /* ifdef DEBUGTYPES */
-    return charCast(*(char*)from->value, toType);
-
-    break;
-    case REAL:
-#ifdef DEBUGTYPES
-    printf("Real!\n");
-#endif /* ifdef DEBUGTYPES */
-
-    return realCast(*(float*)from->value, toType);
+    case VECTOR:
+    return listCast(from, toType);
     default:
+#ifdef DEBUGTYPES
+      printf("Choosing appropriate case...\n");
+#endif /* ifdef DEBUGTYPES */
+    switch (from->type) {
+      case BOOLEAN:
+#ifdef DEBUGTYPES
+      printf("Bool!\n");
+#endif /* ifdef DEBUGTYPES */
+      return boolCast(*(bool*)from->value, toType);
+
+      case INTEGER:
+#ifdef DEBUGTYPES
+      printf("Int!\n");
+#endif /* ifdef DEBUGTYPES */
+      return intCast(*(int*)from->value, toType);
+
+      case CHAR:
+#ifdef DEBUGTYPES
+      printf("Char!\n");
+#endif /* ifdef DEBUGTYPES */
+      return charCast(*(char*)from->value, toType);
+
+      break;
+      case REAL:
+#ifdef DEBUGTYPES
+      printf("Real!\n");
+#endif /* ifdef DEBUGTYPES */
+
+      return realCast(*(float*)from->value, toType);
+      default:
 
 #ifdef DEBUGTYPES
-    printf("Error! Uncastable type!\n");
+      printf("Error! Uncastable type!\n");
 #endif /* ifdef DEBUGTYPES */
-    CastError("Invalid cast, type not recognized or implemented");
-    return NULL;
+      CastError("Invalid cast, type not recognized or implemented");
+      return NULL;
+    }
+
+
   }
 }
 

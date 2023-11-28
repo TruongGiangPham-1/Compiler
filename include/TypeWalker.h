@@ -27,12 +27,20 @@ namespace gazprea {
 
         std::shared_ptr<Type> getType(std::string table[7][7], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
         int getTypeIndex(const std::string type);
+        // vecto helper
         void promoteVectorElements(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode> exprNode);
         void updateVectorNodeEvaluatedType(std::shared_ptr<Type>assignType, std::shared_ptr<ASTNode> exprNode);
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
-
+        void populateInnerTypes(std::shared_ptr<Type>type, std::shared_ptr<VectorNode>tree);
+        std::shared_ptr<Type> promoteVectorTypeObj(std::shared_ptr<Type>promoteTo, std::shared_ptr<Type> promotedType, int line);
+        // matrices helper
+        void addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree);
+        void possiblyPaddMatrix(std::shared_ptr<VectorNode> tree);
+        void possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type>promotedType, int line);
+        int isMatrix(std::shared_ptr<Type> type);
+        int isVector(std::shared_ptr<Type> type);
         // create copy of the type obj. only used in promoteLiteralToArray
         std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);
 
@@ -69,9 +77,10 @@ namespace gazprea {
         std::any visitReal(std::shared_ptr<RealNode> tree) override;
         std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
         std::any visitChar(std::shared_ptr<CharNode> tree) override;
+        std::any visitString(std::shared_ptr<StringNode> tree) override;
         std::any visitBool(std::shared_ptr<BoolNode> tree) override;
         std::any visitVector(std::shared_ptr<VectorNode> tree) override;
-        std::any visitMatrix(std::shared_ptr<MatrixNode> tree) override;
+       // std::any visitMatrix(std::shared_ptr<MatrixNode> tree) override;
 
         std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;

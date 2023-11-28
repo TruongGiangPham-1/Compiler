@@ -47,25 +47,7 @@ void printType(commonType *type, bool nl) {
       printf("%g", *(float*)type->value);
       break;
     case TUPLE:
-      #ifdef DEBUGPRINT
-      printf("\nPRINTING TUPLE\n");
-      #endif /* ifdef DEBUGPRINT */
-      // {} bc we can't declare variables in switch
-      {
-        list*mTuple = ((list*)type->value);
-        #ifdef DEBUGTUPLE
-        printf("Printing tuple %p\n", mTuple);
-        #endif
-        printf("(");
-        for (int i = 0 ; i < mTuple->size ; i++) {
-          #ifdef DEBUGTUPLE
-          printf("\nprinting tuple value at %p\n", &mTuple->values[i]);
-          #endif
-          printType(mTuple->values[i], false);
-          if (i != mTuple->size-1) printf(" ");
-        }
-        printf(")");
-      }
+    // tuple is just for debug
     // we don't disambiguate. similar behavior
     case VECTOR:
     case MATRIX:
@@ -75,10 +57,10 @@ void printType(commonType *type, bool nl) {
 
         if (type->type != STRING) printf("[");
 
-        for (int i = 0 ; i < mListable->size ; i++) {
+        for (int i = 0 ; i < mListable->currentSize; i++) {
 
           printType(mListable->values[i], false);
-          if (i != mListable->size-1 && type->type != STRING) printf(", ");
+          if (i != mListable->currentSize-1 && type->type != STRING) printf(", ");
         }
         if (type->type != STRING) printf("]");
       }
@@ -167,4 +149,13 @@ void streamIn(commonType *type) {
     // in all other cases, set to the "default" value of the type
     setToNullValue(type);
   }
+}
+
+// STDLIB EXAMPLE: silly function
+// TODO: delete once we have a proper stdlib
+commonType* __silly(commonType* toPrint) {
+    printf("Silly called with ");
+    printCommonType(toPrint);
+    printf("\n");
+    return toPrint;
 }

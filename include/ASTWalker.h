@@ -68,7 +68,7 @@ namespace gazprea {
         virtual std::any visitBool(std::shared_ptr<BoolNode> tree);
         virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
         virtual std::any visitVector(std::shared_ptr<VectorNode> tree);
-        virtual std::any visitMatrix(std::shared_ptr<MatrixNode> tree);
+        //virtual std::any visitMatrix(std::shared_ptr<MatrixNode> tree);
 
         // Expr/Binary
 
