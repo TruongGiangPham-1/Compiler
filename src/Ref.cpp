@@ -323,7 +323,6 @@ namespace gazprea {
 
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
-        //}
 
         if (!tree->getTypeNode()) {
             if (!tree->getExprNode()) {
@@ -334,7 +333,12 @@ namespace gazprea {
 
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
-            throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
+            if (resolveID->scope->getScopeName().find("iterator") == std::string::npos) {  // resolved ID is not in iterator scope then its error
+                // this is resolved in the iterator domain var
+                throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
+            }
+            // else, any Identifier same name as one defined in iterator loop is ok
+
         }
 
         // define the ID in symtable
@@ -375,9 +379,7 @@ namespace gazprea {
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
         idSym->qualifier = tree->qualifier;
-
         currentScope->define(idSym);
-
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
         return 0;
@@ -462,7 +464,36 @@ namespace gazprea {
         return 0;
     }
 
+    std::any Ref::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
+        // resolve the domain 1st
+        for (auto &domain: tree->getConditions()) {
+            walk(domain);
+        }
 
+        auto scopeName = "iteratorLoop" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(scopeName, currentScope);
+
+        // define domainVar
+        auto intType = currentScope->resolveType("integer");  // domain var is just int right?
+        for (auto&domainV: tree->domainVars) {
+            domainV->mlirName = "VAR_DEF" + std::to_string(getNextId());
+            domainV->typeSym = intType;
+            domainV->scope = currentScope;
+            currentScope->define(domainV);
+#ifdef DEBUG
+            std::cout << "in line " << tree->loc()
+                      << "domainVar=" << domainV->getName() << " defined as "
+                      << domainV->mlirName << std::endl;
+#endif
+        }
+        // note, iterator variables in its own scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
+        walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
+        currentScope = symtab->exitScope(currentScope);
+        return 0;
+    }
 
 
     /*

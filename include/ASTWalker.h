@@ -27,6 +27,7 @@
 #include "ASTNode/Loop/PredicatedLoopNode.h"
 #include "ASTNode/Loop/PostPredicatedLoopNode.h"
 #include "ASTNode/Loop/InfiniteLoopNode.h"
+#include "ASTNode/Loop/IteratorLoopNode.h"
 #include "ASTNode/BreakNode.h"
 #include "ASTNode/ContinueNode.h"
 #include "ASTNode/Block/ConditionalNode.h"
@@ -89,6 +90,7 @@ namespace gazprea {
         // === BLOCK AST NODES ===
         virtual std::any visitConditional(std::shared_ptr<ConditionalNode> tree);
         virtual std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree);
+        virtual std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree);
         virtual std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
         virtual std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
         virtual std::any visitBreak(std::shared_ptr<BreakNode> tree);

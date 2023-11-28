@@ -245,7 +245,10 @@ namespace gazprea {
             std::cout << "about to visit Break" << std::endl;
 #endif // DEBUG
             return this->visitBreak(std::dynamic_pointer_cast<BreakNode>(tree));
-        } else if (std::dynamic_pointer_cast<ContinueNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<IteratorLoopNode>(tree)) {
+            return this->visitIteratorLoop(std::dynamic_pointer_cast<IteratorLoopNode>(tree));
+        }
+        else if (std::dynamic_pointer_cast<ContinueNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit Continue" << std::endl;
 #endif // DEBUG
@@ -460,6 +463,10 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+        return this->walkChildren(tree);
+    }
+
+    std::any ASTWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
         return this->walkChildren(tree);
     }
 
