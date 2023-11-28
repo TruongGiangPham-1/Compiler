@@ -1,0 +1,5 @@
+procedure main() returns integer {
+    integer a = 5;
+    a[5] ->std_output;  // canot index literal, this is syntax error?
+    return 0;
+}

@@ -28,6 +28,8 @@ public:
   mlir::Value generateValue(char value);
   mlir::Value generateValue(bool value);
   mlir::Value generateValue(std::string value);
+  mlir::Value generateValue(mlir::Value lower, mlir::Value upper);
+  mlir::Value generateValue(mlir::Value size);
 
 
   void functionShowcase();
@@ -45,6 +47,8 @@ public:
   mlir::Value generateVectorFromRange(mlir::Value lower, mlir::Value upper);
   mlir::Value generateIndexWithInteger(mlir::Value vector, mlir::Value index);
   mlir::Value generateIndexWithVector(mlir::Value indexee, mlir::Value indexor);
+  mlir::Value copyCommonType(mlir::Value val);
+
 
   mlir::Value generateLoadValue(mlir::Value addr);
   mlir::Value generateNullValue(TYPE type);
@@ -54,6 +58,8 @@ public:
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  void appendCommon(mlir::Value destination, mlir::Value item);
+
   mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
@@ -63,7 +69,7 @@ public:
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
   mlir::Value generateLoadArgument(size_t index);
-  mlir::Value indexCommonType(mlir::Value indexee, int indexor);
+  mlir::Value indexCommonType(mlir::Value indexee, mlir::Value indexor);
 
   void generateDeclaration(std::string varName, mlir::Value value);
   void generateAssignment(std::string varName, mlir::Value value);
@@ -72,6 +78,10 @@ public:
   void generateInitializeGlobalVar(std::string varName, mlir::Value value);
   void deallocateVectors();
   void deallocateObjects();
+  void pushScope();
+  void popScope();
+
+
 
   // LOOP METHOD 2: we either discard method 1 later
   void generateCompAndJump(mlir::Block *trueBlock, mlir::Block *falseBlock,
@@ -120,12 +130,14 @@ protected:
   void setupVectorRuntime();
   void setupStreamRuntime();
   void setupCommonTypeRuntime();
+  std::string trackObject();
   mlir::Value translateToMLIRType(TYPE type);
   int writeLLVMIR();
 
 private:
   std::vector<std::string> vectorLabels;
-  std::vector<std::string> objectLabels;
+  // stack of labels defined in the current scope
+  std::vector<std::vector<std::string>*> objectLabels;
   std::vector<mlir::LLVM::LLVMFuncOp> functionContext;
 
   unsigned int allocatedVectors = 0;

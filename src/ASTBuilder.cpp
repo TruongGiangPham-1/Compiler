@@ -256,23 +256,19 @@ namespace gazprea {
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
         std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
-        if (charContent[0] == '\\') {
-            auto escapedChar = CharNode::parseEscape(charContent[1]);
-            if (escapedChar.has_value()) {
-                auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), escapedChar.value());
-                return std::dynamic_pointer_cast<ASTNode>(t);
-            } else {
-                throw SyntaxError(ctx->getStart()->getLine(), "invalid escape sequence in character literal " + ctx->getText());
-            }
-        } else {
-            // normal char
-            auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(),ctx->getText()[1]);
+
+        try {
+            auto charPair = CharNode::consumeChar(charContent);
+
+            auto t = std::make_shared<CharNode>(ctx->getStart()->getLine(), charPair.first);
             return std::dynamic_pointer_cast<ASTNode>(t);
+        } catch (std::runtime_error& error) {
+            throw SyntaxError(ctx->getStart()->getLine(), error.what());
         }
     }
 
     std::any ASTBuilder::visitLiteralString(GazpreaParser::LiteralStringContext *ctx) {
-        // ANTLR does a good job in escaping backslashes and other chars
+        // ANTLR escapes backslashes and other chars for us,
         // so I just retrieve the value as is
         // not sure if we'll have to do work to go back and account for escape sequences
 #ifdef DEBUG
@@ -281,7 +277,16 @@ namespace gazprea {
         auto t = std::make_shared<StringNode>(ctx->getStart()->getLine());
 
         std::string val = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
-        t->val = val;
+        // iteratively consume chars until the string is empty
+        while (!val.empty()) {
+            try {
+                auto charPair = CharNode::consumeChar(val);
+                t->val.push_back(charPair.first);
+                val = charPair.second;
+            } catch (std::runtime_error& error) {
+                throw SyntaxError(ctx->getStart()->getLine(), error.what());
+            }
+        }
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -304,19 +309,19 @@ namespace gazprea {
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
 
-    std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
-#ifdef DEBUG
-        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
-#endif
-        auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
-
-        auto matrixCtx = ctx->literal_matrix();
-        for (auto vectorCtx : matrixCtx->literal_vector()) {
-            t->addChild(visit(vectorCtx));
-        }
-
-        return std::dynamic_pointer_cast<ASTNode>(t);
-    }
+//    std::any ASTBuilder::visitLiteralMatrix(GazpreaParser::LiteralMatrixContext *ctx) {
+//#ifdef DEBUG
+//        std::cout << "visitLiteralMatrix" << ctx->getText() << std::endl;
+//#endif
+//        auto t = std::make_shared<MatrixNode>(ctx->getStart()->getLine());
+//
+//        auto matrixCtx = ctx->literal_matrix();
+//        for (auto vectorCtx : matrixCtx->literal_vector()) {
+//            t->addChild(visit(vectorCtx));
+//        }
+//
+//        return std::dynamic_pointer_cast<ASTNode>(t);
+//    }
 
     std::any ASTBuilder::visitMath(GazpreaParser::MathContext *ctx) {
 #ifdef DEBUG
@@ -521,6 +526,11 @@ namespace gazprea {
 
         t->addChild(visit(ctx->expr(0)));
         t->addChild(visit(ctx->expr(1)));
+
+        if (ctx->expr().size() == 3) {
+            // this is matrix index
+            t->addChild(visit(ctx->expr(2)));
+        }
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }
@@ -823,6 +833,15 @@ namespace gazprea {
             fNode->addChild(visit(expr));
         }
         return std::dynamic_pointer_cast<ASTNode>(fNode);
+    }
+
+    std::any ASTBuilder::visitConcatenation(GazpreaParser::ConcatenationContext *ctx) {
+        auto concatNode = std::make_shared<ConcatNode>(ctx->getStart()->getLine());
+        concatNode->op = CONCAT;
+
+        concatNode->addChild(visit(ctx->expr(0)));
+        concatNode->addChild(visit(ctx->expr(1)));
+        return std::dynamic_pointer_cast<ASTNode>(concatNode);
     }
 }
 

@@ -66,6 +66,12 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getName());  // create typenode with integer
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
         resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;
+
+        // make innertype node, which is a vector
+        std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
+        innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
+        innerType_->vectorOrMatrixEnum = TYPE::NONE;  //  matrices is just vector of vector
+        resolvedType->vectorInnerTypes.push_back(innerType_);
         return resolvedType;
 
     } else if (std::dynamic_pointer_cast<MatrixTypeNode>(typeNode)) {
@@ -80,9 +86,15 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
             throw (typeNode->loc(), "matrix can only be int, real, boolean, char");
         }
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
-        std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>("vector");
+        std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
-        resolvedType->vectorOrMatrixEnum = TYPE::MATRIX;
+        resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;  //  matrices is just vector of vector
+
+        // make innertype node, which is a vector
+        std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
+        innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
+        innerType_->vectorOrMatrixEnum = TYPE::VECTOR;  //  matrices is just vector of vector
+        resolvedType->vectorInnerTypes.push_back(innerType_);
         return resolvedType;
 
     } else if (std::dynamic_pointer_cast<StringTypeNode>(typeNode)){

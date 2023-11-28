@@ -4,7 +4,7 @@
 Symbol::Symbol(std::string name) : name(name), typeSym(nullptr) {}
 Symbol::Symbol(std::string name, std::shared_ptr<Type> type) : name(name), typeSym(type) {}
 Symbol::Symbol(std::string name, std::shared_ptr<Type> type  , std::shared_ptr<Scope> scope) : name(name), typeSym(type), scope(scope) {}
-
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type, int index) : name(name), typeSym(type), index(index) {};
 
 std::string Symbol::getName() { return name; }
 

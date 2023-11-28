@@ -1,0 +1,5 @@
+procedure main() returns integer {
+    boolean[3, 2] A = [[true, true], [true, true], [true, true]];
+    real[3, 2] B = [[1.2, 2], [1.2,2], [2, 4]];
+    A + B -> std_output;   // invalid binop. cant do it between bool and real
+}
