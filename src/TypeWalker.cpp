@@ -214,6 +214,13 @@ namespace gazprea {
      * TODO: i only implement this for vector binops for far. so future ill try to generalize this to all type?
      */
     void PromotedType::possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right) {
+
+        if ((isMatrix(left->evaluatedType) && isVector(right->evaluatedType)) ||
+                (isMatrix(right->evaluatedType) && isVector(left->evaluatedType))) {
+            // cannot have matrix to vector operation
+            throw TypeError(left->loc(), "matrix and vector operation invalid");
+        }
+
         auto LtoRpromotion = getPromotedTypeString(promotionTable, left->evaluatedType, right->evaluatedType);
         auto RtoLpromotion = getPromotedTypeString(promotionTable, right->evaluatedType, left->evaluatedType);
         if (LtoRpromotion.empty() && RtoLpromotion.empty())  throw TypeError(left->loc(), "invalid vectors type binop");
@@ -504,8 +511,13 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitString(std::shared_ptr<StringNode> tree) {
+        // string is a vector Type node where baseEnum = string
+        // and vectorInnerType of character
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->baseTypeEnum = STRING;
+        tree->evaluatedType = std::make_shared<AdvanceType>(tree->evaluatedType->getBaseTypeEnumName());
+        tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
+        tree->evaluatedType->vectorInnerTypes.push_back(promotedType->getTypeCopy(currentScope->resolveType("character")));
         return nullptr;
     }
 
