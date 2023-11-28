@@ -41,8 +41,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
       auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i));
 
-      auto castedIndexedVal = codeGenerator.possiblyCast(indexedValue, tree->evaluatedType);
-      codeGenerator.generateAssignment(dest, castedIndexedVal);
+      codeGenerator.generateAssignment(dest, indexedValue);
     }
   }
 
@@ -52,9 +51,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
 
-  auto castedVal = codeGenerator.possiblyCast(val, tree->evaluatedType);
-
-  codeGenerator.generateDeclaration(tree->sym->mlirName, castedVal);
+  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
   return 0;
 }
 
