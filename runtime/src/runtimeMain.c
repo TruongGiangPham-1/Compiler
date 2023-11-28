@@ -166,10 +166,16 @@ void streamIn(commonType *type, int* streamState) {
 
   if (check == 0) {
     // invalid input! (scanf didn't convert anything)
+    // set the val to "default"
+    setToNullValue(type);
 
     // check end of file (for char)
     // https://stackoverflow.com/a/1428924
     if (feof(stdin)) {
+#ifdef DEBUGSTREAM
+        printf("EOF encountered\n");
+#endif /* ifdef DEBUGSTREAM */
+
       if (type->type == CHAR) {
           // if a char encounters a streamState, set to -1
           // val is now -1
@@ -177,13 +183,16 @@ void streamIn(commonType *type, int* streamState) {
           return;
       }
 
-      // set new streamState
+      // set new streamState to EOF (2)
       setStreamState(streamState, STREAM_STATE_EOF, type);
+    } else {
+      // in all other cases, set to err state (1)
+      setStreamState(streamState, STREAM_STATE_ERR, type);
     }
 
-    // in all other cases, set to the "default" value of the type
-    setToNullValue(type);
-    setStreamState(streamState, STREAM_STATE_ERR, type);
+  } else {
+    // valid input! reset stream_state to 0 (it might have been 1 before)
+    setStreamState(streamState, 0, type);
   }
 }
 
