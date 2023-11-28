@@ -541,6 +541,7 @@ mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
       return this->generateValue(1);
     case REAL:
       return this->generateValue(1.0f);
+    case TUPLE:
     default:
       throw std::runtime_error("Identity not available");
   }
