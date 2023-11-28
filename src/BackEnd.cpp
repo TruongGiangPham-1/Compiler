@@ -224,7 +224,7 @@ void BackEnd::setupCommonTypeRuntime() {
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamOut",
                                           printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "castHelper",
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
@@ -300,7 +300,7 @@ mlir::Value BackEnd::copyCommonType(mlir::Value val) {
 
 mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
-      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("castHelper");
 
   auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, this->generateInteger(toType)})).getResult();
 
@@ -561,6 +561,7 @@ mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
         // magic code
         return this->generateValue(children);
       }
+    case VECTOR:
     default:
       throw std::runtime_error("Identity not available");
   }

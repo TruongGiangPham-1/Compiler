@@ -60,7 +60,7 @@ commonType* castHelper(commonType* fromValue, enum TYPE type) {
     case BOOLEAN:
       {
       bool temp = false;
-      return cast(fromValue, allocateCommonType(&temp, CHAR));
+      return cast(fromValue, allocateCommonType(&temp, BOOLEAN));
       }
     default:
     RuntimeOPError("something went wrong");
