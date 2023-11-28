@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
+commonType* cast(commonType* from, commonType* toType);
 bool isComparison(enum BINOP op) {
   switch (op) {
     case EQUAL:
@@ -40,11 +40,39 @@ bool ValidType(enum TYPE type) {
   }
 }
 
-commonType* boolCast(bool fromValue, enum TYPE toType) {
+commonType* castHelper(commonType* fromValue, enum TYPE type) {
+  switch (type) {
+    case INTEGER:
+      {
+      int temp = 0;
+      return cast(fromValue, allocateCommonType(&temp, INTEGER));
+      }
+    case CHAR:
+      {
+      char temp = 0;
+      return cast(fromValue, allocateCommonType(&temp, CHAR));
+      }
+    case REAL:
+      {
+      char temp = 0.0;
+      return cast(fromValue, allocateCommonType(&temp, REAL));
+      }
+    case BOOLEAN:
+      {
+      bool temp = false;
+      return cast(fromValue, allocateCommonType(&temp, CHAR));
+      }
+    default:
+    RuntimeOPError("something went wrong");
+    return NULL;
+  }
+}
+
+commonType* boolCast(bool fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Cast from bool\n");
 #endif /* ifdef DEBUGTYPES */
-  switch (toType) {
+  switch (toType->type) {
     case BOOLEAN:
     {
       return allocateCommonType(&fromValue, BOOLEAN);
@@ -72,12 +100,12 @@ commonType* boolCast(bool fromValue, enum TYPE toType) {
   }
 }
 
-commonType* intCast(int fromValue, enum TYPE toType) {
+commonType* intCast(int fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Cast from int\n");
 #endif /* ifdef DEBUGTYPES */
 
-  switch (toType) {
+  switch (toType->type) {
     case BOOLEAN:
     {
       bool tempBool = (bool)fromValue;
@@ -105,12 +133,12 @@ commonType* intCast(int fromValue, enum TYPE toType) {
   }
 }
 
-commonType* charCast(char fromValue, enum TYPE toType) {
+commonType* charCast(char fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Cast from char\n");
 #endif /* ifdef DEBUGTYPES */
 
-  switch (toType) {
+  switch (toType->type) {
     case BOOLEAN:
     {
       bool tempBool = (bool)fromValue;
@@ -138,12 +166,12 @@ commonType* charCast(char fromValue, enum TYPE toType) {
   }
 }
 
-commonType* realCast(float fromValue, enum TYPE toType) {
+commonType* realCast(float fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Cast from real\n");
 #endif /* ifdef DEBUGTYPES */
 
-  switch (toType) {
+  switch (toType->type) {
     case INTEGER:
     {
   #ifdef DEBUGTYPES
@@ -167,23 +195,14 @@ commonType* realCast(float fromValue, enum TYPE toType) {
     return NULL;
   }
 }
-commonType* cast(commonType* from, enum TYPE toType);
 /*
  *
  */
-commonType* listCast(commonType* from, enum TYPE toType) {
-  list* mlist = (list*)from->value;
 
-  for (int i = 0 ; i < mlist->size ; i++) {
-    commonType* casted = cast(mlist->values[i], toType);
-    appendList(mlist, casted);
-  }
+// vector promotion
 
-  return allocateCommonType(mlist, VECTOR);
-}
-
-commonType* cast(commonType* from, enum TYPE toType) {
-  if (!ValidType(toType)) {
+commonType* cast(commonType* from, commonType* toType) {
+  if (!ValidType(toType->type)) {
     UnsupportedTypeError("Cast recieved a type it could not recognize");
   }
 
@@ -226,17 +245,17 @@ commonType* cast(commonType* from, enum TYPE toType) {
   }
 }
 
-commonType* boolPromotion(commonType* fromValue, enum TYPE toType) {
+commonType* boolPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Promotion from bool\n");
 #endif /* ifdef DEBUGTYPES */
 
-  switch (toType) {
+  switch (toType->type) {
   case BOOLEAN:
 #ifdef DEBUGTYPES
   printf("To bool!\n");
 #endif /* ifdef DEBUGTYPES */
-  return cast(fromValue, BOOLEAN);
+  return cast(fromValue, toType);
 
   default:
 #ifdef DEBUGTYPES
@@ -247,23 +266,23 @@ commonType* boolPromotion(commonType* fromValue, enum TYPE toType) {
   }
 }
 
-commonType* intPromotion(commonType* fromValue, enum TYPE toType) {
+commonType* intPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Promotion from int\n");
 #endif /* ifdef DEBUGTYPES */
 
-  switch (toType) {
+  switch (toType->type) {
     case REAL:
 #ifdef DEBUGTYPES
   printf("To real\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, REAL);
+    return cast(fromValue, toType);
 
     case INTEGER:
 #ifdef DEBUGTYPES
   printf("To int\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, INTEGER);
+    return cast(fromValue, toType);
 
     default:
 #ifdef DEBUGTYPES
@@ -274,17 +293,17 @@ commonType* intPromotion(commonType* fromValue, enum TYPE toType) {
   }
 }
 
-commonType* charPromotion(commonType* fromValue, enum TYPE toType) {
+commonType* charPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Promotion from char\n");
 #endif /* ifdef DEBUGTYPES */
 
-    switch (toType) {
+    switch (toType->type) {
     case CHAR:
 #ifdef DEBUGTYPES
     printf("To char\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, CHAR);
+    return cast(fromValue, toType);
 
     default:
 #ifdef DEBUGTYPES
@@ -295,21 +314,21 @@ commonType* charPromotion(commonType* fromValue, enum TYPE toType) {
   }
 }
 
-commonType* realPromotion(commonType* fromValue, enum TYPE toType) {
+commonType* realPromotion(commonType* fromValue, commonType* toType) {
 #ifdef DEBUGTYPES
   printf("Promotion from real\n");
 #endif /* ifdef DEBUGTYPES */
-    switch (toType) {
+    switch (toType->type) {
     case REAL:
 #ifdef DEBUGTYPES
   printf("To real\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, REAL);
+    return cast(fromValue, toType);
     case INTEGER:
 #ifdef DEBUGTYPES
   printf("To real\n");
 #endif /* ifdef DEBUGTYPES */
-    return cast(fromValue, REAL);
+    return cast(fromValue, toType);
     default:
 #ifdef DEBUGTYPES
   printf("Error! Promotion not possible\n");
@@ -323,13 +342,13 @@ commonType* realPromotion(commonType* fromValue, enum TYPE toType) {
 commonType* promotion(commonType* from, commonType* to) {
   switch (from->type) {
     case BOOLEAN:
-    return boolPromotion(from, to->type);
+    return boolPromotion(from, to);
     case INTEGER:
-    return intPromotion(from, to->type);
+    return intPromotion(from, to);
     case CHAR:
-    return charPromotion(from, to->type);
+    return charPromotion(from, to);
     case REAL:
-    return realPromotion(from, to->type);
+    return realPromotion(from, to);
     default:
     PromotionError("Attempting promotion on invalid or tuple type");
     return NULL;
