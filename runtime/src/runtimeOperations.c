@@ -514,7 +514,6 @@ bool commonTypeToBool(commonType* val) {
 
 // *state is a globalop defined in the BackEnd::setupStreamRuntime
 commonType* __stream_state(int* state) {
-  printf("Stream state: %d\n", *state);
   return allocateCommonType(state, INTEGER);
 }
 

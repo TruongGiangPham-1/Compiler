@@ -19,6 +19,7 @@
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 //#define DEBUGPRINT
+//#define DEBUGSTREAM
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
@@ -105,6 +106,10 @@ enum StreamStateErr {
 };
 
 void setStreamState(int* state, enum StreamStateErr err, commonType *type) {
+#ifdef DEBUGSTREAM
+  printf("Setting streamState to %d\n", err);
+#endif /* ifdef DEBUGSTREAM */
+
     // given the streamState error and the type, set the streamState
     if (type->type == CHAR) {
         // the only possible error for a char is EOF, where we set streamState to 0
@@ -141,9 +146,11 @@ void streamIn(commonType *type, int* streamState) {
 //      printf("buffer: '%s'\n", buffer);
       if (strcmp(buffer, "T") == 0) {
         *(bool*)type->value = true;
+      } else if (strcmp(buffer, "F") == 0) {
+          *(bool *) type->value = false;
       } else {
-        // "default" boolean value is also false
-        *(bool *) type->value = false;
+          // Manually set error if we don't get a T or F
+          check = 0;
       }
       break;
     }
@@ -153,8 +160,12 @@ void streamIn(commonType *type, int* streamState) {
       break;
   }
 
+#ifdef DEBUGSTREAM
+  printf("scanf check is %d\n", check);
+#endif /* ifdef DEBUGSTREAM */
+
   if (check == 0) {
-    // invalid input!
+    // invalid input! (scanf didn't convert anything)
 
     // check end of file (for char)
     // https://stackoverflow.com/a/1428924
