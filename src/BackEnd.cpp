@@ -516,8 +516,8 @@ mlir::Value BackEnd::generateInteger(int value) {
   return result;
 }
 
-mlir::Value BackEnd::generateNullValue(TYPE type) {
-  switch (type) {
+mlir::Value BackEnd::generateNullValue(std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
     case BOOLEAN:
       return this->generateValue(false);
     case CHAR:
@@ -531,8 +531,8 @@ mlir::Value BackEnd::generateNullValue(TYPE type) {
   }
 }
 
-mlir::Value BackEnd::generateIdentityValue(TYPE type) {
-  switch (type) {
+mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
     case BOOLEAN:
       return this->generateValue(true);
     case CHAR:

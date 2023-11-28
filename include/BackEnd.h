@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Type.h"
 #include "Types/TYPES.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -51,8 +52,8 @@ public:
 
 
   mlir::Value generateLoadValue(mlir::Value addr);
-  mlir::Value generateNullValue(TYPE type);
-  mlir::Value generateIdentityValue(TYPE type);
+  mlir::Value generateNullValue(std::shared_ptr<Type> type);
+  mlir::Value generateIdentityValue(std::shared_ptr<Type> type);
 
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);

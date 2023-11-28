@@ -86,12 +86,11 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
 }
 
 std::any BackendWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
-
-    return codeGenerator.generateIdentityValue(tree->evaluatedType->baseTypeEnum);
+  return codeGenerator.generateIdentityValue(tree->evaluatedType);
 }
 
 std::any BackendWalker::visitNull(std::shared_ptr<NullNode> tree) {
-    return codeGenerator.generateNullValue(tree->evaluatedType->baseTypeEnum);
+  return codeGenerator.generateNullValue(tree->evaluatedType);
 }
 
 std::any BackendWalker::visitInt(std::shared_ptr<IntNode> tree) {
@@ -197,6 +196,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   // empty filter we are appending to
   auto filter = codeGenerator.generateValue(maxFiltered);
+  
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
   auto domain = codeGenerator.generateValue(0);
@@ -204,6 +204,9 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   auto maxVectorSize = codeGenerator.generateCallNamed("length", argument);
 
+  // bool list of what indices never satisfied predicate
+  auto leftOver = codeGenerator.generateValue(maxFiltered);
+  
   for (int i = 0 ; i < tree->getExprList().size() ; i++) {
     auto newVector = codeGenerator.generateValue(maxVectorSize);
 
@@ -224,7 +227,6 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
     codeGenerator.generateAssignment(domain, indexedVal);
 
     auto result = std::any_cast<mlir::Value>(walk(tree->getExprList()[i]));
-
 
     mlir::Block *trueResult = codeGenerator.generateBlock();
     mlir::Block *falseResult= codeGenerator.generateBlock();
