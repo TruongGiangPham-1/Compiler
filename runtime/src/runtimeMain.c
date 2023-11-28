@@ -108,7 +108,7 @@ enum StreamState {
 
 void setStreamState(int* state, int newState, commonType *type) {
 #ifdef DEBUGSTREAM
-  printf("Setting streamState to %d\n", err);
+  printf("Setting streamState to %d\n", newState);
 #endif /* ifdef DEBUGSTREAM */
 
     // given the streamState error and the type, set the streamState
@@ -127,7 +127,7 @@ void streamIn(commonType *type, int* streamState) {
   // to handle scanf errors, we check the return value
   // the return value of scanf is the number of validly converted args
   // https://stackoverflow.com/a/5969152
-  int check = 1;
+  int check = 0;
 
   switch (type->type) {
     case INTEGER:
@@ -149,9 +149,6 @@ void streamIn(commonType *type, int* streamState) {
         *(bool*)type->value = true;
       } else if (strcmp(buffer, "F") == 0) {
           *(bool *) type->value = false;
-      } else {
-          // Manually set error if we don't get a T or F
-          check = 0;
       }
       break;
     }
@@ -165,7 +162,10 @@ void streamIn(commonType *type, int* streamState) {
   printf("scanf check is %d\n", check);
 #endif /* ifdef DEBUGSTREAM */
 
-  if (check == 0) {
+  // check if the scanf failed
+  // i used to check if check == 0, but that doesn't work on linux for EOF
+  // on EOF, scanf returns -1 on linux, but 0 on mac
+  if (check != 1) {
     // invalid input! (scanf didn't convert anything)
     // set the val to "default"
     setToNullValue(type);
