@@ -19,7 +19,7 @@
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 //#define DEBUGPRINT
-//#define DEBUGSTREAM
+#define DEBUGSTREAM
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
@@ -144,11 +144,15 @@ void streamIn(commonType *type, int* streamState) {
       // scan char. If it's T, true, else false
       char buffer[1024]; // how big do I make this?
       check = scanf("%s", buffer);
-//      printf("buffer: '%s'\n", buffer);
+#ifdef DEBUGSTREAM
+      printf("buffer: '%s'\n", buffer);
+#endif /* ifdef DEBUGSTREAM */
       if (strcmp(buffer, "T") == 0) {
         *(bool*)type->value = true;
       } else if (strcmp(buffer, "F") == 0) {
-          *(bool *) type->value = false;
+        *(bool *) type->value = false;
+      } else {
+          check = 0;
       }
       break;
     }
