@@ -71,6 +71,7 @@ namespace gazprea {
         std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
         std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
         std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
+        std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) override;
 
 
         std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
