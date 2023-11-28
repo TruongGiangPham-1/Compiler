@@ -189,7 +189,7 @@ commonType* cast(commonType* from, enum TYPE toType) {
 
   switch (from->type) {
     case VECTOR:
-    return listCast(from, toType);
+    return NULL;
     default:
 #ifdef DEBUGTYPES
       printf("Choosing appropriate case...\n");
