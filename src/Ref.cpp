@@ -323,18 +323,15 @@ namespace gazprea {
 
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
-        //}
-
-        if (!tree->getTypeNode()) {
-            if (!tree->getExprNode()) {
-                // TODO: or if exprNode is identity or null
-                throw SyntaxError(tree->loc(), "Inferred declaration is missing expression.");
-            }
-        }
 
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
-            throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
+            if (resolveID->scope->getScopeName().find("iterator") == std::string::npos) {  // resolved ID is not in iterator scope then its error
+                // this is resolved in the iterator domain var
+                throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
+            }
+            // else, any Identifier same name as one defined in iterator loop is ok
+
         }
 
         // define the ID in symtable
@@ -373,8 +370,6 @@ namespace gazprea {
 
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
-        idSym->qualifier = tree->qualifier;
-
         currentScope->define(idSym);
 
         tree->scope = currentScope;
@@ -483,8 +478,11 @@ namespace gazprea {
                       << domainV->mlirName << std::endl;
 #endif
         }
-
+        // note, iterator variables in its own scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
         walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
         currentScope = symtab->exitScope(currentScope);
         return 0;
     }
