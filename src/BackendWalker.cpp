@@ -49,10 +49,32 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 }
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
-  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  auto initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, val);
+  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  codeGenerator.generateAssignment(initializedType, val);
+
+  codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
   return 0;
+}
+
+std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
+  std::cout << tree->evaluatedType->baseTypeEnum << std::endl;
+
+  switch (tree->evaluatedType->baseTypeEnum) {
+    case TUPLE:
+      for (auto child : tree->children) {
+        std::vector<mlir::Value> children;
+        auto val = std::any_cast<mlir::Value>(walk(child));
+
+        children.push_back(val);
+        return codeGenerator.generateValue(children);
+      }
+    case VECTOR:
+    default:
+      // base type, can resolve directly
+      return codeGenerator.generateNullValue(tree->sym->type);
+  }
 }
 
 std::any BackendWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
