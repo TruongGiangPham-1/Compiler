@@ -390,13 +390,12 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
 
 
 mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
-    std::cout << "Generating call to " << signature << " with " << arguments.size() << "args" << std::endl;
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("__"+signature);
 
   auto result = builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 
-//  this->generateDeclaration(trackObject(), result);
+  this->generateDeclaration(trackObject(), result);
 
   return result;
 }
