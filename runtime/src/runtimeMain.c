@@ -178,6 +178,8 @@ void streamIn(commonType *type, int* streamState) {
           check = 1;
           *(int *) type->value = (int) lnum;
       }
+      // reset errno
+        errno = 0;
       break;
     case CHAR:
 //      printf("Enter a char: ");
