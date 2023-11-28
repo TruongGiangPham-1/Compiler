@@ -59,7 +59,6 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-  std::cout << tree->evaluatedType->baseTypeEnum << std::endl;
 
   switch (tree->evaluatedType->baseTypeEnum) {
     case TUPLE:
@@ -73,7 +72,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
     case VECTOR:
     default:
       // base type, can resolve directly
-      return codeGenerator.generateNullValue(tree->sym->type);
+      return codeGenerator.generateNullValue(tree->evaluatedType);
   }
 }
 
