@@ -7,7 +7,7 @@
 #include <memory>
 
 
-//#define DEBUG
+#define DEBUG
 
 namespace gazprea {
     std::any ASTBuilder::visitFile(GazpreaParser::FileContext *ctx) {
@@ -257,7 +257,16 @@ namespace gazprea {
         auto t = std::make_shared<StringNode>(ctx->getStart()->getLine());
 
         std::string val = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
-        t->val = val;
+        // iteratively consume chars until the string is empty
+        while (!val.empty()) {
+            try {
+                auto charPair = CharNode::consumeChar(val);
+                t->val.push_back(charPair.first);
+                val = charPair.second;
+            } catch (std::runtime_error& error) {
+                throw SyntaxError(ctx->getStart()->getLine(), error.what());
+            }
+        }
 
         return std::dynamic_pointer_cast<ASTNode>(t);
     }

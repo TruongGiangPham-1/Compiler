@@ -21,7 +21,7 @@
 #include <iostream>
 #include <fstream>
 
-//#define DEBUG
+#define DEBUG
 int main(int argc, char **argv) {
   if (argc < 3) {
     std::cout << "Missing required argument.\n"
@@ -38,6 +38,9 @@ int main(int argc, char **argv) {
       antlr4::ANTLRFileStream afs;
       afs.loadFromFile(argv[1]);
       gazprea::GazpreaLexer lexer(&afs);
+      lexer.removeErrorListeners();
+      lexer.addErrorListener(new ErrorListener());
+
       antlr4::CommonTokenStream tokens(&lexer);
       gazprea::GazpreaParser parser(&tokens);
 
