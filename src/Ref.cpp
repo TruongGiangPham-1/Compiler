@@ -343,6 +343,7 @@ namespace gazprea {
         std::shared_ptr<VariableSymbol> idSym;
         if (tree->getTypeNode()) {
             std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
+            tree->getTypeNode()->evaluatedType = resType;
             if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
             idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
 #ifdef DEBUG
