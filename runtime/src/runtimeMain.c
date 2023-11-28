@@ -19,7 +19,7 @@
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 //#define DEBUGPRINT
-#define DEBUGSTREAM
+//#define DEBUGSTREAM
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
