@@ -187,10 +187,6 @@ commonType* cast(commonType* from, enum TYPE toType) {
     UnsupportedTypeError("Cast recieved a type it could not recognize");
   }
 
-  switch (from->type) {
-    case VECTOR:
-    return NULL;
-    default:
 #ifdef DEBUGTYPES
       printf("Choosing appropriate case...\n");
 #endif /* ifdef DEBUGTYPES */
@@ -227,9 +223,6 @@ commonType* cast(commonType* from, enum TYPE toType) {
 #endif /* ifdef DEBUGTYPES */
       CastError("Invalid cast, type not recognized or implemented");
       return NULL;
-    }
-
-
   }
 }
 
