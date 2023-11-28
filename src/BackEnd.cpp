@@ -220,6 +220,8 @@ void BackEnd::setupCommonTypeRuntime() {
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
+  // setup runtime stream_state function
+  auto streamStateFunctionType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {intPtrType});
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType", copy);
@@ -227,6 +229,7 @@ void BackEnd::setupCommonTypeRuntime() {
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
                                             lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__stream_state", streamStateFunctionType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "indexCommonType",
                                             indexCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "assignByReference",
@@ -269,14 +272,10 @@ void BackEnd::setupStreamRuntime() {
   auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
   auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
 
+  // streamState variable
   auto streamState = builder->create<mlir::LLVM::GlobalOp>(
           loc, intType, false, mlir::LLVM::Linkage::Internal,
           "streamState", builder->getIntegerAttr(intType, 0));
-
-  // setup runtime getStreamState function
-  auto getStreamStateType = mlir::LLVM::LLVMFunctionType::get(voidType, {intPtrType});
-  auto getStreamStateFunc = builder->create<mlir::LLVM::LLVMFuncOp>(
-        loc, "getStreamState", getStreamStateType);
 }
 
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
@@ -391,12 +390,13 @@ mlir::Value BackEnd::performUNARYOP(mlir::Value val, UNARYOP op) {
 
 
 mlir::Value BackEnd::generateCallNamed(std::string signature, std::vector<mlir::Value> arguments) {
+    std::cout << "Generating call to " << signature << " with " << arguments.size() << "args" << std::endl;
   mlir::ArrayRef mlirArguments = arguments;
   mlir::LLVM::LLVMFuncOp function = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("__"+signature);
 
   auto result = builder->create<mlir::LLVM::CallOp>(loc, function, mlirArguments).getResult();
 
-  this->generateDeclaration(trackObject(), result);
+//  this->generateDeclaration(trackObject(), result);
 
   return result;
 }

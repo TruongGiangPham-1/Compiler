@@ -511,6 +511,13 @@ bool commonTypeToBool(commonType* val) {
 
 // STANDARD LIBRARY. They are prefixed with __ because they can be called with regular
 // function calls in the walker.
+
+// *state is a globalop defined in the BackEnd::setupStreamRuntime
+commonType* __stream_state(int* state) {
+  printf("Stream state: %d\n", *state);
+  return allocateCommonType(state, INTEGER);
+}
+
 commonType* __length(commonType* vector)  {
   if (!isCompositeType(vector->type)) {
     UnsupportedTypeError("Trying to take length of non-vector type");

@@ -38,6 +38,9 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
 void Def::defineBuiltins() {
     auto resolvedInt = symtab->globalScope->resolveType("integer");
 
+    auto streamState = std::make_shared<FunctionSymbol>("stream_state", "Global", symtab->globalScope->resolveType("integer"), symtab->globalScope, -1, true);
+    symtab->globalScope->define(streamState);
+
     // EXAMPLE BUILTIN FUNCTION (TODO: delete once we have a proper stdlib)
     // define a vustom function silly() that returns an integer (no args)
     // to define args, use sillyDef->orderedArgs.push_back();

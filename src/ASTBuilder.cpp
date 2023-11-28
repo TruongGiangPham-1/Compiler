@@ -156,7 +156,7 @@ namespace gazprea {
 #endif
         // this is a regular function call but with the name "streamState"
         std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
-        std::shared_ptr<Symbol> funcName = std::make_shared<Symbol>("streamState");
+        std::shared_ptr<Symbol> funcName = std::make_shared<Symbol>("stream_state");
 
         callNode->CallName = funcName;
 

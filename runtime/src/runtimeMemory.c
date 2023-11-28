@@ -201,7 +201,7 @@ void deallocateCommonType(commonType* object) {
     }
   }
 
-#ifdef DEBUGMEMORY
+#ifdef DEBUGMEMORYll
   printf("Commontype deallocation success!\n");
 #endif /* ifdef DEBUGMEMORY */
 }

@@ -184,7 +184,3 @@ commonType* __silly(commonType* toPrint) {
     printf("\n");
     return toPrint;
 }
-// *state is a globalop defined in the BackEnd::setupStreamRuntime
-void getStreamState(int* state) {
-  printf("Stream state: %d\n", *state);
-}
