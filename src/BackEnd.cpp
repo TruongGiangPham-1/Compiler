@@ -226,6 +226,8 @@ void BackEnd::setupCommonTypeRuntime() {
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "castHelper",
                                           commonCastType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+                                          allocateFromRange);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
@@ -297,7 +299,19 @@ mlir::Value BackEnd::copyCommonType(mlir::Value val) {
 
   return builder->create<mlir::LLVM::CallOp>(loc, copyFunc, mlir::ValueRange({val})).getResult();
 }
+mlir::Value BackEnd::cast(mlir::Value left, mlir::Value right) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
 
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
+  auto newLabel = trackObject();
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
 mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("castHelper");

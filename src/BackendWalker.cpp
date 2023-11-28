@@ -1,5 +1,6 @@
 #include "BackendWalker.h"
 #include "ASTNode/Expr/CastNode.h"
+#include "ASTNode/Type/VectorTypeNode.h"
 #include "ASTWalker.h"
 #include "Operands/BINOP.h"
 #include "Types/TYPES.h"
@@ -7,6 +8,7 @@
 #include "mlir/IR/Value.h"
 #include <memory>
 #include <stdexcept>
+#include <strings.h>
 //#define DEBUG
 
 std::any BackendWalker::walk(std::shared_ptr<ASTNode> tree) {
@@ -59,20 +61,52 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
+  if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+      auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
-  switch (tree->evaluatedType->baseTypeEnum) {
-    case TUPLE:
-      for (auto child : tree->children) {
-        std::vector<mlir::Value> children;
-        auto val = std::any_cast<mlir::Value>(walk(child));
+      auto size = std::any_cast<mlir::Value>(walk(mtree->getSize()));
+      auto one = codeGenerator.generateValue(1);
 
-        children.push_back(val);
-        return codeGenerator.generateValue(children);
-      }
-    case VECTOR:
-    default:
-      // base type, can resolve directly
-      return codeGenerator.generateNullValue(tree->evaluatedType);
+      auto newVector = codeGenerator.generateValue(size);
+
+      mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+      mlir::Block *trueBlock = codeGenerator.generateBlock();
+      mlir::Block *exitBlock = codeGenerator.generateBlock();
+
+      auto index = codeGenerator.generateValue(0);
+
+      codeGenerator.generateEnterBlock(loopBeginBlock);
+      codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+
+      auto inBounds = codeGenerator.performBINOP(index, size, LTHAN);
+
+      codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
+
+      codeGenerator.setBuilderInsertionPoint(trueBlock);
+      auto result = codeGenerator.generateNullValue(mtree->evaluatedType);
+
+      codeGenerator.appendCommon(newVector, result);
+
+      codeGenerator.generateAssignment(index, codeGenerator.performBINOP(index, one, ADD));
+
+      codeGenerator.generateEnterBlock(loopBeginBlock);
+      codeGenerator.setBuilderInsertionPoint(exitBlock);
+
+      return newVector;
+  } else {
+    switch (tree->evaluatedType->baseTypeEnum) {
+      case TUPLE:
+        for (auto child : tree->children) {
+          std::vector<mlir::Value> children;
+          auto val = std::any_cast<mlir::Value>(walk(child));
+
+          children.push_back(val);
+          return codeGenerator.generateValue(children);
+        }
+          default:
+        // base type, can resolve directly
+        return codeGenerator.generateNullValue(tree->evaluatedType);
+    }
   }
 }
 

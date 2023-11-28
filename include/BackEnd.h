@@ -59,6 +59,8 @@ public:
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  mlir::Value cast(mlir::Value from, mlir::Value to);
+
   void appendCommon(mlir::Value destination, mlir::Value item);
 
   mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
