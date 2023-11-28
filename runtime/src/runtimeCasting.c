@@ -310,6 +310,10 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
     RuntimeOPError("wierd stuff goin on man");
   }
 }
+
+commonType* vectorPromotion(list* from, commonType* to) {
+  return NULL;
+}
 /*
  *
  */

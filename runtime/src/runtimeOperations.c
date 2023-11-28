@@ -311,10 +311,8 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     return result;
   }
 
-  if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
-    promotedLeft = promotion(left,right);
-    promotedRight = promotion(right,left);
-  }
+  promotedLeft = promotion(left,right);
+  promotedRight = promotion(right,left);
   
     
   if (op == RANGE) {
@@ -324,7 +322,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   // god is dead and i have killed him
   if (!isComparison(op)) {
 
-    if (isCompositeType(left->type) || isCompositeType(right->type)) {
+    if (isCompositeType(promotedLeft->type)) {
 
       result = listBINOP(left, right, op);
 
@@ -349,7 +347,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
       result = allocateCommonType(&tempChar, CHAR);
     } 
   } else {
-    if (isCompositeType(left->type) || isCompositeType(right->type)) {
+    if (isCompositeType(left->type)) {
 
       result = listCOMP(left, right, op);
 
@@ -379,10 +377,8 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   printf("=== de allocating temporary operands...\n");
 #endif /* ifdef DEBUGMEMORY */
 
-  if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
-    deallocateCommonType(promotedLeft);
-    deallocateCommonType(promotedRight);
-  }
+  deallocateCommonType(promotedLeft);
+  deallocateCommonType(promotedRight);
 
 #ifdef DEBUGMEMORY
   printf("=== complete\n");
