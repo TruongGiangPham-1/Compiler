@@ -137,7 +137,6 @@ void streamIn(commonType *type, int* streamState) {
 
   switch (type->type) {
     case INTEGER:
-//      printf("Enter an int: ");
       check = scanf("%s", buffer);
       // convert string to an int
       // https://stackoverflow.com/a/18544436
@@ -179,11 +178,22 @@ void streamIn(commonType *type, int* streamState) {
           *(int *) type->value = (int) lnum;
       }
       break;
-    case CHAR:
-//      printf("Enter a char: ");
-      // CHAR CAN NEVER FAIL (except if it's an end of file)
-      check = scanf("%c", (char*)type->value);
-      break;
+    case CHAR: {
+        // CHAR CAN NEVER FAIL (except if it's an end of file)
+        char c;
+        check = scanf("%c", &c);
+        *(char*)type->value = c;
+
+        if (c == '\0') {
+            // on mac, an EOF won't be detected by scanf as a -1
+            check = -1;
+        }
+
+#ifdef DEBUGSTREAM
+        printf("Scanned char: '%c'\n", *(char*)type->value);
+#endif /* ifdef DEBUGSTREAM */
+        break;
+    }
     case BOOLEAN: {
 //      printf("Enter a boolean value (T/F): ");
       // scan char. If it's T, true, else false
