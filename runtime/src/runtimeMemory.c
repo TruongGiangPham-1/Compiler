@@ -22,6 +22,7 @@ typedef struct list {
   commonType** values; // list of values
 } list;
 commonType* promotion(commonType* from, commonType* to);
+void printCommonType(commonType *type);
 // allocate some memory for a new commontype
 commonType* allocateCommonType(void* value, enum TYPE type);
 commonType* allocateListOfSize(int size);
@@ -65,14 +66,13 @@ commonType* copyCommonType(commonType* copyFrom) {
 
 void assignByReference(commonType* dest, commonType* from) {
   commonType* promotedVal = promotion(from, dest);
-
   if (isCompositeType(dest->type)) {
     deallocateList(dest->value);
   } else {
     free(dest->value);
   }
 
-  dest->value = promotedVal;
+  dest->value = copyValue(promotedVal);
 }
 
 commonType* allocateCommonType(void* value, enum TYPE type) {
