@@ -35,6 +35,7 @@ public:
      * @param: ID: used to create a unique type name for the tuple Type created in typedef, used Def::getID()
      */
     void defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string typeDefTo, int ID);  // define using typenode
+    int isTypeDefed(std::string typedefTo);  // check if a given typestring is in typedef mapping
 
     std::shared_ptr<Scope> exitScope(std::shared_ptr<Scope> currentScope) {
         return currentScope->getEnclosingScope();
