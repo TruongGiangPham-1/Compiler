@@ -1,0 +1,35 @@
+procedure main() returns integer {
+
+  integer[3,3] a = [[1], [2], [3]];
+  character[3,3] b = [['a'], ['b'], ['c']];
+  real[3,3] c = [[1.5], [2.5], [3.5]];
+
+  integer[4] d = [1];
+  character[4] e = ['a'];
+  real[4] f = [1.0];
+
+  integer[4] g;
+  character[4] h;
+  real[4] i;
+
+  a-> std_output;
+  '\n' -> std_output;
+  b-> std_output;
+  '\n' -> std_output;
+  c-> std_output;
+  '\n' -> std_output;
+  d-> std_output;
+  '\n' -> std_output;
+  e-> std_output;
+  '\n' -> std_output;
+  f-> std_output;
+  '\n' -> std_output;
+  g-> std_output;
+  '\n' -> std_output;
+  h-> std_output;
+  '\n' -> std_output;
+  i-> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
