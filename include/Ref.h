@@ -45,6 +45,10 @@ namespace gazprea {
         void swapMethodBody(int prototypeLine, int methodDefinitionLine, std::shared_ptr<ASTNode>prototypeNode
         , std::shared_ptr<ASTNode> methodDefTree);
 
+
+        // if the typenode of this tree has typedef mapping, we swap the tree's typenode with the TYpeNode that was mapped in typedef
+        void potentiallySwapTypeDefNode(std::shared_ptr<ASTNode> typeNode, std::shared_ptr<ASTNode>tree);
+
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;
