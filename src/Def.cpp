@@ -64,6 +64,21 @@ std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
     // define type def mapping
     std::string typdefToString = tree->getName();
     symtab->defineTypeDef(tree->getType(), typdefToString, getNextId());
+
+    auto typeN = std::dynamic_pointer_cast<TypeNode>(tree->getType());
+    if (symtab->globalScope->typedefTypeNode.find(typeN->getTypeName()) != symtab->globalScope->typedefTypeNode.end()) {
+        // this mapping already exists
+        /*  eg
+         * typedef integer[i] five;
+         * typedef five poopoo;
+         *  I will remove {five, integer[i]} mapping and will add {poopoo, integer[i]} mapping
+         */
+        auto topMostType = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];  // this is gets integer[i] node
+        symtab->globalScope->typedefTypeNode.erase(typeN->getTypeName());  // erase the old mapping
+        symtab->globalScope->typedefTypeNode.emplace(typdefToString, topMostType);  // add new mapping
+    } else {
+        symtab->globalScope->typedefTypeNode.emplace(typdefToString, tree->getType());  // add new mapping
+    }
     return 0;
 }
 
