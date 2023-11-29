@@ -298,7 +298,7 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
       for (int i = 0 ; i < toSize ; i ++) {
           commonType* promotedItem;
           if (i < fromValue->currentSize) {
-            promotedItem = promotion(fromValue->values[i], toList->values[i]);
+            promotedItem = cast(fromValue->values[i], toList->values[i]);
           } else { 
             // padding
             promotedItem = nullFrom(toList->values[i]);
