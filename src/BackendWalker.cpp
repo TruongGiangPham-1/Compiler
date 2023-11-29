@@ -1,6 +1,7 @@
 #include "BackendWalker.h"
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Type/VectorTypeNode.h"
+#include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTWalker.h"
 #include "Operands/BINOP.h"
 #include "Types/TYPES.h"
@@ -61,7 +62,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-  if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+  if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
       auto size = std::any_cast<mlir::Value>(walk(mtree->getSize()));
@@ -93,7 +94,69 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
       codeGenerator.setBuilderInsertionPoint(exitBlock);
 
       return newVector;
-  } else {
+  } else if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR){
+      std::cout << "matrix" << std::endl;
+      std::cout << "1" << std::endl;
+      auto mtree = std::dynamic_pointer_cast<MatrixTypeNode>(tree);
+
+      auto row = std::any_cast<mlir::Value>(walk(mtree->sizeLeft));
+      auto column = std::any_cast<mlir::Value>(walk(mtree->sizeRight));
+      std::cout << "1.5" << std::endl;
+
+      // we do a little indexing
+      auto rowIndex = codeGenerator.generateValue(0);
+
+      auto one = codeGenerator.generateValue(1);
+
+      
+      auto matrix = codeGenerator.generateValue(row);
+
+      rowIndex = codeGenerator.generateValue(0);
+
+      mlir::Block *rowBeginBlock= codeGenerator.generateBlock();
+      mlir::Block *rowTrueBlock= codeGenerator.generateBlock();
+      mlir::Block *rowExitBlock= codeGenerator.generateBlock();
+
+      codeGenerator.generateEnterBlock(rowBeginBlock);
+      codeGenerator.setBuilderInsertionPoint(rowBeginBlock);
+
+      auto inBoundsRow = codeGenerator.performBINOP(rowIndex, row, LTHAN);
+      codeGenerator.generateCompAndJump(rowTrueBlock, rowExitBlock, codeGenerator.downcastToBool(inBoundsRow));
+      codeGenerator.setBuilderInsertionPoint(rowTrueBlock);
+    
+      auto rowVec = codeGenerator.generateValue(column);
+
+      auto colIndex = codeGenerator.generateValue(0);
+
+      /* COL ========================= */
+        mlir::Block *colBeginBlock= codeGenerator.generateBlock();
+        mlir::Block *colTrueBlock= codeGenerator.generateBlock();
+        mlir::Block *colExitBlock= codeGenerator.generateBlock();
+
+        codeGenerator.generateEnterBlock(colBeginBlock);
+        codeGenerator.setBuilderInsertionPoint(colBeginBlock);
+
+        auto inBoundsCol = codeGenerator.performBINOP(colIndex, column, LTHAN);
+        codeGenerator.generateCompAndJump(colTrueBlock, colExitBlock, codeGenerator.downcastToBool(inBoundsCol));
+
+        codeGenerator.setBuilderInsertionPoint(colTrueBlock);
+
+        auto result = codeGenerator.generateNullValue(mtree->evaluatedType);
+        codeGenerator.appendCommon(rowVec, result);
+
+        codeGenerator.generateAssignment(colIndex, codeGenerator.performBINOP(colIndex, one, ADD));
+        codeGenerator.generateEnterBlock(colBeginBlock);
+        codeGenerator.setBuilderInsertionPoint(colExitBlock);
+      /* COL ========================= */
+
+      codeGenerator.generateAssignment(rowIndex, codeGenerator.performBINOP(rowIndex, one, ADD));
+      codeGenerator.appendCommon(matrix, row);
+      codeGenerator.generateEnterBlock(rowBeginBlock);
+      codeGenerator.setBuilderInsertionPoint(rowExitBlock);
+
+      return matrix;
+  }else {
+    
     switch (tree->evaluatedType->baseTypeEnum) {
       case TUPLE:
         for (auto child : tree->children) {
@@ -104,7 +167,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
           return codeGenerator.generateValue(children);
         }
           default:
-        // base type, can resolve directly
+       // base type, can resolve directly
         return codeGenerator.generateNullValue(tree->evaluatedType);
     }
   }
@@ -381,9 +444,6 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.appendCommon(generatorVector, codeGenerator.generateValue(colLength));
     codeGenerator.generateAssignment(rowIndex, codeGenerator.performBINOP(rowIndex,one , ADD));
-
-    codeGenerator.generateEnterBlock(matrixBeginBlock);
-    codeGenerator.setBuilderInsertionPoint(matrixExitBlock);
 
     rowIndex = codeGenerator.generateValue(0);
 
