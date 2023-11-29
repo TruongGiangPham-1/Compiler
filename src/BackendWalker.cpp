@@ -95,13 +95,10 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
 
       return newVector;
   } else if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR){
-      std::cout << "matrix" << std::endl;
-      std::cout << "1" << std::endl;
       auto mtree = std::dynamic_pointer_cast<MatrixTypeNode>(tree);
 
       auto row = std::any_cast<mlir::Value>(walk(mtree->sizeLeft));
       auto column = std::any_cast<mlir::Value>(walk(mtree->sizeRight));
-      std::cout << "1.5" << std::endl;
 
       // we do a little indexing
       auto rowIndex = codeGenerator.generateValue(0);
@@ -150,7 +147,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
       /* COL ========================= */
 
       codeGenerator.generateAssignment(rowIndex, codeGenerator.performBINOP(rowIndex, one, ADD));
-      codeGenerator.appendCommon(matrix, row);
+      codeGenerator.appendCommon(matrix, rowVec);
       codeGenerator.generateEnterBlock(rowBeginBlock);
       codeGenerator.setBuilderInsertionPoint(rowExitBlock);
 
