@@ -317,25 +317,34 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   // bool list of what indices never satisfied predicate
   auto leftOver = codeGenerator.generateValue(maxFiltered);
+
+  // +1 for left over
+  for (int i = 0 ; i < tree->getExprList().size()+1 ; i++)  {
+    auto vector = codeGenerator.generateValue(maxVectorSize);
+    codeGenerator.appendCommon(filter, vector);
+  }
   
-  for (int i = 0 ; i < tree->getExprList().size() ; i++) {
-    auto newVector = codeGenerator.generateValue(maxVectorSize);
+  auto newVector = codeGenerator.generateValue(maxVectorSize);
 
-    mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
-    mlir::Block *trueBlock = codeGenerator.generateBlock();
-    mlir::Block *exitBlock = codeGenerator.generateBlock();
-    auto index = codeGenerator.generateValue(0);
+  mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+  mlir::Block *trueBlock = codeGenerator.generateBlock();
+  mlir::Block *exitBlock = codeGenerator.generateBlock();
+  auto index = codeGenerator.generateValue(0);
 
-    codeGenerator.generateEnterBlock(loopBeginBlock);
-    codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+  codeGenerator.generateEnterBlock(loopBeginBlock);
+  codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
 
-    auto inBounds = codeGenerator.performBINOP(index, maxVectorSize, LTHAN);
+  auto inBounds = codeGenerator.performBINOP(index, maxVectorSize, LTHAN);
 
-    codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
+  codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
-    codeGenerator.setBuilderInsertionPoint(trueBlock);
-    auto indexedVal = codeGenerator.indexCommonType(filteree, index);
-    codeGenerator.generateAssignment(domain, indexedVal);
+  codeGenerator.setBuilderInsertionPoint(trueBlock);
+
+
+  auto indexedVal = codeGenerator.indexCommonType(filteree, index);
+  codeGenerator.generateAssignment(domain, indexedVal);
+
+  for (int i = 0 ; i < tree->getExprList().size() ; i ++) {
 
     auto result = std::any_cast<mlir::Value>(walk(tree->getExprList()[i]));
 
@@ -345,17 +354,16 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
     codeGenerator.setBuilderInsertionPoint(trueResult);
 
-    codeGenerator.appendCommon(newVector, indexedVal);
+    codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, codeGenerator.generateValue(i)), indexedVal);
 
     codeGenerator.generateEnterBlock(falseResult);
     codeGenerator.setBuilderInsertionPoint(falseResult);
-
-    codeGenerator.generateAssignment(index, codeGenerator.performBINOP(index, one, ADD));
-
-    codeGenerator.generateEnterBlock(loopBeginBlock);
-    codeGenerator.setBuilderInsertionPoint(exitBlock);
-    codeGenerator.appendCommon(filter, newVector);
   }
+
+  codeGenerator.generateAssignment(index, codeGenerator.performBINOP(index, one, ADD));
+
+  codeGenerator.generateEnterBlock(loopBeginBlock);
+  codeGenerator.setBuilderInsertionPoint(exitBlock);
 
   return filter;
 }
