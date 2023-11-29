@@ -301,6 +301,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   // what we are filtering from
   auto filteree = std::any_cast<mlir::Value>(walk(tree->getDomain()));
   auto one = codeGenerator.generateValue(1);
+  auto unfilteredIndex = codeGenerator.generateValue((int)tree->getExprList().size()+1);
 
   // max amount of filters
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size());
@@ -315,8 +316,6 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   auto maxVectorSize = codeGenerator.generateCallNamed("length", argument);
 
-  // bool list of what indices never satisfied predicate
-  auto leftOver = codeGenerator.generateValue(maxFiltered);
 
   // +1 for left over
   for (int i = 0 ; i < tree->getExprList().size()+1 ; i++)  {
@@ -343,7 +342,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   auto indexedVal = codeGenerator.indexCommonType(filteree, index);
   codeGenerator.generateAssignment(domain, indexedVal);
-
+  auto appended = codeGenerator.generateValue(false);
   for (int i = 0 ; i < tree->getExprList().size() ; i ++) {
 
     auto result = std::any_cast<mlir::Value>(walk(tree->getExprList()[i]));
@@ -355,10 +354,23 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
     codeGenerator.setBuilderInsertionPoint(trueResult);
 
     codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, codeGenerator.generateValue(i)), indexedVal);
+    codeGenerator.generateAssignment(appended, codeGenerator.performBINOP(appended, codeGenerator.generateValue(true), OR));
 
     codeGenerator.generateEnterBlock(falseResult);
     codeGenerator.setBuilderInsertionPoint(falseResult);
   }
+
+  mlir::Block *satisfied = codeGenerator.generateBlock();
+  mlir::Block *unsatisfied = codeGenerator.generateBlock();
+  codeGenerator.generateCompAndJump(satisfied, unsatisfied, codeGenerator.downcastToBool(appended)) ;
+
+  codeGenerator.setBuilderInsertionPoint(unsatisfied);
+  codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, unfilteredIndex), codeGenerator.indexCommonType(filteree, index));
+
+  codeGenerator.generateEnterBlock(satisfied);
+  codeGenerator.setBuilderInsertionPoint(satisfied);
+
+
 
   codeGenerator.generateAssignment(index, codeGenerator.performBINOP(index, one, ADD));
 
