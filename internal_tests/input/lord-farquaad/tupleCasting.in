@@ -1,0 +1,18 @@
+procedure main() returns integer {
+  tuple(integer, integer, integer) tuple1 = as<tuple(integer, integer,integer)>(('a','b','c'));
+  tuple(integer, real, boolean) tuple2 = as<tuple(integer, real, boolean)>(('a','b','c'));
+
+  integer a = tuple1.1;
+  real b = tuple2.2;
+  boolean c = tuple2.3;
+
+  a->std_output;
+  '\n' -> std_output;
+  b->std_output;
+  '\n' -> std_output;
+  c->std_output;
+  '\n' -> std_output;
+
+
+  return 0;
+}
