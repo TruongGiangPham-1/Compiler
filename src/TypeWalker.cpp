@@ -655,8 +655,8 @@ namespace gazprea {
         walkChildren(tree);
         if (!tree->getTypeNode()) {
             tree->sym->typeSym = tree->getExprNode()->evaluatedType;
-            if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY)  {
-               throw TypeError(tree->loc(), "cannot have identity when type is not defined");
+            if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY || tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::NULL_)  {
+               throw TypeError(tree->loc(), "cannot have identity or null when type is not defined");
             }
             tree->evaluatedType = tree->getExprNode()->evaluatedType;
             return nullptr;
@@ -718,6 +718,7 @@ namespace gazprea {
                     }
                 }
             }
+          
             tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
             tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
 
