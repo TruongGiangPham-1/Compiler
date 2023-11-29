@@ -301,7 +301,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   // what we are filtering from
   auto filteree = std::any_cast<mlir::Value>(walk(tree->getDomain()));
   auto one = codeGenerator.generateValue(1);
-  auto unfilteredIndex = codeGenerator.generateValue((int)tree->getExprList().size()+1);
+  auto unfilteredIndex = codeGenerator.generateValue((int)tree->getExprList().size());
 
   // max amount of filters
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size());
@@ -369,7 +369,6 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   codeGenerator.generateEnterBlock(satisfied);
   codeGenerator.setBuilderInsertionPoint(satisfied);
-
 
 
   codeGenerator.generateAssignment(index, codeGenerator.performBINOP(index, one, ADD));
