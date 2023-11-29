@@ -260,7 +260,7 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
-  auto type = tree->evaluatedType->baseTypeEnum;
+  auto type = std::any_cast<mlir::Value>(walk(tree->getType()));
 
   return codeGenerator.cast(val, type);
 }
