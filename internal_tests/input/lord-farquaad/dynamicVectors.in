@@ -1,0 +1,18 @@
+procedure main() returns integer {
+  
+  integer[5+3*3] a = [1,2,3];
+  character[5+3*3] b = ['a','b','c'];
+  real[5+3*3] c = [1.5,2.5,3.5];
+  boolean[5+3*3] d = [true,true,true];
+
+  a -> std_output;
+  '\n' -> std_output;
+  b -> std_output;
+  '\n' -> std_output;
+  c -> std_output;
+  '\n' -> std_output;
+  d -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}

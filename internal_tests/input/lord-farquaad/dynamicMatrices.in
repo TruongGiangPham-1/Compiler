@@ -1,0 +1,18 @@
+procedure main() returns integer {
+  
+  integer[2*2,2*2] a = [[1,2]];
+  character[2*2,2*2] b = [['a','b']];
+  real[2*2,2*2] c = [[1.5,2.5]];
+  boolean[2*2,2*2] d = [[true,true]];
+
+  a -> std_output;
+  '\n' -> std_output;
+  b -> std_output;
+  '\n' -> std_output;
+  c -> std_output;
+  '\n' -> std_output;
+  d -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
