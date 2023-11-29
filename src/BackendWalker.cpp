@@ -301,7 +301,6 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   // what we are filtering from
   auto filteree = std::any_cast<mlir::Value>(walk(tree->getDomain()));
   auto one = codeGenerator.generateValue(1);
-  auto unfilteredIndex = codeGenerator.generateValue((int)tree->getExprList().size());
 
   // max amount of filters
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size());
@@ -316,14 +315,11 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   auto maxVectorSize = codeGenerator.generateCallNamed("length", argument);
 
-
   // +1 for left over
   for (int i = 0 ; i < tree->getExprList().size()+1 ; i++)  {
     auto vector = codeGenerator.generateValue(maxVectorSize);
     codeGenerator.appendCommon(filter, vector);
   }
-  
-  auto newVector = codeGenerator.generateValue(maxVectorSize);
 
   mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
   mlir::Block *trueBlock = codeGenerator.generateBlock();
@@ -365,7 +361,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   codeGenerator.generateCompAndJump(satisfied, unsatisfied, codeGenerator.downcastToBool(appended)) ;
 
   codeGenerator.setBuilderInsertionPoint(unsatisfied);
-  codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, unfilteredIndex), codeGenerator.indexCommonType(filteree, index));
+  codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, maxFiltered), codeGenerator.indexCommonType(filteree, index));
 
   codeGenerator.generateEnterBlock(satisfied);
   codeGenerator.setBuilderInsertionPoint(satisfied);
