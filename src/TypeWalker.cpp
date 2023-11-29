@@ -959,9 +959,9 @@ namespace gazprea {
                 if (leftTypeString != rightTypeString) {
                     auto leftIndex = promotedType->getTypeIndex(leftTypeString);
                     auto rightIndex = promotedType->getTypeIndex(rightTypeString);
-                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    std::string resultTypeString = promotedType->castTable[leftIndex][rightIndex];
                     if (resultTypeString.empty()) {
-                        throw TypeError(tree->loc(), "Cannot implicitly promote " + leftTypeString + " to " + rightTypeString);
+                        throw TypeError(tree->loc(), "Cannot cast " + leftTypeString + " to " + rightTypeString);
                     }
                 }
             }
