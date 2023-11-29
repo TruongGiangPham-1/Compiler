@@ -146,6 +146,16 @@ void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string 
         typedefType->typDefName = typeDefTo;
         globalScope->defineType(typedefType);
     } else if (std::dynamic_pointer_cast<VectorTypeNode>(typeNode)) {
+        auto vNode = std::dynamic_pointer_cast<VectorTypeNode>(typeNode);
+        auto innerType  = resolveTypeUser(vNode->getInnerType());
+
+
+        auto typeDefType = std::make_shared<AdvanceType>("vector" + typeDefTo + std::to_string(ID));
+        typeDefType->typDefName = typeDefTo;
+        typeDefType->baseTypeEnum = innerType->baseTypeEnum;
+        typeDefType->vectorOrMatrixEnum = VECTOR;
+
+        globalScope->defineType(typeDefType);
 
     } else if (std::dynamic_pointer_cast<MatrixTypeNode>(typeNode)) {
 
@@ -157,6 +167,13 @@ void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string 
          */
         globalScope->defineType(std::make_shared<AdvanceType>(typeNode->getTypeName(), typeDefTo));
     }
+}
+
+int SymbolTable::isTypeDefed(std::string typedefTo) {
+    if (globalScope->typedefTypeNode.find(typedefTo) != globalScope->typedefTypeNode.end()) {
+        return  1;
+    }
+    return 0;
 }
 /*
  * tt :   AdvancedType(name="tuple");

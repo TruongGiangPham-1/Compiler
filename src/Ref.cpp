@@ -347,8 +347,18 @@ namespace gazprea {
         std::shared_ptr<VariableSymbol> idSym;
         if (tree->getTypeNode()) {
             std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
-            tree->getTypeNode()->evaluatedType = resType;
             if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
+
+            /*
+             * potentially swap to typedef node
+             *
+             */
+            auto typeNode = std::dynamic_pointer_cast<TypeNode>(tree->getTypeNode());
+            if (symtab->isTypeDefed(typeNode->getTypeName())) {  // this type has typedef mapping
+                tree->children[0] = symtab->globalScope->typedefTypeNode[typeNode->getTypeName()];   // swap the real typenode here
+            }
+
+            tree->getTypeNode()->evaluatedType = resType;
             idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
 #ifdef DEBUG
             std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
