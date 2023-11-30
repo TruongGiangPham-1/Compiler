@@ -41,6 +41,7 @@ private:
   std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+  std::any visitStride(std::shared_ptr<StrideNode> tree) override;
   std::any visitCast(std::shared_ptr<CastNode> tree) override;
   std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
   std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;

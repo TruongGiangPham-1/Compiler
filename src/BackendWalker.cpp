@@ -733,3 +733,10 @@ std::any BackendWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
   return codeGenerator.performBINOP(lhs, rhs, CONCAT);
 }
 
+std::any BackendWalker::visitStride(std::shared_ptr<StrideNode> tree) {
+  auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
+  auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
+
+  return codeGenerator.performBINOP(lhs, rhs, STRIDE);
+}
+
