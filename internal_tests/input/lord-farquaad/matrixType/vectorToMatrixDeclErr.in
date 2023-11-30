@@ -1,0 +1,6 @@
+procedure main() returns integer {
+  integer[2, 1] a = [1, 2];  // type error cuz cannot promote vector to matrix
+
+  a -> std_output;
+  return 1;
+}

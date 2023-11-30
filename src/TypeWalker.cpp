@@ -371,6 +371,9 @@ namespace gazprea {
             promoteIdentityAndNull(promoteTo, exprNode);
             return;
         }
+        if (isMatrix(promoteTo) && isVector(exprNode->evaluatedType)) {
+            throw TypeError(exprNode->loc(), "cannot promote vectorNode to matrix");
+        }
 
         //assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
         if (exprNode->evaluatedType->vectorOrMatrixEnum == NONE) {
