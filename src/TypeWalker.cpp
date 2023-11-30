@@ -371,9 +371,6 @@ namespace gazprea {
             promoteIdentityAndNull(promoteTo, exprNode);
             return;
         }
-        if (isMatrix(promoteTo) && isVector(exprNode->evaluatedType)) {
-            throw TypeError(exprNode->loc(), "cannot promote vectorNode to matrix");
-        }
 
         //assert(exprNode->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR);  // remove this when im implementing matrix
         if (exprNode->evaluatedType->vectorOrMatrixEnum == NONE) {
@@ -450,6 +447,7 @@ namespace gazprea {
         exprNode->evaluatedType->setName(assignType->getBaseTypeEnumName());  // set the string evaluated type
     }
 
+
     std::shared_ptr<Type> PromotedType::getDominantTypeFromVector(std::shared_ptr<VectorNode> tree) {
         std::shared_ptr<Type>bestType = nullptr;
         for (int i = 0; i < tree->getSize(); i++) {
@@ -471,7 +469,13 @@ namespace gazprea {
         if (bestType == nullptr) {
             throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
         }
-        return bestType;
+        if (bestType->vectorOrMatrixEnum == NONE) {
+            // scalar
+            auto vectorType = getTypeCopy(bestType);
+        }
+        auto copy = getTypeCopy(bestType);   // if vectorNode is vector, return besttype as matrix
+        copy->vectorInnerTypes.push_back(bestType);
+        return copy;
     }
 
     void PromotedType::assertVector(std::shared_ptr<ASTNode> tree) {
@@ -745,6 +749,9 @@ namespace gazprea {
 
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
+            if (promotedType->isMatrix(lType) && promotedType->isVector(tree->getExprNode()->evaluatedType)) {
+                throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
+            }
             promotedType->promoteVectorElements(lType, tree->getExprNode());
             promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
             auto typeCopy = promotedType->getTypeCopy(tree->getExprNode()->evaluatedType);  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
@@ -1019,6 +1026,11 @@ namespace gazprea {
 
         for (auto &exprNode: tree->getElements()) {
             walk(exprNode);  // set the evaluated type of each expr
+        }
+
+        if (promotedType->isVector(tree->getElement(0)->evaluatedType)) {
+            auto s = "";
+
         }
 
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
