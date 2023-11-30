@@ -148,6 +148,10 @@ bool charCOMP(char l, char r, enum BINOP op) {
 
 bool boolBINOP(bool l, bool r, enum BINOP op) {
   switch (op) {
+    case EQUAL:
+    return l == r;
+    case NEQUAL:
+    return l != r;
     case AND:
     return l & r;
     case OR:
