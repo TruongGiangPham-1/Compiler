@@ -1,0 +1,4 @@
+procedure main() returns integer {
+    integer[*, *] v = [[1, 2], [1, 2]] by 1;  // cant stride matrix
+    return 0;
+}

@@ -389,8 +389,9 @@ namespace gazprea {
         // recursively promote inner vector nodes
         auto vectNodeCast = std::dynamic_pointer_cast<VectorNode>(exprNode);
         if (vectNodeCast == nullptr) {
-            // this is not a vector literal. so we simply do nothing since no child to promote
-            if (std::dynamic_pointer_cast<IDNode>(exprNode)) {
+            // this is not a vector literal. but could be other vector nodes
+            if (std::dynamic_pointer_cast<IDNode>(exprNode) || std::dynamic_pointer_cast<StrideNode>(exprNode) || std::dynamic_pointer_cast<ConcatNode>(exprNode)
+                      || std::dynamic_pointer_cast<RangeVecNode>(exprNode) || std::dynamic_pointer_cast<GeneratorNode>(exprNode)) {
                 //
                 auto sizeVec= exprNode->evaluatedType->dims;  // vector of size
                 auto promoteTypeString= getPromotedTypeString(promotionTable, exprNode->evaluatedType, promoteTo);
@@ -604,6 +605,23 @@ namespace gazprea {
             tree->evaluatedType->dims.clear();
             tree->evaluatedType->dims.push_back(tree->getLHS()->evaluatedType->dims[0] + tree->getRHS()->evaluatedType->dims[0]);  // update dim
         }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitStride(std::shared_ptr<StrideNode> tree) {
+        walkChildren(tree);
+        auto l = tree->getLHS();
+        auto r = tree->getRHS();
+
+        if (r->evaluatedType->vectorOrMatrixEnum != NONE || r->evaluatedType->baseTypeEnum == TUPLE) {
+            throw TypeError(tree->loc(), "stride amount must be a scalar");
+        } else if (!promotedType->isVector(l->evaluatedType)) {
+            throw TypeError(tree->loc(), "stride lhs must be a vector");
+        } else if (r->evaluatedType->baseTypeEnum != INTEGER) {
+            throw TypeError(tree->loc(), "stride rhs must be an integer");
+        }
+
+        tree->evaluatedType = promotedType->getTypeCopy(l->evaluatedType);
         return nullptr;
     }
 
@@ -1083,15 +1101,17 @@ namespace gazprea {
     }
     std::any TypeWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
         walkChildren(tree);
-        tree->evaluatedType = tree->getExpr()->evaluatedType;
+        tree->evaluatedType = tree->getVectDomain()->evaluatedType;
         tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
         return nullptr;
     }
 
     std::any TypeWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
         walkChildren(tree);
-        auto typeCopy = promotedType->getTypeCopy(tree->getStart()->evaluatedType);  // returns an integer type
+        auto typeCopy = promotedType->getTypeCopy(tree->getStart()->evaluatedType);  // returns an integer scalar
+        typeCopy->vectorInnerTypes.push_back(promotedType->getTypeCopy(typeCopy));   // push integer type as inner type
         typeCopy->vectorOrMatrixEnum = VECTOR;
+        // create vector type
         tree->evaluatedType = typeCopy;
         return nullptr;
     }

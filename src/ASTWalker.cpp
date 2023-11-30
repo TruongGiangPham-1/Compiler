@@ -152,6 +152,13 @@ namespace gazprea {
 #endif // DEBUG
            return this->visitConcat(std::dynamic_pointer_cast<ConcatNode>(tree));
         }
+        else if (std::dynamic_pointer_cast<StrideNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit stride" << std::endl;
+#endif // DEBUG
+
+            return this->visitStride(std::dynamic_pointer_cast<StrideNode>(tree));
+        }
         else if (std::dynamic_pointer_cast<VectorNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit literal Vector" << std::endl;
@@ -471,6 +478,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitStride(std::shared_ptr<StrideNode> tree) {
         return this->walkChildren(tree);
     }
 
