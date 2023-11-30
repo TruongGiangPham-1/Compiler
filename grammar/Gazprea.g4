@@ -89,16 +89,16 @@ procedure
     ;
 
 procedureCall
-    : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';'
+    : RESERVED_CALL ID '(' (expression (',' expression)*)? ')' ';'          #normalProcedureCall
     // syntax error if someone calls these with different arguments.
-    // | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';' // Since in built stream_state() is a procedure defined in Gazprea
+    | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';'    #streamStateProcedureCall
     ;
 
 functionCall
-    : ID '(' (expression (',' expression)*)? ')' // no semicolon for functions because they always return and hence can be used as an expression
+    : ID '(' (expression (',' expression)*)? ')'        #normalFunctionCall
     // I'm commenting these out because we will get syntax errors if someone calls these with different arguments,
     //| (RESERVED_LENGTH | RESERVED_ROWS | RESERVED_COLUMNS | RESERVED_REVERSE | RESERVED_FORMAT) '(' expression ')'
-    //| RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'
+    | RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'  #streamStateFunctionCall
     ;
 
 type

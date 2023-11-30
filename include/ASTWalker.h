@@ -10,6 +10,7 @@
 #include "ASTNode/Stream/StreamOut.h"
 #include "ASTNode/Stream/StreamIn.h"
 #include "ASTNode/Expr/ExprListNode.h"
+#include "ASTNode/Expr/StdInputNode.h"
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
@@ -70,6 +71,7 @@ namespace gazprea {
         virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
         virtual std::any visitVector(std::shared_ptr<VectorNode> tree);
         //virtual std::any visitMatrix(std::shared_ptr<MatrixNode> tree);
+        virtual std::any visitStdInputNode(std::shared_ptr<StdInputNode> tree);
 
         // Expr/Binary
 

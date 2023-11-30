@@ -33,6 +33,7 @@ private:
   std::any visitBool(std::shared_ptr<BoolNode> tree) override;
   std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
   std::any visitVector(std::shared_ptr<VectorNode> tree) override;
+  std::any visitStdInputNode(std::shared_ptr<StdInputNode> tree) override;
 
 
   // Expr/Binary

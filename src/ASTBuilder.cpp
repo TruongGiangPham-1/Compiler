@@ -4,6 +4,7 @@
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/Expr/TupleIndexNode.h"
+#include "ASTNode/Expr/StdInputNode.h"
 #include <memory>
 
 
@@ -148,6 +149,30 @@ namespace gazprea {
         t->addChild(visit(ctx->expression()));
 
         return t;
+    }
+
+    std::any ASTBuilder::visitStreamStateFunctionCall(GazpreaParser::StreamStateFunctionCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitStreamStateFunctionCall" << std::endl;
+#endif
+        // this is a regular function call but with the name "streamState"
+        std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> funcName = std::make_shared<Symbol>("stream_state");
+
+        callNode->CallName = funcName;
+
+        // add dummy StdInput node
+        // this helps stream_state work with our current function call codegen
+        std::shared_ptr<ASTNode> stdInput = std::make_shared<StdInputNode>(ctx->getStart()->getLine());
+        callNode->addChild(stdInput);
+
+        return std::dynamic_pointer_cast<ASTNode>(callNode);
+    }
+
+    std::any ASTBuilder::visitStreamStateProcedureCall(GazpreaParser::StreamStateProcedureCallContext *ctx) {
+        // a procedure call to streamState is a NoOp
+        // thus, do nothing
+        return std::make_shared<ASTNode>();
     }
 
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
@@ -760,7 +785,7 @@ namespace gazprea {
         return visit(ctx->functionCall());
     }
 
-    std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
+    std::any ASTBuilder::visitNormalFunctionCall(GazpreaParser::NormalFunctionCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting function call" << std::endl;
 #endif
@@ -777,7 +802,7 @@ namespace gazprea {
 
     }
 
-    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+    std::any ASTBuilder::visitNormalProcedureCall(GazpreaParser::NormalProcedureCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure call" << std::endl;
 #endif

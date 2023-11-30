@@ -27,6 +27,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #endif 
 
   codeGenerator.init();
+//  codeGenerator.functionShowcase();
   walkChildren(tree);
   //codeGenerator.deallocateObjects();
   codeGenerator.generate();
@@ -255,6 +256,10 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
   }
 
   return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index));
+}
+
+std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
+  return codeGenerator.getStreamStateVar();
 }
 
 // Expr/Binary
