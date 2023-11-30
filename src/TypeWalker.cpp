@@ -1031,11 +1031,6 @@ namespace gazprea {
             walk(exprNode);  // set the evaluated type of each expr
         }
 
-        if (promotedType->isVector(tree->getElement(0)->evaluatedType)) {
-            auto s = "";
-
-        }
-
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
         // TODO handle empty vector
