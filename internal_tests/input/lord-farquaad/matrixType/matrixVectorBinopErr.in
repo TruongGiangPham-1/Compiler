@@ -1,0 +1,4 @@
+procedure main() returns integer {
+    integer[1, 2] A = [[1, 2], [1, 2]];
+    A + [1, 2] -> std_output;  // cannot do binop between matrix and vector
+}
