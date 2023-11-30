@@ -475,7 +475,8 @@ namespace gazprea {
 
     std::any Ref::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
         // resolve the domain 1st
-        for (auto &domain: tree->getConditions()) {
+        for (auto &domainExpr: tree->getDomainExprs()) {
+            auto domain = domainExpr.second;
             walk(domain);
         }
 
@@ -484,11 +485,13 @@ namespace gazprea {
 
         // define domainVar
         auto intType = currentScope->resolveType("integer");  // domain var is just int right?
-        for (auto&domainV: tree->domainVars) {
-            domainV->mlirName = "VAR_DEF" + std::to_string(getNextId());
-            domainV->typeSym = intType;
-            domainV->scope = currentScope;
-            currentScope->define(domainV);
+        for (auto &domainExpr: tree->getDomainExprs()) {
+            auto domainVar = domainExpr.first;
+
+            domainVar->mlirName = "VAR_DEF" + std::to_string(getNextId());
+            domainVar->typeSym = intType;
+            domainVar->scope = currentScope;
+            currentScope->define(domainVar);
 #ifdef DEBUG
             std::cout << "in line " << tree->loc()
                       << "domainVar=" << domainV->getName() << " defined as "
