@@ -574,6 +574,12 @@ namespace gazprea {
         // CASE: both lhs and rhs is none vector
         auto l = tree->getLHS();
         auto r = tree->getRHS();
+
+        if (promotedType->isMatrix(l->evaluatedType) || promotedType->isMatrix(r->evaluatedType)) {
+            throw TypeError(tree->loc(), "cannot concat Matrices");
+        }
+
+
         promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
         tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
