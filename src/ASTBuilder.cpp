@@ -856,5 +856,14 @@ namespace gazprea {
         concatNode->addChild(visit(ctx->expr(1)));
         return std::dynamic_pointer_cast<ASTNode>(concatNode);
     }
+
+    std::any ASTBuilder::visitStride(GazpreaParser::StrideContext *ctx) {
+        auto strideNode = std::make_shared<StrideNode>(ctx->getStart()->getLine());
+        strideNode->op = STRIDE;
+
+        strideNode->addChild(visit(ctx->expr(0))) ;
+        strideNode->addChild(visit(ctx->expr(1))) ;
+        return std::dynamic_pointer_cast<ASTNode>(strideNode);
+    }
 }
 

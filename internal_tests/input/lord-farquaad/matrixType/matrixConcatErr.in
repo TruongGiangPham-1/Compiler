@@ -1,0 +1,4 @@
+procedure main() returns integer {
+    [1, 2] || [[1, 2], [1, 2]] -> std_output;  // cannot concat matrices
+    return 0;
+}

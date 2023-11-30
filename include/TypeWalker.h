@@ -86,6 +86,7 @@ namespace gazprea {
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
         std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
+        std::any visitStride(std::shared_ptr<StrideNode> tree) override;
         // streams
         std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;

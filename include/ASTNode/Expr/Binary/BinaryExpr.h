@@ -49,3 +49,8 @@ class ConcatNode: public BinaryExpr {
 public:
     ConcatNode(int line): BinaryExpr(line) {}
 };
+
+class StrideNode: public BinaryExpr {
+public:
+    StrideNode(int line): BinaryExpr(line) {}
+};
