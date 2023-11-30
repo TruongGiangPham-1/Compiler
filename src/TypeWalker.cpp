@@ -1111,10 +1111,8 @@ namespace gazprea {
             }
             tree->evaluatedType = typeCopy;
             tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
-            assert(indexee->evaluatedType->dims.size() == 2);
-            int colSize = indexee->evaluatedType->dims[1];
             tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
-            tree->evaluatedType->dims.push_back(colSize);
+            tree->evaluatedType->dims.push_back(1);
         } else {
             assert(indexee->evaluatedType->dims.empty());
             throw SyntaxError(tree->loc(), "cannot index non vector or matrices");  // TODO is this the correct error
