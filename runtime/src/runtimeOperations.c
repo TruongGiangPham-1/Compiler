@@ -203,18 +203,41 @@ list* stride(list* l, int stride) {
   return newList;
 }
 
-/*
- * swap rows/columns for easy matrix multiply/ dot product
+/* covers matrix multiply + dot product. General
  */
 commonType* dotProduct(commonType* left, commonType* right) {
   list* lList = (list*)left->value;
   list* rList = (list*)right->value;
 
   commonType* lCols = __columns(left);
-  commonType* rCols = __columns(right);
+  commonType* lRows = __rows(left);
+  int oneInit = 1;
+  commonType* one = allocateCommonType(&oneInit, INTEGER);
 
-  
+  int zero = 0;
+
+  commonType* sum = allocateCommonType(&zero, INTEGER);
+
+  commonType* row = allocateCommonType(&zero, INTEGER);
+
+  while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LTHAN))) {
+
+    commonType* col = allocateCommonType(&zero, INTEGER);
+
+    while (commonTypeToBool(performCommonTypeBINOP(col, lCols, LTHAN))) {
+      commonType *leftItem = indexCommonType(indexCommonType(left, row), col);
+      commonType *rightItem = indexCommonType(indexCommonType(right, col), row);
+
+      commonType* product = performCommonTypeBINOP(leftItem, rightItem, MULT);
+    }
+
+    deallocateCommonType(col);                   
+  }
+
+  deallocateCommonType(lCols);
+  deallocateCommonType(lCols);
 }
+
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list binop, but neither operand is listable type");
