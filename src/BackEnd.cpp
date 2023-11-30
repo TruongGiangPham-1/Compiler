@@ -703,7 +703,7 @@ mlir::Value BackEnd::generateLoadIdentifier(std::string varName) {
 }
 
 mlir::Value BackEnd::generateLoadArgument(size_t index) {
-  auto val = builder->getBlock()->getArguments().vec()[index];
+  auto val = (*(functionStack.end()-1)).front().getArguments().vec()[index];  
   return val;
 }
 /*
