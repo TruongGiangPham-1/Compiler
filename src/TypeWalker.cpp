@@ -1153,6 +1153,12 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
+        tree->evaluatedType = symtab->resolveTypeUser(tree->type);
+        tree->type->evaluatedType = tree->evaluatedType;
+        return nullptr;
+    }
+
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
             case TYPE::BOOLEAN:

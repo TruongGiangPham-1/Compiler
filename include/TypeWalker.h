@@ -96,6 +96,10 @@ namespace gazprea {
         std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
         // Return CFG unsupported right now :(
+        std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+        std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
+        std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+        std::any visitParameter(std::shared_ptr<ArgNode> tree) override;
 
         std::any visitCall(std::shared_ptr<CallNode> tree) override; // Procedure Call, function and procedure call in expr
         std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
