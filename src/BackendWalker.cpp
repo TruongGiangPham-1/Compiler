@@ -644,8 +644,8 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
 
 std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
   // important loop info we need to have
-  // tuple of <loopStart, loopExit, domainIdx>
-  std::vector<std::tuple<mlir::Block *, mlir::Block *, mlir::Value>> loopInfo;
+  // tuple of <loopStart, loopExit>
+  std::vector<std::pair<mlir::Block *, mlir::Block *>> blocks;
 
   // create new nested loop for each domainExpr
   for (auto &domainExpr : tree->getDomainExprs()) {
@@ -668,7 +668,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       mlir::Block *trueBlock = codeGenerator.generateBlock();
       mlir::Block *exitBlock = codeGenerator.generateBlock();
 
-      loopInfo.push_back(std::make_tuple(loopBeginBlock, exitBlock, domainIdx));
+      blocks.push_back(std::make_pair(loopBeginBlock, exitBlock));
 
       // PREDICATE (domainIdx < length)
       codeGenerator.generateEnterBlock(loopBeginBlock);
@@ -681,27 +681,27 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       // set domainIdxVal to domain[domainIdx]
       auto indexedVal = codeGenerator.indexCommonType(domain, domainIdx);
       codeGenerator.generateAssignment(domainIdxVal, indexedVal);
+
+      // increment domainIdx
+      // doing this here so if there is a `break` of `continue` stmt in the body, we won't be stuck in an infinite loop
+      auto one = codeGenerator.generateValue(1);
+      auto newDomainIdx = codeGenerator.performBINOP(domainIdx, one, ADD);
+      codeGenerator.generateAssignment(domainIdx, newDomainIdx);
   }
 
   // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
   // if there is a break/continue statement, we need to jump to the correct exit block
-  this->loopBlocks.push_back(std::make_pair(std::get<0>(loopInfo[0]), std::get<1>(loopInfo[0])));
+  this->loopBlocks.push_back(std::make_pair(blocks[0].first, blocks[0].second));
 
   // walk the body
   walk(tree->getBody());
 
   // add all exitBlocks, increment domainIdx
   // reverse it first
-  std::reverse(loopInfo.begin(), loopInfo.end());
-  for (auto &loopInfoTuple : loopInfo) {
-    auto enter = std::get<0>(loopInfoTuple);
-    auto exit = std::get<1>(loopInfoTuple);
-    auto domainIdx = std::get<2>(loopInfoTuple);
-
-    // increment domainIdx
-    auto one = codeGenerator.generateValue(1);
-    auto newDomainIdx = codeGenerator.performBINOP(domainIdx, one, ADD);
-    codeGenerator.generateAssignment(domainIdx, newDomainIdx);
+  std::reverse(blocks.begin(), blocks.end());
+  for (auto &blockInfo : blocks) {
+    auto enter = blockInfo.first;
+    auto exit = blockInfo.second;
 
     codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
     codeGenerator.setBuilderInsertionPoint(exit);
