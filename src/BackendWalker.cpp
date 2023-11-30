@@ -8,6 +8,7 @@
 #include "mlir/Dialect/LLVMIR/FunctionCallUtils.h"
 #include "mlir/IR/Value.h"
 #include <memory>
+#include <algorithm>
 #include <stdexcept>
 #include <strings.h>
 //#define DEBUG
@@ -641,6 +642,76 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
+  this->loopBlocks.pop_back();
+
+  return 0;
+}
+
+std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
+  // important loop info we need to have
+  // tuple of <loopStart, loopExit>
+  std::vector<std::pair<mlir::Block *, mlir::Block *>> blocks;
+
+  // create new nested loop for each domainExpr
+  for (auto &domainExpr : tree->getDomainExprs()) {
+      auto domainNode = domainExpr.second;
+      auto domainSym = domainExpr.first;
+
+      // create/load domain vector
+      auto domain = std::any_cast<mlir::Value>(walk(domainNode));
+
+      // var to index the domain
+      auto domainIdx = codeGenerator.generateValue(0);
+      auto domainIdxVal = codeGenerator.generateValue(0);
+      codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
+
+      // get length of domainVec
+      auto domainLength = codeGenerator.generateCallNamed("length", {domain});
+
+      // START THE LOOP
+      mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+      mlir::Block *trueBlock = codeGenerator.generateBlock();
+      mlir::Block *exitBlock = codeGenerator.generateBlock();
+
+      blocks.push_back(std::make_pair(loopBeginBlock, exitBlock));
+
+      // PREDICATE (domainIdx < length)
+      codeGenerator.generateEnterBlock(loopBeginBlock);
+      codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+      auto inBounds = codeGenerator.performBINOP(domainIdx, domainLength, LTHAN);
+      codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
+
+      // BODY (true block)
+      codeGenerator.setBuilderInsertionPoint(trueBlock);
+      // set domainIdxVal to domain[domainIdx]
+      auto indexedVal = codeGenerator.indexCommonType(domain, domainIdx);
+      codeGenerator.generateAssignment(domainIdxVal, indexedVal);
+
+      // increment domainIdx
+      // doing this here so if there is a `break` of `continue` stmt in the body, we won't be stuck in an infinite loop
+      auto one = codeGenerator.generateValue(1);
+      auto newDomainIdx = codeGenerator.performBINOP(domainIdx, one, ADD);
+      codeGenerator.generateAssignment(domainIdx, newDomainIdx);
+  }
+
+  // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
+  // if there is a break/continue statement, we need to jump to the correct exit block
+  this->loopBlocks.push_back(std::make_pair(blocks[0].first, blocks[0].second));
+
+  // walk the body
+  walk(tree->getBody());
+
+  // add all exitBlocks, increment domainIdx
+  // reverse it first
+  std::reverse(blocks.begin(), blocks.end());
+  for (auto &blockInfo : blocks) {
+    auto enter = blockInfo.first;
+    auto exit = blockInfo.second;
+
+    codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
+    codeGenerator.setBuilderInsertionPoint(exit);
+  }
+  this->earlyReturn = false;
   this->loopBlocks.pop_back();
 
   return 0;

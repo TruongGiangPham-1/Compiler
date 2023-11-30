@@ -55,6 +55,7 @@ private:
   std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
   std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
   std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
+  std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) override;
   std::any visitBreak(std::shared_ptr<BreakNode> tree) override;
   std::any visitContinue(std::shared_ptr<ContinueNode> tree) override;
 

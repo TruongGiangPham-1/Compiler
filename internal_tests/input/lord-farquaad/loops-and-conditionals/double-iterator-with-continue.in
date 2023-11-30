@@ -1,0 +1,14 @@
+procedure main() returns integer {
+  integer[10] v = [1, 2, 3, 4, 5, 6, 7];
+
+
+  loop i in v, j in 1..5{
+    if (i % 2 == 0) {
+      "continued: " -> std_output; i -> std_output; '\n' -> std_output;
+      continue;
+    }
+    i -> std_output; ' ' -> std_output; j -> std_output; '\n' -> std_output;
+  }
+
+  return 0;
+}
