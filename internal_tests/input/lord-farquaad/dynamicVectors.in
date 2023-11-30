@@ -5,13 +5,33 @@ procedure main() returns integer {
   real[5+3*3] c = [1.5,2.5,3.5];
   boolean[5+3*3] d = [true,true,true];
 
-  a -> std_output;
+  integer[14] a1 = [1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  integer[14] a2 = [1, 2, 4];
+
+  character[14] b1 = ['a', 'b', 'c', as<character>(0),as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ,as<character>(0) ];
+  character[14] b2 = ['a', 'b', 'd'];
+
+  real[14] c1 = [1.5, 2.5, 3.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  real[14] c2 = [1.5, 2.5, 4.5];
+
+  boolean[14] d1 = [true, true, true, false, false, false, false, false, false, false, false, false, false, false];
+  boolean[14] d2 = [true, true, false];
+
+  a==a1 -> std_output;
   '\n' -> std_output;
-  b -> std_output;
+  b==b1 -> std_output;
   '\n' -> std_output;
-  c -> std_output;
+  c==c1 -> std_output;
   '\n' -> std_output;
-  d -> std_output;
+  d==d1 -> std_output;
+  '\n' -> std_output;
+  a1==a2 -> std_output;
+  '\n' -> std_output;
+  b1==b2 -> std_output;
+  '\n' -> std_output;
+  c1==c2 -> std_output;
+  '\n' -> std_output;
+  d1==d2 -> std_output;
   '\n' -> std_output;
 
   return 0;
