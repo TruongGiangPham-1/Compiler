@@ -203,39 +203,103 @@ list* stride(list* l, int stride) {
   return newList;
 }
 
-/* covers matrix multiply + dot product. General
- */
-commonType* dotProduct(commonType* left, commonType* right) {
+
+commonType* matrixMultiply(commonType* left, commonType* right) {
   list* lList = (list*)left->value;
   list* rList = (list*)right->value;
 
   commonType* lCols = __columns(left);
   commonType* lRows = __rows(left);
+
+  commonType* rCols = __columns(right);
+  commonType* rRows = __rows(right);
+
   int oneInit = 1;
   commonType* one = allocateCommonType(&oneInit, INTEGER);
 
   int zero = 0;
 
-  commonType* sum = allocateCommonType(&zero, INTEGER);
-
-  commonType* row = allocateCommonType(&zero, INTEGER);
+  commonType* row = allocateCommonType(&zero, INTEGER) ;
+  list* rowList = allocateListFromCommon(lRows);
 
   while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LTHAN))) {
 
-    commonType* col = allocateCommonType(&zero, INTEGER);
+    commonType* col  = allocateCommonType(&zero, INTEGER);
+    list* colList = allocateListFromCommon(rCols);
 
-    while (commonTypeToBool(performCommonTypeBINOP(col, lCols, LTHAN))) {
-      commonType *leftItem = indexCommonType(indexCommonType(left, row), col);
-      commonType *rightItem = indexCommonType(indexCommonType(right, col), row);
+    while (commonTypeToBool(performCommonTypeBINOP(col, rCols, LTHAN))) {
 
-      commonType* product = performCommonTypeBINOP(leftItem, rightItem, MULT);
+      commonType* newItem = allocateCommonType(&zero, INTEGER);
+      commonType* k = allocateCommonType(&zero, INTEGER);
+          
+      while (commonTypeToBool(performCommonTypeBINOP(k, rRows, LTHAN))) {
+
+        commonType *leftItem = indexCommonType(indexCommonType(left, row), k);
+        commonType *rightItem = indexCommonType(indexCommonType(right, k), col);
+
+        commonType* product = performCommonTypeBINOP(leftItem, rightItem, MULT);
+
+        assignByReference(newItem, performCommonTypeBINOP(newItem, product, ADD));
+
+        assignByReference(k, performCommonTypeBINOP(k, one, ADD));
+      }
+
+      deallocateCommonType(k);                   
+      appendList(colList, newItem);
+
+      assignByReference(col, performCommonTypeBINOP(col, one, ADD));
     }
-
-    deallocateCommonType(col);                   
+    
+    appendList(rowList, allocateCommonType(&colList, VECTOR));
+    assignByReference(row, performCommonTypeBINOP(row, one, ADD));
+    deallocateCommonType(col);
   }
 
+  deallocateCommonType(row);
+  deallocateCommonType(one);
+
   deallocateCommonType(lCols);
-  deallocateCommonType(lCols);
+  deallocateCommonType(lRows);
+
+  deallocateCommonType(rCols);
+  deallocateCommonType(rRows);
+
+  return allocateCommonType(&rowList, VECTOR);
+}
+
+commonType* crossProduct(commonType* left, commonType* right) {
+  printf("\ncross product\n");
+  list* lList = (list*)left->value;
+  list* rList = (list*)right->value;
+
+  int zero = 0;
+  commonType* sum = allocateCommonType(&zero, INTEGER);
+
+  for (int i = 0 ; i < lList->currentSize ; i ++) {
+    commonType* leftItem = lList->values[i];
+    commonType* rightItem = rList->values[i];
+
+    commonType* result = performCommonTypeBINOP(leftItem, rightItem, MULT);
+    assignByReference(sum, performCommonTypeBINOP(sum, result, ADD));
+    deallocateCommonType(result);
+  }
+
+  return sum;
+}
+
+
+/* covers matrix multiply + dot product. General
+ */
+commonType* dotProduct(commonType* left, commonType* right) {
+  printf("here\n\n");
+  if (isCompositeType(((list*)left->value)->values[0]->type)) {
+    printCommonType(left);
+    printf("\n");
+    printCommonType(right);
+    return matrixMultiply(left, right);
+  } else {
+    return crossProduct(left, right);
+  }
 }
 
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
@@ -278,6 +342,8 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
       commonType *result = allocateCommonType(&mlist, resultingType);
       return result;
     }
+    case DOT_PROD:
+    return dotProduct(l, r);
     default:
     RuntimeOPError("Unknown binary operation between lists");
   }
