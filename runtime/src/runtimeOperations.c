@@ -38,6 +38,9 @@ commonType* indexCommonType(commonType* indexee, commonType* indexor);
 // turn into bool for llvm control flow
 bool commonTypeToBool(commonType* val);
 
+commonType* __rows(commonType* matrix);
+commonType* __columns(commonType* matrix);
+
 
 int intBINOP(int l, int r, enum BINOP op) {
   switch (op) {
@@ -200,6 +203,18 @@ list* stride(list* l, int stride) {
   return newList;
 }
 
+/*
+ * swap rows/columns for easy matrix multiply/ dot product
+ */
+commonType* dotProduct(commonType* left, commonType* right) {
+  list* lList = (list*)left->value;
+  list* rList = (list*)right->value;
+
+  commonType* lCols = __columns(left);
+  commonType* rCols = __columns(right);
+
+  
+}
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list binop, but neither operand is listable type");
@@ -481,6 +496,12 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 
 // assume we are indexing a tuploe item
 commonType* indexCommonType(commonType* indexee, commonType* indexor) {
+  // cheat for easy dot product. This will never actually occur with scalar-to-scalar
+  // should be caught by typecheck if they try
+  if (!isCompositeType(indexee->type)) {
+    return indexee;
+  }
+
   list* list = indexee->value;
   return list->values[*(int*)indexor->value];
 }
