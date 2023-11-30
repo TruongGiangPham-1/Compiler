@@ -1165,6 +1165,38 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        for (auto arg: tree->orderedArgs) {
+            walk(arg);
+        }
+        tree->evaluatedType = symtab->resolveTypeUser(tree->getRetTypeNode());
+        tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
+
+        if (tree->body) {
+            auto blockNode = tree->body;
+            walkChildren(blockNode);
+        }
+        return nullptr;
+    }
+
+    std::any TypeWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+        for (auto arg: tree->orderedArgs) {
+            walk(arg);
+        }
+        if (tree->getRetTypeNode()) {
+            tree->evaluatedType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
+        }
+        else {
+            tree->evaluatedType = nullptr;
+        }
+        if (tree->body) {
+            auto blockNode = tree->body;
+            walkChildren(blockNode);
+        }
+        return nullptr;
+    }
+
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
             case TYPE::BOOLEAN:
