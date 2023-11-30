@@ -314,6 +314,17 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     return result;
   }
 
+  if (op == STRIDE) {
+      commonType* castedRight = castHelper(right, INTEGER);
+
+      list* newlist = stride((list*)left->value, *(int*)castedRight->value);
+
+      deallocateCommonType(castedRight);
+
+      // TODO: leaking here 
+      return allocateCommonType(&newlist, left->type);
+  }
+
   promotedLeft = promotion(left,right);
   promotedRight = promotion(right,left);
     

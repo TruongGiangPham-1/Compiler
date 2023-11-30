@@ -1,0 +1,24 @@
+procedure main() returns integer {
+  integer[5] v = 1..5 by 1; /* [1, 2, 3, 4, 5] */
+  integer[5] u = v by 1; /* [1, 2, 3, 4, 5] */
+  integer[3] w = v by 2; /* [1, 3, 5] */
+  integer[2] l = v by 3; /* [1, 4] */
+
+  integer[5] v1 = [1,2,3,4,5];
+  integer[5] u1 = [1,2,3,4,5];
+  integer[3] w1 = [1,3,5];
+  integer[2] l1 = [1,4];
+
+  v==v1 -> std_output;
+  '\n' -> std_output;
+  u==u1 -> std_output;
+  '\n' -> std_output;
+  w==w1 -> std_output;
+  '\n' -> std_output;
+  l==l1 -> std_output;
+  '\n' -> std_output;
+  l==w -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
