@@ -4,31 +4,52 @@ procedure main() returns integer {
   character[3,3] b = [['a'], ['b'], ['c']];
   real[3,3] c = [[1.5], [2.5], [3.5]];
 
+  integer[3,3] a1 = [[1, 0, 0], [2, 0, 0], [3, 0, 0]];
+  character[3,3] b1 = [
+    ['a', as<character>(0),as<character>(0)], 
+    ['b', as<character>(0),as<character>(0)], 
+    ['c',as<character>(0),as<character>(0)]
+  ];
+  real[3,3] c1 = [[1.5,0,0], [2.5,0,0], [3.5,0,0]];
+
   integer[4] d = [1];
   character[4] e = ['a'];
   real[4] f = [1.0];
 
+  integer[4] d1 = [1, 0, 0, 0];
+  character[4] eone = ['a', as<character>(0), as<character>(0), as<character>(0) ];
+  real[4] f1 = [1.0, 0, 0, 0];
+
   integer[4] g;
   character[4] h;
   real[4] i;
+  boolean[4] j;
 
-  a-> std_output;
+
+  integer[4] g1 = [0, 0, 0, 0];
+  character[4] h1 = [as<character>(0),as<character>(0),as<character>(0),as<character>(0)];
+  real[4] i1 = [0, 0, 0, 0];
+  boolean[4] j1 = [false, false, false, false];
+
+  a1 == a -> std_output;
   '\n' -> std_output;
-  b-> std_output;
+  b1 == b -> std_output;
   '\n' -> std_output;
-  c-> std_output;
+  c1 == c -> std_output;
   '\n' -> std_output;
-  d-> std_output;
+  d1 == d -> std_output;
   '\n' -> std_output;
-  e-> std_output;
+  eone == e -> std_output;
   '\n' -> std_output;
-  f-> std_output;
+  f1 == f -> std_output;
   '\n' -> std_output;
-  g-> std_output;
+  g1 == g -> std_output;
   '\n' -> std_output;
-  h-> std_output;
+  h1 == h -> std_output;
   '\n' -> std_output;
-  i-> std_output;
+  i1 == i -> std_output;
+  '\n' -> std_output;
+  j1 == j -> std_output;
   '\n' -> std_output;
 
   return 0;
