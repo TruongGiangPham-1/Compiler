@@ -1159,6 +1159,12 @@ namespace gazprea {
         return nullptr;
     }
 
+    std::any TypeWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+        walk(tree->returnExpr);
+        tree->evaluatedType = tree->returnExpr->evaluatedType;
+        return nullptr;
+    }
+
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
             case TYPE::BOOLEAN:
