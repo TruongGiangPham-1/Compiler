@@ -50,6 +50,8 @@ namespace gazprea {
         // get the most dominant type fomr the vector onde, raise error otherwise
         std::shared_ptr<Type>getDominantTypeFromVector(std::shared_ptr<VectorNode> tree);
 
+
+        void dotProductErrorCheck(std::shared_ptr<Type> l, std::shared_ptr<Type> r, int line);
         // throw error if tree was node a vectornode
         void assertVector(std::shared_ptr<ASTNode> tree);
         PromotedType(std::shared_ptr<SymbolTable> symtab);
