@@ -853,6 +853,9 @@ namespace gazprea {
                         tree->evaluatedType = lvalue->evaluatedType;
                     } else if (lvalue->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR) {
                         // handle vector literal. promote rhs
+                        if (promotedType->isMatrix(lvalue->evaluatedType) && promotedType->isVector(tree->getRvalue()->evaluatedType)) {
+                            throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
+                        }
                         promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
                         promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
                         tree->evaluatedType = promotedType->getTypeCopy(tree->getRvalue()->evaluatedType);  // update the tree evaluated type with promoted
