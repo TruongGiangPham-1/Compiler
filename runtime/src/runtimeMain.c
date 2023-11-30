@@ -63,7 +63,7 @@ void printType(commonType *type, bool nl) {
         for (int i = 0 ; i < mListable->currentSize; i++) {
 
           printType(mListable->values[i], false);
-          if (i != mListable->currentSize-1 && type->type != STRING) printf(", ");
+          if (i != mListable->currentSize-1 && type->type != STRING) printf(" ");
         }
         if (type->type != STRING) printf("]");
       }
