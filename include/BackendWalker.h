@@ -22,6 +22,8 @@ private:
   std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
   std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
 
+  std::any visitType(std::shared_ptr<TypeNode> tree) override;
+
   // === EXPRESSION AST NODES ===
   std::any visitID(std::shared_ptr<IDNode> tree) override;
   std::any visitInt(std::shared_ptr<IntNode> tree) override;
