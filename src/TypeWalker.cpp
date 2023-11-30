@@ -655,8 +655,8 @@ namespace gazprea {
         walkChildren(tree);
         if (!tree->getTypeNode()) {
             tree->sym->typeSym = tree->getExprNode()->evaluatedType;
-            if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY)  {
-               throw TypeError(tree->loc(), "cannot have identity when type is not defined");
+            if (tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::IDENTITY || tree->getExprNode()->evaluatedType->baseTypeEnum == TYPE::NULL_)  {
+               throw TypeError(tree->loc(), "cannot have identity or null when type is not defined");
             }
             tree->evaluatedType = tree->getExprNode()->evaluatedType;
             return nullptr;
@@ -673,6 +673,7 @@ namespace gazprea {
             }
             tree->evaluatedType = lType;  //
             tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
+            tree->getTypeNode()->evaluatedType = lType;
             return nullptr;
         }
 
@@ -717,7 +718,9 @@ namespace gazprea {
                     }
                 }
             }
-            tree->evaluatedType = rType;
+          
+            tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
+            tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
 
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
@@ -725,11 +728,13 @@ namespace gazprea {
             promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
             auto typeCopy = promotedType->getTypeCopy(tree->getExprNode()->evaluatedType);  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
             tree->evaluatedType = typeCopy;
+            tree->getTypeNode()->evaluatedType = tree->evaluatedType;
             tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
             return nullptr;
         }
         else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
-            tree->evaluatedType = lType;  //
+            tree->evaluatedType = lType;
+            tree->getTypeNode()->evaluatedType = lType;//
             promotedType->promoteIdentityAndNull(lType, tree->getExprNode());
         }
         else if (lType->getBaseTypeEnumName() != rType->getBaseTypeEnumName()) {
@@ -741,8 +746,10 @@ namespace gazprea {
             }
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
             tree->evaluatedType = resultType;
+            tree->getTypeNode()->evaluatedType = resultType;
         }
         else {  // normal implicit promotion
+            tree->getTypeNode()->evaluatedType = rType;
             tree->evaluatedType = rType;
         }
         return nullptr;
@@ -952,12 +959,13 @@ namespace gazprea {
                 if (leftTypeString != rightTypeString) {
                     auto leftIndex = promotedType->getTypeIndex(leftTypeString);
                     auto rightIndex = promotedType->getTypeIndex(rightTypeString);
-                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    std::string resultTypeString = promotedType->castTable[leftIndex][rightIndex];
                     if (resultTypeString.empty()) {
-                        throw TypeError(tree->loc(), "Cannot implicitly promote " + leftTypeString + " to " + rightTypeString);
+                        throw TypeError(tree->loc(), "Cannot cast " + leftTypeString + " to " + rightTypeString);
                     }
                 }
             }
+            tree->children[0]->evaluatedType = toType;
             tree->evaluatedType = toType; // tuple Type
         }
         else if (toType->getBaseTypeEnumName() == "tuple" || toType->getBaseTypeEnumName() == "tuple" ) {
@@ -972,6 +980,7 @@ namespace gazprea {
             }
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
             tree->evaluatedType = resultType; // base Type
+            tree->children[0]->evaluatedType = resultType;
         }
         return nullptr;
     }
@@ -979,6 +988,7 @@ namespace gazprea {
     std::any TypeWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
         auto typeNode = tree->children[0];
         tree->evaluatedType = symtab->resolveTypeUser(typeNode);
+        tree->children[0]->evaluatedType = tree->evaluatedType;
         return nullptr;
     }
 

@@ -243,8 +243,10 @@ void BackEnd::setupCommonTypeRuntime() {
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamOut",
                                           printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", streamInType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "castHelper",
                                           commonCastType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+                                          allocateFromRange);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
@@ -328,10 +330,22 @@ mlir::Value BackEnd::copyCommonType(mlir::Value val) {
 
   return builder->create<mlir::LLVM::CallOp>(loc, copyFunc, mlir::ValueRange({val})).getResult();
 }
-
-mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
+mlir::Value BackEnd::cast(mlir::Value left, mlir::Value right) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
+
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
+  auto newLabel = trackObject();
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
+mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("castHelper");
 
   auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, this->generateInteger(toType)})).getResult();
 
@@ -559,8 +573,8 @@ mlir::Value BackEnd::generateInteger(int value) {
   return result;
 }
 
-mlir::Value BackEnd::generateNullValue(TYPE type) {
-  switch (type) {
+mlir::Value BackEnd::generateNullValue(std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
     case BOOLEAN:
       return this->generateValue(false);
     case CHAR:
@@ -569,13 +583,23 @@ mlir::Value BackEnd::generateNullValue(TYPE type) {
       return this->generateValue(0);
     case REAL:
       return this->generateValue(0.0f);
+    case TUPLE:
+      {
+        std::vector<mlir::Value> children;
+        for (auto childType : type->tupleChildType) {
+          children.push_back(generateNullValue(childType.second));
+        }
+
+        // magic code
+        return this->generateValue(children);
+      }
     default:
       throw std::runtime_error("Identity not available");
   }
 }
 
-mlir::Value BackEnd::generateIdentityValue(TYPE type) {
-  switch (type) {
+mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
     case BOOLEAN:
       return this->generateValue(true);
     case CHAR:
@@ -584,6 +608,17 @@ mlir::Value BackEnd::generateIdentityValue(TYPE type) {
       return this->generateValue(1);
     case REAL:
       return this->generateValue(1.0f);
+    case TUPLE:
+      {
+        std::vector<mlir::Value> children;
+        for (auto childType : type->tupleChildType) {
+          children.push_back(generateIdentityValue(childType.second));
+        }
+
+        // magic code
+        return this->generateValue(children);
+      }
+    case VECTOR:
     default:
       throw std::runtime_error("Identity not available");
   }
@@ -711,7 +746,7 @@ mlir::Value BackEnd::generateLoadIdentifier(std::string varName) {
 }
 
 mlir::Value BackEnd::generateLoadArgument(size_t index) {
-  auto val = builder->getBlock()->getArguments().vec()[index];
+  auto val = (*(functionStack.end()-1)).front().getArguments().vec()[index];
   return val;
 }
 /*
