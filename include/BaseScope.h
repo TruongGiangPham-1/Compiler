@@ -11,6 +11,7 @@ public:
     std::shared_ptr<Scope> enclosingScope; // nullptr if global (outermost) scope
     std::map<std::string, std::shared_ptr<Symbol>> symbols;  // add non types
     std::map<std::string,  std::shared_ptr<Symbol>> userTypes;  // mostly <string, AdvancedType*> members
+    std::map<std::string, std::shared_ptr<ASTNode>> typedefTypeNode;  // stores typdefTo string : typedefTYpenode for swapping
 
     BaseScope(std::shared_ptr<Scope> parent) : enclosingScope(parent) {}
 

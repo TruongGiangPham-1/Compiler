@@ -90,6 +90,8 @@ namespace gazprea {
             auto retType = symtab->resolveTypeUser(tree->getRetTypeNode());
             if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve function return type");
 
+            potentiallySwapTypeDefNode(tree->getRetTypeNode(), tree);
+
             // ----------------------------------
             std::string scopeName= "funcScope" + tree->funcNameSym->getName() +std::to_string(tree->loc());
             std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
@@ -194,6 +196,8 @@ namespace gazprea {
             if (tree->getRetTypeNode()) {
                 retType = symtab->resolveTypeUser(tree->getRetTypeNode());
                 if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
+
+                potentiallySwapTypeDefNode(tree->getRetTypeNode(), tree);
             }
             // --------------------------------------
             std::string scopeName= "procScope" + tree->nameSym->getName() +std::to_string(tree->loc());
@@ -229,6 +233,7 @@ namespace gazprea {
                 if (tree->getRetTypeNode()) {
                     retType = symtab->resolveTypeUser(tree->getRetTypeNode());
                     if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve procedure return type");
+                    potentiallySwapTypeDefNode(tree->getRetTypeNode(), tree);
                 }
                 // IMPORTANT: update the line number of the method symbol to be one highest
                 procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
@@ -323,7 +328,6 @@ namespace gazprea {
 
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
-        //}
 
         if (!tree->getTypeNode()) {
             if (!tree->getExprNode()) {
@@ -334,7 +338,12 @@ namespace gazprea {
 
         auto resolveID = currentScope->resolve(tree->getIDName());
         if (resolveID != nullptr) {
-            throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
+            if (resolveID->scope->getScopeName().find("iterator") == std::string::npos) {  // resolved ID is not in iterator scope then its error
+                // this is resolved in the iterator domain var
+                throw SymbolError(tree->loc(), ":redeclaration of identifier " + tree->getIDName());
+            }
+            // else, any Identifier same name as one defined in iterator loop is ok
+
         }
 
         // define the ID in symtable
@@ -344,6 +353,11 @@ namespace gazprea {
         if (tree->getTypeNode()) {
             std::shared_ptr<Type> resType = symtab->resolveTypeUser(tree->getTypeNode());
             if (resType == nullptr) throw TypeError(tree->loc(), "cannot resolve type");
+
+            potentiallySwapTypeDefNode(tree->getTypeNode(), tree);
+
+
+            tree->getTypeNode()->evaluatedType = resType;
             idSym = std::make_shared<VariableSymbol>(tree->getIDName(), resType);
 #ifdef DEBUG
             std::cout << "line " << tree->loc() << " defined symbol " << idSym->getName() << " as type " << resType->getName() << " as mlirNmae: " << mlirName << "\n" ;
@@ -374,9 +388,7 @@ namespace gazprea {
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
         idSym->qualifier = tree->qualifier;
-
         currentScope->define(idSym);
-
         tree->scope = currentScope;
         tree->sym = std::dynamic_pointer_cast<Symbol>(idSym);
         return 0;
@@ -483,8 +495,11 @@ namespace gazprea {
                       << domainV->mlirName << std::endl;
 #endif
         }
-
+        // note, iterator variables in its own scope
+        std::string sname = "loopcond" + std::to_string(tree->loc());
+        currentScope = symtab->enterScope(sname, currentScope);
         walk(tree->getBody());
+        currentScope = symtab->exitScope(currentScope);
         currentScope = symtab->exitScope(currentScope);
         return 0;
     }
@@ -630,6 +645,19 @@ namespace gazprea {
             }
         }
     }
+
+    void Ref::potentiallySwapTypeDefNode(std::shared_ptr<ASTNode> typeNode, std::shared_ptr<ASTNode> tree) {
+        /*
+         * potentially swap to typedef node
+         *
+         */
+        auto typeN = std::dynamic_pointer_cast<TypeNode>(typeNode);
+        if (symtab->isTypeDefed(typeN->getTypeName())) {  // this type has typedef mapping
+            tree->children[0] = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];   // swap the real typenode here
+        }
+        return;
+    }
+
     std::any Ref::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
         if (tree->domainVar1 == tree->domainVar2) throw  SymbolError(tree->loc(), "redefinition of domainVar");
         int isVec = 1;
