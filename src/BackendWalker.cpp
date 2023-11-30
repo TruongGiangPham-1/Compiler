@@ -658,6 +658,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       // var to index the domain
       auto domainIdx = codeGenerator.generateValue(0);
       auto domainIdxVal = codeGenerator.generateValue(0);
+      codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
 
       // get length of domainVec
       auto domainLength = codeGenerator.generateCallNamed("length", {domain});
@@ -667,7 +668,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       mlir::Block *trueBlock = codeGenerator.generateBlock();
       mlir::Block *exitBlock = codeGenerator.generateBlock();
 
-    loopInfo.push_back(std::make_tuple(loopBeginBlock, exitBlock, domainIdx));
+      loopInfo.push_back(std::make_tuple(loopBeginBlock, exitBlock, domainIdx));
 
       // PREDICATE (domainIdx < length)
       codeGenerator.generateEnterBlock(loopBeginBlock);
