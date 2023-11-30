@@ -1,0 +1,33 @@
+procedure main() returns integer {
+  character b;
+  integer i;
+
+  // input: a
+  b <- std_input;
+  b -> std_output;
+  i = stream_state(std_input);
+  i -> std_output;
+  '\n' -> std_output;
+
+  // input: ' '
+  b <- std_input;
+  b -> std_output;
+  i = stream_state(std_input);
+  i -> std_output;
+  '\n' -> std_output;
+
+  // input: '\n'
+  b <- std_input;
+  b -> std_output;
+  i = stream_state(std_input);
+  i -> std_output;
+  '\n' -> std_output;
+
+  // EOF
+  b <- std_input;
+  i = stream_state(std_input);
+  i -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}

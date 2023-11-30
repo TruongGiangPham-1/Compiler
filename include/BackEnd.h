@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Type.h"
 #include "Types/TYPES.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -18,6 +19,8 @@ public:
   void print(mlir::Value value);
   void printVec(mlir::Value value);
   void printCommonType(mlir::Value value);
+
+  mlir::Value getStreamStateVar();
   void streamOut(mlir::Value value);
   void streamIn(mlir::Value value);
   void verifyFunction(int line, std::string name);
@@ -51,13 +54,15 @@ public:
 
 
   mlir::Value generateLoadValue(mlir::Value addr);
-  mlir::Value generateNullValue(TYPE type);
-  mlir::Value generateIdentityValue(TYPE type);
+  mlir::Value generateNullValue(std::shared_ptr<Type> type);
+  mlir::Value generateIdentityValue(std::shared_ptr<Type> type);
 
   mlir::Value generateIntegerBinaryOperation(mlir::Value left,
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  mlir::Value cast(mlir::Value from, mlir::Value to);
+
   void appendCommon(mlir::Value destination, mlir::Value item);
 
   mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
@@ -128,6 +133,7 @@ protected:
   void setupPrint();
   void setupPrintVec();
   void setupVectorRuntime();
+  void setupStreamRuntime();
   void setupCommonTypeRuntime();
   std::string trackObject();
   mlir::Value translateToMLIRType(TYPE type);

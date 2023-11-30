@@ -130,6 +130,19 @@ int BackEnd::writeLLVMIR() {
   return 0;
 }
 
+void BackEnd::functionShowcase() {
+    // run getStreamState with streamStatePtr
+    auto streamState = module.lookupSymbol<mlir::LLVM::GlobalOp>("streamState");
+
+    // MLIR doesn't allow direct access to globals, so we have to use an addressof
+    auto streamStatePtr = builder->create<mlir::LLVM::AddressOfOp>(loc, streamState);
+
+    // lookup getStreamState runtime function
+    auto getStreamStateFunc= module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("getStreamState");
+    builder->create<mlir::LLVM::CallOp>(loc, getStreamStateFunc, mlir::ValueRange({streamStatePtr}));
+    builder->create<mlir::LLVM::CallOp>(loc, getStreamStateFunc, mlir::ValueRange({streamStatePtr}));
+}
+
 BackEnd::BackEnd(std::ostream &out)
     : out(out), loc(mlir::UnknownLoc::get(&context)) {
   context.loadDialect<mlir::LLVM::LLVMDialect>();
@@ -141,6 +154,7 @@ BackEnd::BackEnd(std::ostream &out)
   builder->setInsertionPointToStart(module.getBody());
 
   setupCommonTypeRuntime();
+  setupStreamRuntime();
 }
 
 int BackEnd::emitMain() {
@@ -184,6 +198,8 @@ void BackEnd::setupCommonTypeRuntime() {
 
   auto printType = mlir::LLVM::LLVMFunctionType::get(
       voidType, {commonTypeAddr});
+  auto streamInType = mlir::LLVM::LLVMFunctionType::get(
+      voidType, {commonTypeAddr, intPtrType});
   auto allocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {voidPtrType, intType});
   auto allocateFromRange =
@@ -204,6 +220,8 @@ void BackEnd::setupCommonTypeRuntime() {
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
+  // setup runtime stream_state function
+  auto streamStateFunctionType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {intPtrType});
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType", copy);
@@ -211,6 +229,7 @@ void BackEnd::setupCommonTypeRuntime() {
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
                                             lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__stream_state", streamStateFunctionType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "indexCommonType",
                                             indexCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "assignByReference",
@@ -223,9 +242,11 @@ void BackEnd::setupCommonTypeRuntime() {
                                             printType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamOut",
                                           printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", printType);
-  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "streamIn", streamInType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "castHelper",
                                           commonCastType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
+                                          allocateFromRange);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
@@ -247,6 +268,18 @@ void BackEnd::setupCommonTypeRuntime() {
 //   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__silly", mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr}));
 }
 
+void BackEnd::setupStreamRuntime() {
+  // setup a global (int) variable called streamState
+  auto intType = builder->getI32Type();
+  auto intPtrType = mlir::LLVM::LLVMPointerType::get(intType);
+  auto voidType = mlir::LLVM::LLVMVoidType::get(&context);
+
+  // streamState variable
+  auto streamState = builder->create<mlir::LLVM::GlobalOp>(
+          loc, intType, false, mlir::LLVM::Linkage::Internal,
+          "streamState", builder->getIntegerAttr(intType, 0));
+}
+
 mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op) {
   mlir::LLVM::LLVMFuncOp binopFunc=
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("performCommonTypeBINOP");
@@ -255,7 +288,7 @@ mlir::Value BackEnd::performBINOP(mlir::Value left, mlir::Value right, BINOP op)
       binopFunc, 
       mlir::ValueRange({
         left, 
-        right, 
+        right,
         generateInteger(op)})
       ).getResult();
 
@@ -297,10 +330,22 @@ mlir::Value BackEnd::copyCommonType(mlir::Value val) {
 
   return builder->create<mlir::LLVM::CallOp>(loc, copyFunc, mlir::ValueRange({val})).getResult();
 }
-
-mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
+mlir::Value BackEnd::cast(mlir::Value left, mlir::Value right) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
+
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
+  auto newLabel = trackObject();
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
+}
+mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("castHelper");
 
   auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, this->generateInteger(toType)})).getResult();
 
@@ -390,12 +435,24 @@ void BackEnd::streamOut(mlir::Value value) {
 }
 
 /*
+ * Returns (pointer to) global streamState variable (pointer to int)
+ */
+mlir::Value BackEnd::getStreamStateVar() {
+  // run getStreamState with streamStatePtr
+  auto streamState = module.lookupSymbol<mlir::LLVM::GlobalOp>("streamState");
+  // MLIR doesn't allow direct access to globals, so we have to use an addressof
+  auto streamStatePtr = builder->create<mlir::LLVM::AddressOfOp>(loc, streamState);
+  return streamStatePtr.getResult();
+}
+
+/*
  * Reads from stdin (based on the type of the value) and assigns
  */
 void BackEnd::streamIn(mlir::Value value) {
+    auto streamStatePtr = getStreamStateVar();
     mlir::LLVM::LLVMFuncOp streamInFunc =
             module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("streamIn");
-    builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, value);
+    builder->create<mlir::LLVM::CallOp>(loc, streamInFunc, mlir::ValueRange({value, streamStatePtr}));
 }
 
 // === === === TYPEs === === === 
@@ -516,8 +573,8 @@ mlir::Value BackEnd::generateInteger(int value) {
   return result;
 }
 
-mlir::Value BackEnd::generateNullValue(TYPE type) {
-  switch (type) {
+mlir::Value BackEnd::generateNullValue(std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
     case BOOLEAN:
       return this->generateValue(false);
     case CHAR:
@@ -526,13 +583,23 @@ mlir::Value BackEnd::generateNullValue(TYPE type) {
       return this->generateValue(0);
     case REAL:
       return this->generateValue(0.0f);
+    case TUPLE:
+      {
+        std::vector<mlir::Value> children;
+        for (auto childType : type->tupleChildType) {
+          children.push_back(generateNullValue(childType.second));
+        }
+
+        // magic code
+        return this->generateValue(children);
+      }
     default:
       throw std::runtime_error("Identity not available");
   }
 }
 
-mlir::Value BackEnd::generateIdentityValue(TYPE type) {
-  switch (type) {
+mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
+  switch (type->baseTypeEnum) {
     case BOOLEAN:
       return this->generateValue(true);
     case CHAR:
@@ -541,6 +608,17 @@ mlir::Value BackEnd::generateIdentityValue(TYPE type) {
       return this->generateValue(1);
     case REAL:
       return this->generateValue(1.0f);
+    case TUPLE:
+      {
+        std::vector<mlir::Value> children;
+        for (auto childType : type->tupleChildType) {
+          children.push_back(generateIdentityValue(childType.second));
+        }
+
+        // magic code
+        return this->generateValue(children);
+      }
+    case VECTOR:
     default:
       throw std::runtime_error("Identity not available");
   }
@@ -668,7 +746,7 @@ mlir::Value BackEnd::generateLoadIdentifier(std::string varName) {
 }
 
 mlir::Value BackEnd::generateLoadArgument(size_t index) {
-  auto val = builder->getBlock()->getArguments().vec()[index];
+  auto val = (*(functionStack.end()-1)).front().getArguments().vec()[index];
   return val;
 }
 /*

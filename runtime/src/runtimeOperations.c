@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
+void printCommonType(commonType *type);
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 // defined binary operations between types
@@ -147,6 +148,10 @@ bool charCOMP(char l, char r, enum BINOP op) {
 
 bool boolBINOP(bool l, bool r, enum BINOP op) {
   switch (op) {
+    case EQUAL:
+    return l == r;
+    case NEQUAL:
+    return l != r;
     case AND:
     return l & r;
     case OR:
@@ -203,7 +208,7 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   switch (op) {
     case STRIDE:
     {
-      commonType* castedRight = cast(r, INTEGER);
+      commonType* castedRight = castHelper(r, INTEGER);
 
       list* newlist = stride((list*)l->value, *(int*)castedRight->value);
 
@@ -225,16 +230,14 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
       list *mlist = allocateList(listSize);
 
       for (int i = 0 ; i < listSize ; i ++) {
-        commonType* left = isCompositeType(l->type) ? ((list*) l->value)->values[i]: l;
-        commonType* right = isCompositeType(r->type) ? ((list*) r->value)->values[i]: r;
-
+        commonType* left = ((list*) l->value)->values[i];
+        commonType* right = ((list*) r->value)->values[i];
+        
         commonType* result = performCommonTypeBINOP(left, right, op);
         appendList(mlist, result);
       }
-
-      enum TYPE resultingType = isCompositeType(l->type) ? l->type : r->type;;
+      enum TYPE resultingType = l->type;
       commonType *result = allocateCommonType(&mlist, resultingType);
-
       return result;
     }
     default:
@@ -270,8 +273,8 @@ commonType* listCOMP(commonType* l, commonType* r, enum BINOP op) {
 }
 
 commonType* vectorFromRange(commonType* lower, commonType* upper) {
-  commonType* castedLower = cast(lower, INTEGER);
-  commonType* castedUpped = cast(upper, INTEGER);
+  commonType* castedLower = castHelper(lower, INTEGER);
+  commonType* castedUpped = castHelper(upper, INTEGER);
 
   list* newList = allocateList(*(int*)upper->value - *(int*)lower->value);
 
@@ -311,11 +314,8 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     return result;
   }
 
-  if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
-    promotedLeft = promotion(left,right);
-    promotedRight = promotion(right,left);
-  }
-  
+  promotedLeft = promotion(left,right);
+  promotedRight = promotion(right,left);
     
   if (op == RANGE) {
     return vectorFromRange(left, right);
@@ -324,9 +324,9 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   // god is dead and i have killed him
   if (!isComparison(op)) {
 
-    if (isCompositeType(left->type) || isCompositeType(right->type)) {
+    if (isCompositeType(promotedLeft->type)) {
 
-      result = listBINOP(left, right, op);
+      result = listBINOP(promotedLeft, promotedRight, op);
 
     } else if(promotedLeft->type == BOOLEAN) {
 
@@ -349,9 +349,9 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
       result = allocateCommonType(&tempChar, CHAR);
     } 
   } else {
-    if (isCompositeType(left->type) || isCompositeType(right->type)) {
+    if (isCompositeType(promotedLeft->type)) {
 
-      result = listCOMP(left, right, op);
+      result = listCOMP(promotedLeft, promotedRight, op);
 
     } else if(promotedLeft->type == BOOLEAN) {
 
@@ -379,10 +379,8 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   printf("=== de allocating temporary operands...\n");
 #endif /* ifdef DEBUGMEMORY */
 
-  if (!(isCompositeType(left->type) || isCompositeType(right->type))) {
-    deallocateCommonType(promotedLeft);
-    deallocateCommonType(promotedRight);
-  }
+  deallocateCommonType(promotedLeft);
+  deallocateCommonType(promotedRight);
 
 #ifdef DEBUGMEMORY
   printf("=== complete\n");
@@ -511,6 +509,12 @@ bool commonTypeToBool(commonType* val) {
 
 // STANDARD LIBRARY. They are prefixed with __ because they can be called with regular
 // function calls in the walker.
+
+// *state is a globalop defined in the BackEnd::setupStreamRuntime
+commonType* __stream_state(int* state) {
+  return allocateCommonType(state, INTEGER);
+}
+
 commonType* __length(commonType* vector)  {
   if (!isCompositeType(vector->type)) {
     UnsupportedTypeError("Trying to take length of non-vector type");
@@ -557,8 +561,9 @@ commonType* __reverse(commonType* vector)  {
 }
 
 commonType* allocateFromRange(commonType* lower, commonType* upper) {
-  commonType* castedLower = cast(lower, INTEGER);
-  commonType* castedUpper = cast(upper, INTEGER);
+
+  commonType* castedLower = castHelper(lower, INTEGER);
+  commonType* castedUpper = castHelper(upper, INTEGER);
 
   int lowerVal = *(int*)castedLower->value;
   int upperVal = *(int*)castedUpper->value;
