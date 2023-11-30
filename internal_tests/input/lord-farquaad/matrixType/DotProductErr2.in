@@ -1,0 +1,7 @@
+procedure main() returns integer {
+  integer[2] a = [1, 1];
+  integer[2, 1] b = [[2, 2]];
+  integer c = 1;
+  a ** b -> std_output;  // dot porduct only defined for same types(matrix, or vector)
+  return 1;
+}

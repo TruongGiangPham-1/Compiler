@@ -113,6 +113,17 @@ namespace gazprea {
 
         return;
     }
+    void PromotedType::dotProductErrorCheck(std::shared_ptr<Type> l, std::shared_ptr<Type> r, int line) {
+        if (l->vectorOrMatrixEnum == NONE || r->vectorOrMatrixEnum == NONE) {
+            throw TypeError(line, "scaler cannot be dot producted");
+        }
+        if ((isMatrix(l) && isMatrix(r))
+        || (isVector(r) && isVector(l))) {
+
+        } else {
+            throw TypeError(line, "dot product can only be done between matrix or between vectors");
+        }
+    }
     std::shared_ptr<Type> PromotedType::getTypeCopy(std::shared_ptr<Type> type) {
         // returns a copy of the type
         auto newtype = std::make_shared<AdvanceType>(type->getBaseTypeEnumName());
@@ -569,6 +580,11 @@ namespace gazprea {
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
+                break;
+            case BINOP::DOT_PROD:
+                promotedType->dotProductErrorCheck(lhsType, rhsType, tree->loc());
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
         }
         return nullptr;

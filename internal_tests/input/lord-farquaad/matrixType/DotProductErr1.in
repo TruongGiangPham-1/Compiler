@@ -1,0 +1,6 @@
+procedure main() returns integer {
+  character[2, 1] a = [['a', 'a'], ['a', 'a']];
+  character[2, 1] b = [['a', 'a'], ['b', 'b']];
+  a ** b -> std_output;  // character is not arithmeticable
+  return 1;
+}
