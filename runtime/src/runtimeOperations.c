@@ -291,11 +291,7 @@ commonType* crossProduct(commonType* left, commonType* right) {
 /* covers matrix multiply + dot product. General
  */
 commonType* dotProduct(commonType* left, commonType* right) {
-  printf("here\n\n");
   if (isCompositeType(((list*)left->value)->values[0]->type)) {
-    printCommonType(left);
-    printf("\n");
-    printCommonType(right);
     return matrixMultiply(left, right);
   } else {
     return crossProduct(left, right);
