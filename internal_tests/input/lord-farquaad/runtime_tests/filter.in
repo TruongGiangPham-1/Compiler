@@ -1,5 +1,7 @@
 procedure main() returns integer {
   var x = [i in 1..5 & i == 3, i == 2, i % 2 == 0];
+  var y = [i in x.1 & i == 3, i == 2, i % 2 == 0];
+
 
   x.1->std_output;
   '\n' -> std_output;
@@ -8,6 +10,14 @@ procedure main() returns integer {
   x.3->std_output;
   '\n' -> std_output;
   x.4->std_output;
+  '\n' -> std_output;
+  y.1->std_output;
+  '\n' -> std_output;
+  y.2->std_output;
+  '\n' -> std_output;
+  y.3->std_output;
+  '\n' -> std_output;
+  y.4->std_output;
   '\n' -> std_output;
 
   return 1;
