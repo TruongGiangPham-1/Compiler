@@ -239,7 +239,7 @@ void appendList(list* list, commonType *value) {
   printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
 
-  if (list->currentSize +1 >= list->size) {
+  if (list->currentSize +1 > list->size) {
     printCommonType(value);
     RuntimeOPError("Writing past array");
   }
