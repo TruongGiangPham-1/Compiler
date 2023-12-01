@@ -317,7 +317,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size());
 
   // empty filter we are appending to
-  auto filter = codeGenerator.generateValue(maxFiltered);
+  auto filter = codeGenerator.generateValue(codeGenerator.performBINOP(maxFiltered, one, ADD));
   
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
