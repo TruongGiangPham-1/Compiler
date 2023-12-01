@@ -2,9 +2,6 @@ procedure main() returns integer {
   integer n;
   n <- std_input;
 
-  boolean[n] is_prime = true;
-  is_prime -> std_output;
-
   if (n < 2 || n > 100) {
     "Error: n must be between 2 and 100 (n was" -> std_output;
     n -> std_output;
@@ -12,8 +9,8 @@ procedure main() returns integer {
     return 1;
   }
 
+  integer[n] nums = 1..n;
   boolean[n] is_prime = true;
-
   is_prime -> std_output;
 
   integer i = 2;
@@ -32,7 +29,11 @@ procedure main() returns integer {
   loop i in nums {
     if (is_prime[i]) {
       i -> std_output;
-      " " -> std_output;
+      if (i < n - 1) {
+        " " -> std_output;
+      } else {
+        "\n" -> std_output;
+      }
     }
   }
 
