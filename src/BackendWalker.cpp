@@ -8,6 +8,7 @@
 #include "mlir/Dialect/LLVMIR/FunctionCallUtils.h"
 #include "mlir/IR/Value.h"
 #include <memory>
+#include <algorithm>
 #include <stdexcept>
 #include <strings.h>
 //#define DEBUG
@@ -27,6 +28,7 @@ void BackendWalker::generateCode(std::shared_ptr<ASTNode> tree) {
 #endif 
 
   codeGenerator.init();
+//  codeGenerator.functionShowcase();
   walkChildren(tree);
   //codeGenerator.deallocateObjects();
   codeGenerator.generate();
@@ -52,10 +54,15 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 }
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
-  auto initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
-
-  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-  codeGenerator.generateAssignment(initializedType, val);
+  mlir::Value initializedType; 
+  // dynamic typecheck if lhs type exists, otherwise assign
+  if (tree->getTypeNode()) {
+    initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
+    auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+    codeGenerator.generateAssignment(initializedType, val);
+  } else {
+    initializedType = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  }
 
   codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
   return 0;
@@ -257,6 +264,10 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
   return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index));
 }
 
+std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
+  return codeGenerator.getStreamStateVar();
+}
+
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
@@ -306,7 +317,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size());
 
   // empty filter we are appending to
-  auto filter = codeGenerator.generateValue(maxFiltered);
+  auto filter = codeGenerator.generateValue(codeGenerator.performBINOP(maxFiltered, one, ADD));
   
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
@@ -641,6 +652,76 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   return 0;
 }
 
+std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
+  // important loop info we need to have
+  // tuple of <loopStart, loopExit>
+  std::vector<std::pair<mlir::Block *, mlir::Block *>> blocks;
+
+  // create new nested loop for each domainExpr
+  for (auto &domainExpr : tree->getDomainExprs()) {
+      auto domainNode = domainExpr.second;
+      auto domainSym = domainExpr.first;
+
+      // create/load domain vector
+      auto domain = std::any_cast<mlir::Value>(walk(domainNode));
+
+      // var to index the domain
+      auto domainIdx = codeGenerator.generateValue(0);
+      auto domainIdxVal = codeGenerator.generateValue(0);
+      codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
+
+      // get length of domainVec
+      auto domainLength = codeGenerator.generateCallNamed("length", {domain});
+
+      // START THE LOOP
+      mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
+      mlir::Block *trueBlock = codeGenerator.generateBlock();
+      mlir::Block *exitBlock = codeGenerator.generateBlock();
+
+      blocks.push_back(std::make_pair(loopBeginBlock, exitBlock));
+
+      // PREDICATE (domainIdx < length)
+      codeGenerator.generateEnterBlock(loopBeginBlock);
+      codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
+      auto inBounds = codeGenerator.performBINOP(domainIdx, domainLength, LTHAN);
+      codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
+
+      // BODY (true block)
+      codeGenerator.setBuilderInsertionPoint(trueBlock);
+      // set domainIdxVal to domain[domainIdx]
+      auto indexedVal = codeGenerator.indexCommonType(domain, domainIdx);
+      codeGenerator.generateAssignment(domainIdxVal, indexedVal);
+
+      // increment domainIdx
+      // doing this here so if there is a `break` of `continue` stmt in the body, we won't be stuck in an infinite loop
+      auto one = codeGenerator.generateValue(1);
+      auto newDomainIdx = codeGenerator.performBINOP(domainIdx, one, ADD);
+      codeGenerator.generateAssignment(domainIdx, newDomainIdx);
+  }
+
+  // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
+  // if there is a break/continue statement, we need to jump to the correct exit block
+  this->loopBlocks.push_back(std::make_pair(blocks[0].first, blocks[0].second));
+
+  // walk the body
+  walk(tree->getBody());
+
+  // add all exitBlocks, increment domainIdx
+  // reverse it first
+  std::reverse(blocks.begin(), blocks.end());
+  for (auto &blockInfo : blocks) {
+    auto enter = blockInfo.first;
+    auto exit = blockInfo.second;
+
+    codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
+    codeGenerator.setBuilderInsertionPoint(exit);
+  }
+  this->earlyReturn = false;
+  this->loopBlocks.pop_back();
+
+  return 0;
+}
+
 std::any BackendWalker::visitBreak(std::shared_ptr<BreakNode> tree) {
     if (this->loopBlocks.empty()) {
         throw StatementError(tree->loc(), "Break statement outside of loop");
@@ -726,5 +807,12 @@ std::any BackendWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
   auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
 
   return codeGenerator.performBINOP(lhs, rhs, CONCAT);
+}
+
+std::any BackendWalker::visitStride(std::shared_ptr<StrideNode> tree) {
+  auto lhs = std::any_cast<mlir::Value>(walk(tree->getLHS()));
+  auto rhs = std::any_cast<mlir::Value>(walk(tree->getRHS()));
+
+  return codeGenerator.performBINOP(lhs, rhs, STRIDE);
 }
 

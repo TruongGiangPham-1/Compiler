@@ -33,6 +33,7 @@ private:
   std::any visitBool(std::shared_ptr<BoolNode> tree) override;
   std::any visitTuple(std::shared_ptr<TupleNode> tree) override;
   std::any visitVector(std::shared_ptr<VectorNode> tree) override;
+  std::any visitStdInputNode(std::shared_ptr<StdInputNode> tree) override;
 
 
   // Expr/Binary
@@ -40,6 +41,7 @@ private:
   std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
   std::any visitUnaryArith(std::shared_ptr<UnaryArithNode> tree) override;
   std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+  std::any visitStride(std::shared_ptr<StrideNode> tree) override;
   std::any visitCast(std::shared_ptr<CastNode> tree) override;
   std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
   std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
@@ -54,6 +56,7 @@ private:
   std::any visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree) override;
   std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
   std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
+  std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) override;
   std::any visitBreak(std::shared_ptr<BreakNode> tree) override;
   std::any visitContinue(std::shared_ptr<ContinueNode> tree) override;
 

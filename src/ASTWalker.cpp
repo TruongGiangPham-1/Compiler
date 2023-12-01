@@ -152,11 +152,23 @@ namespace gazprea {
 #endif // DEBUG
            return this->visitConcat(std::dynamic_pointer_cast<ConcatNode>(tree));
         }
+        else if (std::dynamic_pointer_cast<StrideNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit stride" << std::endl;
+#endif // DEBUG
+
+            return this->visitStride(std::dynamic_pointer_cast<StrideNode>(tree));
+        }
         else if (std::dynamic_pointer_cast<VectorNode>(tree)) {
 #ifdef DEBUG
             std::cout << "about to visit literal Vector" << std::endl;
 #endif // DEBUG
             return this->visitVector(std::dynamic_pointer_cast<VectorNode>(tree));
+        } else if (std::dynamic_pointer_cast<StdInputNode>(tree)) {
+#ifdef DEBUG
+            std::cout << "about to visit std input token (should only be in stream_state function)" << std::endl;
+#endif // DEBUG
+            return this->visitStdInputNode(std::dynamic_pointer_cast<StdInputNode>(tree));
 
         } else if (std::dynamic_pointer_cast<MatrixNode>(tree)) {
 #ifdef DEBUG
@@ -321,7 +333,21 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitType(std::shared_ptr<TypeNode> tree) {
-        return this->walkChildren(tree);
+        if (std::dynamic_pointer_cast<VectorTypeNode>(tree)) {
+            auto cast = std::dynamic_pointer_cast<VectorTypeNode>(tree);
+            if (cast->size) {  // has an expression
+                walk(cast->size);
+            }
+        } else if (std::dynamic_pointer_cast<MatrixTypeNode>(tree)) {
+            auto cast = std::dynamic_pointer_cast<MatrixTypeNode>(tree);
+            if (cast->sizeLeft) {  // has an expression
+                walk(cast->sizeLeft);
+            }
+            if (cast->sizeRight) {
+                walk(cast->sizeRight);
+            }
+        }
+        return this->walkChildren(tree);  // doesnt do anytihng
     }
 
     // Expr
@@ -353,6 +379,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
@@ -463,6 +492,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+        return this->walkChildren(tree);
+    }
+    std::any ASTWalker::visitStride(std::shared_ptr<StrideNode> tree) {
         return this->walkChildren(tree);
     }
 

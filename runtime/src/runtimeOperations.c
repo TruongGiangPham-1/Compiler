@@ -412,6 +412,17 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     return result;
   }
 
+  if (op == STRIDE) {
+      commonType* castedRight = castHelper(right, INTEGER);
+
+      list* newlist = stride((list*)left->value, *(int*)castedRight->value);
+
+      deallocateCommonType(castedRight);
+
+      // TODO: leaking here 
+      return allocateCommonType(&newlist, left->type);
+  }
+
   promotedLeft = promotion(left,right);
   promotedRight = promotion(right,left);
     
@@ -618,6 +629,12 @@ bool commonTypeToBool(commonType* val) {
 
 // STANDARD LIBRARY. They are prefixed with __ because they can be called with regular
 // function calls in the walker.
+
+// *state is a globalop defined in the BackEnd::setupStreamRuntime
+commonType* __stream_state(int* state) {
+  return allocateCommonType(state, INTEGER);
+}
+
 commonType* __length(commonType* vector)  {
   if (!isCompositeType(vector->type)) {
     UnsupportedTypeError("Trying to take length of non-vector type");

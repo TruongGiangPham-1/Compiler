@@ -30,9 +30,10 @@ namespace gazprea {
 
 
         auto tupleIDsym = currentScope->resolve(tupleNameNode->getName());
-        if (tupleIDsym) {
+        if (tupleIDsym ) {
+            // sometime it doesnt have typesymbol if declarated as var
             // declared tuple
-            if (tupleIDsym->typeSym->baseTypeEnum != TYPE::TUPLE) {
+            if (tupleIDsym->typeSym && tupleIDsym->typeSym->baseTypeEnum != TYPE::TUPLE) {
                 throw SymbolError(tree->loc(), "cannot index non tuple");
             } else {
                 tree->sym = tupleIDsym;
@@ -46,17 +47,19 @@ namespace gazprea {
                         throw SymbolError(tree->loc(), "this tupple id index not in tupple");
                     } else {
                         tree->index = tupleIDsym->tupleIndexMap[idCast->getName()];
+                        //tree->sym->index = tree->index;
                     }
                 } else {
                     // index by integer
                     assert(std::dynamic_pointer_cast<IntNode>(tree->getIndexNode()));
                     auto intCast =  std::dynamic_pointer_cast<IntNode>(tree->getIndexNode());
                     tree->index = intCast->getVal();
-                    if (tree->index > tupleIDsym->typeSym->tupleChildType.size() || tree->index < 1) {
+                    if (tupleIDsym->typeSym && ((tree->index > tupleIDsym->typeSym->tupleChildType.size()) || tree->index < 1)) {
                         // index out of bound(assume base i index
                         throw SymbolError(tree->loc(), "tuple index out of bound");
                     }
                     tree->index --;  // mae is base 0 index
+                    //tree->sym->index = tree->index;
                 }
 #ifdef DEBUG
                 std::cout << " index tuple " << tupleIDsym->getName() << " at index=" << tree->index <<std::endl;
@@ -328,6 +331,7 @@ namespace gazprea {
 
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
+        walkChildren(tree);  // walks typenode and expr node
 
         if (!tree->getTypeNode()) {
             if (!tree->getExprNode()) {
@@ -475,7 +479,8 @@ namespace gazprea {
 
     std::any Ref::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
         // resolve the domain 1st
-        for (auto &domain: tree->getConditions()) {
+        for (auto &domainExpr: tree->getDomainExprs()) {
+            auto domain = domainExpr.second;
             walk(domain);
         }
 
@@ -484,11 +489,13 @@ namespace gazprea {
 
         // define domainVar
         auto intType = currentScope->resolveType("integer");  // domain var is just int right?
-        for (auto&domainV: tree->domainVars) {
-            domainV->mlirName = "VAR_DEF" + std::to_string(getNextId());
-            domainV->typeSym = intType;
-            domainV->scope = currentScope;
-            currentScope->define(domainV);
+        for (auto &domainExpr: tree->getDomainExprs()) {
+            auto domainVar = domainExpr.first;
+
+            domainVar->mlirName = "VAR_DEF" + std::to_string(getNextId());
+            domainVar->typeSym = intType;
+            domainVar->scope = currentScope;
+            currentScope->define(domainVar);
 #ifdef DEBUG
             std::cout << "in line " << tree->loc()
                       << "domainVar=" << domainV->getName() << " defined as "

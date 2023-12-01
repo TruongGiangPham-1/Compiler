@@ -71,6 +71,8 @@ namespace gazprea {
         std::any visitVectorType(GazpreaParser::VectorTypeContext *ctx) override;
         std::any visitMatrixType(GazpreaParser::MatrixTypeContext *ctx) override;
         std::any visitTupleType(GazpreaParser::TupleTypeContext *ctx) override;
+        std::any visitStride(GazpreaParser::StrideContext *ctx) override;
+
 
         std::any visitBlock(GazpreaParser::BlockContext *ctx) override;
         std::any visitBodyStatement(GazpreaParser::BodyStatementContext *ctx) override;
@@ -105,8 +107,8 @@ namespace gazprea {
         std::any visitFuncParameter(GazpreaParser::FuncParameterContext *ctx) override;
         std::any visitReturn(GazpreaParser::ReturnContext *ctx) override;
 
-        std::any visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) override;
-        std::any visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) override;  // this is functioncall rule
+        std::any visitNormalProcedureCall(GazpreaParser::NormalProcedureCallContext *ctx) override;
+        std::any visitNormalFunctionCall(GazpreaParser::NormalFunctionCallContext *ctx) override;  // this is functioncall rule
         std::any visitFuncCall(GazpreaParser::FuncCallContext *ctx) override;   // this is #funcCall label in expr
 
         // control flow
@@ -123,6 +125,8 @@ namespace gazprea {
 
         std::any visitStreamIn(GazpreaParser::StreamInContext *ctx) override;
         std::any visitStreamOut(GazpreaParser::StreamOutContext *ctx) override;
+        std::any visitStreamStateFunctionCall(GazpreaParser::StreamStateFunctionCallContext *ctx) override;
+        std::any visitStreamStateProcedureCall(GazpreaParser::StreamStateProcedureCallContext *ctx) override;
 
         std::any visitRange(GazpreaParser::RangeContext *ctx) override;
         std::any visitGenerator(GazpreaParser::GeneratorContext *ctx) override;

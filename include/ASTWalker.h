@@ -6,10 +6,13 @@
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Type/VectorTypeNode.h"
+#include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
 #include "ASTNode/Stream/StreamIn.h"
 #include "ASTNode/Expr/ExprListNode.h"
+#include "ASTNode/Expr/StdInputNode.h"
 #include "ASTNode/Expr/Literal/IDNode.h"
 #include "ASTNode/Expr/Literal/IntNode.h"
 #include "ASTNode/Expr/Literal/RealNode.h"
@@ -70,6 +73,7 @@ namespace gazprea {
         virtual std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
         virtual std::any visitVector(std::shared_ptr<VectorNode> tree);
         //virtual std::any visitMatrix(std::shared_ptr<MatrixNode> tree);
+        virtual std::any visitStdInputNode(std::shared_ptr<StdInputNode> tree);
 
         // Expr/Binary
 
@@ -79,6 +83,7 @@ namespace gazprea {
         virtual std::any visitCast(std::shared_ptr<CastNode> tree);
         virtual std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree);
         virtual std::any visitConcat(std::shared_ptr<ConcatNode> tree);
+        virtual std::any visitStride(std::shared_ptr<StrideNode> tree);
         // Expr/Vector
         virtual std::any visitFilter(std::shared_ptr<FilterNode> tree);
         virtual std::any visitGenerator(std::shared_ptr<GeneratorNode> tree);

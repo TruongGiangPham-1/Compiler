@@ -4,6 +4,7 @@
 #include "ASTNode/Method/FunctionNode.h"
 #include "ASTNode/Type/TypeNode.h"
 #include "ASTNode/Expr/TupleIndexNode.h"
+#include "ASTNode/Expr/StdInputNode.h"
 #include <memory>
 
 
@@ -148,6 +149,30 @@ namespace gazprea {
         t->addChild(visit(ctx->expression()));
 
         return t;
+    }
+
+    std::any ASTBuilder::visitStreamStateFunctionCall(GazpreaParser::StreamStateFunctionCallContext *ctx) {
+#ifdef DEBUG
+        std::cout << "visitStreamStateFunctionCall" << std::endl;
+#endif
+        // this is a regular function call but with the name "streamState"
+        std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
+        std::shared_ptr<Symbol> funcName = std::make_shared<Symbol>("stream_state");
+
+        callNode->CallName = funcName;
+
+        // add dummy StdInput node
+        // this helps stream_state work with our current function call codegen
+        std::shared_ptr<ASTNode> stdInput = std::make_shared<StdInputNode>(ctx->getStart()->getLine());
+        callNode->addChild(stdInput);
+
+        return std::dynamic_pointer_cast<ASTNode>(callNode);
+    }
+
+    std::any ASTBuilder::visitStreamStateProcedureCall(GazpreaParser::StreamStateProcedureCallContext *ctx) {
+        // a procedure call to streamState is a NoOp
+        // thus, do nothing
+        return std::make_shared<ASTNode>();
     }
 
     std::any ASTBuilder::visitIdentity(GazpreaParser::IdentityContext *ctx) {
@@ -630,9 +655,11 @@ namespace gazprea {
         std::shared_ptr<IteratorLoopNode> t = std::make_shared<IteratorLoopNode>(ctx->getStart()->getLine());
         // add the 1st domain
         for (int i = 0; i < ctx->ID().size(); i++)  {
-            t->addChild(visit(ctx->expression(i)));
-            std::shared_ptr<Symbol> s = std::make_shared<Symbol>(ctx->ID(i)->getSymbol()->getText());
-            t->domainVars.push_back(s);
+            auto domain = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->expression(i)));
+            auto domainCasted = std::dynamic_pointer_cast<ExprNode>(domain);
+            auto sym = std::make_shared<Symbol>(ctx->ID(i)->getSymbol()->getText());
+
+            t->domainExprs.push_back(std::make_pair(sym, domainCasted));
         }
         t->addChild(visit(ctx->bodyStatement()));
         return std::dynamic_pointer_cast<ASTNode>(t);
@@ -760,7 +787,7 @@ namespace gazprea {
         return visit(ctx->functionCall());
     }
 
-    std::any ASTBuilder::visitFunctionCall(GazpreaParser::FunctionCallContext *ctx) {
+    std::any ASTBuilder::visitNormalFunctionCall(GazpreaParser::NormalFunctionCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting function call" << std::endl;
 #endif
@@ -777,7 +804,7 @@ namespace gazprea {
 
     }
 
-    std::any ASTBuilder::visitProcedureCall(GazpreaParser::ProcedureCallContext *ctx) {
+    std::any ASTBuilder::visitNormalProcedureCall(GazpreaParser::NormalProcedureCallContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting procedure call" << std::endl;
 #endif
@@ -830,6 +857,15 @@ namespace gazprea {
         concatNode->addChild(visit(ctx->expr(0)));
         concatNode->addChild(visit(ctx->expr(1)));
         return std::dynamic_pointer_cast<ASTNode>(concatNode);
+    }
+
+    std::any ASTBuilder::visitStride(GazpreaParser::StrideContext *ctx) {
+        auto strideNode = std::make_shared<StrideNode>(ctx->getStart()->getLine());
+        strideNode->op = STRIDE;
+
+        strideNode->addChild(visit(ctx->expr(0))) ;
+        strideNode->addChild(visit(ctx->expr(1))) ;
+        return std::dynamic_pointer_cast<ASTNode>(strideNode);
     }
 }
 

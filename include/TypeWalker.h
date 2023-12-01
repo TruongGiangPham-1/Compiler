@@ -50,6 +50,8 @@ namespace gazprea {
         // get the most dominant type fomr the vector onde, raise error otherwise
         std::shared_ptr<Type>getDominantTypeFromVector(std::shared_ptr<VectorNode> tree);
 
+
+        void dotProductErrorCheck(std::shared_ptr<Type> l, std::shared_ptr<Type> r, int line);
         // throw error if tree was node a vectornode
         void assertVector(std::shared_ptr<ASTNode> tree);
         PromotedType(std::shared_ptr<SymbolTable> symtab);
@@ -86,6 +88,7 @@ namespace gazprea {
         std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
         std::any visitUnaryArith(std::shared_ptr<UnaryArithNode>tree) override;
         std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
+        std::any visitStride(std::shared_ptr<StrideNode> tree) override;
         // streams
         std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
@@ -95,6 +98,10 @@ namespace gazprea {
         std::any visitIdentity(std::shared_ptr<IdentityNode> tree) override;
 
         // Return CFG unsupported right now :(
+        std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+        std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
+        std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
+        std::any visitParameter(std::shared_ptr<ArgNode> tree) override;
 
         std::any visitCall(std::shared_ptr<CallNode> tree) override; // Procedure Call, function and procedure call in expr
         std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;

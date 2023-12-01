@@ -1,0 +1,4 @@
+procedure main() returns integer {
+    integer[*] v = 1..5 by [1, 1];  // stride amount has to be scalar
+    return 0;
+}

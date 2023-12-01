@@ -19,6 +19,8 @@ public:
   void print(mlir::Value value);
   void printVec(mlir::Value value);
   void printCommonType(mlir::Value value);
+
+  mlir::Value getStreamStateVar();
   void streamOut(mlir::Value value);
   void streamIn(mlir::Value value);
   void verifyFunction(int line, std::string name);
@@ -131,6 +133,7 @@ protected:
   void setupPrint();
   void setupPrintVec();
   void setupVectorRuntime();
+  void setupStreamRuntime();
   void setupCommonTypeRuntime();
   std::string trackObject();
   mlir::Value translateToMLIRType(TYPE type);

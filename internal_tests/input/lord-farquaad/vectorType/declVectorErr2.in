@@ -1,0 +1,4 @@
+procedure main() returns integer {
+	integer[3, 2] a =  'c';   // cant implicitly promote literal to matrix
+	return 0;
+}
