@@ -78,6 +78,8 @@ namespace gazprea {
         std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) override;
 
 
+        //std::any visitType(std::shared_ptr<TypeNode> tree) override;
+
         std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
         std::any visitFilter(std::shared_ptr<FilterNode> tree) override;
         // miscaleous function

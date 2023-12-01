@@ -328,6 +328,7 @@ namespace gazprea {
 
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
+        walkChildren(tree);  // walks typenode and expr node
 
         if (!tree->getTypeNode()) {
             if (!tree->getExprNode()) {
