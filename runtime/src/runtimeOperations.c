@@ -337,8 +337,7 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
       commonType *result = allocateCommonType(&mlist, resultingType);
       return result;
     }
-    case DOT_PROD:
-    return dotProduct(l, r);
+
     default:
     RuntimeOPError("Unknown binary operation between lists");
   }
@@ -419,6 +418,11 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   if (op == RANGE) {
     return vectorFromRange(left, right);
   }
+
+  if (op == DOT_PROD) {
+    return dotProduct(left, right);
+  }
+
 
   // god is dead and i have killed him
   if (!isComparison(op)) {
