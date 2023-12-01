@@ -2,6 +2,6 @@ procedure main() returns integer {
   integer[3] v = [1, 2, 3];
   integer[3, 3] A = [v, [1, 2]];
   A->std_output;
-
+  '\n' -> std_output;
   return 1;
 }

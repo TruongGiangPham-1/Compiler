@@ -4,6 +4,7 @@
 #include "Operands/BINOP.h"
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
+#include "run_time_errors.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -203,7 +204,7 @@ void deallocateCommonType(commonType* object) {
     }
   }
 
-#ifdef DEBUGMEMORYll
+#ifdef DEBUGMEMORY
   printf("Commontype deallocation success!\n");
 #endif /* ifdef DEBUGMEMORY */
 }
@@ -238,6 +239,11 @@ void appendList(list* list, commonType *value) {
   printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
 
+  if (list->currentSize +1 > list->size) {
+    printCommonType(value);
+    RuntimeOPError("Writing past array");
+  }
+
   list->values[list->currentSize] = value;
 
 #ifdef DEBUGTUPLE
@@ -250,7 +256,7 @@ void appendList(list* list, commonType *value) {
 }
 
 void appendCommon(commonType* list, commonType *value) {
-  appendList(list->value, value);
+  appendList(list->value, copyCommonType(value));
 }
 
 list* copyList(list* copyFrom) {
