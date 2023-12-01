@@ -32,11 +32,8 @@ namespace gazprea {
         auto tupleIDsym = currentScope->resolve(tupleNameNode->getName());
         if (tupleIDsym ) {
             // sometime it doesnt have typesymbol if declarated as var
-            if (tupleIDsym->typeSym == nullptr) {
-                return 0;
-            }
             // declared tuple
-            if (tupleIDsym->typeSym->baseTypeEnum != TYPE::TUPLE) {
+            if (tupleIDsym->typeSym && tupleIDsym->typeSym->baseTypeEnum != TYPE::TUPLE) {
                 throw SymbolError(tree->loc(), "cannot index non tuple");
             } else {
                 tree->sym = tupleIDsym;
@@ -50,17 +47,19 @@ namespace gazprea {
                         throw SymbolError(tree->loc(), "this tupple id index not in tupple");
                     } else {
                         tree->index = tupleIDsym->tupleIndexMap[idCast->getName()];
+                        //tree->sym->index = tree->index;
                     }
                 } else {
                     // index by integer
                     assert(std::dynamic_pointer_cast<IntNode>(tree->getIndexNode()));
                     auto intCast =  std::dynamic_pointer_cast<IntNode>(tree->getIndexNode());
                     tree->index = intCast->getVal();
-                    if (tree->index > tupleIDsym->typeSym->tupleChildType.size() || tree->index < 1) {
+                    if (tupleIDsym->typeSym && ((tree->index > tupleIDsym->typeSym->tupleChildType.size()) || tree->index < 1)) {
                         // index out of bound(assume base i index
                         throw SymbolError(tree->loc(), "tuple index out of bound");
                     }
                     tree->index --;  // mae is base 0 index
+                    //tree->sym->index = tree->index;
                 }
 #ifdef DEBUG
                 std::cout << " index tuple " << tupleIDsym->getName() << " at index=" << tree->index <<std::endl;
