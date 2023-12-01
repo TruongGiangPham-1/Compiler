@@ -54,11 +54,17 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 }
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
-  auto initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
+  mlir::Value initializedType; 
 
-  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
-  codeGenerator.generateAssignment(initializedType, val);
-
+  // dynamic typecheck if lhs type exists, otherwise assign
+  if (tree->getTypeNode()) {
+    initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
+    auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+    codeGenerator.generateAssignment(initializedType, val);
+  } else {
+    initializedType = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+  }
+  
   codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
   return 0;
 }
