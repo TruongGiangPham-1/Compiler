@@ -238,7 +238,7 @@ void appendList(list* list, commonType *value) {
   printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
 
-  list->values[list->currentSize] = copyCommonType(value);
+  list->values[list->currentSize] = value;
 
 #ifdef DEBUGTUPLE
   printf("appended to list at %p, %p\n", &list->values[list->currentSize], value);
@@ -250,7 +250,7 @@ void appendList(list* list, commonType *value) {
 }
 
 void appendCommon(commonType* list, commonType *value) {
-  appendList(list->value, value);
+  appendList(list->value, copyCommonType(value));
 }
 
 list* copyList(list* copyFrom) {
