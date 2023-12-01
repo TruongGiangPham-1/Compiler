@@ -30,7 +30,11 @@ namespace gazprea {
 
 
         auto tupleIDsym = currentScope->resolve(tupleNameNode->getName());
-        if (tupleIDsym) {
+        if (tupleIDsym ) {
+            // sometime it doesnt have typesymbol if declarated as var
+            if (tupleIDsym->typeSym == nullptr) {
+                return 0;
+            }
             // declared tuple
             if (tupleIDsym->typeSym->baseTypeEnum != TYPE::TUPLE) {
                 throw SymbolError(tree->loc(), "cannot index non tuple");
@@ -328,6 +332,7 @@ namespace gazprea {
 
         //if (tree->scope) {  // this Node already has a scope so its declared in  Def pass
         //    return 0;
+        walkChildren(tree);  // walks typenode and expr node
 
         if (!tree->getTypeNode()) {
             if (!tree->getExprNode()) {

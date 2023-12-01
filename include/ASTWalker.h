@@ -6,6 +6,8 @@
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Method/ReturnNode.h"
 #include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Type/VectorTypeNode.h"
+#include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTNode/DeclNode.h"
 #include "ASTNode/Stream/StreamOut.h"
 #include "ASTNode/Stream/StreamIn.h"

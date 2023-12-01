@@ -333,7 +333,21 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitType(std::shared_ptr<TypeNode> tree) {
-        return this->walkChildren(tree);
+        if (std::dynamic_pointer_cast<VectorTypeNode>(tree)) {
+            auto cast = std::dynamic_pointer_cast<VectorTypeNode>(tree);
+            if (cast->size) {  // has an expression
+                walk(cast->size);
+            }
+        } else if (std::dynamic_pointer_cast<MatrixTypeNode>(tree)) {
+            auto cast = std::dynamic_pointer_cast<MatrixTypeNode>(tree);
+            if (cast->sizeLeft) {  // has an expression
+                walk(cast->sizeLeft);
+            }
+            if (cast->sizeRight) {
+                walk(cast->sizeRight);
+            }
+        }
+        return this->walkChildren(tree);  // doesnt do anytihng
     }
 
     // Expr
