@@ -21,7 +21,15 @@
 //#define DEBUGTYPES
 //#define DEBUGMEMORY
 //#define DEBUGPRINT
-// #define DEBUGSTREAM
+ #define DEBUGSTREAM
+
+// global variable streamBuffer for streamIn
+// this is a buffer for the rewind feature
+const int MAX_REWIND_BUFFER_SIZE = 1024;
+char STREAM_REWIND_BUFFER[MAX_REWIND_BUFFER_SIZE] = {0};
+int BUF_HEAD = 0;
+int BUF_TAIL = 0;
+
 
 void printType(commonType *type, bool nl) {
   switch (type->type) {
@@ -136,48 +144,49 @@ void streamIn(commonType *type, int* streamState) {
   char buffer[1024] = {0}; // how big do I make this?
 
   switch (type->type) {
-    case INTEGER:
-      check = scanf("%s", buffer);
-      // convert string to an int
-      // https://stackoverflow.com/a/18544436
-      long lnum;
-      char* end;
-      errno = 0;
+    case INTEGER: {
+        check = scanf("%s", buffer);
+        // convert string to an int
+        // https://stackoverflow.com/a/18544436
+        long lnum;
+        char *end;
+        errno = 0;
 
 #ifdef DEBUGSTREAM
         printf("buffer: '%s'\n", buffer);
 #endif /* ifdef DEBUGSTREAM */
 
-      lnum = strtol(buffer, &end, 10);        //10 specifies base-10
-      if (end == buffer) {
-          // no digits consumed
+        lnum = strtol(buffer, &end, 10);        //10 specifies base-10
+        if (end == buffer) {
+            // no digits consumed
 #ifdef DEBUGSTREAM
-          printf("ERROR: no digits were found\n");
+            printf("ERROR: no digits were found\n");
 #endif /* ifdef DEBUGSTREAM */
-          check = 0;
-      } else if (*end != '\0') {
-          // extra characters at the end
+            check = 0;
+        } else if (*end != '\0') {
+            // extra characters at the end
 #ifdef DEBUGSTREAM
-          printf("ERROR: extra characters at the end\n");
+            printf("ERROR: extra characters at the end\n");
 #endif /* ifdef DEBUGSTREAM */
-          check = 0;
-      } else if (((lnum == LONG_MAX || lnum == LONG_MIN) && errno == ERANGE) ||
-              (lnum > INT_MAX) || (lnum < INT_MIN)) {
-          // number is out of range
+            check = 0;
+        } else if (((lnum == LONG_MAX || lnum == LONG_MIN) && errno == ERANGE) ||
+                   (lnum > INT_MAX) || (lnum < INT_MIN)) {
+            // number is out of range
 #ifdef DEBUGSTREAM
-          printf("ERROR: input out of range");
+            printf("ERROR: input out of range");
 #endif /* ifdef DEBUGSTREAM */
-          check = 0;
-      } else {
+            check = 0;
+        } else {
 #ifdef DEBUGSTREAM
-          printf("Successful int read: %d\n", (int) lnum);
+            printf("Successful int read: %d\n", (int) lnum);
 #endif /* ifdef DEBUGSTREAM */
 
-          // number is valid
-          check = 1;
-          *(int *) type->value = (int) lnum;
-      }
-      break;
+            // number is valid
+            check = 1;
+            *(int *) type->value = (int) lnum;
+        }
+        break;
+    }
     case CHAR: {
         // CHAR CAN NEVER FAIL (except if it's an end of file)
         char c;
@@ -212,12 +221,15 @@ void streamIn(commonType *type, int* streamState) {
     }
     case REAL:
 //      printf("Enter a real: ");
+//      check = scanf("%f", buffer);
+//      *(float*)type->value = atof(buffer);
       check = scanf("%f", (float*)type->value);
       break;
   }
 
 #ifdef DEBUGSTREAM
   printf("scanf check is %d\n", check);
+  printf("Buffer is '%s'\n", buffer);
 #endif /* ifdef DEBUGSTREAM */
 
   // check if the scanf failed
