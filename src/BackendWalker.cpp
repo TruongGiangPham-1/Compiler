@@ -55,7 +55,6 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   mlir::Value initializedType; 
-  std::cout << tree->getTypeNode() << std::endl;
   // dynamic typecheck if lhs type exists, otherwise assign
   if (tree->getTypeNode()) {
     initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
@@ -257,10 +256,8 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
 
   // indexee isn't an expression. HACK
   if (tree->sym->index >= 0) {
-    std::cout << tree->sym->index << std::endl;
     indexee = codeGenerator.generateLoadArgument(tree->sym->index);
   } else {
-    std::cout << tree->sym->mlirName << std::endl;
     indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
 
