@@ -268,7 +268,6 @@ commonType* matrixMultiply(commonType* left, commonType* right) {
 }
 
 commonType* crossProduct(commonType* left, commonType* right) {
-  printf("\ncross product\n");
   list* lList = (list*)left->value;
   list* rList = (list*)right->value;
 

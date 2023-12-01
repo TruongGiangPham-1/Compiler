@@ -18,6 +18,3 @@ procedure main() returns integer {
 
   return 0;
 }
-
-  return 0;
-}
