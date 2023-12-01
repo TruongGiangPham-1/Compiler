@@ -210,6 +210,10 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
+            auto s = getPromotedTypeString(promotionTable, promoteTo, literalNode->evaluatedType);
+            if (s.empty()) {
+                throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
+            }
             auto typeCopy = getTypeCopy(promoteTo);
             literalNode->evaluatedType = typeCopy;  // to make sure it gets its own copy
             literalNode->evaluatedType->dims.clear();
