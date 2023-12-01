@@ -203,7 +203,7 @@ void deallocateCommonType(commonType* object) {
     }
   }
 
-#ifdef DEBUGMEMORYll
+#ifdef DEBUGMEMORY
   printf("Commontype deallocation success!\n");
 #endif /* ifdef DEBUGMEMORY */
 }
@@ -238,7 +238,7 @@ void appendList(list* list, commonType *value) {
   printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
 
-  list->values[list->currentSize] = value;
+  list->values[list->currentSize] = copyCommonType(value);
 
 #ifdef DEBUGTUPLE
   printf("appended to list at %p, %p\n", &list->values[list->currentSize], value);
