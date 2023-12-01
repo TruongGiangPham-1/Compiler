@@ -59,7 +59,7 @@ namespace gazprea {
                         throw SymbolError(tree->loc(), "tuple index out of bound");
                     }
                     tree->index --;  // mae is base 0 index
-                    tree->sym->index = tree->index;
+                    //tree->sym->index = tree->index;
                 }
 #ifdef DEBUG
                 std::cout << " index tuple " << tupleIDsym->getName() << " at index=" << tree->index <<std::endl;
