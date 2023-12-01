@@ -47,7 +47,7 @@ namespace gazprea {
                         throw SymbolError(tree->loc(), "this tupple id index not in tupple");
                     } else {
                         tree->index = tupleIDsym->tupleIndexMap[idCast->getName()];
-                        tree->sym->index = tree->index;
+                        //tree->sym->index = tree->index;
                     }
                 } else {
                     // index by integer
