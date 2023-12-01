@@ -210,6 +210,10 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
+            auto s = getPromotedTypeString(promotionTable, promoteTo, literalNode->evaluatedType);
+            if (s.empty()) {
+                throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
+            }
             auto typeCopy = getTypeCopy(promoteTo);
             literalNode->evaluatedType = typeCopy;  // to make sure it gets its own copy
             literalNode->evaluatedType->dims.clear();
@@ -402,7 +406,7 @@ namespace gazprea {
         if (vectNodeCast == nullptr) {
             // this is not a vector literal. but could be other vector nodes
             if (std::dynamic_pointer_cast<IDNode>(exprNode) || std::dynamic_pointer_cast<StrideNode>(exprNode) || std::dynamic_pointer_cast<ConcatNode>(exprNode)
-                      || std::dynamic_pointer_cast<RangeVecNode>(exprNode) || std::dynamic_pointer_cast<GeneratorNode>(exprNode)) {
+                      || std::dynamic_pointer_cast<RangeVecNode>(exprNode) || std::dynamic_pointer_cast<GeneratorNode>(exprNode) || std::dynamic_pointer_cast<ExprNode>(exprNode)) {
                 //
                 auto sizeVec= exprNode->evaluatedType->dims;  // vector of size
                 auto promoteTypeString= getPromotedTypeString(promotionTable, exprNode->evaluatedType, promoteTo);
@@ -786,8 +790,12 @@ namespace gazprea {
             if (promotedType->isMatrix(lType) && promotedType->isVector(tree->getExprNode()->evaluatedType)) {
                 throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
             }
-            promotedType->promoteVectorElements(lType, tree->getExprNode());
-            promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
+            if (rType->vectorOrMatrixEnum == NONE) {
+                promotedType->promoteLiteralToArray(lType, tree->getExprNode());
+            } else {
+                promotedType->promoteVectorElements(lType, tree->getExprNode());
+                promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
+            }
             auto typeCopy = promotedType->getTypeCopy(tree->getExprNode()->evaluatedType);  // copy the vectorLiteral's type into this node(mostly to copy the size attribute
             tree->evaluatedType = typeCopy;
             tree->getTypeNode()->evaluatedType = tree->evaluatedType;
@@ -891,8 +899,12 @@ namespace gazprea {
                         if (promotedType->isMatrix(lvalue->evaluatedType) && promotedType->isVector(tree->getRvalue()->evaluatedType)) {
                             throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
                         }
-                        promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
-                        promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
+                        if (rhsType->vectorOrMatrixEnum == NONE) {
+                            promotedType->promoteLiteralToArray(lvalue->evaluatedType, tree->getRvalue());
+                        } else {
+                            promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
+                            promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
+                        }
                         tree->evaluatedType = promotedType->getTypeCopy(tree->getRvalue()->evaluatedType);  // update the tree evaluated type with promoted
                         return nullptr;
                     }

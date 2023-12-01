@@ -1,0 +1,5 @@
+procedure main() returns integer {
+	integer[3, 2] a;
+    a = 'c';  // cannot promote char to int array
+	return 0;
+}
