@@ -813,6 +813,7 @@ namespace gazprea {
         else {  // normal implicit promotion
             tree->getTypeNode()->evaluatedType = rType;
             tree->evaluatedType = rType;
+            tree->sym->typeSym = tree->evaluatedType;
         }
         return nullptr;
     }
