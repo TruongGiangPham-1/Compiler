@@ -4,6 +4,7 @@
 #include "Operands/BINOP.h"
 #include "Operands/UNARYOP.h"
 #include "Types/TYPES.h"
+#include "run_time_errors.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -238,6 +239,9 @@ void appendList(list* list, commonType *value) {
   printf("List currently holding %p  at index %d address %p\n", tuple->values[tuple->currentSize], tuple->currentSize, &tuple->values[tuple->currentSize]);
 #endif
 
+  if (list->currentSize +1 >= list->size) {
+    RuntimeOPError("Writing past array");
+  }
   list->values[list->currentSize] = value;
 
 #ifdef DEBUGTUPLE
