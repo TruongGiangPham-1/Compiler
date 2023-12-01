@@ -625,7 +625,14 @@ mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
 }
 
 void BackEnd::deallocateObjects() {
+  for (auto label : **(objectLabels.end() - 1)) {
+    mlir::LLVM::LLVMFuncOp deallocateObject =
+        module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
 
+    auto object = this->generateLoadIdentifier(label);
+
+    builder->create<mlir::LLVM::CallOp>(loc, deallocateObject, object);
+  }
 }
 // don't need the types for much, just set stuff up so we know what to cast to
 mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid) {
