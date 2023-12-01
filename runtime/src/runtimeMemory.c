@@ -240,8 +240,10 @@ void appendList(list* list, commonType *value) {
 #endif
 
   if (list->currentSize +1 >= list->size) {
+    printCommonType(value);
     RuntimeOPError("Writing past array");
   }
+
   list->values[list->currentSize] = value;
 
 #ifdef DEBUGTUPLE
