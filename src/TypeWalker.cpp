@@ -863,9 +863,17 @@ namespace gazprea {
                 }
             }
 
-            else
-                throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+            else if(std::dynamic_pointer_cast<IndexNode>(exprList->children[0])) {
+                auto lvalue = std::dynamic_pointer_cast<IDNode>(std::dynamic_pointer_cast<IndexNode>(exprList->children[0])->children[0]);
+                auto symbol = lvalue->sym;
+                if (symbol != nullptr and symbol->qualifier == QUALIFIER::CONST) {
+                    throw AssignError(tree->loc(), "Cannot assign to const");
+                }
+            }
 
+            else {
+                throw SyntaxError(tree->loc(), "incorrect lvalue");
+            }
 
             if (rhsType != nullptr) {
                 if (tree->getLvalue()->children[0]->evaluatedType == nullptr) {
@@ -923,13 +931,32 @@ namespace gazprea {
                     if (rhsType->getBaseTypeEnumName() == "tuple") {
                         throw TypeError(tree->loc(), "Cannot assign tuple to tuple index");
                     }
+                    if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
+                        tree->evaluatedType = tupleIndexNode->evaluatedType;  //
+                        promotedType->promoteIdentityAndNull(tupleIndexNode->evaluatedType, tree->getRvalue());
+                    }
                     if (tree->getRvalue()->evaluatedType->getBaseTypeEnumName() != tupleIndexNode->evaluatedType->getBaseTypeEnumName())
                         tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), tupleIndexNode, tree);
                     else
                         tree->evaluatedType = tree->getRvalue()->evaluatedType;
                 }
-                else
-                    throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+                else if (std::dynamic_pointer_cast<IndexNode>(exprList->children[0])) {
+                   auto vecMatrixIndexNode = std::dynamic_pointer_cast<IndexNode>(exprList->children[0]);
+                    if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
+                        tree->evaluatedType = vecMatrixIndexNode->evaluatedType;  //
+                        promotedType->promoteIdentityAndNull(vecMatrixIndexNode->evaluatedType, tree->getRvalue());
+                    }
+                    if (rhsType->getBaseTypeEnumName() == "tuple") {
+                        throw TypeError(tree->loc(), "Cannot assign tuple to vector index");
+                    }
+                    if (tree->getRvalue()->evaluatedType->getBaseTypeEnumName() != vecMatrixIndexNode->evaluatedType->getBaseTypeEnumName())
+                        tree->evaluatedType = promotedType->getType(promotedType->promotionTable, tree->getRvalue(), vecMatrixIndexNode, tree);
+                    else
+                        tree->evaluatedType = tree->getRvalue()->evaluatedType;
+                }
+                else {
+                    throw SyntaxError(tree->loc(), "incorrect lvalue");
+                }
             }
         }
         else {
@@ -948,9 +975,13 @@ namespace gazprea {
                     auto lvalue = std::dynamic_pointer_cast<TupleIndexNode>(exprList->children[i]);
                     leftTypeString = lvalue->evaluatedType->getBaseTypeEnumName();
                 }
+                else if (std::dynamic_pointer_cast<IndexNode>(exprList->children[i])) {
+                    auto lvalue = std::dynamic_pointer_cast<IndexNode>(exprList->children[i]);
+                    leftTypeString = lvalue->evaluatedType->getBaseTypeEnumName();
+                }
 
                 if (leftTypeString.empty()) {
-                    throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+                    throw SyntaxError(tree->loc(), "incorrect lvalue");
                 }
 
                 auto rightTypeString = rhsType->tupleChildType[i].second->getBaseTypeEnumName();

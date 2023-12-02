@@ -107,8 +107,8 @@ namespace gazprea {
         std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
         std::any visitCast(std::shared_ptr<CastNode> tree) override;
 
-        std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree);
-        std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree);
+        std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
+        std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
 
 
 
