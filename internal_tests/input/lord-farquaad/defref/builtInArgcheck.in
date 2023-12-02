@@ -1,0 +1,7 @@
+procedure main() returns integer {  // DEFREF PASS CHECK ONLY FOR ARG SIZE
+    integer a = rows([[1,2], [1, 2]], []);  // each builtin must have exactly 1 arg
+    integer b= columns();  // error , no arg
+    reverse()-> std_output;  // error, no arg
+    format() -> std_output;  // error, no arg
+    return 0;
+}

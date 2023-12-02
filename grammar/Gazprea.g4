@@ -96,7 +96,7 @@ procedureCall
 
 callable_ids :
     RESERVED_REVERSE |
-    RESERVED_REVERSE |
+    RESERVED_COLUMNS |
     RESERVED_LENGTH |
     RESERVED_ROWS |
     RESERVED_FORMAT |

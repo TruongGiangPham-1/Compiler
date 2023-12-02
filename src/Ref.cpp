@@ -291,6 +291,10 @@ namespace gazprea {
                 std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
 #endif
             }
+            if (cast->isBuiltIn() && tree->children.size() != 1) {
+                // every builtin function must have an argument
+                throw CallError(tree->loc(), "builtin function must have 1 argument");
+            }
             tree->scope = currentScope;
             // reference to the function Symbol that we are calling. can get all arguments using
             // tree->functionRef->orderedArgs
