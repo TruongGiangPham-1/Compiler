@@ -94,8 +94,18 @@ procedureCall
     | RESERVED_CALL RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')' ';'    #streamStateProcedureCall
     ;
 
+callable_ids :
+    RESERVED_REVERSE |
+    RESERVED_REVERSE |
+    RESERVED_LENGTH |
+    RESERVED_ROWS |
+    RESERVED_FORMAT |
+    ID
+    ;
+
+
 functionCall
-    : ID '(' (expression (',' expression)*)? ')'        #normalFunctionCall
+    : callable_ids '(' (expression (',' expression)*)? ')'        #normalFunctionCall
     // I'm commenting these out because we will get syntax errors if someone calls these with different arguments,
     //| (RESERVED_LENGTH | RESERVED_ROWS | RESERVED_COLUMNS | RESERVED_REVERSE | RESERVED_FORMAT) '(' expression ')'
     | RESERVED_STREAM_STATE '(' RESERVED_STD_INPUT ')'  #streamStateFunctionCall
