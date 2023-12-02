@@ -24,6 +24,8 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     globalScope->defineType(std::make_shared<AdvanceType>("identity"));
     globalScope->defineType(std::make_shared<AdvanceType>("null"));
 
+    // push all the builtin function symbol,make their return type int for now, can change in typecheck
+
 
     // simulate typdef  resolveType will walk up the type chain
     //globalScope->defineType(std::make_shared<AdvanceType>("integer", "quack"));
@@ -39,8 +41,25 @@ void Def::defineBuiltins() {
     auto resolvedInt = symtab->globalScope->resolveType("integer");
 
     auto streamState = std::make_shared<FunctionSymbol>("stream_state", "Global", symtab->globalScope->resolveType("integer"), symtab->globalScope, -1, true);
-    symtab->globalScope->define(streamState);
+    auto length = std::make_shared<FunctionSymbol>("length", "global", resolvedInt, symtab->globalScope, -1, true);
+    auto rows = std::make_shared<FunctionSymbol>("rows", "global", resolvedInt, symtab->globalScope, -1 ,true);
+    auto columns = std::make_shared<FunctionSymbol>("columns", "global", resolvedInt, symtab->globalScope, -1, true);
+    auto reverse = std::make_shared<FunctionSymbol>("reverse", "global", resolvedInt, symtab->globalScope, -1, true);
+    auto format = std::make_shared<FunctionSymbol>("format", "global", resolvedInt, symtab->globalScope, -1, true);
 
+
+    streamState->functypeENUM = FUNC_SSTATE;
+    length->functypeENUM = FUNC_LENGTH;
+    rows->functypeENUM = FUNC_ROW;
+    columns->functypeENUM = FUNC_COLUMN;
+    reverse->functypeENUM = FUNC_REVERSE;
+    format->functypeENUM = FUNC_FORMAT;
+    symtab->globalScope->define(streamState);
+    symtab->globalScope->define(length);
+    symtab->globalScope->define(rows);
+    symtab->globalScope->define(columns);
+    symtab->globalScope->define(reverse);
+    symtab->globalScope->define(format);
     // EXAMPLE BUILTIN FUNCTION (TODO: delete once we have a proper stdlib)
     // define a vustom function silly() that returns an integer (no args)
     // to define args, use sillyDef->orderedArgs.push_back();
