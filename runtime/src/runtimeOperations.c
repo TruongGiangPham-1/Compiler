@@ -38,6 +38,9 @@ commonType* indexCommonType(commonType* indexee, commonType* indexor);
 // turn into bool for llvm control flow
 bool commonTypeToBool(commonType* val);
 
+commonType* __rows(commonType* matrix);
+commonType* __columns(commonType* matrix);
+
 
 int intBINOP(int l, int r, enum BINOP op) {
   switch (op) {
@@ -200,6 +203,100 @@ list* stride(list* l, int stride) {
   return newList;
 }
 
+
+commonType* matrixMultiply(commonType* left, commonType* right) {
+  list* lList = (list*)left->value;
+  list* rList = (list*)right->value;
+
+  commonType* lCols = __columns(left);
+  commonType* lRows = __rows(left);
+
+  commonType* rCols = __columns(right);
+  commonType* rRows = __rows(right);
+
+  int oneInit = 1;
+  commonType* one = allocateCommonType(&oneInit, INTEGER);
+
+  int zero = 0;
+
+  commonType* row = allocateCommonType(&zero, INTEGER) ;
+  list* rowList = allocateListFromCommon(lRows);
+
+  while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LTHAN))) {
+
+    commonType* col  = allocateCommonType(&zero, INTEGER);
+    list* colList = allocateListFromCommon(rCols);
+
+    while (commonTypeToBool(performCommonTypeBINOP(col, rCols, LTHAN))) {
+
+      commonType* newItem = allocateCommonType(&zero, INTEGER);
+      commonType* k = allocateCommonType(&zero, INTEGER);
+          
+      while (commonTypeToBool(performCommonTypeBINOP(k, rRows, LTHAN))) {
+
+        commonType *leftItem = indexCommonType(indexCommonType(left, row), k);
+        commonType *rightItem = indexCommonType(indexCommonType(right, k), col);
+
+        commonType* product = performCommonTypeBINOP(leftItem, rightItem, MULT);
+
+        assignByReference(newItem, performCommonTypeBINOP(newItem, product, ADD));
+
+        assignByReference(k, performCommonTypeBINOP(k, one, ADD));
+      }
+
+      deallocateCommonType(k);                   
+      appendList(colList, newItem);
+
+      assignByReference(col, performCommonTypeBINOP(col, one, ADD));
+    }
+    
+    appendList(rowList, allocateCommonType(&colList, VECTOR));
+    assignByReference(row, performCommonTypeBINOP(row, one, ADD));
+    deallocateCommonType(col);
+  }
+
+  deallocateCommonType(row);
+  deallocateCommonType(one);
+
+  deallocateCommonType(lCols);
+  deallocateCommonType(lRows);
+
+  deallocateCommonType(rCols);
+  deallocateCommonType(rRows);
+
+  return allocateCommonType(&rowList, VECTOR);
+}
+
+commonType* crossProduct(commonType* left, commonType* right) {
+  list* lList = (list*)left->value;
+  list* rList = (list*)right->value;
+
+  int zero = 0;
+  commonType* sum = allocateCommonType(&zero, INTEGER);
+
+  for (int i = 0 ; i < lList->currentSize ; i ++) {
+    commonType* leftItem = lList->values[i];
+    commonType* rightItem = rList->values[i];
+
+    commonType* result = performCommonTypeBINOP(leftItem, rightItem, MULT);
+    assignByReference(sum, performCommonTypeBINOP(sum, result, ADD));
+    deallocateCommonType(result);
+  }
+
+  return sum;
+}
+
+
+/* covers matrix multiply + dot product. General
+ */
+commonType* dotProduct(commonType* left, commonType* right) {
+  if (isCompositeType(((list*)left->value)->values[0]->type)) {
+    return matrixMultiply(left, right);
+  } else {
+    return crossProduct(left, right);
+  }
+}
+
 commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
   if (!isCompositeType(l->type) && !isCompositeType(r->type)) {
     UnsupportedTypeError("Reached list binop, but neither operand is listable type");
@@ -240,6 +337,7 @@ commonType* listBINOP(commonType* l, commonType* r, enum BINOP op) {
       commonType *result = allocateCommonType(&mlist, resultingType);
       return result;
     }
+
     default:
     RuntimeOPError("Unknown binary operation between lists");
   }
@@ -331,6 +429,11 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
   if (op == RANGE) {
     return vectorFromRange(left, right);
   }
+
+  if (op == DOT_PROD) {
+    return dotProduct(left, right);
+  }
+
 
   // god is dead and i have killed him
   if (!isComparison(op)) {
@@ -492,6 +595,12 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 
 // assume we are indexing a tuploe item
 commonType* indexCommonType(commonType* indexee, commonType* indexor) {
+  // cheat for easy dot product. This will never actually occur with scalar-to-scalar
+  // should be caught by typecheck if they try
+  if (!isCompositeType(indexee->type)) {
+    return indexee;
+  }
+
   list* list = indexee->value;
   return list->values[*(int*)indexor->value];
 }
