@@ -1,31 +1,27 @@
 procedure main() returns integer {
-  boolean b;
+  real x;
   integer i;
 
-  // input: T
-  b <- std_input;
-  b -> std_output;
+  // input: 99999999999999999999999999999999999999999999999999999.9999999999999 (inf)
+  x <- std_input;
+  x -> std_output;
+  ' ' -> std_output;
   i = stream_state(std_input);
   i -> std_output;
   '\n' -> std_output;
 
-  // input: F
-  b <- std_input;
-  b -> std_output;
-  i = stream_state(std_input);
-  i -> std_output;
-  '\n' -> std_output;
-
-  // input: penis
-  b <- std_input;
-  b -> std_output;
+  // input: 12.5
+  x <- std_input;
+  x -> std_output;
+  ' ' -> std_output;
   i = stream_state(std_input);
   i -> std_output;
   '\n' -> std_output;
 
   // EOF
-  b <- std_input;
-  b -> std_output;
+  x <- std_input;
+  x -> std_output;
+  ' ' -> std_output;
   i = stream_state(std_input);
   i -> std_output;
   '\n' -> std_output;
