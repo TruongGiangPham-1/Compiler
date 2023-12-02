@@ -794,7 +794,8 @@ namespace gazprea {
         //functionCall : ID '(' (expression (',' expression)*)? ')'
         // TODO: how to determine if theh function is normal or not? i guess we do that in other passes when resolving name
         std::shared_ptr<CallNode> callNode = std::make_shared<CallNode>(ctx->getStart()->getLine());
-        std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->ID()->getSymbol()->getText());
+        std::shared_ptr<Symbol> fcallName = std::make_shared<Symbol>(ctx->callable_ids()->getText());
+        std::cout << ctx->callable_ids()->getText() << std::endl;
 
         callNode->CallName = fcallName;
         for (auto expr: ctx->expression()) {
