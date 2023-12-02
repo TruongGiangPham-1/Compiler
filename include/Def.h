@@ -10,6 +10,7 @@
 #include "CompileTimeExceptions.h"
 #include "ScopedSymbol.h"
 #include "AdvanceType.h"
+#include "FunctionCallTypes/FuncCallType.h"
 
 namespace gazprea {
     class Def : public ASTWalker {
