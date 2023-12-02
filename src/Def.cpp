@@ -24,6 +24,15 @@ Def::Def(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirID) : symt
     globalScope->defineType(std::make_shared<AdvanceType>("identity"));
     globalScope->defineType(std::make_shared<AdvanceType>("null"));
 
+    // push all the builtin function symbol,make their return type int for now, can change in typecheck
+    auto intType = globalScope->resolveType("integer");
+    globalScope->define(std::make_shared<FunctionSymbol>("length", "funcScopeLength", intType, globalScope, -1));
+    globalScope->define(std::make_shared<FunctionSymbol>("rows", "funcScopeRow", intType, globalScope, -1));
+    globalScope->define(std::make_shared<FunctionSymbol>("columns", "funcScopeCol", intType, globalScope, -1));
+    globalScope->define(std::make_shared<FunctionSymbol>("reverse", "funcScopeReverse", intType, globalScope, -1));
+    globalScope->define(std::make_shared<FunctionSymbol>("format", "funcScopeFormat", intType, globalScope, -1));
+    globalScope->define(std::make_shared<FunctionSymbol>("stream_state", "funcScopeSSTate", intType, globalScope, -1));
+
 
     // simulate typdef  resolveType will walk up the type chain
     //globalScope->defineType(std::make_shared<AdvanceType>("integer", "quack"));
