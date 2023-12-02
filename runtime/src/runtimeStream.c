@@ -1,15 +1,13 @@
 #include <errno.h>
 #include <limits.h>
 
-//#define DEBUGSTREAM
+#define DEBUGSTREAM
 //#define DEBUGPRINT
 
 // global variable streamBuffer for streamIn
-// this is a buffer for the rewind feature
 #define MAX_REWIND_BUFFER_SIZE 1024
-char STREAM_REWIND_BUFFER[MAX_REWIND_BUFFER_SIZE] = {0};
-int BUF_HEAD = 0;
-int BUF_TAIL = 0;
+char STREAM_BUF[MAX_REWIND_BUFFER_SIZE] = {0};
+int BUFFER_PTR = 0;
 bool LAST_STREAMIN_ERR = false;
 
 enum StreamState {
@@ -24,8 +22,11 @@ void readToBuf();
 // read from the rewind buffer into the corresponding type.
 enum StreamState readFromBuf(commonType* type);
 void pushToBuf(char c);
-// write STREAM_REWIND_BUFFER into a zero-indexed newbuf
-void normalizeRewindBuffer(char newbuf[1024]);
+// push the unread chars back into stdin with ungetc
+void resetBuf(int charsRead);
+// helper function
+bool isWhitespace(char c);
+
 void printType(commonType *type, bool nl) {
     switch (type->type) {
         case INTEGER:
@@ -119,14 +120,17 @@ void handleStreamState(int* state, int newState, commonType *type) {
         // in all other cases, set the state to the integer value of the streamStateErr
         *state = newState;
     }
+
+    // set the value of *type->value to the null value if there was an error
+    if (newState == STREAM_STATE_ERR || newState == STREAM_STATE_EOF) {
+        setToNullValue(type);
+    }
 }
 
 
 void streamIn(commonType *type, int* streamStatePtr) {
 #ifdef DEBUGSTREAM
-    char buf[1024] = {0};
-    normalizeRewindBuffer(buf);
-    printf("streamIn with curr buf '%s'\n", buf);
+    printf("streamIn with curr buf '%s'\n", STREAM_BUF);
 #endif /* ifdef DEBUGSTREAM */
 
     if (!LAST_STREAMIN_ERR) {
@@ -151,77 +155,30 @@ void streamIn(commonType *type, int* streamStatePtr) {
     }
 }
 
-// TODO: handle buffer rewind size.
 void readToBuf() {
-    // read individual chars from stdin into the rewind buffer
-    // keep leading whitespace until we hit a non-whitespace char
-    // after that, read until we hit a whitespace char
-    char c;
-    bool leadingWhitespace = true;
+    // read up to 1024 chars into the buffer
+    // stop when we hit EOF or until buffer is full
 
-    // debug vals
-    int whitespaceCount = 0;
-    int nonWhitespaceCount = 0;
-
-    // read until we hit a non-whitespace char
-    while (true) {
-        c = getchar();
+    for (int i = 0; i < MAX_REWIND_BUFFER_SIZE; i++) {
+        char c = getchar();
         if (c == EOF) {
             // if we hit EOF, we're done
-            return;
-        } else if (c == ' ' || c == '\t' || c == '\n') {
-            // if we hit whitespace, keep reading
-            pushToBuf(c);
-
-            // debug
-            whitespaceCount++;
-        } else {
-            // if we hit a non-whitespace char, stop reading
+            STREAM_BUF[i] = '\0';
             break;
+        } else {
+            // otherwise, read the char
+            pushToBuf(c);
         }
     }
-
-    // read until we hit a whitespace char
-    while (c != ' ' && c != '\t' && c != '\n') {
-        // if we hit EOF, we're done
-        if (c == EOF) {
-            return;
-        }
-
-        // otherwise, read the char
-        pushToBuf(c);
-        c = getchar();
-
-        // debug
-        nonWhitespaceCount++;
-    }
-
-    // add trailing whitespace to buffer
-    pushToBuf(c);
-
 #ifdef DEBUGSTREAM
-    printf("Read %d non-whitespace chars and %d whitespace chars\n", nonWhitespaceCount, whitespaceCount);
-    printf("Buffer is now '%s'\n", STREAM_REWIND_BUFFER);
+    printf("Read %lu chars into buffer\n", strlen(STREAM_BUF));
+    printf("Buffer is now '%s'\n", STREAM_BUF);
 #endif /* ifdef DEBUGSTREAM */
 }
 
 void pushToBuf(char c) {
-    STREAM_REWIND_BUFFER[BUF_TAIL] = c;
-    BUF_TAIL = (BUF_TAIL + 1) % MAX_REWIND_BUFFER_SIZE;
-}
-
-void normalizeRewindBuffer(char newBuf[1024]) {
-    // write STREAM_REWIND_BUFFER into a zero-indexed newbuf
-    // this is so we can use strtol and other functions on it
-    int i = BUF_HEAD;
-    int j = 0;
-    while (i != BUF_TAIL) {
-        newBuf[j] = STREAM_REWIND_BUFFER[i];
-        i = (i + 1) % MAX_REWIND_BUFFER_SIZE;
-        j++;
-    }
-    newBuf[j] = '\0';
-
+    STREAM_BUF[BUFFER_PTR] = c;
+    BUFFER_PTR++;
 }
 
 // WARNING: this function is very ugly
@@ -229,108 +186,113 @@ enum StreamState readFromBuf(commonType* type) {
     // assume STREAM_REWIND_BUFFER is populated (so not EOF)
     // now, read a value from the buffer and store it into the *type
 
-    // since the buffer is circular, we first have to "normalize" it into a zero-indexed array
-    char buf[2014];
-    normalizeRewindBuffer(buf);
-
 #ifdef DEBUGSTREAM
-    printf("readFromBuf: buf = '%s'\n", buf);
+    printf("readFromBuf: STREAM_BUF = '%s'\n", STREAM_BUF);
 #endif /* ifdef DEBUGSTREAM */
+
+    int check = 0;
+    int charsRead = 0;
 
     switch (type->type) {
         case INTEGER: {
-            // convert string to an int
-            // https://stackoverflow.com/a/18544436
-            long lnum;
-            char *end;
-            errno = 0;
-
-            lnum = strtol(buf, &end, 10);        //10 specifies base-10
-            if (end == buf) {
-                // no digits consumed
+            int n;
+            check = sscanf(STREAM_BUF, "%d%n", &n, &charsRead);
+            if (check == 0) {
+                // if we didn't read anything, we hit EOF
 #ifdef DEBUGSTREAM
-                printf("ERROR (int): no digits were found\n");
+                printf("ERROR (int): didn't successfully read an int\n");
 #endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
-            } else if (*end != '\0') {
-                // extra characters at the end
-#ifdef DEBUGSTREAM
-                printf("ERROR (int): extra characters at the end\n");
-#endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
-            } else if (((lnum == LONG_MAX || lnum == LONG_MIN) && errno == ERANGE) ||
-                       (lnum > INT_MAX) || (lnum < INT_MIN)) {
-                // number is out of range
-#ifdef DEBUGSTREAM
-                printf("ERROR (int): input out of range");
-#endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
+                return STREAM_STATE_EOF;
             } else {
+                // success
 #ifdef DEBUGSTREAM
-                printf("OK (int): Successful int read: %d\n", (int) lnum);
+                printf("OK (int): Scanned '%d', with '%d' chars\n", n, charsRead);
 #endif /* ifdef DEBUGSTREAM */
-
-                // number is valid
-                *(int *) type->value = (int) lnum;
+                *(int*)type->value = n;
+                resetBuf(charsRead);
                 return STREAM_STATE_OK;
             }
-            break;
         }
-        case CHAR: {
-            // CHAR CAN NEVER FAIL (except if it's an end of file)
-            // BUT: we assume the buffer is nonempty so this must succeed.
-            *(char*)type->value = buf[0];
-#ifdef DEBUGSTREAM
-            printf("OK (char): Scanned '%c'\n", *(char*)type->value);
-#endif /* ifdef DEBUGSTREAM */
-            break;
-        }
-        case BOOLEAN: {
-//      printf("Enter a boolean value (T/F): ");
-            // scan char. If it's T, true, else false
-            if (strcmp(buf, "T") == 0) {
-                *(bool*)type->value = true;
-            } else if (strcmp(buf, "F") == 0) {
-                *(bool *) type->value = false;
-            } else {
-#ifdef DEBUGSTREAM
-                printf("ERROR (bool): Invalid boolean value '%s'\n", buf);
-#endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
-            }
-#ifdef DEBUGSTREAM
-            printf("OK (bool): Scanned '%s'\n", *(bool*)type->value ? "T" : "F");
-#endif /* ifdef DEBUGSTREAM */
-            return STREAM_STATE_OK;
-            break;
-        }
-        case REAL: {
-            // convert string to a float
-            // https://stackoverflow.com/a/18544436
-            char *end;
-            errno = 0;
-            float fnum = strtof(buf, &end);        //10 specifies base-10
-            if (*end != '\0') {
-                // extra characters at the end
-#ifdef DEBUGSTREAM
-                printf("ERROR (real): extra characters at the end\n");
-#endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
-            } else if (errno == ERANGE) {
-                // number is out of range
-#ifdef DEBUGSTREAM
-                printf("ERROR (real): input out of range");
-#endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
-            } else {
-#ifdef DEBUGSTREAM
-                printf("OK (real): Successful real read: %g\n", fnum);
-#endif /* ifdef DEBUGSTREAM */
-                // number is valid
-                *(float *) type->value = fnum;
-                return STREAM_STATE_OK;
-            }
-            break;
-        }
+//
+//        case CHAR: {
+//            // CHAR CAN NEVER FAIL (except if it's an end of file)
+//            // BUT: we assume the buffer is nonempty so this must succeed.
+//            *(char*)type->value = buf[0];
+//#ifdef DEBUGSTREAM
+//            printf("OK (char): Scanned '%c'\n", *(char*)type->value);
+//#endif /* ifdef DEBUGSTREAM */
+//            return STREAM_STATE_OK;
+//        }
+//        case BOOLEAN: {
+////      printf("Enter a boolean value (T/F): ");
+//            // scan char. If it's T, true, else false
+//            if (strcmp(buf, "T") == 0) {
+//                *(bool*)type->value = true;
+//            } else if (strcmp(buf, "F") == 0) {
+//                *(bool *) type->value = false;
+//            } else {
+//#ifdef DEBUGSTREAM
+//                printf("ERROR (bool): Invalid boolean value '%s'\n", buf);
+//#endif /* ifdef DEBUGSTREAM */
+//                return STREAM_STATE_ERR;
+//            }
+//#ifdef DEBUGSTREAM
+//            printf("OK (bool): Scanned '%s'\n", *(bool*)type->value ? "T" : "F");
+//#endif /* ifdef DEBUGSTREAM */
+//            BUF_HEAD = (BUF_HEAD + 1) % MAX_REWIND_BUFFER_SIZE;
+//            return STREAM_STATE_OK;
+//        }
+//        case REAL: {
+//            // convert string to a float
+//            // https://stackoverflow.com/a/18544436
+//            char *end;
+//            errno = 0;
+//            float fnum = strtof(buf, &end);        //10 specifies base-10
+//            if (!isWhitespace(*end) && *end != '\0') {
+//                // extra characters at the end
+//#ifdef DEBUGSTREAM
+//                printf("ERROR (real): extra characters at the end)\n");
+//#endif /* ifdef DEBUGSTREAM */
+//                return STREAM_STATE_ERR;
+//            } else if (errno == ERANGE) {
+//                // number is out of range
+//#ifdef DEBUGSTREAM
+//                printf("ERROR (real): input out of range");
+//#endif /* ifdef DEBUGSTREAM */
+//                // TODO: should be MAX_FLOAT or MIN_FLOAT
+//                return STREAM_STATE_ERR;
+//            } else {
+//#ifdef DEBUGSTREAM
+//                printf("OK (real): Successful real read: %g\n", fnum);
+//#endif /* ifdef DEBUGSTREAM */
+//                // number is valid
+//                *(float *) type->value = fnum;
+//
+//                // advance stream buffer
+//                int toAdvance = end - buf;
+//                BUF_HEAD = (BUF_HEAD + toAdvance) % MAX_REWIND_BUFFER_SIZE;
+//
+//                return STREAM_STATE_OK;
+//            }
+//        }
+        default:
+            UnsupportedTypeError("Attempting to read a type not recognized by the backend (this happens when type enums are bad)");
+            return STREAM_STATE_ERR;
     }
+}
+
+void resetBuf(int charsRead) {
+    // push the unread chars back into stdin with ungetc
+#ifdef DEBUGSTREAM
+    printf("resetBuf: pushing %d char(s) back into stdin: '%s'\n", BUFFER_PTR-charsRead, STREAM_BUF+charsRead);
+#endif /* ifdef DEBUGSTREAM */
+    for (int i = charsRead; i < BUFFER_PTR; i++) {
+        ungetc(STREAM_BUF[i], stdin);
+    }
+    STREAM_BUF[0] = '\0';
+    BUFFER_PTR = 0;
+}
+
+bool isWhitespace(char c) {
+    return c == ' ' || c == '\t' || c == '\n';
 }
