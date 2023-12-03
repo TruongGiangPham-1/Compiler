@@ -673,11 +673,54 @@ commonType* __reverse(commonType* vector)  {
   list* mlist = (list*)vector->value;
   list* newList = allocateList(mlist->currentSize);
 
-  for (int i = mlist->currentSize ; i >= 0 ; i--) {
+  for (int i = mlist->currentSize - 1; i >= 0 ; i--) {
     appendList(newList,copyCommonType(mlist->values[i]));
   }
 
   return allocateCommonType(&newList, VECTOR);
+}
+
+commonType* __format(commonType* value) {
+  int len;
+  char* charArr;
+  switch (value->type)  {
+    case INTEGER: 
+    {
+      len = snprintf(NULL, 0, "%d", *(int*)value->value);
+      snprintf(charArr, len+1,"%d", *(int*)value->value);
+      break;
+    }
+    case REAL:
+    {
+      len = snprintf(NULL, 0, "%g", *(float*)value->value);
+      snprintf(charArr, len+1, "%g", *(float*)value->value);
+      break;
+    }
+    case CHAR:
+    {
+      len = 1;
+      charArr = malloc(sizeof(char) * 2);
+      charArr[0] = *(char*)value->value;
+      break;
+    }
+    case BOOLEAN:
+    {
+      len = 1;
+      charArr = malloc(sizeof(char) * 2);
+      charArr[0] = *(bool*)value->value == true ? 'T' : 'F';
+      break;
+    }
+    default:
+    RuntimeOPError("Trying to stringify unstringable type");
+  }
+
+  list* newList = allocateList(len);
+  for (int i = 0; i < len ; i++) {
+    commonType* newChar = allocateCommonType(&charArr[i], CHAR);
+    appendList(newList, newChar);
+  }
+
+  return allocateCommonType(&newList, STRING);
 }
 
 commonType* allocateFromRange(commonType* lower, commonType* upper) {

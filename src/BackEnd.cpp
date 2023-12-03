@@ -229,7 +229,10 @@ void BackEnd::setupCommonTypeRuntime() {
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__length",
                                             lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__reverse", lengthType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__format", lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__stream_state", streamStateFunctionType);
+
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "indexCommonType",
                                             indexCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "assignByReference",
