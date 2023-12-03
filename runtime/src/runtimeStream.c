@@ -235,7 +235,7 @@ enum StreamState readFromBuf(commonType* type) {
 #ifdef DEBUGSTREAM
             printf("OK (bool): Scanned '%s'\n", *(bool*)type->value ? "T" : "F");
 #endif /* ifdef DEBUGSTREAM */
-            resetBuf(1);
+            resetBuf(charsRead);
             return STREAM_STATE_OK;
         }
         case REAL: {
