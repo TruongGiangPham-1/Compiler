@@ -86,9 +86,12 @@ namespace gazprea {
         } else if (isMatrix(type)) {
             std::cout << type->getBaseTypeEnumName() << " matrix\n";
         } else {
-            if (type->vectorOrMatrixEnum == NONE) {
+            if (isScalar(type)) {
                 std::cout << type->getBaseTypeEnumName() << " base\n";
+            } else if (isEmptyArrayLiteral(type)) {
+                std::cout << " empty\n";
             }
+
         }
     }
     // just creates Vector Type or Matrix TYpe  given base type
@@ -473,6 +476,12 @@ namespace gazprea {
         }
         // promote each vector elements
         for (auto &child: vectNodeCast->getElements()) {
+            if (isEmptyArrayLiteral(child->evaluatedType)) {
+                auto vectorType = createArrayType(promoteTo->getBaseTypeEnumName(), VECTOR);
+                child->evaluatedType = vectorType;
+                continue;
+            }
+
             if (child->evaluatedType->vectorOrMatrixEnum == VECTOR) {
                 // this means that vector is recursive
                 if (child->evaluatedType->baseTypeEnum == VECTOR) throw SyntaxError(exprNode->loc(), "invalid matrix");
@@ -496,8 +505,10 @@ namespace gazprea {
             }
         }
         // update the root node's evaluated type
-        for (int i = 0; i < vectNodeCast->evaluatedType->vectorInnerTypes.size(); i++) {
-            vectNodeCast->evaluatedType->vectorInnerTypes[i] = getTypeCopy(vectNodeCast->getElement(i)->evaluatedType);
+        vectNodeCast->evaluatedType->vectorInnerTypes.clear();
+        for (int i = 0; i < vectNodeCast->getSize(); i++) {
+            //vectNodeCast->evaluatedType->vectorInnerTypes[i] = getTypeCopy(vectNodeCast->getElement(i)->evaluatedType);
+            vectNodeCast->evaluatedType->vectorInnerTypes.push_back( getTypeCopy(vectNodeCast->getElement(i)->evaluatedType));
         }
     }
     /*
@@ -1050,6 +1061,11 @@ namespace gazprea {
         } else {
             throw TypeError(tree->loc(), "Cannot stream out unknown type");
         }
+#ifdef DEBUG
+
+        std::cout << "in streamout, evaltype=";
+        promotedType->printTypeClass(tree->evaluatedType);
+#endif
         return nullptr;
     }
 
@@ -1207,8 +1223,9 @@ namespace gazprea {
 
         tree->evaluatedType->dims.push_back(tree->getSize());  // the row size of this vector
         if (tree->getElement(0)->evaluatedType->vectorOrMatrixEnum == VECTOR) {  // pul column size of there is any
-            assert(!tree->getElement(0)->evaluatedType->dims.empty());
-            tree->evaluatedType->dims.push_back(tree->getElement(0)->evaluatedType->dims[0]);  // TODO:
+            //assert(!tree->getElement(0)->evaluatedType->dims.empty());
+            //tree->evaluatedType->dims.push_back(tree->getElement(0)->evaluatedType->dims[0]);  // TODO:
+
         }
         // TODO: make sure that matrix element must be vector
         return nullptr;
