@@ -61,6 +61,8 @@ public:
                                              mlir::Value right, BINOP op);
 
   mlir::Value cast(mlir::Value from, TYPE toType);
+  void normalize(mlir::Value matrix);
+
   mlir::Value cast(mlir::Value from, mlir::Value to);
 
   void appendCommon(mlir::Value destination, mlir::Value item);
