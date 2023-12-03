@@ -841,7 +841,7 @@ namespace gazprea {
             if (promotedType->isMatrix(lType) && promotedType->isVector(tree->getExprNode()->evaluatedType)) {
                 throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
             }
-            if (rType->vectorOrMatrixEnum == NONE) {
+            if (rType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rType)) {
                 promotedType->promoteLiteralToArray(lType, tree->getExprNode());
             } else {
                 promotedType->promoteVectorElements(lType, tree->getExprNode());
@@ -1176,6 +1176,10 @@ namespace gazprea {
 
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        if (tree->getElements().empty()) {
+            tree->evaluatedType->baseTypeEnum = NULL_;
+            return nullptr;
+        }
         // TODO handle empty vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
