@@ -266,7 +266,7 @@ void normalize(commonType* array) {
   int maxSize = 0;
   commonType* maxItem;
 
-  if (isCompositeType(mlist->values[0]->type)) {
+  if (mlist->currentSize > 0 && isCompositeType(mlist->values[0]->type)) {
     for (int i = 0; i < mlist->currentSize; i ++) {
       list* item = mlist->values[i]->value;
 
