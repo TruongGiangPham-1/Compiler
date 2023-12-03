@@ -6,7 +6,8 @@
 
 // global variable streamBuffer for streamIn
 #define MAX_REWIND_BUFFER_SIZE 1024
-char STREAM_BUF[MAX_REWIND_BUFFER_SIZE] = {0};
+// size is +1 for null terminator
+char STREAM_BUF[MAX_REWIND_BUFFER_SIZE + 1] = {0};
 int BUFFER_PTR = 0;
 
 enum StreamState {
@@ -193,7 +194,7 @@ enum StreamState readFromBuf(commonType* type) {
             } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
                 // if we didn't read a valid ending, we hit an error
 #ifdef DEBUGSTREAM
-                printf("ERROR (int): didn't successfully read an int (ending char was non-whitespace '%c')\n", STREAM_BUF[charsRead]);
+                printf("ERROR (int): didn't successfully read an int (ending char was non-whitespace '%c' at pos %d)\n", STREAM_BUF[charsRead], charsRead);
 #endif /* ifdef DEBUGSTREAM */
                 resetBuf(0);
                 return STREAM_STATE_ERR;
@@ -251,7 +252,7 @@ enum StreamState readFromBuf(commonType* type) {
             } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
                 // if we didn't read a valid ending, we hit an error
 #ifdef DEBUGSTREAM
-                printf("ERROR (real): didn't successfully read a real (ending char was non-whitespace '%c')\n", STREAM_BUF[charsRead]);
+                printf("ERROR (real): didn't successfully read a real (ending char was non-whitespace '%c' at pos %d)\n", STREAM_BUF[charsRead], charsRead);
 #endif /* ifdef DEBUGSTREAM */
                 resetBuf(0);
                 return STREAM_STATE_ERR;
@@ -280,7 +281,7 @@ void resetBuf(int charsRead) {
     for (int i = BUFFER_PTR - 1; i >= charsRead; i--) {
         ungetc(STREAM_BUF[i], stdin);
     }
-    memset(STREAM_BUF, 0, MAX_REWIND_BUFFER_SIZE);
+    memset(STREAM_BUF, 0, sizeof STREAM_BUF);
     BUFFER_PTR = 0;
 }
 
