@@ -277,6 +277,9 @@ namespace gazprea {
             // cannot have matrix to vector operation
             throw TypeError(left->loc(), "matrix and vector operation invalid");
         }
+        if (isEmptyArrayLiteral(left->evaluatedType) || isEmptyArrayLiteral(right->evaluatedType)) {
+            throw TypeError(left->loc(), "cannot use empty array in binop");
+        }
 
         auto LtoRpromotion = getPromotedTypeString(promotionTable, left->evaluatedType, right->evaluatedType);
         auto RtoLpromotion = getPromotedTypeString(promotionTable, right->evaluatedType, left->evaluatedType);
