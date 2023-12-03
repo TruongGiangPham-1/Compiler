@@ -194,7 +194,7 @@ enum StreamState readFromBuf(commonType* type) {
             } else {
                 // success
 #ifdef DEBUGSTREAM
-                printf("OK (int): Scanned '%d', with '%d' chars\n", n, charsRead);
+                printf("OK (int): Scanned '%d', reading '%d' chars\n", n, charsRead);
 #endif /* ifdef DEBUGSTREAM */
                 *(int*)type->value = n;
                 resetBuf(charsRead);
@@ -212,11 +212,12 @@ enum StreamState readFromBuf(commonType* type) {
             return STREAM_STATE_OK;
         }
         case BOOLEAN: {
-//      printf("Enter a boolean value (T/F): ");
             // scan char. If it's T, true, else false
-            if (strcmp(STREAM_BUF, "T") == 0) {
+            char untilWhitespace[1024]; // new char array to scan a string into
+            check = sscanf(STREAM_BUF, "%s%n", &untilWhitespace, &charsRead);
+            if (strcmp(untilWhitespace, "T") == 0) {
                 *(bool*)type->value = true;
-            } else if (strcmp(STREAM_BUF, "F") == 0) {
+            } else if (strcmp(untilWhitespace, "F") == 0) {
                 *(bool*) type->value = false;
             } else {
 #ifdef DEBUGSTREAM
