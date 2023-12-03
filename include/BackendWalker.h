@@ -16,6 +16,7 @@ private:
   // this boolean is true when we are inside a loop and we encounter a break
   bool earlyReturn = false;
   bool returnDropped = false;
+  std::vector<mlir::Value> inferenceContext;
 
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
