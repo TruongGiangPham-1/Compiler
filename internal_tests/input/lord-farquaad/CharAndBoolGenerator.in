@@ -1,0 +1,9 @@
+procedure main() returns integer {
+   boolean[10] booleans = [ i in 1..10 | true ];
+   character[10] characters = [ i in 1..10 | 'a' ];
+   booleans -> std_output;
+   '\n' -> std_output;
+   characters -> std_output;
+   '\n' -> std_output;
+   return 0;
+}
