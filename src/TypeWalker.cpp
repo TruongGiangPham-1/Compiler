@@ -1,6 +1,6 @@
 #include "TypeWalker.h"
 #include "ASTNode/Type/TupleTypeNode.h"
-#define DEBUG
+//#define DEBUG
 
 // until we get more typecheck done
 
