@@ -676,6 +676,29 @@ namespace gazprea {
             throw TypeError(tree->loc(), "cannot concat Matrices");
         }
 
+        // empty vector
+        if (promotedType->isEmptyArrayLiteral(l->evaluatedType) && promotedType->isVector(r->evaluatedType)) {
+            tree->evaluatedType = promotedType->getTypeCopy(r->evaluatedType);
+            return nullptr;
+        } else if (promotedType->isEmptyArrayLiteral(r->evaluatedType) && promotedType->isVector(l->evaluatedType)) {
+            tree->evaluatedType = promotedType->getTypeCopy(l->evaluatedType);
+            return nullptr;
+        } else if (promotedType->isEmptyArrayLiteral(l->evaluatedType) && promotedType->isScalar(r->evaluatedType)) {
+            auto vectorType = promotedType->createArrayType(r->evaluatedType->getBaseTypeEnumName(), VECTOR);
+            promotedType->promoteLiteralToArray(vectorType, tree->getRHS());
+            tree->evaluatedType = promotedType->getTypeCopy(tree->getRHS()->evaluatedType);
+            return nullptr;
+        } else if (promotedType->isEmptyArrayLiteral(r->evaluatedType) && promotedType->isScalar(l->evaluatedType)) {
+            auto vectorType = promotedType->createArrayType(l->evaluatedType->getBaseTypeEnumName(), VECTOR);
+            promotedType->promoteLiteralToArray(vectorType, tree->getLHS());
+            tree->evaluatedType = promotedType->getTypeCopy(tree->getLHS()->evaluatedType);
+            return nullptr;
+        } else if (promotedType->isEmptyArrayLiteral(l->evaluatedType) && promotedType->isEmptyArrayLiteral(r->evaluatedType)) {
+            // both empty, then just return empty vector
+            tree->evaluatedType = promotedType->getTypeCopy(tree->getLHS()->evaluatedType);
+            return nullptr;
+        }
+        //--------------------------------
 
         promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
