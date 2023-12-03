@@ -11,6 +11,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#ifndef MAX
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#endif
 
 typedef struct commonType {
   enum TYPE type; 
@@ -253,6 +256,22 @@ void appendList(list* list, commonType *value) {
 #endif /* ifdef DEBUGTUPLE */
 
   list->currentSize++;
+}
+
+/**
+ * list can potentially be of different size elements, normalize.
+  */
+void normalize(commonType* array) {
+  list* mlist = (list*)array;
+  int maxSize = 0;
+
+  if (isCompositeType(mlist->values[0]->type)) {
+    for (int i = 0; i < mlist->currentSize; i ++) {
+      maxSize = MAX(maxSize, ((list*)mlist->values[i])->currentSize);
+    }
+  }
+
+  return;
 }
 
 void appendCommon(commonType* list, commonType *value) {

@@ -56,13 +56,19 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
 std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   mlir::Value initializedType; 
   // dynamic typecheck if lhs type exists, otherwise assign
+  
+  auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+
+  this->inferenceContext.push_back(val);
+
   if (tree->getTypeNode()) {
     initializedType = std::any_cast<mlir::Value>(walk(tree->getTypeNode()));
-    auto val = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
     codeGenerator.generateAssignment(initializedType, val);
   } else {
-    initializedType = std::any_cast<mlir::Value>(walk(tree->getExprNode()));
+    initializedType = val;
   }
+
+  this->inferenceContext.pop_back();
 
   codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
   return 0;
@@ -72,7 +78,15 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
   if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
-      auto size = std::any_cast<mlir::Value>(walk(mtree->getSize()));
+      mlir::Value size;
+      if (mtree->getSize()) {
+        size = std::any_cast<mlir::Value>(walk(mtree->getSize()));
+      } else {
+        std::vector<mlir::Value> arguments;
+        arguments.push_back(*(this->inferenceContext.end()-1));
+        size = codeGenerator.generateCallNamed("length", arguments);
+      }
+
       auto one = codeGenerator.generateValue(1);
 
       auto newVector = codeGenerator.generateValue(size);
@@ -104,15 +118,31 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
   } else if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR){
       auto mtree = std::dynamic_pointer_cast<MatrixTypeNode>(tree);
 
-      auto row = std::any_cast<mlir::Value>(walk(mtree->sizeLeft));
-      auto column = std::any_cast<mlir::Value>(walk(mtree->sizeRight));
+      mlir::Value row;
+      mlir::Value column;
+  
+      // advanced ml algorithm for size inferencing
+      if (mtree->sizeLeft) {
+        row = std::any_cast<mlir::Value>(walk(mtree->sizeLeft));
+      } else {
+        std::vector<mlir::Value> arguments;
+        arguments.push_back(*(this->inferenceContext.end()-1));
+        row = codeGenerator.generateCallNamed("rows", arguments);
+      }
+    
+      if (mtree->sizeRight) {
+        column = std::any_cast<mlir::Value>(walk(mtree->sizeRight));
+      } else {
+        std::vector<mlir::Value> arguments;
+        arguments.push_back(*(this->inferenceContext.end()-1));
+        column = codeGenerator.generateCallNamed("columns", arguments);
+      }
 
       // we do a little indexing
       auto rowIndex = codeGenerator.generateValue(0);
 
       auto one = codeGenerator.generateValue(1);
 
-      
       auto matrix = codeGenerator.generateValue(row);
 
       rowIndex = codeGenerator.generateValue(0);
