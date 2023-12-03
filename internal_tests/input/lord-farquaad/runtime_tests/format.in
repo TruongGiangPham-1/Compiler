@@ -1,0 +1,18 @@
+procedure main() returns integer {
+  format(1 * 3) -> std_output;
+  '\n' -> std_output;
+  format(1.2) -> std_output;
+  '\n' -> std_output;
+  format(1.2678) -> std_output;
+  '\n' -> std_output;
+  format(1.26789 + 2) -> std_output;
+  '\n' -> std_output;
+  format('c') -> std_output;
+  '\n' -> std_output;
+  format(true) -> std_output;
+  '\n' -> std_output;
+  format(true == false) -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
