@@ -706,7 +706,7 @@ namespace gazprea {
         promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
         tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
-        if (tree->getLHS()->evaluatedType->vectorOrMatrixEnum == NONE && tree->getRHS()->evaluatedType->vectorOrMatrixEnum == NONE) {
+        if (promotedType->isScalar(tree->getLHS()->evaluatedType) && promotedType->isScalar(tree->getRHS()->evaluatedType)) {
             // concat between 2 non vector. we have to promote them all to vector
             auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
             vectorType->vectorOrMatrixEnum = VECTOR;
