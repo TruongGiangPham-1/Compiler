@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <limits.h>
 
-#define DEBUGSTREAM
+//#define DEBUGSTREAM
 //#define DEBUGPRINT
 
 // global variable streamBuffer for streamIn
@@ -189,8 +189,8 @@ enum StreamState readFromBuf(commonType* type) {
 #ifdef DEBUGSTREAM
                 printf("ERROR (int): didn't successfully read an int (check = %d)\n", check);
 #endif /* ifdef DEBUGSTREAM */
-                return STREAM_STATE_ERR;
                 resetBuf(0);
+                return STREAM_STATE_ERR;
             } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
                 // if we didn't read a valid ending, we hit an error
 #ifdef DEBUGSTREAM
