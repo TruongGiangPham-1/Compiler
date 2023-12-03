@@ -1,6 +1,6 @@
 #include "TypeWalker.h"
 #include "ASTNode/Type/TupleTypeNode.h"
-//#define DEBUG
+#define DEBUG
 
 // until we get more typecheck done
 
@@ -1217,7 +1217,19 @@ namespace gazprea {
     std::any TypeWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
         walkChildren(tree);
         tree->evaluatedType = tree->getVectDomain()->evaluatedType;
-        tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
+        auto exprType = tree->getExpr()->evaluatedType;
+
+        // walk the domain var to resolve them first
+        if (tree->getVectDomain()) {
+            // this is a vector generator
+            tree->evaluatedType = promotedType->createArrayType(exprType->getBaseTypeEnumName(), VECTOR);
+        } else {
+            // this is a matrix generator
+            tree->evaluatedType = promotedType->createArrayType(exprType->getBaseTypeEnumName(), MATRIX);
+        }
+#ifdef DEBUG
+        promotedType->printTypeClass(tree->evaluatedType);
+#endif
         return nullptr;
     }
 
