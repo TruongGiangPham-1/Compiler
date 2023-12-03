@@ -9,6 +9,7 @@ procedure main() returns integer {
   a -> std_output;
   '\n' -> std_output;
   a + b -> std_output;
+  '\n' -> std_output;
 
   return 0;
 }
