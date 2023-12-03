@@ -1,6 +1,6 @@
 #include "TypeWalker.h"
 #include "ASTNode/Type/TupleTypeNode.h"
-//#define DEBUG
+#define DEBUG
 
 // until we get more typecheck done
 
@@ -199,6 +199,7 @@ namespace gazprea {
         // HERE vector should have identical types because possiblyPromoteBinop have make sure both vectors are same types.
         if (left->evaluatedType->vectorOrMatrixEnum == VECTOR && right->evaluatedType->vectorOrMatrixEnum == VECTOR &&
                                            std::dynamic_pointer_cast<BinaryCmpNode>(t) == nullptr) {  // skip this is if we are doing cmpNode since we want binop tobe nonVec
+
             assert(right->evaluatedType->vectorOrMatrixEnum == VECTOR);
             auto typeCopyl= getTypeCopy(left->evaluatedType);
             auto typeCopyr = getTypeCopy(right->evaluatedType);
@@ -629,9 +630,18 @@ namespace gazprea {
             case BINOP::DOT_PROD:
                 promotedType->dotProductErrorCheck(lhsType, rhsType, tree->loc());
                 promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+
+
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
+                if (promotedType->isVector(lhsType) && promotedType->isVector(rhsType)) {
+                    // vector to vector inner product eval type should be scalar
+                    tree->evaluatedType = promotedType->getTypeCopy(symtab->globalScope->resolveType(tree->getLHS()->evaluatedType->getBaseTypeEnumName()));
+                }
                 break;
         }
+#ifdef DEBUG
+        promotedType->printTypeClass(tree->evaluatedType);
+#endif
         return nullptr;
     }
 
