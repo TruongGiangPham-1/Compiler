@@ -1,0 +1,19 @@
+procedure main() returns integer {
+
+  var a = [[1,2,3], [4,5,6]];
+  a->std_output;
+  '\n'->std_output;
+  var b = 99; 
+  b->std_output;
+  '\n'->std_output;
+  a[1,2] = b;
+  a->std_output;
+  '\n' -> std_output;
+  b = 1000;
+  b -> std_output;
+  '\n' -> std_output;
+  a -> std_output;
+  '\n' -> std_output;
+    
+  return 0;
+}
