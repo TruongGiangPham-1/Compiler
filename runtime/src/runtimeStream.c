@@ -8,7 +8,6 @@
 #define MAX_REWIND_BUFFER_SIZE 1024
 char STREAM_BUF[MAX_REWIND_BUFFER_SIZE] = {0};
 int BUFFER_PTR = 0;
-bool LAST_STREAMIN_ERR = false;
 
 enum StreamState {
     STREAM_STATE_OK = 0,
@@ -25,7 +24,7 @@ void pushToBuf(char c);
 // push the unread chars back into stdin with ungetc
 void resetBuf(int charsRead);
 // helper function
-bool isWhitespace(char c);
+bool whitespaceOrEOF(char c);
 
 void printType(commonType *type, bool nl) {
     switch (type->type) {
@@ -129,30 +128,11 @@ void handleStreamState(int* state, int newState, commonType *type) {
 
 
 void streamIn(commonType *type, int* streamStatePtr) {
-#ifdef DEBUGSTREAM
-    printf("streamIn with curr buf '%s'\n", STREAM_BUF);
-#endif /* ifdef DEBUGSTREAM */
-
-    if (!LAST_STREAMIN_ERR) {
-#ifdef DEBUGSTREAM
-        printf("Last streamIn was successful, reading from stdin\n");
-#endif /* ifdef DEBUGSTREAM */
-
-        // if the last streamIn was successful, read from stdin
-        // otherwise, we're just going to read from the rewind buffer
-        readToBuf();
-    }
+    readToBuf();
 
     // now, read from a value from the buffer
     enum StreamState newStreamState = readFromBuf(type);
     handleStreamState(streamStatePtr, newStreamState, type);
-
-    // finally, set the last streamIn error
-    if (newStreamState == STREAM_STATE_ERR) {
-        LAST_STREAMIN_ERR = true;
-    } else {
-        LAST_STREAMIN_ERR = false;
-    }
 }
 
 void readToBuf() {
@@ -203,6 +183,14 @@ enum StreamState readFromBuf(commonType* type) {
                 printf("ERROR (int): didn't successfully read an int\n");
 #endif /* ifdef DEBUGSTREAM */
                 return STREAM_STATE_EOF;
+                resetBuf(0);
+            } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
+                // if we didn't read a valid ending, we hit an error
+#ifdef DEBUGSTREAM
+                printf("ERROR (int): didn't successfully read an int\n");
+#endif /* ifdef DEBUGSTREAM */
+                resetBuf(0);
+                return STREAM_STATE_ERR;
             } else {
                 // success
 #ifdef DEBUGSTREAM
@@ -234,6 +222,7 @@ enum StreamState readFromBuf(commonType* type) {
 #ifdef DEBUGSTREAM
                 printf("ERROR (bool): Invalid boolean value '%s'\n", STREAM_BUF);
 #endif /* ifdef DEBUGSTREAM */
+                resetBuf(0);
                 return STREAM_STATE_ERR;
             }
 #ifdef DEBUGSTREAM
@@ -248,13 +237,21 @@ enum StreamState readFromBuf(commonType* type) {
             if (check == 0) {
                 // if we didn't read anything, we hit EOF
 #ifdef DEBUGSTREAM
-                printf("ERROR (int): didn't successfully read an int\n");
+                printf("ERROR (real): didn't successfully read a real\n");
 #endif /* ifdef DEBUGSTREAM */
+                resetBuf(0);
                 return STREAM_STATE_EOF;
+            } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
+                // if we didn't read a valid ending, we hit an error
+#ifdef DEBUGSTREAM
+                printf("ERROR (real): didn't successfully read a real\n");
+#endif /* ifdef DEBUGSTREAM */
+                resetBuf(0);
+                return STREAM_STATE_ERR;
             } else {
                 // success
 #ifdef DEBUGSTREAM
-                printf("OK (int): Scanned '%f', with '%d' chars\n", f, charsRead);
+                printf("OK (real): Scanned '%f', with '%d' chars\n", f, charsRead);
 #endif /* ifdef DEBUGSTREAM */
                 *(float*)type->value = f;
                 resetBuf(charsRead);
@@ -273,7 +270,7 @@ void resetBuf(int charsRead) {
 #ifdef DEBUGSTREAM
     printf("resetBuf: pushing %d char(s) back into stdin: '%s'\n", BUFFER_PTR-charsRead, STREAM_BUF+charsRead);
 #endif /* ifdef DEBUGSTREAM */
-    for (int i = charsRead; i < BUFFER_PTR; i++) {
+    for (int i = BUFFER_PTR - 1; i >= charsRead; i--) {
 #ifdef DEBUGSTREAM
         printf("ungetting '%c'\n", STREAM_BUF[i]);
 #endif /* ifdef DEBUGSTREAM */
@@ -283,3 +280,6 @@ void resetBuf(int charsRead) {
     BUFFER_PTR = 0;
 }
 
+bool whitespaceOrEOF(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == EOF;
+}
