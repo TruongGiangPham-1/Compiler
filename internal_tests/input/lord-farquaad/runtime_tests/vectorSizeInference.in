@@ -1,7 +1,7 @@
 procedure main() returns integer {
   integer[*] a = [1,2,3,4];
   integer[*] b = 1..10;
-  integer[*] b = 1..10 || [1,2,3];
+  integer[*] c = 1..10 || [1,2,3];
 
   a -> std_output;
   a = 1;
@@ -9,6 +9,8 @@ procedure main() returns integer {
   a -> std_output;
   '\n' -> std_output;
   a + b -> std_output;
+  '\n' -> std_output;
+  c -> std_output;
   '\n' -> std_output;
 
   return 0;
