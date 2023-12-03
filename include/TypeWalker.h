@@ -35,7 +35,6 @@ namespace gazprea {
         void updateVectorNodeEvaluatedType(std::shared_ptr<Type>assignType, std::shared_ptr<ASTNode> exprNode);
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
-        void promoteEmptytoAray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>emptyNode);
 
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
         void populateInnerTypes(std::shared_ptr<Type>type, std::shared_ptr<VectorNode>tree);

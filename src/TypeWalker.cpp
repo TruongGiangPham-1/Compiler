@@ -164,6 +164,7 @@ namespace gazprea {
             throw TypeError(line, "dot product can only be done between matrix or between vectors");
         }
     }
+
     std::shared_ptr<Type> PromotedType::getTypeCopy(std::shared_ptr<Type> type) {
         // returns a copy of the type
         auto newtype = std::make_shared<AdvanceType>(type->getBaseTypeEnumName());
@@ -864,6 +865,7 @@ namespace gazprea {
                 promotedType->promoteLiteralToArray(lType, tree->getExprNode());
             } else if (promotedType->isEmptyArrayLiteral(rType)) {
                 // empty array literal. simply promote to ltype
+                //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
                 tree->getExprNode()->evaluatedType = promotedType->getTypeCopy(lType);
             } else {
                 promotedType->promoteVectorElements(lType, tree->getExprNode());
@@ -975,9 +977,12 @@ namespace gazprea {
                         if (promotedType->isMatrix(lvalue->evaluatedType) && promotedType->isVector(tree->getRvalue()->evaluatedType)) {
                             throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
                         }
-                        if (rhsType->vectorOrMatrixEnum == NONE) {
+                        if (rhsType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rhsType)) {
                             promotedType->promoteLiteralToArray(lvalue->evaluatedType, tree->getRvalue());
-                        } else {
+                        } else if (promotedType->isEmptyArrayLiteral(rhsType)) {
+                            tree->getRvalue()->evaluatedType = promotedType->getTypeCopy(lvalue->evaluatedType);
+                        }
+                        else {
                             promotedType->promoteVectorElements(lvalue->evaluatedType, tree->getRvalue());
                             promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, tree->getRvalue());
                         }
@@ -1209,6 +1214,7 @@ namespace gazprea {
         if (tree->getElements().empty()) {
             // we will represent empty vector literal if it is vector but doesnt have a type
             tree->evaluatedType->baseTypeEnum = NONE;
+            tree->isEmpty = true;
             return nullptr;
         }
 

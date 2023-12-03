@@ -10,6 +10,7 @@
 // children: elements of the vector
 class VectorNode : public ExprNode {
 public:
+    bool isEmpty = false;
     VectorNode(int line);
 
     std::vector<std::shared_ptr<ExprNode>> getElements();
