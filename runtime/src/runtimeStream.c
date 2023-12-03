@@ -130,6 +130,12 @@ void handleStreamState(int* state, int newState, commonType *type) {
 void streamIn(commonType *type, int* streamStatePtr) {
     readToBuf();
 
+    if (strlen(STREAM_BUF) == 0) {
+        // if we read nothing, we hit EOF
+        handleStreamState(streamStatePtr, STREAM_STATE_EOF, type);
+        return;
+    }
+
     // now, read from a value from the buffer
     enum StreamState newStreamState = readFromBuf(type);
     handleStreamState(streamStatePtr, newStreamState, type);
@@ -177,10 +183,10 @@ enum StreamState readFromBuf(commonType* type) {
         case INTEGER: {
             int n;
             check = sscanf(STREAM_BUF, "%d%n", &n, &charsRead);
-            if (check == 0) {
+            if (check != 1) {
                 // if we didn't read anything, we hit EOF
 #ifdef DEBUGSTREAM
-                printf("ERROR (int): didn't successfully read an int\n");
+                printf("ERROR (int): didn't successfully read an int (check = %d)\n", check);
 #endif /* ifdef DEBUGSTREAM */
                 return STREAM_STATE_EOF;
                 resetBuf(0);
@@ -235,10 +241,10 @@ enum StreamState readFromBuf(commonType* type) {
         case REAL: {
             float f;
             check = sscanf(STREAM_BUF, "%f%n", &f, &charsRead);
-            if (check == 0) {
+            if (check != 1) {
                 // if we didn't read anything, we hit EOF
 #ifdef DEBUGSTREAM
-                printf("ERROR (real): didn't successfully read a real\n");
+                printf("ERROR (real): didn't successfully read a real (check = %d)\n", check);
 #endif /* ifdef DEBUGSTREAM */
                 resetBuf(0);
                 return STREAM_STATE_EOF;
