@@ -193,7 +193,7 @@ enum StreamState readFromBuf(commonType* type) {
             } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
                 // if we didn't read a valid ending, we hit an error
 #ifdef DEBUGSTREAM
-                printf("ERROR (int): didn't successfully read an int\n");
+                printf("ERROR (int): didn't successfully read an int (ending char was non-whitespace '%c')\n", STREAM_BUF[charsRead]);
 #endif /* ifdef DEBUGSTREAM */
                 resetBuf(0);
                 return STREAM_STATE_ERR;
@@ -251,7 +251,7 @@ enum StreamState readFromBuf(commonType* type) {
             } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
                 // if we didn't read a valid ending, we hit an error
 #ifdef DEBUGSTREAM
-                printf("ERROR (real): didn't successfully read a real\n");
+                printf("ERROR (real): didn't successfully read a real (ending char was non-whitespace '%c')\n", STREAM_BUF[charsRead]);
 #endif /* ifdef DEBUGSTREAM */
                 resetBuf(0);
                 return STREAM_STATE_ERR;
@@ -278,15 +278,13 @@ void resetBuf(int charsRead) {
     printf("resetBuf: pushing %d char(s) back into stdin: '%s'\n", BUFFER_PTR-charsRead, STREAM_BUF+charsRead);
 #endif /* ifdef DEBUGSTREAM */
     for (int i = BUFFER_PTR - 1; i >= charsRead; i--) {
-#ifdef DEBUGSTREAM
-        printf("ungetting '%c'\n", STREAM_BUF[i]);
-#endif /* ifdef DEBUGSTREAM */
         ungetc(STREAM_BUF[i], stdin);
     }
-    STREAM_BUF[0] = '\0';
+    memset(STREAM_BUF, 0, MAX_REWIND_BUFFER_SIZE);
     BUFFER_PTR = 0;
 }
 
+// this is to test if the "end" of a token has been reached
 bool whitespaceOrEOF(char c) {
-    return c == ' ' || c == '\t' || c == '\n' || c == EOF;
+    return c == ' ' || c == '\t' || c == '\n' || c == EOF || c == '\0';
 }
