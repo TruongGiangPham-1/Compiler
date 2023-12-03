@@ -1,0 +1,10 @@
+procedure main() returns integer {
+  rows([[1,2], [1,2], [1,2]]) -> std_output;
+  '\n' -> std_output;
+  rows([[1,2,3], [4,5,6]]) -> std_output;
+  '\n' -> std_output;
+  rows([[1,2,3], [4,5,6]] + [[1,2,3], [4,5,6], [7,8,9]]) -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
