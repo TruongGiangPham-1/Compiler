@@ -112,9 +112,10 @@ void handleStreamState(int* state, int newState, commonType *type) {
 #endif /* ifdef DEBUGSTREAM */
 
     // given the streamState error and the type, set the streamState
-    if (type->type == CHAR) {
+    if (type->type == CHAR && newState == STREAM_STATE_EOF) {
         // the only possible error for a char is EOF, where we set streamState to 0
-        *state = 0;
+        // TODO: ask quinn if we can use streamState = 2
+        *state = 2;
         return;
     } else {
         // in all other cases, set the state to the integer value of the streamStateErr
