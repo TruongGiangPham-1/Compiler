@@ -69,7 +69,7 @@ namespace gazprea {
 /*real*/         {"",         "",         "",         "real",    "",   "real", ""},
 /*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
 /*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
-/*null*/         {"boolean",  "character", "integer", "real", "tuple" , "", ""}
+/*null*/         {"",  "", "", "", "" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
     void PromotedType::populateInnerTypes(std::shared_ptr<Type> type, std::shared_ptr<VectorNode> tree) {
@@ -344,6 +344,10 @@ namespace gazprea {
         int t = type->vectorOrMatrixEnum == NONE && type->baseTypeEnum != TUPLE && type->baseTypeEnum != STRING;
         return t;
     }
+    int PromotedType::isEmptyArrayLiteral(std::shared_ptr<Type> type) {
+        int t = type->vectorOrMatrixEnum == VECTOR && type->baseTypeEnum == NONE;
+        return t;
+    }
 
     void PromotedType::possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo,
                                                      std::shared_ptr<Type> promotedType, int line) {
@@ -510,10 +514,12 @@ namespace gazprea {
         std::shared_ptr<Type>bestType = nullptr;
         for (int i = 0; i < tree->getSize(); i++) {
             auto promoteTo = tree->getElement(i)->evaluatedType;
+            if (isEmptyArrayLiteral(promoteTo)) continue;  // skip if its empty litereal
             int isDominant = 1;   // gonna chekc if all the other element can promote to this type
             for (int j = 0; j < tree->getSize(); j++) {
                 if (i == j) continue;
                 auto promoteFrom = tree->getElement(j)->evaluatedType;
+                if (isEmptyArrayLiteral(promoteFrom)) continue;   // skip if its empty
                 if (getPromotedTypeString(promotionTable, promoteFrom, promoteTo).empty()){
                     //
                     isDominant = 0;
@@ -838,11 +844,16 @@ namespace gazprea {
 
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
+
+
             if (promotedType->isMatrix(lType) && promotedType->isVector(tree->getExprNode()->evaluatedType)) {
                 throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
             }
             if (rType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rType)) {
                 promotedType->promoteLiteralToArray(lType, tree->getExprNode());
+            } else if (promotedType->isEmptyArrayLiteral(rType)) {
+                // empty array literal. simply promote to ltype
+                tree->getExprNode()->evaluatedType = promotedType->getTypeCopy(lType);
             } else {
                 promotedType->promoteVectorElements(lType, tree->getExprNode());
                 promotedType->updateVectorNodeEvaluatedType(lType, tree->getExprNode());  // copy ltype to exprNode's type except for the size attribute
@@ -851,6 +862,9 @@ namespace gazprea {
             tree->evaluatedType = typeCopy;
             tree->getTypeNode()->evaluatedType = tree->evaluatedType;
             tree->sym->typeSym = tree->evaluatedType;  // update the identifier's type
+#ifdef DEBUG
+            promotedType->printTypeClass(tree->evaluatedType);
+#endif
             return nullptr;
         }
         else if (rType->getBaseTypeEnumName() == "null" || rType ->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
@@ -1177,9 +1191,11 @@ namespace gazprea {
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
         tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
         if (tree->getElements().empty()) {
-            tree->evaluatedType->baseTypeEnum = NULL_;
+            // we will represent empty vector literal if it is vector but doesnt have a type
+            tree->evaluatedType->baseTypeEnum = NONE;
             return nullptr;
         }
+
         // TODO handle empty vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
