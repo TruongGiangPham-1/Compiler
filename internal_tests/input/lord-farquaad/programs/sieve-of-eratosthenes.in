@@ -2,7 +2,7 @@ procedure main() returns integer {
   integer n;
   n <- std_input;
 
-  if (n < 2 || n > 100) {
+  if (n < 2 or n > 100) {
     "Error: n must be between 2 and 100 (n was" -> std_output;
     n -> std_output;
     ")" -> std_output;
@@ -10,12 +10,13 @@ procedure main() returns integer {
   }
 
   boolean[n] is_prime = true;
+  is_prime[1] = false;
 
   integer i = 2;
-  loop while (i * i < n) {
+  loop while (i * i <= n) {
     if (is_prime[i]) {
       integer j = i * i;
-      loop while (j < n) {
+      loop while (j <= n) {
         is_prime[j] = false;
         j = j + i;
       }
