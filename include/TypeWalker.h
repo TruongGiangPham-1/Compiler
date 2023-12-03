@@ -25,6 +25,9 @@ namespace gazprea {
         const int identityIndex = 5;
         const int nullIndex = 6;
 
+        // miscalleous
+        void printTypeClass(std::shared_ptr<Type> type);
+        //
         std::shared_ptr<Type> getType(std::string table[7][7], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
         int getTypeIndex(const std::string type);
         // vecto helper
@@ -41,6 +44,7 @@ namespace gazprea {
         void possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo, std::shared_ptr<Type>promotedType, int line);
         int isMatrix(std::shared_ptr<Type> type);
         int isVector(std::shared_ptr<Type> type);
+        int isScalar(std::shared_ptr<Type> type);
         // create copy of the type obj. only used in promoteLiteralToArray
         std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);
 
@@ -52,6 +56,7 @@ namespace gazprea {
 
 
         void dotProductErrorCheck(std::shared_ptr<Type> l, std::shared_ptr<Type> r, int line);
+        std::shared_ptr<Type> createArrayType(std::string baseType, TYPE vectORMatrix);
         // throw error if tree was node a vectornode
         void assertVector(std::shared_ptr<ASTNode> tree);
         PromotedType(std::shared_ptr<SymbolTable> symtab);

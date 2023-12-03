@@ -1,6 +1,6 @@
 #include "TypeWalker.h"
 #include "ASTNode/Type/TupleTypeNode.h"
-//#define DEBUG
+#define DEBUG
 
 // until we get more typecheck done
 
@@ -78,6 +78,43 @@ namespace gazprea {
         for (auto&child: tree->getElements()) {
             type->vectorInnerTypes.push_back(getTypeCopy(child->evaluatedType));
         }
+    }
+
+    void PromotedType::printTypeClass(std::shared_ptr<Type> type) {
+        if (isVector(type)) {
+            std::cout << type->getBaseTypeEnumName() << " vector\n";
+        } else if (isMatrix(type)) {
+            std::cout << type->getBaseTypeEnumName() << " matrix\n";
+        } else {
+            if (type->vectorOrMatrixEnum == NONE) {
+                std::cout << type->getBaseTypeEnumName() << " base\n";
+            }
+        }
+    }
+    // just creates Vector Type or Matrix TYpe  given base type
+    std::shared_ptr<Type> PromotedType::createArrayType(std::string baseTypeStr, TYPE vectORMatrix) {
+        std::shared_ptr<Type> arrayType = nullptr;
+        switch (vectORMatrix) {
+            case VECTOR: {
+                arrayType = getTypeCopy(symtab->globalScope->resolveType(baseTypeStr));
+                auto innerType = getTypeCopy(symtab->globalScope->resolveType(baseTypeStr));
+                arrayType->vectorInnerTypes.push_back(innerType);
+                arrayType->vectorOrMatrixEnum = VECTOR;
+                break;
+            }
+            case MATRIX: {
+                arrayType = getTypeCopy(symtab->globalScope->resolveType(baseTypeStr));
+                auto innerType = getTypeCopy(symtab->globalScope->resolveType(baseTypeStr));
+                innerType->vectorOrMatrixEnum = VECTOR;
+                auto innerType2 = getTypeCopy(symtab->globalScope->resolveType(baseTypeStr));
+                innerType->vectorInnerTypes.push_back(innerType2);
+                arrayType->vectorInnerTypes.push_back(innerType);
+                arrayType->vectorOrMatrixEnum = VECTOR;
+                break;
+            }
+        }
+
+        return arrayType;
     }
     void PromotedType::possiblyPaddMatrix(std::shared_ptr<VectorNode> tree) {
         // given a node, possibly padd them with null node
@@ -302,6 +339,10 @@ namespace gazprea {
                  type->vectorInnerTypes[0]->vectorOrMatrixEnum == NONE;
         return t;
     }
+    int PromotedType::isScalar(std::shared_ptr<Type> type) {
+        int t = type->vectorOrMatrixEnum == NONE && type->baseTypeEnum != TUPLE && type->baseTypeEnum != STRING;
+        return t;
+    }
 
     void PromotedType::possiblyPromoteToVectorOrMatrix(std::shared_ptr<Type> promoteTo,
                                                      std::shared_ptr<Type> promotedType, int line) {
@@ -396,7 +437,7 @@ namespace gazprea {
             if (promoteTypeString.empty()) throw  TypeError(exprNode->loc(), "cannot promote vector element");
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(promoteTypeString));
 #ifdef DEBUG
-            std::cout << "promoted vector element " << child->evaluatedType->getBaseTypeEnumName() << "to " << promoteTo->getBaseTypeEnumName() << "\n";
+            //std::cout << "promoted vector element " << child->evaluatedType->getBaseTypeEnumName() << "to " << promoteTo->getBaseTypeEnumName() << "\n";
 #endif
             exprNode->evaluatedType = resultType;  // set each vector element node to its promoted type
             return;
@@ -1013,11 +1054,56 @@ namespace gazprea {
     std::any TypeWalker::visitCall(std::shared_ptr<CallNode> tree) {
         if (tree->procCall) {
             walkChildren(tree);
-            tree->evaluatedType = nullptr;
+            tree->evaluatedType = tree->MethodRef->typeSym;  // could be null if procedure call dont have ret type
         }
         else {
             //must be an expression then
+            // must be a function call
+            walkChildren(tree);
             tree->evaluatedType = tree->MethodRef->typeSym;
+            auto functionSym = tree->MethodRef;
+            auto argType = tree->children[0]->evaluatedType;
+            switch (functionSym->functypeENUM) {
+                case FUNC_LENGTH:
+                    // typecheck must be vector
+                    assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
+                    if (!promotedType->isVector(argType)) {
+                        throw TypeError(tree->loc(), "length() only accepts vector as input");
+                    }
+                    tree->evaluatedType = symtab->globalScope->resolveType("integer");  // return type should just be int
+                    break;
+                case FUNC_ROW:
+                case FUNC_COLUMN:
+                    assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
+                    if (!promotedType->isMatrix(argType)) {
+                        throw TypeError(tree->loc(), "rows() or columns() only accepts matrix as input");
+                    }
+                    tree->evaluatedType = symtab->globalScope->resolveType("integer");  // return type should just be int
+                    break;
+                case FUNC_REVERSE: {
+                    assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
+                    if (!promotedType->isVector(argType)) {
+                        throw TypeError(tree->loc(), "reverse only accepts vector as input");
+                    }
+                    auto argVectorType = promotedType->createArrayType(argType->getBaseTypeEnumName(), VECTOR);
+                    tree->evaluatedType = argVectorType;
+                    break;
+                }
+                case FUNC_FORMAT:
+                    assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
+                    if (!promotedType->isScalar(argType)) {
+                        throw TypeError(tree->loc(), "format only accepts scalar as input");
+                    }
+                    tree->evaluatedType = promotedType->getTypeCopy(symtab->globalScope->resolveType("string"));
+                    break;
+                case FUNC_SSTATE:
+                    assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
+                    tree->evaluatedType = promotedType->getTypeCopy(symtab->globalScope->resolveType("integer"));
+                    break;
+            }
+#ifdef DEBUG
+            promotedType->printTypeClass(tree->evaluatedType);
+#endif
         }
         return nullptr;
     }
