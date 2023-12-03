@@ -673,7 +673,7 @@ commonType* __reverse(commonType* vector)  {
   list* mlist = (list*)vector->value;
   list* newList = allocateList(mlist->currentSize);
 
-  for (int i = mlist->currentSize ; i >= 0 ; i--) {
+  for (int i = mlist->currentSize - 1; i >= 0 ; i--) {
     appendList(newList,copyCommonType(mlist->values[i]));
   }
 
