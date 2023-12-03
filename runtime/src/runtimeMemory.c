@@ -262,14 +262,24 @@ void appendList(list* list, commonType *value) {
  * list can potentially be of different size elements, normalize.
   */
 void normalize(commonType* array) {
-  list* mlist = (list*)array;
+  list* mlist = (list*)array->value;
   int maxSize = 0;
+  commonType* maxItem;
 
   if (isCompositeType(mlist->values[0]->type)) {
     for (int i = 0; i < mlist->currentSize; i ++) {
-      maxSize = MAX(maxSize, ((list*)mlist->values[i])->currentSize);
+      list* item = mlist->values[i]->value;
+
+      if (item->currentSize > maxSize) {
+        maxSize = item->currentSize;
+        maxItem = mlist->values[i];
+      }
     }
-  }
+
+    for (int i = 0 ; i < mlist->currentSize; i ++) {
+      mlist->values[i] = promotion(mlist->values[i], maxItem);
+    }
+  } 
 
   return;
 }
