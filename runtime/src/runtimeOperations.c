@@ -218,7 +218,7 @@ commonType* matrixMultiply(commonType* left, commonType* right) {
   commonType* rRows = __rows(right);
 
   int oneInit = 1;
-  int zero;
+  int zero = 0;
   commonType* one = allocateCommonType(&oneInit, INTEGER);
 
   commonType* row = allocateCommonType(&oneInit, INTEGER) ;
