@@ -423,6 +423,10 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
       return allocateCommonType(&newlist, left->type);
   }
 
+  if (op == DOT_PROD) {
+    return dotProduct(left, right);
+  }
+
   promotedLeft = promotion(left,right);
   promotedRight = promotion(right,left);
     
@@ -430,9 +434,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     return vectorFromRange(left, right);
   }
 
-  if (op == DOT_PROD) {
-    return dotProduct(left, right);
-  }
+
 
 
   // god is dead and i have killed him
