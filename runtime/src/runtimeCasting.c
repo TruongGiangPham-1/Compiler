@@ -318,11 +318,9 @@ commonType* vectorPromotion(list* from, commonType* to) {
   if (isCompositeType(to->type)) {
     list* toList = (list*)to->value;
 
-    if (from->currentSize != toList->currentSize) {
-      SizeError("Left and right operands of unequal size");
-    } else {
-      return vectorCast(from, to);
-    }
+    if (from->currentSize != toList->currentSize) SizeError("Left and right operands of unequal size");
+
+    return vectorCast(from, to);
 
   } else {
     list* newList = allocateList(from->currentSize);
