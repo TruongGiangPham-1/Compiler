@@ -6,7 +6,7 @@ procedure main() returns integer {
   var b = 99; 
   b->std_output;
   '\n'->std_output;
-  a[1,2] = b;
+  a[2,3] = b;
   a->std_output;
   '\n' -> std_output;
   b = 1000;
