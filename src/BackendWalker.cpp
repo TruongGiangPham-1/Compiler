@@ -586,9 +586,7 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
     walk(tree->bodies[i]);
 
     // return was dropped during walk, don't need to bound back
-    if (!this->returnDropped) {
-      codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
-    }
+    if (!this->returnDropped) codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
 
     this->returnDropped = false;
     this->earlyReturn = false;
@@ -596,12 +594,13 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
-  // if there is an "else" clause, we will have one more "body" node
+    // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
+    this->returnDropped = false;
     walk(tree->bodies[tree->bodies.size() - 1]);
   }
 
-  codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+  if (!this->returnDropped) codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
   this->earlyReturn = false;
   this->returnDropped = false;
   codeGenerator.setBuilderInsertionPoint(endBlock);
@@ -785,6 +784,12 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(),
         false);
     walk(tree->body);
+
+    this->returnType = tree->getRetTypeNode();
+
+    // void return
+    if (!returnDropped && !this->returnType) codeGenerator.generateReturn(codeGenerator.generateValue(0));
+
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
     this->returnDropped = false;
