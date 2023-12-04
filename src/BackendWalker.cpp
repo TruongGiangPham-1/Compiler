@@ -264,7 +264,9 @@ std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
     values.push_back(std::any_cast<mlir::Value>(walk(node)));
   }
 
-  return codeGenerator.generateValue(values);
+  auto result = codeGenerator.generateValue(values);
+  codeGenerator.normalize(result);
+  return result;
 }
 
 std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
