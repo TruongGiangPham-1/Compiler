@@ -1,0 +1,11 @@
+procedure void() {
+  "Hello world" -> std_output;
+}
+
+
+procedure main() returns integer {
+  call void();
+
+  return 0;
+}
+
