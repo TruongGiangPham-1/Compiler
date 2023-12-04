@@ -278,15 +278,46 @@ void appendList(list* list, commonType *value) {
   list->currentSize++;
 }
 
+commonType* getDominatingType(commonType* item) {
+  if (isCompositeType(item->type)) {
+    list* mlist = item->value;
+
+    commonType* dominator = getDominatingType(mlist->values[0]);
+
+    for (int i = 1; i < mlist->currentSize ; i++) {
+      commonType* temp = dominator;
+      dominator = promotion(dominator, getDominatingType(mlist->values[i]));
+      deallocateCommonType(temp);
+    }
+
+    return dominator;
+  } else {
+    return copyCommonType(item);
+  }
+}
+
+void normalizeItems(commonType* item, commonType* toBaseItem) {
+  if (isCompositeType(item->type)) {
+    list* mlist = item->value;
+    for (int i = 0; i < mlist->currentSize ; i++) {
+      normalizeItems(mlist->values[i], toBaseItem);
+    }
+  } else {
+    assignByReference(item, promotion(item, toBaseItem));
+  } 
+}
+
 /**
  * list can potentially be of different size elements, normalize.
   */
 void normalize(commonType* array) {
+
   list* mlist = (list*)array->value;
   int maxSize = 0;
   commonType* maxItem;
 
   if (mlist->currentSize > 0 && isCompositeType(mlist->values[0]->type)) {
+    normalizeItems(array, getDominatingType(array));
     for (int i = 0; i < mlist->currentSize; i ++) {
       list* item = mlist->values[i]->value;
 
