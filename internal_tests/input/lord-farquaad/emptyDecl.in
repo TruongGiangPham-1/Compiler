@@ -1,0 +1,9 @@
+procedure main() returns integer {
+    real[2, 2] a = [[], [1, 2.0]];
+    integer[0] empty = [];
+    a -> std_output;
+    '\n' -> std_output;
+    empty -> std_output;
+    '\n' -> std_output;
+    return 0;
+}
