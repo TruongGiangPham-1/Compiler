@@ -313,15 +313,17 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
   }
 }
 
+
 commonType* vectorPromotion(list* from, commonType* to) {
   if (isCompositeType(to->type)) {
     list* toList = (list*)to->value;
 
-    if (from->currentSize > toList->currentSize) {
-      SizeError("Promoting down, possible data loss");
+    if (from->currentSize != toList->currentSize) {
+      SizeError("Left and right operands of unequal size");
     } else {
       return vectorCast(from, to);
     }
+
   } else {
     list* newList = allocateList(from->currentSize);
     for (int i = 0 ; i < from->currentSize ; i++) {
