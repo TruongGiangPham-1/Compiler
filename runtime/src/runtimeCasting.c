@@ -317,23 +317,8 @@ commonType* vectorPromotion(list* from, commonType* to) {
   if (isCompositeType(to->type)) {
     list* toList = (list*)to->value;
 
-    if (from->currentSize < toList->currentSize) {
-      SizeError("Promoting down, possible data loss");
-    }
-
-
     if (from->currentSize > toList->currentSize) {
-
-      list* tempTo = allocateList(from->currentSize);
-      int i = 0;
-      for (; i < toList->currentSize ; i ++) {
-        appendList(tempTo,toList->values[i]);
-      }
-
-      for (; i < from->currentSize ; i ++) {
-        appendList(tempTo, nullFrom(tempTo->values[0]));
-      }
-      return vectorCast(from, allocateCommonType(&tempTo, VECTOR));
+      SizeError("Promoting down, possible data loss");
     } else {
       return vectorCast(from, to);
     }
