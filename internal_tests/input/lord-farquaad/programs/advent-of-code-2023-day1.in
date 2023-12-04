@@ -1,3 +1,5 @@
+const integer EOF = as<character>(255);
+
 function parseDigit(character c) returns integer {
     if (c == '0') {
         return 0;
@@ -32,7 +34,7 @@ procedure getLineNum() returns integer {
     c <- std_input;
 
     loop {
-        if (stream_state(std_input) == 2) {
+        if (c == EOF) {
             // end of file (return from function)
             return -1;
         }
