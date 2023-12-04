@@ -196,10 +196,10 @@ list* concat(list* l, list* r) {
 list* stride(list* l, int stride) {
   if (stride <= 0) StrideError("Bad stride");
 
-  int finalSize = ceil(l->size / (float)stride);
+  int finalSize = ceil(l->currentSize / (float)stride);
   list* newList = allocateList(finalSize);
 
-  for (int i = 0 ; i < l->size ; i += stride) {
+  for (int i = 0 ; i < l->currentSize; i += stride) {
     appendList(newList, l->values[i]);
   }
 
