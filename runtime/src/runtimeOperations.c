@@ -220,22 +220,20 @@ commonType* matrixMultiply(commonType* left, commonType* right) {
   int oneInit = 1;
   commonType* one = allocateCommonType(&oneInit, INTEGER);
 
-  int zero = 0;
-
-  commonType* row = allocateCommonType(&zero, INTEGER) ;
+  commonType* row = allocateCommonType(&oneInit, INTEGER) ;
   list* rowList = allocateListFromCommon(lRows);
 
-  while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LTHAN))) {
+  while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LEQ))) {
 
-    commonType* col  = allocateCommonType(&zero, INTEGER);
+    commonType* col  = allocateCommonType(&oneInit, INTEGER);
     list* colList = allocateListFromCommon(rCols);
 
-    while (commonTypeToBool(performCommonTypeBINOP(col, rCols, LTHAN))) {
+    while (commonTypeToBool(performCommonTypeBINOP(col, rCols, LEQ))) {
 
-      commonType* newItem = allocateCommonType(&zero, INTEGER);
-      commonType* k = allocateCommonType(&zero, INTEGER);
+      commonType* newItem = allocateCommonType(&oneInit, INTEGER);
+      commonType* k = allocateCommonType(&oneInit, INTEGER);
           
-      while (commonTypeToBool(performCommonTypeBINOP(k, rRows, LTHAN))) {
+      while (commonTypeToBool(performCommonTypeBINOP(k, rRows, LEQ))) {
 
         commonType *leftItem = indexCommonType(indexCommonType(left, row), k);
         commonType *rightItem = indexCommonType(indexCommonType(right, k), col);

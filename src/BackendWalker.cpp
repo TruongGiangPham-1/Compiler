@@ -699,7 +699,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       auto domain = std::any_cast<mlir::Value>(walk(domainNode));
 
       // var to index the domain
-      auto domainIdx = codeGenerator.generateValue(0);
+      auto domainIdx = codeGenerator.generateValue(1);
       auto domainIdxVal = codeGenerator.generateValue(0);
       codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
 
@@ -716,7 +716,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       // PREDICATE (domainIdx < length)
       codeGenerator.generateEnterBlock(loopBeginBlock);
       codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
-      auto inBounds = codeGenerator.performBINOP(domainIdx, domainLength, LTHAN);
+      auto inBounds = codeGenerator.performBINOP(domainIdx, domainLength, LEQ);
       codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
       // BODY (true block)
