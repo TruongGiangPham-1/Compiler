@@ -599,14 +599,12 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 
 // assume we are indexing a tuploe item
 commonType* indexCommonType(commonType* indexee, commonType* indexor) {
-  // cheat for easy dot product. This will never actually occur with scalar-to-scalar
-  // should be caught by typecheck if they try
-  if (!isCompositeType(indexee->type)) {
-    return indexee;
-  }
-
   list* list = indexee->value;
-  return list->values[*(int*)indexor->value - 1];
+  int index = *(int*)indexor->value - 1;
+
+  if (index > list->currentSize || index < 0) IndexError("out of bounds index");
+
+  return list->values[index];
 }
 
 // https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar
