@@ -607,7 +607,7 @@ commonType* indexCommonType(commonType* indexee, commonType* indexor) {
   }
 
   list* list = indexee->value;
-  return list->values[*(int*)indexor->value];
+  return list->values[*(int*)indexor->value - 1];
 }
 
 // https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar

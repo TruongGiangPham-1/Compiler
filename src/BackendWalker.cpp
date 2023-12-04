@@ -293,7 +293,7 @@ std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
     indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
 
-  return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index));
+  return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index+1));
 }
 
 std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
