@@ -314,9 +314,14 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
 }
 
 commonType* vectorPromotion(list* from, commonType* to) {
-  list* toList = (list*)to->value;
-
   if (isCompositeType(to->type)) {
+    list* toList = (list*)to->value;
+
+    if (from->currentSize < toList->currentSize) {
+      SizeError("Promoting down, possible data loss");
+    }
+
+
     if (from->currentSize > toList->currentSize) {
 
       list* tempTo = allocateList(from->currentSize);
