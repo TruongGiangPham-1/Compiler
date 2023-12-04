@@ -26,6 +26,8 @@ typedef struct list {
   commonType** values; // list of values
 } list;
 commonType* promotion(commonType* from, commonType* to);
+commonType* cast(commonType* from, commonType* to);
+
 void printCommonType(commonType *type);
 // allocate some memory for a new commontype
 commonType* allocateCommonType(void* value, enum TYPE type);
@@ -45,7 +47,6 @@ list* copyList(list* copyFrom);
 
 // copy the value that the common type is pointing to. KEY WORD COPY
 void* copyValue(commonType* copyFrom);
-
 void assignByReference(commonType* dest, commonType* from);
 
 // 'composite'. internally, it holds a list of commonTypes
@@ -68,8 +69,25 @@ commonType* copyCommonType(commonType* copyFrom) {
   return copy;
 }
 
+void checkSizes(commonType* dest, commonType* value) {
+  if (isCompositeType(dest->type)) {
+    if (!isCompositeType(value->type)) return;
+
+    list* destList = dest->value;
+    list* valueList = value->value;
+
+    if (destList->currentSize < valueList->size) SizeError("Assignment causes data loss");
+
+    checkSizes(destList->values[0], valueList->values[0]);
+  }
+}
+
+
+
 void assignByReference(commonType* dest, commonType* from) {
-  commonType* promotedVal = promotion(from, dest);
+  checkSizes(dest, from);
+
+  commonType* promotedVal = cast(from, dest);
   if (isCompositeType(dest->type)) {
     deallocateList(dest->value);
   } else {
@@ -258,15 +276,46 @@ void appendList(list* list, commonType *value) {
   list->currentSize++;
 }
 
+commonType* getDominatingType(commonType* item) {
+  if (isCompositeType(item->type)) {
+    list* mlist = item->value;
+
+    commonType* dominator = getDominatingType(mlist->values[0]);
+
+    for (int i = 1; i < mlist->currentSize ; i++) {
+      commonType* temp = dominator;
+      dominator = promotion(dominator, getDominatingType(mlist->values[i]));
+      deallocateCommonType(temp);
+    }
+
+    return dominator;
+  } else {
+    return copyCommonType(item);
+  }
+}
+
+void normalizeItems(commonType* item, commonType* toBaseItem) {
+  if (isCompositeType(item->type)) {
+    list* mlist = item->value;
+    for (int i = 0; i < mlist->currentSize ; i++) {
+      normalizeItems(mlist->values[i], toBaseItem);
+    }
+  } else {
+    assignByReference(item, promotion(item, toBaseItem));
+  } 
+}
+
 /**
  * list can potentially be of different size elements, normalize.
   */
 void normalize(commonType* array) {
+
   list* mlist = (list*)array->value;
   int maxSize = 0;
   commonType* maxItem;
 
   if (mlist->currentSize > 0 && isCompositeType(mlist->values[0]->type)) {
+    normalizeItems(array, getDominatingType(array));
     for (int i = 0; i < mlist->currentSize; i ++) {
       list* item = mlist->values[i]->value;
 
@@ -277,7 +326,7 @@ void normalize(commonType* array) {
     }
 
     for (int i = 0 ; i < mlist->currentSize; i ++) {
-      mlist->values[i] = promotion(mlist->values[i], maxItem);
+      mlist->values[i] = cast(mlist->values[i], maxItem);
     }
   } 
 

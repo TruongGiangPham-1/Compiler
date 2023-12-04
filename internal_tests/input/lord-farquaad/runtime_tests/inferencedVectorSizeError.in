@@ -1,0 +1,9 @@
+procedure main() returns integer {
+
+  integer[*] a = 1..(5*5);
+  integer[*] b = 1..8;
+
+  a+b -> std_output;
+  
+  return 1;
+}
