@@ -217,6 +217,11 @@ commonType* matrixMultiply(commonType* left, commonType* right) {
   commonType* rCols = __columns(right);
   commonType* rRows = __rows(right);
 
+  int intLCols = *(int*)lCols->value;
+  int intRows = *(int*)rRows->value;
+
+  if (intLCols != intRows) SizeError("Incompatible matrix multiply");
+
   int oneInit = 1;
   int zero = 0;
   commonType* one = allocateCommonType(&oneInit, INTEGER);
