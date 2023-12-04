@@ -44,7 +44,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
-      auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i));
+      auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i+1));
 
       codeGenerator.generateAssignment(dest, indexedValue);
     }
