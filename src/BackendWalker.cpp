@@ -785,10 +785,9 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         false);
     walk(tree->body);
 
-    this->returnType = tree->getRetTypeNode();
 
     // void return
-    if (!returnDropped && !this->returnType) codeGenerator.generateReturn(codeGenerator.generateValue(0));
+    if (!returnDropped && !tree->getRetTypeNode()) codeGenerator.generateReturn(codeGenerator.generateValue(0));
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
