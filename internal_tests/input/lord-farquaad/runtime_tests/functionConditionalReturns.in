@@ -8,6 +8,8 @@ function bigConditional(integer a) returns integer{
   } else {
     return 5;
   }
+
+  return -1;
 }
 
 procedure main() returns integer {
