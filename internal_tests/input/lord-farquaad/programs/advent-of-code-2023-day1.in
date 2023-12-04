@@ -1,4 +1,4 @@
-const character EOF = as<character>(255);
+const EOF = as<character>(255);
 
 function parseDigit(character c) returns integer {
     if (c == '0') {
