@@ -28,6 +28,7 @@ namespace gazprea {
         std::unordered_map<std::string, std::shared_ptr<FunctionNode>> funcProtypeList;  // map forwad declared function prototype  for swapping
         std::unordered_map<std::string, std::shared_ptr<ProcedureNode>> procProtypeList;  // map forwad declared function prototype for swapping
 
+        std::stack<std::shared_ptr<ScopedSymbol>>methodStack;
 
         std::shared_ptr<SymbolTable> symtab;
         std::shared_ptr<Scope> currentScope;
