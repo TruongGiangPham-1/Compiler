@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <limits.h>
 
-#define DEBUGSTREAM
+//#define DEBUGSTREAM
 //#define DEBUGPRINT
 
 // global variable streamBuffer for streamIn
