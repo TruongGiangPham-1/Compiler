@@ -297,7 +297,7 @@ void normalize(commonType* array) {
     }
 
     for (int i = 0 ; i < mlist->currentSize; i ++) {
-      mlist->values[i] = promotion(mlist->values[i], maxItem);
+      mlist->values[i] = cast(mlist->values[i], maxItem);
     }
   } 
 
