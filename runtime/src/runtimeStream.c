@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <limits.h>
 
-//#define DEBUGSTREAM
+#define DEBUGSTREAM
 //#define DEBUGPRINT
 
 // global variable streamBuffer for streamIn
@@ -185,30 +185,42 @@ enum StreamState readFromBuf(commonType* type) {
     switch (type->type) {
         case INTEGER: {
             int n;
-            check = sscanf(STREAM_BUF, "%d%n", &n, &charsRead);
-            if (check != 1) {
+            errno = 0;
+            char *temp;
+            long val = strtol(STREAM_BUF, &temp, 0);
+
+            if (temp == STREAM_BUF || !whitespaceOrEOF(*temp)) {
                 // didn't read anything (e.g. bad input)
 #ifdef DEBUGSTREAM
                 printf("ERROR (int): didn't successfully read an int (check = %d)\n", check);
 #endif /* ifdef DEBUGSTREAM */
                 resetBuf(0);
                 return STREAM_STATE_ERR;
-            } else if (!whitespaceOrEOF(STREAM_BUF[charsRead])) {
-                // if we didn't read a valid ending, we hit an error
+            } else if (val >= INT_MAX) {
 #ifdef DEBUGSTREAM
-                printf("ERROR (int): didn't successfully read an int (ending char was non-whitespace '%c' at pos %d)\n", STREAM_BUF[charsRead], charsRead);
+                printf("WARN (int): too high (val = %ld)\n", val);
 #endif /* ifdef DEBUGSTREAM */
-                resetBuf(0);
-                return STREAM_STATE_ERR;
+                // too high. Set to max int
+                n = INT_MAX;
+            } else if (val <= INT_MIN) {
+#ifdef DEBUGSTREAM
+                printf("WARN (int): too low (val = %ld)\n", val);
+#endif /* ifdef DEBUGSTREAM */
+                // too low. Set to min int
+                n = INT_MIN;
             } else {
-                // success
 #ifdef DEBUGSTREAM
-                printf("OK (int): Scanned '%d', reading '%d' chars\n", n, charsRead);
+                printf("OK (int): Scanned '%ld'\n", val);
 #endif /* ifdef DEBUGSTREAM */
-                *(int*)type->value = n;
-                resetBuf(charsRead);
-                return STREAM_STATE_OK;
+                n = (int) val;
             }
+            int charsRead = temp - STREAM_BUF;
+#ifdef DEBUGSTREAM
+            printf("OK (int): Scanned %d chars\n", charsRead);
+#endif /* ifdef DEBUGSTREAM */
+            *(int*)type->value = n;
+            resetBuf(charsRead);
+            return STREAM_STATE_OK;
         }
         case CHAR: {
             // CHAR CAN NEVER FAIL (except if it's an end of file)
