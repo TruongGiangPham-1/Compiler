@@ -424,7 +424,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVectDomain()));
 
     // we do a little indexing
-    auto index = codeGenerator.generateValue(0);
+    auto index = codeGenerator.generateValue(1);
     auto domain = codeGenerator.generateValue(0);
     auto one = codeGenerator.generateValue(1);
 
@@ -444,7 +444,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     codeGenerator.generateEnterBlock(loopBeginBlock);
     codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
 
-    auto inBounds = codeGenerator.performBINOP(index, length, LTHAN);
+    auto inBounds = codeGenerator.performBINOP(index, length, LEQ);
 
     codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
@@ -466,9 +466,9 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     auto column = std::any_cast<mlir::Value>(walk(tree->getMatrixDomain().second));
 
     // we do a little indexing
-    auto rowIndex = codeGenerator.generateValue(0);
-    auto rowDomain = codeGenerator.generateValue(0);
-    auto colDomain = codeGenerator.generateValue(0);
+    auto rowIndex = codeGenerator.generateValue(1);
+    auto rowDomain = codeGenerator.generateValue(1);
+    auto colDomain = codeGenerator.generateValue(1);
 
     auto one = codeGenerator.generateValue(1);
 
@@ -493,14 +493,14 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.generateEnterBlock(matrixBeginBlock);
     codeGenerator.setBuilderInsertionPoint(matrixBeginBlock);
-    auto inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LTHAN);
+    auto inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LEQ);
     codeGenerator.generateCompAndJump(matrixTrueBlock, matrixExitBlock, codeGenerator.downcastToBool(inBoundsRow));
     codeGenerator.setBuilderInsertionPoint(matrixTrueBlock);
 
     codeGenerator.appendCommon(generatorVector, codeGenerator.generateValue(colLength));
     codeGenerator.generateAssignment(rowIndex, codeGenerator.performBINOP(rowIndex,one , ADD));
 
-    rowIndex = codeGenerator.generateValue(0);
+    rowIndex = codeGenerator.generateValue(1);
 
     mlir::Block *rowBeginBlock= codeGenerator.generateBlock();
     mlir::Block *rowTrueBlock= codeGenerator.generateBlock();
@@ -509,10 +509,10 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     codeGenerator.generateEnterBlock(rowBeginBlock);
     codeGenerator.setBuilderInsertionPoint(rowBeginBlock);
 
-    inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LTHAN);
+    inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LEQ);
     codeGenerator.generateCompAndJump(rowTrueBlock, rowExitBlock, codeGenerator.downcastToBool(inBoundsRow));
     codeGenerator.setBuilderInsertionPoint(rowTrueBlock);
-    auto colIndex = codeGenerator.generateValue(0);
+    auto colIndex = codeGenerator.generateValue(1);
 
     /* COL ========================= */
       mlir::Block *colBeginBlock= codeGenerator.generateBlock();
@@ -522,7 +522,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
       codeGenerator.generateEnterBlock(colBeginBlock);
       codeGenerator.setBuilderInsertionPoint(colBeginBlock);
 
-      auto inBoundsCol = codeGenerator.performBINOP(colIndex, colLength, LTHAN);
+      auto inBoundsCol = codeGenerator.performBINOP(colIndex, colLength, LEQ);
       codeGenerator.generateCompAndJump(colTrueBlock, colExitBlock, codeGenerator.downcastToBool(inBoundsCol));
 
       codeGenerator.setBuilderInsertionPoint(colTrueBlock);
