@@ -209,6 +209,8 @@ void BackEnd::setupCommonTypeRuntime() {
   auto allocateListFromCommon = mlir::LLVM::LLVMFunctionType::get(listTypeAddr, {commonTypeAddr});
   auto appendListType = mlir::LLVM::LLVMFunctionType::get(intType, {listTypeAddr, commonTypeAddr});
   auto appendCommon = mlir::LLVM::LLVMFunctionType::get(intType, {commonTypeAddr, commonTypeAddr});
+  auto normalize = mlir::LLVM::LLVMFunctionType::get(intType, {commonTypeAddr});
+
   auto indexCommonType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, commonTypeAddr});
   auto deallocateCommonType =
       mlir::LLVM::LLVMFunctionType::get(voidType, commonTypeAddr);
@@ -222,6 +224,9 @@ void BackEnd::setupCommonTypeRuntime() {
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
   // setup runtime stream_state function
   auto streamStateFunctionType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {intPtrType});
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "normalize",
+                                            normalize);
+
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "__rows",
                                             lengthType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "copyCommonType", copy);
@@ -333,6 +338,14 @@ mlir::Value BackEnd::copyCommonType(mlir::Value val) {
 
   return builder->create<mlir::LLVM::CallOp>(loc, copyFunc, mlir::ValueRange({val})).getResult();
 }
+
+void BackEnd::normalize(mlir::Value matrix) {
+  mlir::LLVM::LLVMFuncOp normalizeFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("normalize");
+
+  builder->create<mlir::LLVM::CallOp>(loc, normalizeFunc, mlir::ValueRange({matrix}));
+}
+
 mlir::Value BackEnd::cast(mlir::Value left, mlir::Value right) {
   mlir::LLVM::LLVMFuncOp promotionFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("cast");
