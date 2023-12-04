@@ -602,7 +602,7 @@ commonType* indexCommonType(commonType* indexee, commonType* indexor) {
   list* list = indexee->value;
   int index = *(int*)indexor->value - 1;
 
-  if (index > list->currentSize || index < 0) IndexError("out of bounds index");
+  if (index >= list->currentSize || index < 0) IndexError("out of bounds index");
 
   return list->values[index];
 }
