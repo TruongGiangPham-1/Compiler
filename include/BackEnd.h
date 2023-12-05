@@ -75,7 +75,7 @@ public:
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
   void generateEndFunctionDefinition(mlir::Block* returnBlock, int line);
-  void generateReturn(mlir::Value returnVal);
+  void generateReturn(mlir::Value returnVal, mlir::Value stack);
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
@@ -88,6 +88,7 @@ public:
 
   void generateInitializeGlobalVar(std::string varName, mlir::Value value);
   void deallocateVectors();
+  void deallocateObjects(mlir::Value stack);
   void deallocateObjects();
   void pushScope();
   void popScope();

@@ -274,7 +274,13 @@ commonType* initializeStack(int size) {
 }
 
 void deallocateStack(commonType* stack) {
+  list* mlist = stack->value;
 
+  for (int i = 0 ; i < mlist->currentSize; i++) {
+    deallocateCommonType(mlist->values[i]);
+  }
+
+  deallocateCommonType(stack);
 }
 
 /**

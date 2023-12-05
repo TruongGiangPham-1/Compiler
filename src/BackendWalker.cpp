@@ -833,7 +833,7 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
+  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)), this->methodStack);
   this->returnDropped = true;
   return 0;
 }
