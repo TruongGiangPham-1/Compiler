@@ -76,9 +76,10 @@ void checkSizes(commonType* dest, commonType* value) {
     list* destList = dest->value;
     list* valueList = value->value;
 
-    if (destList->currentSize < valueList->size) SizeError("Assignment causes data loss");
-
-    checkSizes(destList->values[0], valueList->values[0]);
+    if (destList->currentSize < valueList->currentSize) SizeError("Assignment causes data loss");
+    if (destList->currentSize > 0) {
+      checkSizes(destList->values[0], valueList->values[0]);
+    }
   }
 }
 
