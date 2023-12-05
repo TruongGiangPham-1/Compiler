@@ -9,6 +9,7 @@
 
 #include "ASTNode/ASTNode.h"
 #include "ASTNode/ArgNode.h"
+#include "ScopedSymbol.h"
 #include "ASTNode/Block/BlockNode.h"
 #include "Symbol.h"
 #include "Type.h"
@@ -16,6 +17,7 @@
 class ProcedureNode : public ASTNode {
 public:
     std::vector<std::shared_ptr<ASTNode>>orderedArgs;    // array of arguments's ID node
+    std::vector<std::pair<std::string, int>>declaredVars;  // all the variable declared in this mehtod
     std::shared_ptr<Symbol> nameSym;
     int hasReturn = 0;
     std::shared_ptr<ASTNode> body;

@@ -22,6 +22,7 @@ public:
     std::shared_ptr<Type> typeSym;  // cast to advancedType!
     //
     int index = -1;  // for method parameters
+    int functionStackIndex = -1;  // -1 indicates its in global
     std::unordered_map<std::string , int> tupleIndexMap;  // look up map if the tuple index is an ID
 
     mlir::Value mlirAddr;
