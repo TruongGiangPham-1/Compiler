@@ -251,6 +251,31 @@ list* allocateListFromCommon(commonType* size) {
   return allocateList(*(int*)size->value);
 }
 
+void appendStack(commonType* stack, commonType *value) {
+  list* stackList = stack->value;
+
+  if (stackList->currentSize + 1 > stackList->size) {
+    int newSize = stackList->size > 0 ? stackList->size * 2 : 5;
+
+    list* newStack = allocateList(newSize);
+
+    for (int i = 0 ; i < stackList->currentSize; i++) {
+      newStack->values[i] = stackList->values[i];
+    }
+
+    newStack->currentSize = stackList->currentSize;
+
+    deallocateList(stackList);
+    stack->value = newStack;
+  }
+  
+  appendList(stack->value, value);
+}
+
+void deallocateStack(commonType* stack) {
+
+}
+
 /**
  * Add item to our tuple, we can potentially go over bounds....
  * but we shoulnd't due to spec, right?

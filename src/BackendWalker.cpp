@@ -70,7 +70,12 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 
   this->inferenceContext.pop_back();
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
+  if (tree->sym->functionStackIndex > 0) {
+    codeGenerator.appendStack(this->methodStack, initializedType);
+  } else {
+    codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
+  }
+
   return 0;
 }
 
@@ -226,8 +231,11 @@ std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   // might be arg
+  
   if (tree->sym->index >= 0) {
     return codeGenerator.generateLoadArgument(tree->sym->index);
+  } else if (tree->sym->functionStackIndex >= 0) {
+    return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
@@ -785,6 +793,9 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name,
         tree->orderedArgs.size(),
         false);
+
+    this->methodStack = codeGenerator.generateValue(std::vector<mlir::Value>({}));
+
     walk(tree->body);
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
@@ -800,6 +811,9 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
     auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name,
         tree->orderedArgs.size(),
         false);
+    // stack
+    this->methodStack = codeGenerator.generateValue(std::vector<mlir::Value>({}));
+
     walk(tree->body);
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());

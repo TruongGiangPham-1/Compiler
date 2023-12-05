@@ -17,6 +17,7 @@ private:
   bool earlyReturn = false;
   bool returnDropped = false;
   std::vector<mlir::Value> inferenceContext;
+  mlir::Value methodStack;
 
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;

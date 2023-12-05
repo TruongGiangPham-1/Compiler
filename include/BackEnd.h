@@ -66,6 +66,7 @@ public:
   mlir::Value cast(mlir::Value from, mlir::Value to);
 
   void appendCommon(mlir::Value destination, mlir::Value item);
+  void appendStack(mlir::Value destination, mlir::Value item);
 
   mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);

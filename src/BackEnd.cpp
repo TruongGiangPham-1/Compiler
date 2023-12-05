@@ -267,6 +267,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                             appendListType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendCommon",
                                             appendCommon);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "appendStack",
+                                            appendCommon);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "deallocateCommonType",
                                             deallocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "commonTypeToBool", mlir::LLVM::LLVMFunctionType::get(boolType, {commonTypeAddr}));
@@ -379,6 +381,15 @@ mlir::Value BackEnd::cast(mlir::Value left, TYPE toType) {
 void BackEnd::appendCommon(mlir::Value destination, mlir::Value item) {
   mlir::LLVM::LLVMFuncOp appendFunc =
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendCommon");
+
+  builder->create<mlir::LLVM::CallOp>(loc, appendFunc, mlir::ValueRange({destination, item}));
+
+  return;
+}
+
+void BackEnd::appendStack(mlir::Value destination, mlir::Value item) {
+  mlir::LLVM::LLVMFuncOp appendFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("appendStack");
 
   builder->create<mlir::LLVM::CallOp>(loc, appendFunc, mlir::ValueRange({destination, item}));
 
@@ -641,15 +652,8 @@ mlir::Value BackEnd::generateIdentityValue(std::shared_ptr<Type> type) {
 }
 
 void BackEnd::deallocateObjects() {
-  for (auto label : **(objectLabels.end() - 1)) {
-    mlir::LLVM::LLVMFuncOp deallocateObject =
-        module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("deallocateCommonType");
-
-    auto object = this->generateLoadIdentifier(label);
-
-    builder->create<mlir::LLVM::CallOp>(loc, deallocateObject, object);
-  }
 }
+
 // don't need the types for much, just set stuff up so we know what to cast to
 mlir::Block* BackEnd::generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid) {
     auto currentBlock = builder->getBlock();
