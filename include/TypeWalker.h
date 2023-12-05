@@ -31,6 +31,7 @@ namespace gazprea {
         std::shared_ptr<Type> getType(std::string table[7][7], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
         int getTypeIndex(const std::string type);
         // vecto helper
+        void promoteTupleElements(std::shared_ptr<Type> promoteTo ,std::shared_ptr<ASTNode> exprNode);
         void promoteVectorElements(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode> exprNode);
         void updateVectorNodeEvaluatedType(std::shared_ptr<Type>assignType, std::shared_ptr<ASTNode> exprNode);
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
