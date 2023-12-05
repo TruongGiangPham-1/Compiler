@@ -110,7 +110,7 @@ namespace gazprea {
             currentScope = symtab->enterScope(sname, currentScope);
 
             methodStack.push(methodSym);  // define the method symbol ins stack
-
+            methodStackOffset = 0;
 
             // add to the functoin stack
             if (tree->body) {
@@ -123,7 +123,9 @@ namespace gazprea {
             }
 
             methodStack.pop();
+            methodStackOffset = 0;
             tree->declaredVars = methodSym->declaredVars;
+
 
             currentScope = symtab->exitScope(currentScope);  // pop local scope
             currentScope = symtab->exitScope(currentScope);  // pop method scope
@@ -159,6 +161,7 @@ namespace gazprea {
                 currentScope = symtab->enterScope(sname, currentScope);
 
                 methodStack.push(funcSymCast);  // define the method symbol ins stack
+                methodStackOffset = 0;
 
                 if (tree->body) {
                     walk(tree->body);  // ref all the symbol inside function block;
@@ -167,6 +170,7 @@ namespace gazprea {
                 }
 
                 methodStack.pop();
+                methodStackOffset = 0;
 
                 tree->declaredVars = funcSymCast->declaredVars;
                 currentScope = symtab->exitScope(currentScope);  // pop local scope
@@ -230,12 +234,14 @@ namespace gazprea {
             currentScope = symtab->enterScope(sname, currentScope);
 
             methodStack.push(methodSym);  // define the method symbol ins stack
+            methodStackOffset = 0;
 
             if (tree->body) {
                 walk(tree->body);  // ref all the symbol inside function block;
             }
 
             methodStack.pop();
+            methodStackOffset = 0;
             tree->declaredVars = methodSym->declaredVars;
             currentScope = symtab->exitScope(currentScope);  // pop local scope
             currentScope = symtab->exitScope(currentScope);  // pop method scope
@@ -269,11 +275,13 @@ namespace gazprea {
                 currentScope = symtab->enterScope(sname, currentScope);
 
                 methodStack.push(procSymCast);
+                methodStackOffset = 0;
                 if (tree->body) {
                     walk(tree->body);  // ref all the symbol inside function block;
                 }
 
                 methodStack.pop();
+                methodStackOffset = 0;
                 tree->declaredVars = procSymCast->declaredVars;
                 currentScope = symtab->exitScope(currentScope);  // pop local scope
                 currentScope = symtab->exitScope(currentScope);  // pop method scope
@@ -377,12 +385,6 @@ namespace gazprea {
 
         }
 
-        // get the function/procedure we are in
-        std::shared_ptr<ScopedSymbol> methodSym = nullptr;
-        if (!methodStack.empty()) {
-            methodSym = methodStack.top();  // get the method we are in
-            methodSym->declaredVars.push_back(std::make_pair(tree->getIDName(), 1));
-        }
 
 
 
@@ -423,6 +425,17 @@ namespace gazprea {
             if (!tree->getTypeNode()) {
                  idSym = std::make_shared<VariableSymbol>(tree->getIDName(), nullptr);
             }
+        }
+        // get the function/procedure we are in
+        std::shared_ptr<ScopedSymbol> methodSym = nullptr;
+        if (!methodStack.empty()) {
+            methodSym = methodStack.top();  // get the method we are in
+            this->methodStackOffset += 1;
+            methodSym->declaredVars.push_back(std::make_pair(tree->getIDName(), this->methodStackOffset));
+            idSym->functionStackIndex = this->methodStackOffset;
+#ifdef DEBUG
+            std::cout << "stackoffset is " << idSym->functionStackIndex << "\n";
+#endif
         }
 
         idSym->mlirName = mlirName;
@@ -534,8 +547,8 @@ namespace gazprea {
             currentScope->define(domainVar);
 #ifdef DEBUG
             std::cout << "in line " << tree->loc()
-                      << "domainVar=" << domainV->getName() << " defined as "
-                      << domainV->mlirName << std::endl;
+                      << "domainVar=" << domainVar->getName() << " defined as "
+                      << domainVar->mlirName << std::endl;
 #endif
         }
         // note, iterator variables in its own scope

@@ -12,6 +12,8 @@ class ScopedSymbol: public Symbol, public Scope{
 protected:
     bool isBuiltin;
 public:
+
+
     FUNCTYPE functypeENUM = FUNCTYPE::FUNC_NORMAL;  // enum of buildIN
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;

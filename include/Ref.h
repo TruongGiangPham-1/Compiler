@@ -53,6 +53,7 @@ namespace gazprea {
         Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int>mlirIDptr);
 
         std::shared_ptr<int> varID;
+        int methodStackOffset = 0;
 
         std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree);
 
