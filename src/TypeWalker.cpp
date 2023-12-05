@@ -433,6 +433,19 @@ namespace gazprea {
         return promotedTypeCop;
     }
 
+    void PromotedType::promoteTupleElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
+        if (std::dynamic_pointer_cast<TupleNode>(exprNode)) {
+            auto tupleCast = std::dynamic_pointer_cast<TupleNode>(exprNode);
+            for (auto &kv: tupleCast->getVal()) {
+                if (kv->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+
+                }
+            }
+        } else {
+
+        }
+    }
+
     // promote all evaluatedType of a vector tree node
     void PromotedType::promoteVectorElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         if (exprNode->evaluatedType->baseTypeEnum == TYPE::IDENTITY || exprNode->evaluatedType->baseTypeEnum == TYPE::NULL_) {
@@ -875,6 +888,10 @@ namespace gazprea {
                         throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
                     }
                 }
+                //rType->tupleChildType[i].second =
+                if (rType->tupleChildType[i].second->vectorOrMatrixEnum == VECTOR) {
+                    //
+                }
             }
           
             tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
@@ -1164,7 +1181,13 @@ namespace gazprea {
             walkChildren(tree);
             tree->evaluatedType = tree->MethodRef->typeSym;
             auto functionSym = tree->MethodRef;
-            auto argType = tree->children[0]->evaluatedType;
+            std::shared_ptr<Type> argType = nullptr;
+            if (!tree->children.empty()) {
+                argType = tree->children[0]->evaluatedType;
+            }
+            if (!functionSym->isBuiltIn()) {
+                return nullptr;
+            }
             switch (functionSym->functypeENUM) {
                 case FUNC_LENGTH:
                     // typecheck must be vector
