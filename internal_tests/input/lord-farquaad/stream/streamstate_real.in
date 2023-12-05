@@ -1,8 +1,8 @@
 procedure main() returns integer {
-  integer x;
+  real x;
   integer i;
 
-  // input: 9999999999999999
+  // input: 99999999999999999999999999999999999999999999999999999.9999999999999 (inf)
   x <- std_input;
   x -> std_output;
   ' ' -> std_output;
@@ -10,7 +10,7 @@ procedure main() returns integer {
   i -> std_output;
   '\n' -> std_output;
 
-  // input: 1
+  // input: 12.5
   x <- std_input;
   x -> std_output;
   ' ' -> std_output;

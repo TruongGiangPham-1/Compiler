@@ -593,25 +593,30 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
     walk(tree->bodies[i]);
 
     // return was dropped during walk, don't need to bound back
-    if (!this->returnDropped) {
-      codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
-    }
-
+    if (!this->returnDropped) codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+  
     this->returnDropped = false;
     this->earlyReturn = false;
-
+  
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
+  this->returnDropped = false;
   // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
     walk(tree->bodies[tree->bodies.size() - 1]);
   }
 
-  codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+  if (!this->returnDropped)  {
+    codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn); 
+    codeGenerator.setBuilderInsertionPoint(endBlock);
+  } else {
+    endBlock->erase();
+  }
+
+  // note returnDropped isn't turned off. dropping a return in an else
+  // guarantees early return. stop generating code, it will be unreachable
   this->earlyReturn = false;
-  this->returnDropped = false;
-  codeGenerator.setBuilderInsertionPoint(endBlock);
 
   return 0;
 }
@@ -795,6 +800,12 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
 
     walk(tree->body);
+
+    // cheeky return. catches void functions + generalizes if/else returns
+    if (!returnDropped && !tree->getRetTypeNode()) { 
+      codeGenerator.generateReturn(codeGenerator.generateValue(0)) ;
+    }
+
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
     this->returnDropped = false;
@@ -833,7 +844,9 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)), this->methodStack);
+  auto returnValue = tree->returnExpr ? std::any_cast<mlir::Value>(walk(tree->returnExpr)) : codeGenerator.generateValue(0);
+  codeGenerator.generateReturn(returnValue, this->methodStack);
+
   this->returnDropped = true;
   return 0;
 }
