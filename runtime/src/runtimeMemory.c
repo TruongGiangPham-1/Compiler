@@ -76,9 +76,10 @@ void checkSizes(commonType* dest, commonType* value) {
     list* destList = dest->value;
     list* valueList = value->value;
 
-    if (destList->currentSize < valueList->size) SizeError("Assignment causes data loss");
-
-    checkSizes(destList->values[0], valueList->values[0]);
+    if (destList->currentSize < valueList->currentSize) SizeError("Assignment causes data loss");
+    if (destList->currentSize > 0) {
+      checkSizes(destList->values[0], valueList->values[0]);
+    }
   }
 }
 
@@ -277,30 +278,45 @@ void appendList(list* list, commonType *value) {
 }
 
 commonType* getDominatingType(commonType* item) {
+  if (item == NULL) {
+    return NULL;
+  }
+
   if (isCompositeType(item->type)) {
     list* mlist = item->value;
 
-    commonType* dominator = getDominatingType(mlist->values[0]);
-
-    for (int i = 1; i < mlist->currentSize ; i++) {
+    commonType* dominator = NULL;
+    for (int i = 0; i < mlist->currentSize ; i++) {
       commonType* temp = dominator;
-      dominator = promotion(dominator, getDominatingType(mlist->values[i]));
-      deallocateCommonType(temp);
+      
+      commonType* domType = getDominatingType(mlist->values[i]);
+
+      if (domType != NULL) {
+        if (dominator) {
+          dominator = promotion(dominator, domType);
+        } else {
+          dominator = domType;
+        }
+      } 
     }
 
     return dominator;
   } else {
-    return copyCommonType(item);
+    return item;
   }
 }
 
 void normalizeItems(commonType* item, commonType* toBaseItem) {
+  if (!item || !toBaseItem) {
+    return;
+  }
+
   if (isCompositeType(item->type)) {
     list* mlist = item->value;
     for (int i = 0; i < mlist->currentSize ; i++) {
       normalizeItems(mlist->values[i], toBaseItem);
     }
-  } else {
+  } else if (item) {
     assignByReference(item, promotion(item, toBaseItem));
   } 
 }
@@ -309,7 +325,6 @@ void normalizeItems(commonType* item, commonType* toBaseItem) {
  * list can potentially be of different size elements, normalize.
   */
 void normalize(commonType* array) {
-
   list* mlist = (list*)array->value;
   int maxSize = 0;
   commonType* maxItem;
