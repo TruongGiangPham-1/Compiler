@@ -1,0 +1,16 @@
+function fib(integer n) returns integer {
+  if (n == 0) {
+    return 0;
+  }else if (n ==1) {
+    return 1;
+  } 
+
+  return fib(n-1) + fib(n-2);
+}
+ 
+
+procedure main() returns integer {
+  fib(27) -> std_output;
+  '\n' -> std_output;
+  return 1;
+}
