@@ -36,8 +36,6 @@ public:
 
   mlir::Value initializeStack(int size);
 
-
-
   void functionShowcase();
 
   // construct tuple from values
