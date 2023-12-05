@@ -70,7 +70,17 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 
   this->inferenceContext.pop_back();
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
+  if (tree->sym->functionStackIndex >= 0) {
+    codeGenerator.generateAssignment(
+        codeGenerator.indexCommonType(
+          this->methodStack, 
+          codeGenerator.generateValue(tree->sym->functionStackIndex)
+          ),
+        initializedType);
+  } else {
+    codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
+  }
+
   return 0;
 }
 
@@ -226,8 +236,11 @@ std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   // might be arg
+  
   if (tree->sym->index >= 0) {
     return codeGenerator.generateLoadArgument(tree->sym->index);
+  } else if (tree->sym->functionStackIndex >= 0) {
+    return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
@@ -284,14 +297,7 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
 }
 
 std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
-  mlir::Value indexee;
-
-  // indexee isn't an expression. HACK
-  if (tree->sym->index >= 0) {
-    indexee = codeGenerator.generateLoadArgument(tree->sym->index);
-  } else {
-    indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
-  }
+  mlir::Value indexee = std::any_cast<mlir::Value>(walk(tree->getIDNode()));
 
   return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index+1));
 }
@@ -790,11 +796,14 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name,
         tree->orderedArgs.size(),
         false);
+
+    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
+
     walk(tree->body);
 
     // cheeky return. catches void functions + generalizes if/else returns
     if (!returnDropped && !tree->getRetTypeNode()) { 
-      codeGenerator.generateReturn(codeGenerator.generateValue(0)) ;
+      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->methodStack) ;
     }
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
@@ -811,6 +820,9 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
     auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name,
         tree->orderedArgs.size(),
         false);
+    // stack
+    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
+
     walk(tree->body);
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
@@ -832,8 +844,9 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-  auto returnValue = tree->returnExpr ? walk(tree->returnExpr) : codeGenerator.generateValue(0);
-  codeGenerator.generateReturn(std::any_cast<mlir::Value>(returnValue));
+  auto returnValue = tree->returnExpr ? std::any_cast<mlir::Value>(walk(tree->returnExpr)) : codeGenerator.generateValue(0);
+  codeGenerator.generateReturn(returnValue, this->methodStack);
+
   this->returnDropped = true;
   return 0;
 }
