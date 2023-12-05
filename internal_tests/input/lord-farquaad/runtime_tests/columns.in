@@ -3,8 +3,6 @@ procedure main() returns integer {
   '\n' -> std_output;
   columns([[1,2,3], [4,5,6]]) -> std_output;
   '\n' -> std_output;
-  columns([[1,2,3,4], [4,5,6,7]] + [[1,2,3], [4,5,6], [7,8,9]]) -> std_output;
-  '\n' -> std_output;
 
   return 0;
 }

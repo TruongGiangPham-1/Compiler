@@ -35,6 +35,7 @@ namespace gazprea {
         void updateVectorNodeEvaluatedType(std::shared_ptr<Type>assignType, std::shared_ptr<ASTNode> exprNode);
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
+
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
         void populateInnerTypes(std::shared_ptr<Type>type, std::shared_ptr<VectorNode>tree);
         std::shared_ptr<Type> promoteVectorTypeObj(std::shared_ptr<Type>promoteTo, std::shared_ptr<Type> promotedType, int line);
@@ -45,6 +46,8 @@ namespace gazprea {
         int isMatrix(std::shared_ptr<Type> type);
         int isVector(std::shared_ptr<Type> type);
         int isScalar(std::shared_ptr<Type> type);
+        // check if it is an empty vector literal such as [] ->.  it has no baseType yet
+        int isEmptyArrayLiteral(std::shared_ptr<Type>type);
         // create copy of the type obj. only used in promoteLiteralToArray
         std::shared_ptr<Type>getTypeCopy(std::shared_ptr<Type>type);
 

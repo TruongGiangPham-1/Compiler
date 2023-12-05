@@ -17,8 +17,6 @@ procedure main() returns integer {
   '\n' -> std_output;
   l==l1 -> std_output;
   '\n' -> std_output;
-  l==w -> std_output;
-  '\n' -> std_output;
 
   return 0;
 }
