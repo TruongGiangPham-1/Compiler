@@ -733,19 +733,26 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
 
   // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
   // if there is a break/continue statement, we need to jump to the correct exit block
-  this->loopBlocks.push_back(std::make_pair(blocks[0].first, blocks[0].second));
+  this->loopBlocks.push_back(std::make_pair(blocks[blocks.size() - 1].first, blocks[blocks.size() - 1].second));
 
   // walk the body
   walk(tree->getBody());
 
   // add all exitBlocks, increment domainIdx
-  // reverse it first
+  // reverse it first; we need to traverse in reverse order
   std::reverse(blocks.begin(), blocks.end());
+  bool finishedInnermost = false;
   for (auto &blockInfo : blocks) {
     auto enter = blockInfo.first;
     auto exit = blockInfo.second;
 
-    codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
+    // we only do a conditionalJump when we are in the innermost loop
+    if (!finishedInnermost) {
+      codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
+      finishedInnermost = true;
+    } else {
+      codeGenerator.conditionalJumpToBlock(enter, true);
+    }
     codeGenerator.setBuilderInsertionPoint(exit);
   }
   this->earlyReturn = false;
