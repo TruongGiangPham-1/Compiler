@@ -109,6 +109,7 @@ void assignByReference(commonType* dest, commonType* from) {
 commonType* allocateCommonType(void* value, enum TYPE type) {
   commonType* newType = (commonType*)malloc(sizeof(commonType));
   newType->type = type;
+  newType->unset = false;
   extractAndAssignValue(value, newType);
 
 #ifdef DEBUGMEMORY
