@@ -292,14 +292,7 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
 }
 
 std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
-  mlir::Value indexee;
-
-  // indexee isn't an expression. HACK
-  if (tree->sym->index >= 0) {
-    indexee = codeGenerator.generateLoadArgument(tree->sym->index);
-  } else {
-    indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
-  }
+  mlir::Value indexee = std::any_cast<mlir::Value>(walk(tree->getIDNode()));
 
   return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index+1));
 }
