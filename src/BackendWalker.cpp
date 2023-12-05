@@ -803,7 +803,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
 
     // cheeky return. catches void functions + generalizes if/else returns
     if (!returnDropped && !tree->getRetTypeNode()) { 
-      codeGenerator.generateReturn(codeGenerator.generateValue(0)) ;
+      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->methodStack) ;
     }
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
