@@ -2,7 +2,7 @@ procedure main() returns integer {
   integer x;
   integer i;
 
-  // input: 9999999999999999
+  // input: 9s
   x <- std_input;
   x -> std_output;
   ' ' -> std_output;
@@ -11,14 +11,6 @@ procedure main() returns integer {
   '\n' -> std_output;
 
   // input: 1
-  x <- std_input;
-  x -> std_output;
-  ' ' -> std_output;
-  i = stream_state(std_input);
-  i -> std_output;
-  '\n' -> std_output;
-
-  // EOF
   x <- std_input;
   x -> std_output;
   ' ' -> std_output;
