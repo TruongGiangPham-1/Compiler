@@ -242,6 +242,7 @@ void deallocateCommonType(commonType* object) {
 list* allocateList(int size) {
   list* newList = (list*) malloc(sizeof(list));
   commonType** valueList = (commonType**) calloc(size, sizeof(commonType*));
+  memset(valueList, 0x0, size * sizeof(commonType*));
 
   newList->size = size;
   newList->currentSize = 0;
