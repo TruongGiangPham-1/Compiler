@@ -1,0 +1,42 @@
+const integer[*] l1 =  [1, 2, 4, 7, 8, 12, 15, 19, 24, 50, 69, 80, 100];
+
+function binarySearch(integer target) returns integer {
+
+  integer len = length(l1);
+  integer low = 0;
+  integer high = len;
+
+  integer index = (low + high)/2;
+
+  integer num = l1[index];
+  integer lastNum = -1;
+
+  loop while (num != target) {
+    if (num == lastNum) {
+      index = -1;
+      break;
+    }
+
+    if (num > target) {
+      high = index;
+    } else {
+      low = index+1;
+    }
+
+    index = (high + low) / 2;
+    lastNum = num;
+    num = l1[index];
+  }
+  return index; 
+}
+
+procedure main() returns integer {
+  binarySearch(19) -> std_output;
+  '\n' -> std_output;
+  binarySearch(1) -> std_output;
+  '\n' -> std_output;
+  binarySearch(100) -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
