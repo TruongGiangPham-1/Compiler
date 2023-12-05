@@ -34,6 +34,9 @@ public:
   mlir::Value generateValue(mlir::Value lower, mlir::Value upper);
   mlir::Value generateValue(mlir::Value size);
 
+  mlir::Value initializeStack(int size);
+
+
 
   void functionShowcase();
 

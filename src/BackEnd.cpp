@@ -222,6 +222,8 @@ void BackEnd::setupCommonTypeRuntime() {
   auto commonUnaryopType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr, intType});
 
   auto lengthType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {commonTypeAddr});
+  auto initializeStack= mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {intType});
+
   // setup runtime stream_state function
   auto streamStateFunctionType = mlir::LLVM::LLVMFunctionType::get(commonTypeAddr, {intPtrType});
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "normalize",
@@ -259,6 +261,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
                                             allocateListType);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "initializeStack",
+                                            initializeStack);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateListFromCommon",
                                             allocateListFromCommon);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateFromRange",
@@ -570,6 +574,11 @@ mlir::Value BackEnd::generateValue(mlir::Value length) {
   auto list = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({length})).getResult();
 
   return this->generateCommonType(list, VECTOR);
+}
+
+mlir::Value BackEnd::initializeStack(int size) {
+  mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("initializeStack");
+  return builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({generateInteger(size)})).getResult();
 }
 
 /**

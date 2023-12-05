@@ -70,8 +70,13 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 
   this->inferenceContext.pop_back();
 
-  if (tree->sym->functionStackIndex > 0) {
-    codeGenerator.appendStack(this->methodStack, initializedType);
+  if (tree->sym->functionStackIndex >= 0) {
+    codeGenerator.generateAssignment(
+        codeGenerator.indexCommonType(
+          this->methodStack, 
+          codeGenerator.generateValue(tree->sym->functionStackIndex)
+          ),
+        initializedType);
   } else {
     codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
   }
@@ -787,7 +792,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(),
         false);
 
-    this->methodStack = codeGenerator.generateValue(std::vector<mlir::Value>({}));
+    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
 
     walk(tree->body);
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
@@ -805,7 +810,7 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         tree->orderedArgs.size(),
         false);
     // stack
-    this->methodStack = codeGenerator.generateValue(std::vector<mlir::Value>({}));
+    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
 
     walk(tree->body);
 

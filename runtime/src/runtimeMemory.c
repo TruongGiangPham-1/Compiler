@@ -17,6 +17,7 @@
 
 typedef struct commonType {
   enum TYPE type; 
+  bool unset;
   void* value; 
 } commonType;
 
@@ -86,6 +87,13 @@ void checkSizes(commonType* dest, commonType* value) {
 
 
 void assignByReference(commonType* dest, commonType* from) {
+  if (dest->unset) {
+    dest->value = copyValue(from);
+    dest->type = from->type;
+    dest->unset = false;
+    return;
+  }
+
   checkSizes(dest, from);
 
   commonType* promotedVal = cast(from, dest);
@@ -251,25 +259,16 @@ list* allocateListFromCommon(commonType* size) {
   return allocateList(*(int*)size->value);
 }
 
-void appendStack(commonType* stack, commonType *value) {
-  list* stackList = stack->value;
+commonType* initializeStack(int size) {
+  list* stackList = allocateList(size);
 
-  if (stackList->currentSize + 1 > stackList->size) {
-    int newSize = stackList->size > 0 ? stackList->size * 2 : 5;
-
-    list* newStack = allocateList(newSize);
-
-    for (int i = 0 ; i < stackList->currentSize; i++) {
-      newStack->values[i] = stackList->values[i];
-    }
-
-    newStack->currentSize = stackList->currentSize;
-
-    deallocateList(stackList);
-    stack->value = newStack;
+  for (int i  = 0 ; i < stackList->size ; i ++) {
+    commonType* newType = (commonType*)malloc(sizeof(commonType));
+    newType->unset = true;
+    appendList(stackList, newType);
   }
-  
-  appendList(stack->value, value);
+
+  return allocateCommonType(&stackList, VECTOR);
 }
 
 void deallocateStack(commonType* stack) {
