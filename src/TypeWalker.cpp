@@ -603,7 +603,7 @@ namespace gazprea {
         tree->evaluatedType->baseTypeEnum = TYPE::CHAR;
         tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
         tree->evaluatedType->vectorInnerTypes.clear();
-
+        tree->evaluatedType->isString = true;
         // Populating Inner Types of String "vector" with char types
         for (int i = 0; i < tree->getSize(); i++) {
             tree->evaluatedType->vectorInnerTypes.push_back(promotedType->getTypeCopy(currentScope->resolveType("character")));
