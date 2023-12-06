@@ -1,0 +1,11 @@
+procedure main() returns integer {
+
+  tuple(integer[*], integer[*]) a = (1..10, 1..10 || [1, 2, 3]);
+
+  a.1 -> std_output;
+  '\n' -> std_output;
+  a.2 -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
