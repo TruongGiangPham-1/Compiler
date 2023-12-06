@@ -86,6 +86,12 @@ namespace gazprea {
         } else if (isMatrix(type)) {
             std::cout << type->getBaseTypeEnumName() << " matrix\n";
         } else {
+            if (type->baseTypeEnum == TUPLE) {
+                std::cout << "printint tuple\n";
+                for (auto &c: type->tupleChildType) {
+                    printTypeClass(c.second);
+                }
+            }
             if (isScalar(type)) {
                 std::cout << type->getBaseTypeEnumName() << " base\n";
             } else if (isEmptyArrayLiteral(type)) {
@@ -178,6 +184,9 @@ namespace gazprea {
         for (auto &innerType: type->vectorInnerTypes) {
             newtype->vectorInnerTypes.push_back(getTypeCopy(innerType));
         }
+        for (auto &tupleType: type->tupleChildType) {
+            newtype->tupleChildType.push_back(std::make_pair(tupleType.first, getTypeCopy(tupleType.second)));
+        }
         return newtype;
     }
     std::shared_ptr<Type> PromotedType::getType(std::string table[7][7], std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::shared_ptr<ASTNode> t) {
@@ -252,7 +261,7 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            auto s = getPromotedTypeString(promotionTable, promoteTo, literalNode->evaluatedType);
+            auto s = getPromotedTypeString(promotionTable,  literalNode->evaluatedType, promoteTo);
             if (s.empty()) {
                 throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
             }
@@ -317,9 +326,15 @@ namespace gazprea {
 
         }
         else if (isVector(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
+            //possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            right->evaluatedType = createArrayType(right->evaluatedType->getBaseTypeEnumName(), VECTOR);
+            promoteVectorElements(dominantType, promoteNode);
             promoteLiteralToArray(left->evaluatedType, right);
         } else if (isVector(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE){
             // none vector
+            //possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            left->evaluatedType = createArrayType(left->evaluatedType->getBaseTypeEnumName(), VECTOR);
+            promoteVectorElements(dominantType, promoteNode);
             promoteLiteralToArray(right->evaluatedType, left);
         } else{
             // case everything else. like base type
@@ -402,6 +417,7 @@ namespace gazprea {
             promotedType->vectorOrMatrixEnum = VECTOR;
             promotedType->dims.clear();
             promotedType->dims.push_back(1);
+
         }
 
         //if (promoteTo->vectorInnerTypes[0]->size() != promotedType->vectorInnerTypes.size()) {
@@ -436,13 +452,49 @@ namespace gazprea {
     void PromotedType::promoteTupleElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         if (std::dynamic_pointer_cast<TupleNode>(exprNode)) {
             auto tupleCast = std::dynamic_pointer_cast<TupleNode>(exprNode);
-            for (auto &kv: tupleCast->getVal()) {
-                if (kv->evaluatedType->vectorOrMatrixEnum == VECTOR) {
+            int i = 0;
+            for (auto &kv: tupleCast->getVal()) {  // each tupleNode's child
+                auto lType = promoteTo->tupleChildType[i].second;
+                auto rType = kv->evaluatedType;
+                if (lType->vectorOrMatrixEnum == VECTOR) {
+                    if (isMatrix(lType) && isVector(rType)) {
+                        throw TypeError(exprNode->loc(), "cannot promote vectorNode to matrix");
+                    }
+                    if (isScalar(rType)) {
+                        promoteLiteralToArray(lType, kv);
+                    } else if (isEmptyArrayLiteral(rType)) {
+                        // empty array literal. simply promote to ltype
+                        //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
+                        kv->evaluatedType = getTypeCopy(lType);
+                    } else {
+                        promoteVectorElements(promoteTo->tupleChildType[i].second, kv);
+                        updateVectorNodeEvaluatedType(promoteTo->tupleChildType[i].second, kv);
+                    }
+                    exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(kv->evaluatedType);
 
+                } else if (isScalar(kv->evaluatedType)) {
+                    auto promo = getPromotedTypeString(promotionTable,  kv->evaluatedType, promoteTo->tupleChildType[i].second);
+                    if (promo.empty()) throw  TypeError(exprNode->loc(), "cannot promote tuple element");
+                    kv->evaluatedType = getTypeCopy(currentScope->resolveType(promo));
+                    exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(kv->evaluatedType);
                 }
+                i += 1;
             }
         } else {
-
+            // other nodes
+            int i = 0;
+            for (auto &type: exprNode->evaluatedType->tupleChildType) {
+                if (type.second->vectorOrMatrixEnum == VECTOR) {
+                    auto promotedVtype = promoteVectorTypeObj(promoteTo->tupleChildType[i].second, type.second, exprNode->loc());
+                    exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(promotedVtype);
+                } else if (isScalar(type.second)) {
+                    auto promo = getPromotedTypeString(promotionTable,  type.second, promoteTo->tupleChildType[i].second);
+                    if (promo.empty()) throw  TypeError(exprNode->loc(), "cannot promote tuple element");
+                    type.second= getTypeCopy(currentScope->resolveType(promo));
+                    exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(type.second);
+                }
+                i += 1;
+            }
         }
     }
 
@@ -715,10 +767,11 @@ namespace gazprea {
             return nullptr;
         }
         //--------------------------------
-
         promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
         tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
+
+
         if (promotedType->isScalar(tree->getLHS()->evaluatedType) && promotedType->isScalar(tree->getRHS()->evaluatedType)) {
             // concat between 2 non vector. we have to promote them all to vector
             auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
@@ -877,7 +930,8 @@ namespace gazprea {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             }
             for (size_t i = 0; i < rType->tupleChildType.size(); i++) {
-                auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+                //auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+                auto leftTypeString = lType->tupleChildType[i].second->getBaseTypeEnumName();
                 auto rightTypeString = rType->tupleChildType[i].second->getBaseTypeEnumName();
 
                 if (leftTypeString != rightTypeString) {
@@ -889,13 +943,11 @@ namespace gazprea {
                     }
                 }
                 //rType->tupleChildType[i].second =
-                if (rType->tupleChildType[i].second->vectorOrMatrixEnum == VECTOR) {
-                    //
-                }
             }
-          
-            tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
-            tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
+            promotedType->promoteTupleElements(lType, tree->getExprNode());
+            //tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
+            //tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
+            tree->evaluatedType = lType;
 
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
@@ -1022,6 +1074,9 @@ namespace gazprea {
                                 }
                             }
                         }
+                        promotedType->promoteTupleElements(lvalue->evaluatedType, tree->getRvalue());
+                        //promotedType->printTypeClass(tree->getRvalue()->evaluatedType);
+
                         tree->evaluatedType = lvalue->evaluatedType;
                     } else if (lvalue->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR) {
                         // handle vector literal. promote rhs
