@@ -118,7 +118,7 @@ namespace gazprea {
 
         std::any visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) override;
         std::any visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) override;
-
+        std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) override;
 
 
         std::any visitFilter(std::shared_ptr<FilterNode> tree) override;

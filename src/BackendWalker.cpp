@@ -733,7 +733,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
 
       // var to index the domain
       auto domainIdx = codeGenerator.generateValue(1);
-      auto domainIdxVal = codeGenerator.generateValue(0);
+      auto domainIdxVal = codeGenerator.generateNullValue(domainSym->typeSym);
       codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
 
       // get length of domainVec
