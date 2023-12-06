@@ -65,6 +65,8 @@ public:
   void normalize(mlir::Value matrix);
 
   mlir::Value cast(mlir::Value from, mlir::Value to);
+  mlir::Value promotion(mlir::Value from, mlir::Value to);
+
 
   void appendCommon(mlir::Value destination, mlir::Value item);
   void appendStack(mlir::Value destination, mlir::Value item);

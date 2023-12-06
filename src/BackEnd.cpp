@@ -257,6 +257,8 @@ void BackEnd::setupCommonTypeRuntime() {
                                           commonCastType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "cast",
                                           allocateFromRange);
+  builder->create<mlir::LLVM::LLVMFuncOp>(loc, "promotion",
+                                          allocateFromRange);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateCommonType",
                                             allocateCommonType);
   builder->create<mlir::LLVM::LLVMFuncOp>(loc, "allocateList",
@@ -352,6 +354,20 @@ void BackEnd::normalize(mlir::Value matrix) {
       module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("normalize");
 
   builder->create<mlir::LLVM::CallOp>(loc, normalizeFunc, mlir::ValueRange({matrix}));
+}
+
+mlir::Value BackEnd::promotion(mlir::Value left, mlir::Value right) {
+  mlir::LLVM::LLVMFuncOp promotionFunc =
+      module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("promotion");
+
+  auto result = builder->create<mlir::LLVM::CallOp>(loc, promotionFunc, mlir::ValueRange({left, right})).getResult();
+
+  // we create a new object, have to tag it
+  auto newLabel = trackObject();
+  this->generateDeclaration(newLabel, result);
+  this->allocatedObjects++;
+
+  return result;
 }
 
 mlir::Value BackEnd::cast(mlir::Value left, mlir::Value right) {

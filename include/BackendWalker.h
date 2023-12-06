@@ -1,3 +1,4 @@
+#include "ASTNode/ASTNode.h"
 #include "ASTNode/Block/BlockNode.h"
 #include "ASTNode/Expr/Literal/BoolNode.h"
 #include "ASTNode/Expr/Literal/CharNode.h"
@@ -18,6 +19,7 @@ private:
   bool returnDropped = false;
   std::vector<mlir::Value> inferenceContext;
   mlir::Value methodStack;
+  std::shared_ptr<ASTNode> returnType;
 
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
   std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
