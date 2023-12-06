@@ -619,8 +619,7 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopBody, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopBody);
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -646,8 +645,7 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // body of loop
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopCheck);
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -668,8 +666,7 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopCheck);
 
   // conditional
   codeGenerator.setBuilderInsertionPoint(loopCheck);
