@@ -898,6 +898,12 @@ namespace gazprea {
             tree->evaluatedType = lType;  //
             tree->getExprNode()->evaluatedType = lType;  // set identity/null node type to this type for promotion
             tree->getTypeNode()->evaluatedType = lType;
+            auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
+            if (tupleNode) {
+                for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                    tupleNode->getTypes()[i]->evaluatedType = lType->tupleChildType[i].second;
+                }
+            }
             return nullptr;
         }
 
@@ -925,6 +931,12 @@ namespace gazprea {
         }
 
         if (lType->getBaseTypeEnumName() == "tuple" && rType->getBaseTypeEnumName() == "tuple") {
+            // populate the tuple type nodes
+            auto mTree = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
+            for (int i = 0; i < mTree->getTypes().size(); i++) {
+                mTree->getTypes()[i]->evaluatedType = lType->tupleChildType[i].second;
+            }
+
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");

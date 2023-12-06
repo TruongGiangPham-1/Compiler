@@ -86,7 +86,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-  if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
+  if (!tree->evaluatedType->vectorInnerTypes.empty() && tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
       mlir::Value size;
