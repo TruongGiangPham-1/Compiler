@@ -1,0 +1,15 @@
+procedure predicatedTest() returns integer {
+    integer x = 0;
+    loop while (x < 10) {
+        return 10;
+    }
+
+    return 0;
+}
+
+procedure main() returns integer {
+    var x = predicatedTest();
+    x -> std_output;
+
+    return 0;
+}
