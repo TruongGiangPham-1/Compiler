@@ -937,7 +937,7 @@ namespace gazprea {
                 //rType->tupleChildType[i].second =
             }
             promotedType->promoteTupleElements(lType, tree->getExprNode());
-            promotedType->printTypeClass(tree->getExprNode()->evaluatedType);
+            //promotedType->printTypeClass(tree->getExprNode()->evaluatedType);
             //tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
             //tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
             tree->evaluatedType = lType;
