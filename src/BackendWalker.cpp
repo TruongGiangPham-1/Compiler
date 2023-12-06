@@ -320,7 +320,10 @@ std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+
+  this->inferenceContext.push_back(val);
   auto type = std::any_cast<mlir::Value>(walk(tree->getType()));
+  this->inferenceContext.pop_back();
 
   return codeGenerator.cast(val, type);
 }
