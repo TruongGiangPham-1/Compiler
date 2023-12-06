@@ -670,18 +670,35 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "Visiting break." << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<BreakNode>(ctx->getStart()->getLine());
 
-        return t;
+        // wrap this in a if(true)
+        auto ifConditional = std::make_shared<ConditionalNode>(ctx->getStart()->getLine());
+        ifConditional->conditions.push_back(std::make_shared<BoolNode>(ctx->getStart()->getLine(), true));
+
+        // create body
+        std::shared_ptr<ASTNode> continueNode = std::make_shared<BreakNode>(ctx->getStart()->getLine());
+        auto block = std::make_shared<BlockNode>(ctx->getStart()->getLine());
+        block->addChild(continueNode);
+        ifConditional->bodies.push_back(block);
+
+        return std::dynamic_pointer_cast<ASTNode>(ifConditional);
     }
 
     std::any ASTBuilder::visitContinue(GazpreaParser::ContinueContext *ctx) {
 #ifdef DEBUG
         std::cout << "Visiting continue." << std::endl;
 #endif
-        std::shared_ptr<ASTNode> t = std::make_shared<ContinueNode>(ctx->getStart()->getLine());
+        // wrap this in a if(true)
+        auto ifConditional = std::make_shared<ConditionalNode>(ctx->getStart()->getLine());
+        ifConditional->conditions.push_back(std::make_shared<BoolNode>(ctx->getStart()->getLine(), true));
 
-        return t;
+        // create body
+        std::shared_ptr<ASTNode> continueNode = std::make_shared<ContinueNode>(ctx->getStart()->getLine());
+        auto block = std::make_shared<BlockNode>(ctx->getStart()->getLine());
+        block->addChild(continueNode);
+        ifConditional->bodies.push_back(block);
+
+        return std::dynamic_pointer_cast<ASTNode>(ifConditional);
     }
 
     std::any ASTBuilder::visitProcedure(GazpreaParser::ProcedureContext *ctx) {

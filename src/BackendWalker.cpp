@@ -631,8 +631,7 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopBody, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopBody);
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -658,8 +657,7 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // body of loop
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopCheck);
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -680,8 +678,7 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopCheck);
 
   // conditional
   codeGenerator.setBuilderInsertionPoint(loopCheck);
@@ -745,22 +742,21 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
 
   // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
   // if there is a break/continue statement, we need to jump to the correct exit block
-  this->loopBlocks.push_back(std::make_pair(blocks[0].first, blocks[0].second));
+  this->loopBlocks.push_back(std::make_pair(blocks[blocks.size() - 1].first, blocks[blocks.size() - 1].second));
 
   // walk the body
   walk(tree->getBody());
 
   // add all exitBlocks, increment domainIdx
-  // reverse it first
+  // reverse it first; we need to traverse in reverse order
   std::reverse(blocks.begin(), blocks.end());
   for (auto &blockInfo : blocks) {
     auto enter = blockInfo.first;
     auto exit = blockInfo.second;
 
-    codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
+    codeGenerator.generateEnterBlock(enter);
     codeGenerator.setBuilderInsertionPoint(exit);
   }
-  this->earlyReturn = false;
   this->loopBlocks.pop_back();
 
   return 0;
