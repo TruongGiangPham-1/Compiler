@@ -581,6 +581,8 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   }
   mlir::Block *endBlock = codeGenerator.generateBlock();
 
+  bool allReturn = true;
+
   // now, go through the conditions and bodies and generate the code
   // the number of bodies is never less than the number of conditions
   for (int i = 0; i < tree->conditions.size(); i++) {
@@ -594,7 +596,9 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
     // return was dropped during walk, don't need to bound back
     if (!this->returnDropped) codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
-  
+    
+    allReturn = this->returnDropped & allReturn;
+
     this->returnDropped = false;
     this->earlyReturn = false;
   
@@ -609,10 +613,16 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
   if (!this->returnDropped)  {
     codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn); 
-    codeGenerator.setBuilderInsertionPoint(endBlock);
-  } else {
+
+  } 
+
+  if (allReturn) {
     endBlock->erase();
+  } else {
+    codeGenerator.setBuilderInsertionPoint(endBlock);
   }
+
+  this->returnDropped = allReturn;
 
   // note returnDropped isn't turned off. dropping a return in an else
   // guarantees early return. stop generating code, it will be unreachable
