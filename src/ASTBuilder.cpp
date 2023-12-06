@@ -62,7 +62,7 @@ namespace gazprea {
 
             std::shared_ptr<Symbol> baseSym = std::make_shared<Symbol>("character");
             std::shared_ptr<TypeNode> baseType = std::make_shared<TypeNode>(ctx->getStart()->getLine(), baseSym);
-            auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(baseType);
+            auto innerType = std::dynamic_pointer_cast<ASTNode>(baseType);
 
             auto t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
             t->isString = true;
@@ -87,7 +87,7 @@ namespace gazprea {
             sym = std::make_shared<Symbol>(typeText);
             std::shared_ptr<Symbol> baseSym = std::make_shared<Symbol>("character");
             std::shared_ptr<TypeNode> baseType = std::make_shared<TypeNode>(ctx->getStart()->getLine(), baseSym);
-            innerType = std::any_cast<std::shared_ptr<ASTNode>>(baseType);
+            innerType = std::dynamic_pointer_cast<ASTNode>(baseType);
             t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
             t->isString = true;
         }
