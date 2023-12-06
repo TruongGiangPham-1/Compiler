@@ -1141,12 +1141,12 @@ namespace gazprea {
                             throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
                         }
                         if (rhsType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rhsType)) {
-                            promotedType->promoteLiteralToArray(tupleIndexNode->evaluatedType, tree->getRvalue());
+                            promotedType->promoteLiteralToArray(tupleIndexNode->evaluatedType, tree->getRvalue(), promotedType->promotionTable);
                         } else if (promotedType->isEmptyArrayLiteral(rhsType)) {
                             tree->getRvalue()->evaluatedType = promotedType->getTypeCopy(tupleIndexNode->evaluatedType);
                         }
                         else {
-                            promotedType->promoteVectorElements(tupleIndexNode->evaluatedType, tree->getRvalue());
+                            promotedType->promoteVectorElements(tupleIndexNode->evaluatedType, tree->getRvalue(), promotedType->promotionTable);
                             promotedType->updateVectorNodeEvaluatedType(tupleIndexNode->evaluatedType, tree->getRvalue());
                         }
                         tree->evaluatedType = promotedType->getTypeCopy(tree->getRvalue()->evaluatedType);  // update the tree evaluated type with promoted
@@ -1214,12 +1214,12 @@ namespace gazprea {
                         throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
                     }
                     if (rhsType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rhsType)) {
-                        promotedType->promoteLiteralToArray(lvalue->evaluatedType, std::dynamic_pointer_cast<TupleNode>(tree->getRvalue())->getVal()[i]);
+                        promotedType->promoteLiteralToArray(lvalue->evaluatedType, std::dynamic_pointer_cast<TupleNode>(tree->getRvalue())->getVal()[i], promotedType->promotionTable);
                     } else if (promotedType->isEmptyArrayLiteral(rhsType)) {
                         std::dynamic_pointer_cast<TupleNode>(tree->getRvalue())->getVal()[i]->evaluatedType = promotedType->getTypeCopy(lvalue->evaluatedType);
                     }
                     else {
-                        promotedType->promoteVectorElements(lvalue->evaluatedType, std::dynamic_pointer_cast<TupleNode>(tree->getRvalue())->getVal()[i]);
+                        promotedType->promoteVectorElements(lvalue->evaluatedType, std::dynamic_pointer_cast<TupleNode>(tree->getRvalue())->getVal()[i], promotedType->promotionTable);
                         promotedType->updateVectorNodeEvaluatedType(lvalue->evaluatedType, std::dynamic_pointer_cast<TupleNode>(tree->getRvalue())->getVal()[i]);
                     }
                     return nullptr;
