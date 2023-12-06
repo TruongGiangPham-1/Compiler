@@ -14,7 +14,7 @@ public:
     // enum corresponding to the type
     // if it is a TYPE::STRING, we can dyamically cast to StringTypeNode
     TYPE typeEnum;
-
+    bool isString = false;
     TypeNode(int line, std::shared_ptr<Symbol> sym);
 
     std::string getTypeName();
