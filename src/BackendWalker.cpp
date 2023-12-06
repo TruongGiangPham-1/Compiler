@@ -1,6 +1,7 @@
 #include "BackendWalker.h"
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Type/VectorTypeNode.h"
+#include "ASTNode/Type/TupleTypeNode.h"
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTWalker.h"
 #include "Operands/BINOP.h"
@@ -85,7 +86,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-  if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
+  if (!tree->evaluatedType->vectorInnerTypes.empty() && tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
       mlir::Value size;
@@ -202,15 +203,21 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
   }else {
     
     switch (tree->evaluatedType->baseTypeEnum) {
-      case TUPLE:
-        for (auto child : tree->children) {
+      case TUPLE: 
+      {
+          auto mtree = std::dynamic_pointer_cast<TupleTypeNode>(tree);
+   
           std::vector<mlir::Value> children;
-          auto val = std::any_cast<mlir::Value>(walk(child));
+          for (auto child : mtree->getTypes()) {
 
-          children.push_back(val);
+            auto val = std::any_cast<mlir::Value>(walk(child));
+
+            children.push_back(val);
+            
+          }
           return codeGenerator.generateValue(children);
         }
-          default:
+        default:
        // base type, can resolve directly
         return codeGenerator.generateNullValue(tree->evaluatedType);
     }
