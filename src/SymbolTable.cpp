@@ -66,7 +66,7 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getName());  // create typenode with integer
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
         resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;
-
+        resolvedType->isString = typeN->isString;
         // make innertype node, which is a vector
         std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
@@ -97,9 +97,7 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         resolvedType->vectorInnerTypes.push_back(innerType_);
         return resolvedType;
 
-    } else if (std::dynamic_pointer_cast<StringTypeNode>(typeNode)){
-
-    } else if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
+    }  else if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
         // tuple typenode
         auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(typeNode);
 
