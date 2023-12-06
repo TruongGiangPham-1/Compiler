@@ -1423,7 +1423,16 @@ namespace gazprea {
 
     std::any TypeWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
         walk(tree->returnExpr);
+        auto node = std::dynamic_pointer_cast<ASTNode>(tree);
+        walkChildren(node);
         tree->evaluatedType = tree->returnExpr->evaluatedType;
+        auto type = tree->returnFunc->typeSym;
+        auto leftIndex = promotedType->getTypeIndex(tree->returnExpr->evaluatedType->getBaseTypeEnumName());
+        auto rightIndex = promotedType->getTypeIndex(type->getBaseTypeEnumName());
+        std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+        if (resultTypeString.empty()) {
+            throw TypeError(node->loc(), "Cannot implicitly promote " + tree->returnExpr->evaluatedType->getBaseTypeEnumName() + " to " + type->getBaseTypeEnumName());
+        }
         return nullptr;
     }
 
