@@ -307,6 +307,7 @@ namespace gazprea {
         auto t = std::make_shared<StringNode>(ctx->getStart()->getLine());
 
         std::string val = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+        t->size = val.length();
         // iteratively consume chars until the string is empty
         while (!val.empty()) {
             try {

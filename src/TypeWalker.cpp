@@ -600,10 +600,16 @@ namespace gazprea {
         // string is a vector Type node where baseEnum = string
         // and vectorInnerType of character
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
-        tree->evaluatedType->baseTypeEnum = STRING;
-        tree->evaluatedType = std::make_shared<AdvanceType>(tree->evaluatedType->getBaseTypeEnumName());
+        tree->evaluatedType->baseTypeEnum = TYPE::CHAR;
         tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
-        tree->evaluatedType->vectorInnerTypes.push_back(promotedType->getTypeCopy(currentScope->resolveType("character")));
+        tree->evaluatedType->vectorInnerTypes.clear();
+
+        // Populating Inner Types of String "vector" with char types
+        for (int i = 0; i < tree->getSize(); i++) {
+            tree->evaluatedType->vectorInnerTypes.push_back(promotedType->getTypeCopy(currentScope->resolveType("character")));
+        }
+
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the length of the string
         return nullptr;
     }
 
