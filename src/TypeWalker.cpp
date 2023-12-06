@@ -261,7 +261,7 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            auto s = getPromotedTypeString(promotionTable, literalNode->evaluatedType, promoteTo);
+            auto s = getPromotedTypeString(promotionTable, promoteTo, literalNode->evaluatedType);
             if (s.empty()) {
                 throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
             }
