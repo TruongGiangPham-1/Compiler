@@ -261,7 +261,7 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            auto s = getPromotedTypeString(promotionTable, promoteTo, literalNode->evaluatedType);
+            auto s = getPromotedTypeString(promotionTable, literalNode->evaluatedType, promoteTo);
             if (s.empty()) {
                 throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
             }
@@ -446,11 +446,25 @@ namespace gazprea {
         if (std::dynamic_pointer_cast<TupleNode>(exprNode)) {
             auto tupleCast = std::dynamic_pointer_cast<TupleNode>(exprNode);
             int i = 0;
-            for (auto &kv: tupleCast->getVal()) {
-                if (kv->evaluatedType->vectorOrMatrixEnum == VECTOR) {
-                    promoteVectorElements(promoteTo->tupleChildType[i].second, kv);
-                    updateVectorNodeEvaluatedType(promoteTo->tupleChildType[i].second, kv);
+            for (auto &kv: tupleCast->getVal()) {  // each tupleNode's child
+                auto lType = promoteTo->tupleChildType[i].second;
+                auto rType = kv->evaluatedType;
+                if (lType->vectorOrMatrixEnum == VECTOR) {
+                    if (isMatrix(lType) && isVector(rType)) {
+                        throw TypeError(exprNode->loc(), "cannot promote vectorNode to matrix");
+                    }
+                    if (isScalar(rType)) {
+                        promoteLiteralToArray(lType, kv);
+                    } else if (isEmptyArrayLiteral(rType)) {
+                        // empty array literal. simply promote to ltype
+                        //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
+                        kv->evaluatedType = getTypeCopy(lType);
+                    } else {
+                        promoteVectorElements(promoteTo->tupleChildType[i].second, kv);
+                        updateVectorNodeEvaluatedType(promoteTo->tupleChildType[i].second, kv);
+                    }
                     exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(kv->evaluatedType);
+
                 } else if (isScalar(kv->evaluatedType)) {
                     auto promo = getPromotedTypeString(promotionTable,  kv->evaluatedType, promoteTo->tupleChildType[i].second);
                     if (promo.empty()) throw  TypeError(exprNode->loc(), "cannot promote tuple element");
@@ -466,7 +480,6 @@ namespace gazprea {
                 if (type.second->vectorOrMatrixEnum == VECTOR) {
                     auto promotedVtype = promoteVectorTypeObj(promoteTo->tupleChildType[i].second, type.second, exprNode->loc());
                     exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(promotedVtype);
-
                 } else if (isScalar(type.second)) {
                     auto promo = getPromotedTypeString(promotionTable,  type.second, promoteTo->tupleChildType[i].second);
                     if (promo.empty()) throw  TypeError(exprNode->loc(), "cannot promote tuple element");
@@ -475,7 +488,6 @@ namespace gazprea {
                 }
                 i += 1;
             }
-
         }
     }
 
@@ -925,6 +937,7 @@ namespace gazprea {
                 //rType->tupleChildType[i].second =
             }
             promotedType->promoteTupleElements(lType, tree->getExprNode());
+            promotedType->printTypeClass(tree->getExprNode()->evaluatedType);
             //tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
             //tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
             tree->evaluatedType = lType;
