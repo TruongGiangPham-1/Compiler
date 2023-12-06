@@ -1,0 +1,11 @@
+procedure main() returns integer {
+  integer i = 0;
+  loop while (i < 10) {
+    if (i == 5) continue;
+
+    i -> std_output;
+    i = i + 1;
+  }
+
+  return 0;
+}
