@@ -571,11 +571,11 @@ mlir::Value BackEnd::generateValue(std::string value) {
 /**
  * empty vector so we can append to it. For filters and generators
  * */
-mlir::Value BackEnd::generateValue(mlir::Value length, bool isString) {
+mlir::Value BackEnd::generateValue(mlir::Value length) {
   mlir::LLVM::LLVMFuncOp allocateListFunc = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("allocateListFromCommon");
   auto list = builder->create<mlir::LLVM::CallOp>(loc, allocateListFunc, mlir::ValueRange({length})).getResult();
 
-  return this->generateCommonType(list, isString ? STRING : VECTOR);
+  return this->generateCommonType(list, VECTOR);
 }
 
 mlir::Value BackEnd::initializeStack(int size) {

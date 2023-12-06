@@ -7,9 +7,7 @@ public:
     std::string val;
 
     StringNode(int line);
-    int size;
+
     std::string toString() override;
     std::string getVal();
-
-    int getSize();
 };

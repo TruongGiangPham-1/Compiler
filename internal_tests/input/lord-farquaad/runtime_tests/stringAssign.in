@@ -1,7 +1,0 @@
-procedure main() returns integer {
-  string x = "hello world\n";
-
-  x -> std_output;
-
-  return 0;
-}
