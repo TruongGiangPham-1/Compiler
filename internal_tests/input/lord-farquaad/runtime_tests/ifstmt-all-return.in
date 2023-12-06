@@ -1,0 +1,10 @@
+procedure main() returns integer {
+  integer n = 10;
+  if (n == 9) {
+    return 0;
+  } else if (n == 10) {
+    return 1;
+  } else {
+    return 2;
+  }
+}
