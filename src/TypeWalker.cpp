@@ -86,6 +86,12 @@ namespace gazprea {
         } else if (isMatrix(type)) {
             std::cout << type->getBaseTypeEnumName() << " matrix\n";
         } else {
+            if (type->baseTypeEnum == TUPLE) {
+                std::cout << "printint tuple\n";
+                for (auto &c: type->tupleChildType) {
+                    printTypeClass(c.second);
+                }
+            }
             if (isScalar(type)) {
                 std::cout << type->getBaseTypeEnumName() << " base\n";
             } else if (isEmptyArrayLiteral(type)) {
@@ -436,10 +442,19 @@ namespace gazprea {
     void PromotedType::promoteTupleElements(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> exprNode) {
         if (std::dynamic_pointer_cast<TupleNode>(exprNode)) {
             auto tupleCast = std::dynamic_pointer_cast<TupleNode>(exprNode);
+            int i = 0;
             for (auto &kv: tupleCast->getVal()) {
                 if (kv->evaluatedType->vectorOrMatrixEnum == VECTOR) {
-
+                    promoteVectorElements(promoteTo->tupleChildType[i].second, kv);
+                    updateVectorNodeEvaluatedType(promoteTo->tupleChildType[i].second, kv);
+                    exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(kv->evaluatedType);
+                } else if (isScalar(kv->evaluatedType)) {
+                    auto promo = getPromotedTypeString(promotionTable,  kv->evaluatedType, promoteTo->tupleChildType[i].second);
+                    if (promo.empty()) throw  TypeError(exprNode->loc(), "cannot promote tuple element");
+                    kv->evaluatedType = getTypeCopy(currentScope->resolveType(promo));
+                    exprNode->evaluatedType->tupleChildType[i].second = getTypeCopy(kv->evaluatedType);
                 }
+                i += 1;
             }
         } else {
 
@@ -877,7 +892,8 @@ namespace gazprea {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             }
             for (size_t i = 0; i < rType->tupleChildType.size(); i++) {
-                auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+                //auto leftTypeString = std::dynamic_pointer_cast<TypeNode>(tupleNode->innerTypes[i].second)->getTypeName();
+                auto leftTypeString = lType->tupleChildType[i].second->getBaseTypeEnumName();
                 auto rightTypeString = rType->tupleChildType[i].second->getBaseTypeEnumName();
 
                 if (leftTypeString != rightTypeString) {
@@ -889,11 +905,8 @@ namespace gazprea {
                     }
                 }
                 //rType->tupleChildType[i].second =
-                if (rType->tupleChildType[i].second->vectorOrMatrixEnum == VECTOR) {
-                    //
-                }
             }
-          
+            promotedType->promoteTupleElements(lType, tree->getExprNode());
             tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
             tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
 
