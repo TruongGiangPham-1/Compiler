@@ -1,0 +1,9 @@
+procedure main() returns integer {
+  if (true) {
+    "hello\n" -> std_output;
+  } else {
+    return 1;
+  }
+
+  return 1;
+}
