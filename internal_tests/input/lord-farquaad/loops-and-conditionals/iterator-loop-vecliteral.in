@@ -3,6 +3,11 @@ procedure main() returns integer {
     i -> std_output;
     ' ' -> std_output;
   }
+  '\n' -> std_output;
+  loop i in ['a', 'b', 'c', 'd', 'e'] {
+    i -> std_output;
+    ' ' -> std_output;
+  }
 
   return 0;
 }
