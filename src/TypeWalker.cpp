@@ -1163,8 +1163,10 @@ namespace gazprea {
             throw TypeError(tree->loc(), "Cannot stream out unknown type");
         }
 
-        if(!std::dynamic_pointer_cast<IDNode>(tree->getExpr()) && !std::dynamic_pointer_cast<TupleIndexNode>(tree->getExpr())) {
-            throw SyntaxError(tree->loc(), "vector and matrix indexing not implemented yet/ incorrect lvalue");
+        if(!std::dynamic_pointer_cast<IDNode>(tree->getExpr()) &&
+            !std::dynamic_pointer_cast<TupleIndexNode>(tree->getExpr()) &&
+            !std::dynamic_pointer_cast<IndexNode>(tree->getExpr())) {
+            throw SyntaxError(tree->loc(), "incorrect lvalue for streamin!");
         }
 
         return nullptr;
