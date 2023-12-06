@@ -1,0 +1,10 @@
+procedure main() returns integer {
+  tuple(integer[2], real[2, 2], integer) tuple1 = as<tuple(integer[2], real[2, 2],integer)>(('a',1,'c'));
+  tuple1.1-> std_output;
+  '\n' ->std_output;
+  tuple1.2-> std_output;
+  '\n' ->std_output;
+  tuple1.3-> std_output;
+  '\n' ->std_output;
+  return 0;
+}
