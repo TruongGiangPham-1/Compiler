@@ -85,6 +85,8 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
+  std::cout << tree->evaluatedType->baseTypeEnum << std::endl;
+  std::cout << tree->evaluatedType->vectorOrMatrixEnum<< std::endl;
   if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
@@ -852,6 +854,7 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
     this->inferenceContext.push_back(returnValue);
     auto toType = std::any_cast<mlir::Value>(walk(this->returnType));
     returnValue = codeGenerator.promotion(returnValue, toType);
+    this->inferenceContext.pop_back();
   } else {
     returnValue = codeGenerator.generateValue(0);
   }
