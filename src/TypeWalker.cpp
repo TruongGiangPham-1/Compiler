@@ -261,7 +261,7 @@ namespace gazprea {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            auto s = getPromotedTypeString(promotionTable, promoteTo, literalNode->evaluatedType);
+            auto s = getPromotedTypeString(promotionTable,  literalNode->evaluatedType, promoteTo);
             if (s.empty()) {
                 throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
             }
@@ -326,9 +326,13 @@ namespace gazprea {
 
         }
         else if (isVector(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
+            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            promoteVectorElements(dominantType, promoteNode);
             promoteLiteralToArray(left->evaluatedType, right);
         } else if (isVector(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE){
             // none vector
+            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            promoteVectorElements(dominantType, promoteNode);
             promoteLiteralToArray(right->evaluatedType, left);
         } else{
             // case everything else. like base type
