@@ -8,7 +8,7 @@ public:
     TYPE baseTypeEnum = TYPE::NONE;  // [integer, real, character, boolean, string, tuple,   identity, null]
     TYPE vectorOrMatrixEnum = TYPE::NONE;  // [vector, matrix]  // indicate if the type is a matrix or vector or none
     std::vector<std::string> typeString{"integer", "real", "boolean", "character", "string", "vector", "matrix","tuple","none", "identity", "null"};
-    bool isString = false;
+
     // yikes, need to check if the type is TYPE::tuple then this vector will hav size when resolvd
     std::vector<std::pair<std::string, std::shared_ptr<Type>>> tupleChildType;
 
