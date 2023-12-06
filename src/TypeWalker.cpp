@@ -326,12 +326,14 @@ namespace gazprea {
 
         }
         else if (isVector(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
-            possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            //possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            right->evaluatedType = createArrayType(right->evaluatedType->getBaseTypeEnumName(), VECTOR);
             promoteVectorElements(dominantType, promoteNode);
             promoteLiteralToArray(left->evaluatedType, right);
         } else if (isVector(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE){
             // none vector
-            possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            //possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
+            left->evaluatedType = createArrayType(left->evaluatedType->getBaseTypeEnumName(), VECTOR);
             promoteVectorElements(dominantType, promoteNode);
             promoteLiteralToArray(right->evaluatedType, left);
         } else{
@@ -415,6 +417,7 @@ namespace gazprea {
             promotedType->vectorOrMatrixEnum = VECTOR;
             promotedType->dims.clear();
             promotedType->dims.push_back(1);
+
         }
 
         //if (promoteTo->vectorInnerTypes[0]->size() != promotedType->vectorInnerTypes.size()) {
@@ -764,10 +767,11 @@ namespace gazprea {
             return nullptr;
         }
         //--------------------------------
-
         promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
         tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
+
+
         if (promotedType->isScalar(tree->getLHS()->evaluatedType) && promotedType->isScalar(tree->getRHS()->evaluatedType)) {
             // concat between 2 non vector. we have to promote them all to vector
             auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
