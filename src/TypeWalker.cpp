@@ -1548,6 +1548,20 @@ namespace gazprea {
         }
         return nullptr;
     }
+    std::any TypeWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
+        // resolve the domain 1st
+        for (auto &domainExpr: tree->getDomainExprs()) {
+            auto domain = domainExpr.second;
+            walk(domain);
+        }
+        for (auto &domainExpr: tree->getDomainExprs()) {
+            auto domain = domainExpr.second;
+            auto domainVar = domainExpr.first;
+            // domain var's eval type is just a scalar since domainvec cannot be a matrix
+            domainVar->typeSym = promotedType->getTypeCopy(currentScope->resolveType(domain->evaluatedType->getBaseTypeEnumName()));
+        }
+        return nullptr;
+    }
 
     std::string TypeWalker::typeEnumToString(TYPE t) {
         switch (t) {
