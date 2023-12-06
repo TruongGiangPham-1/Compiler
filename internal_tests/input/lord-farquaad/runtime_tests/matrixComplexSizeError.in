@@ -1,0 +1,6 @@
+procedure main() returns integer {
+  
+  [[1,2],[3,4]] + [[1,2], [3,4] || 1] -> std_output;
+  
+  return 1;
+}

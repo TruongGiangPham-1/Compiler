@@ -44,7 +44,7 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
-      auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i));
+      auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i+1));
 
       codeGenerator.generateAssignment(dest, indexedValue);
     }
@@ -70,7 +70,17 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 
   this->inferenceContext.pop_back();
 
-  codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
+  if (tree->sym->functionStackIndex >= 0) {
+    codeGenerator.generateAssignment(
+        codeGenerator.indexCommonType(
+          this->methodStack, 
+          codeGenerator.generateValue(tree->sym->functionStackIndex)
+          ),
+        initializedType);
+  } else {
+    codeGenerator.generateDeclaration(tree->sym->mlirName, initializedType);
+  }
+
   return 0;
 }
 
@@ -226,8 +236,11 @@ std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   // might be arg
+  
   if (tree->sym->index >= 0) {
     return codeGenerator.generateLoadArgument(tree->sym->index);
+  } else if (tree->sym->functionStackIndex >= 0) {
+    return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
@@ -284,16 +297,9 @@ std::any BackendWalker::visitTuple(std::shared_ptr<TupleNode> tree) {
 }
 
 std::any BackendWalker::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
-  mlir::Value indexee;
+  mlir::Value indexee = std::any_cast<mlir::Value>(walk(tree->getIDNode()));
 
-  // indexee isn't an expression. HACK
-  if (tree->sym->index >= 0) {
-    indexee = codeGenerator.generateLoadArgument(tree->sym->index);
-  } else {
-    indexee =codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
-  }
-
-  return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index));
+  return codeGenerator.indexCommonType(indexee, codeGenerator.generateValue(tree->index+1));
 }
 
 std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
@@ -346,10 +352,10 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   auto one = codeGenerator.generateValue(1);
 
   // max amount of filters
-  auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size());
+  auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size()+1);
 
   // empty filter we are appending to
-  auto filter = codeGenerator.generateValue(codeGenerator.performBINOP(maxFiltered, one, ADD));
+  auto filter = codeGenerator.generateValue(maxFiltered);
   
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
@@ -367,12 +373,12 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
   mlir::Block *trueBlock = codeGenerator.generateBlock();
   mlir::Block *exitBlock = codeGenerator.generateBlock();
-  auto index = codeGenerator.generateValue(0);
+  auto index = codeGenerator.generateValue(1);
 
   codeGenerator.generateEnterBlock(loopBeginBlock);
   codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
 
-  auto inBounds = codeGenerator.performBINOP(index, maxVectorSize, LTHAN);
+  auto inBounds = codeGenerator.performBINOP(index, maxVectorSize, LEQ);
 
   codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
@@ -380,6 +386,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
 
   auto indexedVal = codeGenerator.indexCommonType(filteree, index);
+
   codeGenerator.generateAssignment(domain, indexedVal);
   auto appended = codeGenerator.generateValue(false);
   for (int i = 0 ; i < tree->getExprList().size() ; i ++) {
@@ -392,7 +399,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
     codeGenerator.setBuilderInsertionPoint(trueResult);
 
-    codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, codeGenerator.generateValue(i)), indexedVal);
+    codeGenerator.appendCommon(codeGenerator.indexCommonType(filter, codeGenerator.generateValue(i+1)), indexedVal);
     codeGenerator.generateAssignment(appended, codeGenerator.performBINOP(appended, codeGenerator.generateValue(true), OR));
 
     codeGenerator.generateEnterBlock(falseResult);
@@ -424,7 +431,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVectDomain()));
 
     // we do a little indexing
-    auto index = codeGenerator.generateValue(0);
+    auto index = codeGenerator.generateValue(1);
     auto domain = codeGenerator.generateValue(0);
     auto one = codeGenerator.generateValue(1);
 
@@ -444,7 +451,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     codeGenerator.generateEnterBlock(loopBeginBlock);
     codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
 
-    auto inBounds = codeGenerator.performBINOP(index, length, LTHAN);
+    auto inBounds = codeGenerator.performBINOP(index, length, LEQ);
 
     codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
@@ -466,9 +473,9 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     auto column = std::any_cast<mlir::Value>(walk(tree->getMatrixDomain().second));
 
     // we do a little indexing
-    auto rowIndex = codeGenerator.generateValue(0);
-    auto rowDomain = codeGenerator.generateValue(0);
-    auto colDomain = codeGenerator.generateValue(0);
+    auto rowIndex = codeGenerator.generateValue(1);
+    auto rowDomain = codeGenerator.generateValue(1);
+    auto colDomain = codeGenerator.generateValue(1);
 
     auto one = codeGenerator.generateValue(1);
 
@@ -493,14 +500,14 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.generateEnterBlock(matrixBeginBlock);
     codeGenerator.setBuilderInsertionPoint(matrixBeginBlock);
-    auto inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LTHAN);
+    auto inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LEQ);
     codeGenerator.generateCompAndJump(matrixTrueBlock, matrixExitBlock, codeGenerator.downcastToBool(inBoundsRow));
     codeGenerator.setBuilderInsertionPoint(matrixTrueBlock);
 
     codeGenerator.appendCommon(generatorVector, codeGenerator.generateValue(colLength));
     codeGenerator.generateAssignment(rowIndex, codeGenerator.performBINOP(rowIndex,one , ADD));
 
-    rowIndex = codeGenerator.generateValue(0);
+    rowIndex = codeGenerator.generateValue(1);
 
     mlir::Block *rowBeginBlock= codeGenerator.generateBlock();
     mlir::Block *rowTrueBlock= codeGenerator.generateBlock();
@@ -509,10 +516,10 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     codeGenerator.generateEnterBlock(rowBeginBlock);
     codeGenerator.setBuilderInsertionPoint(rowBeginBlock);
 
-    inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LTHAN);
+    inBoundsRow = codeGenerator.performBINOP(rowIndex, rowLength, LEQ);
     codeGenerator.generateCompAndJump(rowTrueBlock, rowExitBlock, codeGenerator.downcastToBool(inBoundsRow));
     codeGenerator.setBuilderInsertionPoint(rowTrueBlock);
-    auto colIndex = codeGenerator.generateValue(0);
+    auto colIndex = codeGenerator.generateValue(1);
 
     /* COL ========================= */
       mlir::Block *colBeginBlock= codeGenerator.generateBlock();
@@ -522,7 +529,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
       codeGenerator.generateEnterBlock(colBeginBlock);
       codeGenerator.setBuilderInsertionPoint(colBeginBlock);
 
-      auto inBoundsCol = codeGenerator.performBINOP(colIndex, colLength, LTHAN);
+      auto inBoundsCol = codeGenerator.performBINOP(colIndex, colLength, LEQ);
       codeGenerator.generateCompAndJump(colTrueBlock, colExitBlock, codeGenerator.downcastToBool(inBoundsCol));
 
       codeGenerator.setBuilderInsertionPoint(colTrueBlock);
@@ -586,25 +593,30 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
     walk(tree->bodies[i]);
 
     // return was dropped during walk, don't need to bound back
-    if (!this->returnDropped) {
-      codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
-    }
-
+    if (!this->returnDropped) codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+  
     this->returnDropped = false;
     this->earlyReturn = false;
-
+  
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
+  this->returnDropped = false;
   // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
     walk(tree->bodies[tree->bodies.size() - 1]);
   }
 
-  codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+  if (!this->returnDropped)  {
+    codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn); 
+    codeGenerator.setBuilderInsertionPoint(endBlock);
+  } else {
+    endBlock->erase();
+  }
+
+  // note returnDropped isn't turned off. dropping a return in an else
+  // guarantees early return. stop generating code, it will be unreachable
   this->earlyReturn = false;
-  this->returnDropped = false;
-  codeGenerator.setBuilderInsertionPoint(endBlock);
 
   return 0;
 }
@@ -695,7 +707,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       auto domain = std::any_cast<mlir::Value>(walk(domainNode));
 
       // var to index the domain
-      auto domainIdx = codeGenerator.generateValue(0);
+      auto domainIdx = codeGenerator.generateValue(1);
       auto domainIdxVal = codeGenerator.generateValue(0);
       codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
 
@@ -712,7 +724,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       // PREDICATE (domainIdx < length)
       codeGenerator.generateEnterBlock(loopBeginBlock);
       codeGenerator.setBuilderInsertionPoint(loopBeginBlock);
-      auto inBounds = codeGenerator.performBINOP(domainIdx, domainLength, LTHAN);
+      auto inBounds = codeGenerator.performBINOP(domainIdx, domainLength, LEQ);
       codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
       // BODY (true block)
@@ -780,7 +792,16 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
     auto block = codeGenerator.generateFunctionDefinition(tree->nameSym->name,
         tree->orderedArgs.size(),
         false);
+
+    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
+
     walk(tree->body);
+
+    // cheeky return. catches void functions + generalizes if/else returns
+    if (!returnDropped && !tree->getRetTypeNode()) { 
+      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->methodStack) ;
+    }
+
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
     this->returnDropped = false;
@@ -795,6 +816,9 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
     auto block = codeGenerator.generateFunctionDefinition(tree->funcNameSym->name,
         tree->orderedArgs.size(),
         false);
+    // stack
+    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
+
     walk(tree->body);
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
@@ -816,7 +840,9 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 }
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-  codeGenerator.generateReturn(std::any_cast<mlir::Value>(walk(tree->returnExpr)));
+  auto returnValue = tree->returnExpr ? std::any_cast<mlir::Value>(walk(tree->returnExpr)) : codeGenerator.generateValue(0);
+  codeGenerator.generateReturn(returnValue, this->methodStack);
+
   this->returnDropped = true;
   return 0;
 }

@@ -194,12 +194,15 @@ list* concat(list* l, list* r) {
 }
 
 list* stride(list* l, int stride) {
-  int finalSize = ceil(l->size / (float)stride);
+  if (stride <= 0) StrideError("Bad stride");
+
+  int finalSize = ceil(l->currentSize / (float)stride);
   list* newList = allocateList(finalSize);
 
-  for (int i = 0 ; i < l->size ; i += stride) {
+  for (int i = 0 ; i < l->currentSize; i += stride) {
     appendList(newList, l->values[i]);
   }
+
   return newList;
 }
 
@@ -214,25 +217,29 @@ commonType* matrixMultiply(commonType* left, commonType* right) {
   commonType* rCols = __columns(right);
   commonType* rRows = __rows(right);
 
+  int intLCols = *(int*)lCols->value;
+  int intRows = *(int*)rRows->value;
+
+  if (intLCols != intRows) SizeError("Incompatible matrix multiply");
+
   int oneInit = 1;
+  int zero = 0;
   commonType* one = allocateCommonType(&oneInit, INTEGER);
 
-  int zero = 0;
-
-  commonType* row = allocateCommonType(&zero, INTEGER) ;
+  commonType* row = allocateCommonType(&oneInit, INTEGER) ;
   list* rowList = allocateListFromCommon(lRows);
 
-  while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LTHAN))) {
+  while (commonTypeToBool(performCommonTypeBINOP(row, lRows, LEQ))) {
 
-    commonType* col  = allocateCommonType(&zero, INTEGER);
+    commonType* col  = allocateCommonType(&oneInit, INTEGER);
     list* colList = allocateListFromCommon(rCols);
 
-    while (commonTypeToBool(performCommonTypeBINOP(col, rCols, LTHAN))) {
+    while (commonTypeToBool(performCommonTypeBINOP(col, rCols, LEQ))) {
 
       commonType* newItem = allocateCommonType(&zero, INTEGER);
-      commonType* k = allocateCommonType(&zero, INTEGER);
+      commonType* k = allocateCommonType(&oneInit, INTEGER);
           
-      while (commonTypeToBool(performCommonTypeBINOP(k, rRows, LTHAN))) {
+      while (commonTypeToBool(performCommonTypeBINOP(k, rRows, LEQ))) {
 
         commonType *leftItem = indexCommonType(indexCommonType(left, row), k);
         commonType *rightItem = indexCommonType(indexCommonType(right, k), col);
@@ -423,6 +430,10 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
       return allocateCommonType(&newlist, left->type);
   }
 
+  if (op == DOT_PROD) {
+    return dotProduct(left, right);
+  }
+
   promotedLeft = promotion(left,right);
   promotedRight = promotion(right,left);
     
@@ -430,9 +441,7 @@ commonType* performCommonTypeBINOP(commonType* left, commonType* right, enum BIN
     return vectorFromRange(left, right);
   }
 
-  if (op == DOT_PROD) {
-    return dotProduct(left, right);
-  }
+
 
 
   // god is dead and i have killed him
@@ -595,14 +604,12 @@ commonType* performCommonTypeUNARYOP(commonType* val, enum UNARYOP op) {
 
 // assume we are indexing a tuploe item
 commonType* indexCommonType(commonType* indexee, commonType* indexor) {
-  // cheat for easy dot product. This will never actually occur with scalar-to-scalar
-  // should be caught by typecheck if they try
-  if (!isCompositeType(indexee->type)) {
-    return indexee;
-  }
-
   list* list = indexee->value;
-  return list->values[*(int*)indexor->value];
+  int index = *(int*)indexor->value - 1;
+
+  if (index >= list->currentSize || index < 0) IndexError("out of bounds index");
+
+  return list->values[index];
 }
 
 // https://cmput415.github.io/415-docs/gazprea/spec/type_casting.html#scalar-to-scalar

@@ -12,9 +12,12 @@ class ScopedSymbol: public Symbol, public Scope{
 protected:
     bool isBuiltin;
 public:
+
+
     FUNCTYPE functypeENUM = FUNCTYPE::FUNC_NORMAL;  // enum of buildIN
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;
+    std::vector<std::pair<std::string, int>>declaredVars;  // all the variable declared in this mehtod
 
     std::vector<std::shared_ptr<ASTNode>>forwardDeclArgs;  // arguments of the forward declared
 

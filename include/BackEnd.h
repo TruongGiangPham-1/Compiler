@@ -34,6 +34,7 @@ public:
   mlir::Value generateValue(mlir::Value lower, mlir::Value upper);
   mlir::Value generateValue(mlir::Value size);
 
+  mlir::Value initializeStack(int size);
 
   void functionShowcase();
 
@@ -66,12 +67,13 @@ public:
   mlir::Value cast(mlir::Value from, mlir::Value to);
 
   void appendCommon(mlir::Value destination, mlir::Value item);
+  void appendStack(mlir::Value destination, mlir::Value item);
 
   mlir::Value possiblyCast(mlir::Value val, std::shared_ptr<Type> nullableType);
   mlir::Block* generateFunctionDefinition(std::string signature, size_t argumentSize, bool isVoid);
 
   void generateEndFunctionDefinition(mlir::Block* returnBlock, int line);
-  void generateReturn(mlir::Value returnVal);
+  void generateReturn(mlir::Value returnVal, mlir::Value stack);
 
   mlir::Value generateLoadIdentifierPtr(std::string varName);
   mlir::Value generateLoadIdentifier(std::string varName);
@@ -84,6 +86,7 @@ public:
 
   void generateInitializeGlobalVar(std::string varName, mlir::Value value);
   void deallocateVectors();
+  void deallocateObjects(mlir::Value stack);
   void deallocateObjects();
   void pushScope();
   void popScope();

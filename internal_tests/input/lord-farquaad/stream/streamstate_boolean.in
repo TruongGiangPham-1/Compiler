@@ -9,13 +9,6 @@ procedure main() returns integer {
   i -> std_output;
   '\n' -> std_output;
 
-  // input: penis
-  b <- std_input;
-  b -> std_output;
-  i = stream_state(std_input);
-  i -> std_output;
-  '\n' -> std_output;
-
   // input: F
   b <- std_input;
   b -> std_output;
@@ -23,7 +16,7 @@ procedure main() returns integer {
   i -> std_output;
   '\n' -> std_output;
 
-  // EOF
+  // input: penis
   b <- std_input;
   b -> std_output;
   i = stream_state(std_input);

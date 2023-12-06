@@ -1,0 +1,9 @@
+procedure main() returns integer {
+
+  ([1,2] || 3) + [0,0,0] -> std_output;
+  '\n' -> std_output;
+  ([1,2] || [3,4]) + ([0,0,0] || 1) -> std_output;
+  '\n' -> std_output;
+
+  return 1;
+}

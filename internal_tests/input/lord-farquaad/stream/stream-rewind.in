@@ -1,0 +1,14 @@
+procedure main() returns integer {
+  integer i;
+  character c;
+  i <- std_input;
+  i <- std_input;
+  c <- std_input;
+
+  i -> std_output;
+  c -> std_output;
+  '$' -> std_output;
+
+
+  return 0;
+}
