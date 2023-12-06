@@ -1,0 +1,117 @@
+const integer N = 10;
+
+typedef integer[N, N] Board;
+
+procedure boardElement(Board board, integer row, integer col) returns string {
+    if (board[row, col] == 1) return "Q";
+    else return ".";
+}
+
+procedure printBoard(Board board) {
+    loop row in 1..N {
+        boardElement(board, row, 1) -> std_output;
+        loop col in 2..N {
+            " " -> std_output;
+            boardElement(board, row, col) -> std_output;
+        }
+        '\n' -> std_output;
+    }
+}
+
+procedure isSafe(Board board, const integer row, const integer col) returns boolean {
+    integer x = row;
+    integer y = col;
+
+    // row check
+    loop i in 1..col {
+        if (board[row, i] == 1) return false;
+    }
+
+    // diagonal check (part 1)
+    loop while (x >= 1 and y >= 1) {
+        if (board[x, y] == 1) return false;
+        x = x - 1;
+        y = y - 1;
+    }
+
+    // diagonal check (part 2)
+    x = row;
+    y = col;
+    loop while (x <= N and y >= 1) {
+        if (board[x, y] == 1) return false;
+        x = x + 1;
+        y = y - 1;
+    }
+
+    " Queen is safe at " -> std_output;
+    row -> std_output;
+    ", " -> std_output;
+    col -> std_output;
+    "\n" -> std_output;
+
+    return true;
+}
+
+procedure solveNQueens(var Board board, integer col) returns boolean {
+    if (col > N) return true;
+
+    "Trying column " -> std_output;
+    col -> std_output;
+    "\n" -> std_output;
+
+    loop row in 1..N {
+        col -> std_output;
+        if (isSafe(board, row, col)) {
+            "Placing queen at " -> std_output;
+            row -> std_output;
+            ", " -> std_output;
+            col -> std_output;
+            "\n" -> std_output;
+            board[row, col] = 1;
+            call printBoard(board);
+
+            boolean success = solveNQueens(board, col + 1);
+            "success = " -> std_output;
+            success -> std_output;
+            "\n" -> std_output;
+
+            if (success) {
+                return true;
+            } else {
+                "row = " -> std_output;
+                row -> std_output;
+
+                "\nRemoving queen at " -> std_output;
+                row -> std_output;
+                ", " -> std_output;
+                col -> std_output;
+                "\n" -> std_output;
+                call printBoard(board);
+
+                board[row, col] = 0;
+            }
+
+            "col = " -> std_output;
+            col -> std_output;
+        }
+    }
+
+    "\nNo solution found for col " -> std_output;
+    col -> std_output;
+    "\n" -> std_output;
+
+    return false;
+}
+
+procedure main() returns integer {
+    Board board = 0;
+    call printBoard(board);
+
+    if (not solveNQueens(board, 1)) {
+        "No solution found\n" -> std_output;
+    } else {
+        call printBoard(board);
+    }
+
+    return 0;
+}
