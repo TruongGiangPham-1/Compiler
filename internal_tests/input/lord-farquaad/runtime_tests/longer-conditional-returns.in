@@ -1,0 +1,11 @@
+procedure main() returns integer {
+  if (false) {
+    "hello\n" -> std_output;
+  } else if (1 == 1) {
+    return 1;
+  } else {
+    "hi" -> std_output;
+  }
+
+  return 1;
+}
