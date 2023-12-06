@@ -1,0 +1,12 @@
+procedure main() returns integer {
+    integer n;
+    n <- std_input;
+
+    integer[n] v;
+    loop i in 1..n {
+        v[i] <- std_input;
+    }
+    v -> std_output;
+
+    return 0;
+}
