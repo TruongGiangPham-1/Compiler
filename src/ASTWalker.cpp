@@ -476,8 +476,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+        auto node = std::dynamic_pointer_cast<ASTNode>(tree);
         walk(tree->getReturnExpr());
-        return this->walkChildren(tree);
+        return this->walkChildren(node);
     }
     std::any ASTWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
         return this->walkChildren(tree);

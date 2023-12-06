@@ -68,7 +68,7 @@ namespace gazprea {
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
         // === procedure
         std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
-
+        std::any visitReturn(std::shared_ptr<ReturnNode> tree) override;
         //std::any visitProcedureForward(std::shared_ptr<ProcedureForwardNode> tree) override;
         //std::any visitProcedureBlock(std::shared_ptr<ProcedureBlockNode> tree) override;
 

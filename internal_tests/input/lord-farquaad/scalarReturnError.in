@@ -1,0 +1,7 @@
+procedure test(real a) returns integer {
+  return a;
+}
+
+procedure main() returns integer {
+  return 1;
+}
