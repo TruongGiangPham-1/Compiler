@@ -206,14 +206,18 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
       case TUPLE: 
       {
           auto mtree = std::dynamic_pointer_cast<TupleTypeNode>(tree);
-   
+          int index = 1;
           std::vector<mlir::Value> children;
           for (auto child : mtree->getTypes()) {
 
+            auto rhsItem = codeGenerator.indexCommonType(*(this->inferenceContext.end()-1), codeGenerator.generateValue(index));
+
+            this->inferenceContext.push_back(rhsItem);
             auto val = std::any_cast<mlir::Value>(walk(child));
+            this->inferenceContext.pop_back();
 
             children.push_back(val);
-            
+            index ++;
           }
           return codeGenerator.generateValue(children);
         }
