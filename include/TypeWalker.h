@@ -15,7 +15,7 @@ namespace gazprea {
         static std::string comparisonResult[7][7]; //>= <= > <
         static std::string equalityResult[7][7]; //==, !=
         static std::string promotionTable[7][7];
-        static std::string castTable[4][4];
+        static std::string castTable[7][7];
 
         const int boolIndex = 0;
         const int charIndex = 1;
@@ -31,15 +31,15 @@ namespace gazprea {
         std::shared_ptr<Type> getType(std::string table[7][7], std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs, std::shared_ptr<ASTNode> t);
         int getTypeIndex(const std::string type);
         // vecto helper
-        void promoteTupleElements(std::shared_ptr<Type> promoteTo ,std::shared_ptr<ASTNode> exprNode);
-        void promoteVectorElements(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode> exprNode);
+        void promoteTupleElements(std::shared_ptr<Type> promoteTo ,std::shared_ptr<ASTNode> exprNode, std::string table[7][7]);
+        void promoteVectorElements(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode> exprNode, std::string table[7][7]);
         void updateVectorNodeEvaluatedType(std::shared_ptr<Type>assignType, std::shared_ptr<ASTNode> exprNode);
         void promoteIdentityAndNull(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>identityNode);
         void promoteLiteralToArray(std::shared_ptr<Type>promoteTo, std::shared_ptr<ASTNode>literalNode);  // promotes none vector into array
 
         void possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode>right);
         void populateInnerTypes(std::shared_ptr<Type>type, std::shared_ptr<VectorNode>tree);
-        std::shared_ptr<Type> promoteVectorTypeObj(std::shared_ptr<Type>promoteTo, std::shared_ptr<Type> promotedType, int line);
+        std::shared_ptr<Type> promoteVectorTypeObj(std::shared_ptr<Type>promoteTo, std::shared_ptr<Type> promotedType, int line, std::string table[7][7]);
         // matrices helper
         void addNullNodesToVector(int howMuch, std::shared_ptr<VectorNode> tree);
         void possiblyPaddMatrix(std::shared_ptr<VectorNode> tree);
