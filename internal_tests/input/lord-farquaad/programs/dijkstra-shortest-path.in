@@ -1,0 +1,27 @@
+procedure main() returns integer {
+    integer n; // number of nodes in the graph
+    n <- std_input;
+
+    integer s; // source node
+    integer t; // target node
+    s <- std_input;
+    t <- std_input;
+
+    // when format works, remove this
+    "Going from " -> std_output;
+    s -> std_output;
+    " to " -> std_output;
+    t -> std_output;
+    " in a graph with " -> std_output;
+    n -> std_output;
+    " nodes.\n" -> std_output;
+
+    // read the graph
+    integer[n, n] GRAPH;
+    loop i in 1..n, j in 1..n {
+        GRAPH[i, j] <- std_input;
+    }
+    GRAPH -> std_output;
+
+  return 0;
+}
