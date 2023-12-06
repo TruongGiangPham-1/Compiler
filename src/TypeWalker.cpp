@@ -258,13 +258,13 @@ namespace gazprea {
                 throw std::runtime_error("Unknown type");
         }
     }
-    void PromotedType::promoteLiteralToArray(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> literalNode) {
+    void PromotedType::promoteLiteralToArray(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> literalNode, std::string table[7][7]) {
         if (literalNode->evaluatedType->baseTypeEnum == TUPLE) throw TypeError(literalNode->loc(), "cannot promote tuple to array");
         if (literalNode->evaluatedType->vectorOrMatrixEnum == VECTOR) {
             return;
         }
         if (promoteTo->vectorOrMatrixEnum == VECTOR) {
-            auto s = getPromotedTypeString(promotionTable,  literalNode->evaluatedType, promoteTo);
+            auto s = getPromotedTypeString(table,  literalNode->evaluatedType, promoteTo);
             if (s.empty()) {
                 throw TypeError(literalNode->loc(), "cannot implicitly promote: typewalk line 215");
             }
@@ -282,7 +282,7 @@ namespace gazprea {
      * eg: left =int vector , right =  real vector, i will promote left to a real vector
      * TODO: i only implement this for vector binops for far. so future ill try to generalize this to all type?
      */
-    void PromotedType::possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right) {
+    void PromotedType::possiblyPromoteBinop(std::shared_ptr<ASTNode> left, std::shared_ptr<ASTNode> right, std::string table[7][7]) {
 
         if ((isMatrix(left->evaluatedType) && isVector(right->evaluatedType)) ||
                 (isMatrix(right->evaluatedType) && isVector(left->evaluatedType))) {
@@ -293,8 +293,8 @@ namespace gazprea {
             throw TypeError(left->loc(), "cannot use empty array in binop");
         }
 
-        auto LtoRpromotion = getPromotedTypeString(promotionTable, left->evaluatedType, right->evaluatedType);
-        auto RtoLpromotion = getPromotedTypeString(promotionTable, right->evaluatedType, left->evaluatedType);
+        auto LtoRpromotion = getPromotedTypeString(table, left->evaluatedType, right->evaluatedType);
+        auto RtoLpromotion = getPromotedTypeString(table, right->evaluatedType, left->evaluatedType);
         if (LtoRpromotion.empty() && RtoLpromotion.empty())  throw TypeError(left->loc(), "invalid vectors type binop");
 
         std::shared_ptr<Type> dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
@@ -303,27 +303,27 @@ namespace gazprea {
         if (isVector(left->evaluatedType) && isVector(right->evaluatedType)) {
             //if (left->evaluatedType->dims[0] != right->evaluatedType->dims[0]) throw SizeError(left->loc(), "incompatible size binop");
 
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
+            promoteVectorElements(dominantType, promoteNode, table);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(left->evaluatedType) && isMatrix(right->evaluatedType)) {
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
+            promoteVectorElements(dominantType, promoteNode, table);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(left->evaluatedType) && isVector(right->evaluatedType)) {
             possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update right->Evaltype to matrix
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
+            promoteVectorElements(dominantType, promoteNode, table);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(right->evaluatedType) && isVector(left->evaluatedType)) {
             possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
             auto r = left->evaluatedType;
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
+            promoteVectorElements(dominantType, promoteNode, table);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
             possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
+            promoteVectorElements(dominantType, promoteNode, table);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
         } else if (isMatrix(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE) {
             possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
+            promoteVectorElements(dominantType, promoteNode, table);
             updateVectorNodeEvaluatedType(dominantType, promoteNode);
             auto l = left->evaluatedType;
 
@@ -331,14 +331,14 @@ namespace gazprea {
         else if (isVector(left->evaluatedType) && right->evaluatedType->vectorOrMatrixEnum == NONE) {
             //possiblyPromoteToVectorOrMatrix(left->evaluatedType, right->evaluatedType, left->loc());  // update left->evaltype ot matrix
             right->evaluatedType = createArrayType(right->evaluatedType->getBaseTypeEnumName(), VECTOR);
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
-            promoteLiteralToArray(left->evaluatedType, right);
+            promoteVectorElements(dominantType, promoteNode, table);
+            promoteLiteralToArray(left->evaluatedType, right, table);
         } else if (isVector(right->evaluatedType) && left->evaluatedType->vectorOrMatrixEnum == NONE){
             // none vector
             //possiblyPromoteToVectorOrMatrix(right->evaluatedType, left->evaluatedType, left->loc());  // update left->evaltype ot matrix
             left->evaluatedType = createArrayType(left->evaluatedType->getBaseTypeEnumName(), VECTOR);
-            promoteVectorElements(dominantType, promoteNode, promotionTable);
-            promoteLiteralToArray(right->evaluatedType, left);
+            promoteVectorElements(dominantType, promoteNode, table);
+            promoteLiteralToArray(right->evaluatedType, left, table);
         } else{
             // case everything else. like base type
             promoteNode->evaluatedType = dominantType;
@@ -464,7 +464,7 @@ namespace gazprea {
                         throw TypeError(exprNode->loc(), "cannot promote vectorNode to matrix");
                     }
                     if (isScalar(rType)) {
-                        promoteLiteralToArray(lType, kv);
+                        promoteLiteralToArray(lType, kv, table);
                     } else if (isEmptyArrayLiteral(rType)) {
                         // empty array literal. simply promote to ltype
                         //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
@@ -703,7 +703,7 @@ namespace gazprea {
             case BINOP::EXP:
             case BINOP::SUB:
             case BINOP::REM:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
@@ -711,14 +711,14 @@ namespace gazprea {
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
             case BINOP::DOT_PROD:
                 promotedType->dotProductErrorCheck(lhsType, rhsType, tree->loc());
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
 
 
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
@@ -756,12 +756,12 @@ namespace gazprea {
             return nullptr;
         } else if (promotedType->isEmptyArrayLiteral(l->evaluatedType) && promotedType->isScalar(r->evaluatedType)) {
             auto vectorType = promotedType->createArrayType(r->evaluatedType->getBaseTypeEnumName(), VECTOR);
-            promotedType->promoteLiteralToArray(vectorType, tree->getRHS());
+            promotedType->promoteLiteralToArray(vectorType, tree->getRHS(), promotedType->promotionTable);
             tree->evaluatedType = promotedType->getTypeCopy(tree->getRHS()->evaluatedType);
             return nullptr;
         } else if (promotedType->isEmptyArrayLiteral(r->evaluatedType) && promotedType->isScalar(l->evaluatedType)) {
             auto vectorType = promotedType->createArrayType(l->evaluatedType->getBaseTypeEnumName(), VECTOR);
-            promotedType->promoteLiteralToArray(vectorType, tree->getLHS());
+            promotedType->promoteLiteralToArray(vectorType, tree->getLHS(), promotedType->promotionTable);
             tree->evaluatedType = promotedType->getTypeCopy(tree->getLHS()->evaluatedType);
             return nullptr;
         } else if (promotedType->isEmptyArrayLiteral(l->evaluatedType) && promotedType->isEmptyArrayLiteral(r->evaluatedType)) {
@@ -770,7 +770,7 @@ namespace gazprea {
             return nullptr;
         }
         //--------------------------------
-        promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //   make sure rhs and lhs are same type.promote if neccesary
+        promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //   make sure rhs and lhs are same type.promote if neccesary
         assert(tree->getLHS()->evaluatedType->baseTypeEnum == tree->getRHS()->evaluatedType->baseTypeEnum);
         tree->evaluatedType =  promotedType->getType(promotedType->promotionTable, tree->getLHS(), tree->getRHS(), tree);
 
@@ -779,8 +779,8 @@ namespace gazprea {
             // concat between 2 non vector. we have to promote them all to vector
             auto vectorType = std::make_shared<AdvanceType>(tree->getLHS()->evaluatedType->getBaseTypeEnumName());
             vectorType->vectorOrMatrixEnum = VECTOR;
-            promotedType->promoteLiteralToArray(vectorType, tree->getLHS());  // promote both of em to vector
-            promotedType->promoteLiteralToArray(vectorType, tree->getRHS());
+            promotedType->promoteLiteralToArray(vectorType, tree->getLHS(), promotedType->promotionTable);  // promote both of em to vector
+            promotedType->promoteLiteralToArray(vectorType, tree->getRHS(), promotedType->promotionTable);
             auto typeCopy = promotedType->getTypeCopy(tree->getLHS()->evaluatedType);   // create a copy
             tree->evaluatedType = typeCopy;  // re assign evaluatoin type
         }
@@ -819,12 +819,12 @@ namespace gazprea {
             case BINOP::GTHAN:
             case BINOP::LEQ:
             case BINOP::GEQ:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->comparisonResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
             case BINOP::EQUAL:
             case BINOP::NEQUAL:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS());  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
                 break;
 
@@ -975,7 +975,7 @@ namespace gazprea {
                 throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
             }
             if (rType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rType)) {
-                promotedType->promoteLiteralToArray(lType, tree->getExprNode());
+                promotedType->promoteLiteralToArray(lType, tree->getExprNode(), promotedType->promotionTable);
             } else if (promotedType->isEmptyArrayLiteral(rType)) {
                 // empty array literal. simply promote to ltype
                 //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
@@ -1102,7 +1102,7 @@ namespace gazprea {
                             throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
                         }
                         if (rhsType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rhsType)) {
-                            promotedType->promoteLiteralToArray(lvalue->evaluatedType, tree->getRvalue());
+                            promotedType->promoteLiteralToArray(lvalue->evaluatedType, tree->getRvalue(), promotedType->promotionTable);
                         } else if (promotedType->isEmptyArrayLiteral(rhsType)) {
                             tree->getRvalue()->evaluatedType = promotedType->getTypeCopy(lvalue->evaluatedType);
                         }
