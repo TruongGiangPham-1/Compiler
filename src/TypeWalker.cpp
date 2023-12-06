@@ -945,7 +945,6 @@ namespace gazprea {
                 //rType->tupleChildType[i].second =
             }
             promotedType->promoteTupleElements(lType, tree->getExprNode());
-            promotedType->printTypeClass(tree->getExprNode()->evaluatedType);
             //tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
             //tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
             tree->evaluatedType = lType;
@@ -1075,6 +1074,9 @@ namespace gazprea {
                                 }
                             }
                         }
+                        promotedType->promoteTupleElements(lvalue->evaluatedType, tree->getRvalue());
+                        //promotedType->printTypeClass(tree->getRvalue()->evaluatedType);
+
                         tree->evaluatedType = lvalue->evaluatedType;
                     } else if (lvalue->evaluatedType->vectorOrMatrixEnum == TYPE::VECTOR) {
                         // handle vector literal. promote rhs
