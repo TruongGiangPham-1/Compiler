@@ -608,20 +608,23 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   if (tree->bodies.size() > tree->conditions.size()) {
     this->returnDropped = false;
     walk(tree->bodies[tree->bodies.size() - 1]);
+
+    allReturn = allReturn & returnDropped;
+  } else {
+    allReturn = false;
   }
 
   if (!this->returnDropped)  {
     codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn); 
-  } 
+  }  
 
-  if (allReturn) {
+   if (allReturn){
     endBlock->erase();
   } else {
     codeGenerator.setBuilderInsertionPoint(endBlock);
   }
+  this->returnDropped = allReturn & returnDropped;
 
-
-  this->returnDropped = allReturn;
   // note returnDropped isn't turned off. dropping a return in an else
   // guarantees early return. stop generating code, it will be unreachable
   this->earlyReturn = false;
