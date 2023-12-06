@@ -656,11 +656,17 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopBody);
 
   // loop exit
-  codeGenerator.setBuilderInsertionPoint(loopExit);
+  if (!this->returnDropped)  {
+      codeGenerator.generateEnterBlock(loopBody);
+      codeGenerator.setBuilderInsertionPoint(loopExit);
+  } else {
+      loopExit->erase();
+  }
   this->loopBlocks.pop_back();
+
+  this->earlyReturn = false;
 
   return 0;
 }
