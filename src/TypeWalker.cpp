@@ -937,6 +937,8 @@ namespace gazprea {
                 mTree->getTypes()[i]->evaluatedType = lType->tupleChildType[i].second;
             }
 
+            tree->getTypeNode()->evaluatedType = lType;
+            auto child = mTree->getTypes();
             auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getTypeNode());
             if (tupleNode->innerTypes.size() != rType->tupleChildType.size()) {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
@@ -960,6 +962,7 @@ namespace gazprea {
             //tree->getTypeNode()->evaluatedType = symtab->resolveTypeUser(tupleNode);
             //tree->evaluatedType = symtab->resolveTypeUser(tupleNode);
             tree->evaluatedType = lType;
+            return nullptr;
 
         } else if (lType->vectorOrMatrixEnum == TYPE::VECTOR) {
             // promote all RHS vector element to ltype if exprNode is a vectorNode
@@ -1307,6 +1310,11 @@ namespace gazprea {
         auto toType = symtab->resolveTypeUser(tree->children[0]);
         auto exprType = tree->children[1]->evaluatedType;
         if (toType->getBaseTypeEnumName() == "tuple" && exprType->getBaseTypeEnumName() == "tuple") {
+            auto mTree = std::dynamic_pointer_cast<TupleTypeNode>(tree->getType());
+            for (int i = 0; i < mTree->getTypes().size(); i++) {
+                mTree->getTypes()[i]->evaluatedType = toType->tupleChildType[i].second;
+            }
+
             if (toType->tupleChildType.size() != exprType->tupleChildType.size()) {
                 throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
             }
@@ -1323,7 +1331,10 @@ namespace gazprea {
                     }
                 }
             }
-            tree->children[0]->evaluatedType = toType;
+
+            promotedType->promoteTupleElements(toType, tree->getExpr());
+            //tree->children[0]->evaluatedType = toType;
+            tree->getType()->evaluatedType = toType;
             tree->evaluatedType = toType; // tuple Type
         }
         else if (toType->getBaseTypeEnumName() == "tuple" || toType->getBaseTypeEnumName() == "tuple" ) {
