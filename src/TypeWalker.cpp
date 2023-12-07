@@ -1535,14 +1535,7 @@ namespace gazprea {
             tree->evaluatedType->vectorOrMatrixEnum = NONE;
             tree->evaluatedType->dims.clear();    // evaluted type is just a non vector literal with no dimention
         } else if (promotedType->isMatrix(indexee->evaluatedType)) {  // case: its a matrix indx
-            auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
-            for (int i = 0; i < typeCopy->vectorInnerTypes.size(); i++) {
-                typeCopy->vectorInnerTypes[i] = promotedType->getTypeCopy(currentScope->resolveType(typeCopy->getBaseTypeEnumName()));
-            }
-            tree->evaluatedType = typeCopy;
-            tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
-            tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
-            tree->evaluatedType->dims.push_back(1);
+            auto typeCopy = promotedType->getTypeCopy(currentScope->resolveType(indexee->evaluatedType->getBaseTypeEnumName()));
         } else {
             assert(indexee->evaluatedType->dims.empty());
             throw SyntaxError(tree->loc(), "cannot index non vector or matrices");  // TODO is this the correct error
