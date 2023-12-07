@@ -9,11 +9,6 @@ procedure main() returns integer {
     ' ' -> std_output;
   }
   '\n' -> std_output;
-  loop i in "hello world" {
-      i -> std_output;
-      ' ' -> std_output;
-    }
-    '\n' -> std_output;
 
   loop i in "hello world" {
       i -> std_output;
