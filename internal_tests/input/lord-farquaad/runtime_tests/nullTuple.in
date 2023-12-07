@@ -1,0 +1,23 @@
+procedure main() returns integer {
+  tuple(string[5], integer[10], boolean[5]) b;
+
+  b.1 -> std_output;
+  '\n' -> std_output;
+
+  b.2->std_output;
+  '\n' -> std_output;
+
+  b.3->std_output;
+  '\n' -> std_output;
+
+  b.3 = true;
+  b.3->std_output;
+  '\n' -> std_output;
+
+  b.1 = "hello";
+
+  b.1->std_output;
+  '\n' -> std_output;
+
+  return 0;
+}
