@@ -9,4 +9,8 @@ public:
   std::shared_ptr<ASTNode> returnExpr;
   std::shared_ptr<ScopedSymbol> returnFunc;
   std::shared_ptr<ASTNode> getReturnExpr() {return returnExpr;};
+
+  std::string toString() override {
+    return "ReturnNode";
+  }
 };
