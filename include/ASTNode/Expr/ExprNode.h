@@ -8,6 +8,6 @@ class ExprNode : public ASTNode {
 public:
     std::shared_ptr<Type> promoteTo;
     std::shared_ptr<Type> type;  // For type checking
-
+    bool isString = false;
     ExprNode(int line) : ASTNode(line), type(nullptr) {}
 };
