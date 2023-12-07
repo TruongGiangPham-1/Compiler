@@ -688,7 +688,8 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // body of loop
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopCheck);
+  if (!this->returnDropped) codeGenerator.generateEnterBlock(loopCheck);
+  this->returnDropped = false;
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
