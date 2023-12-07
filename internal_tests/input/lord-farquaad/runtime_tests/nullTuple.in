@@ -3,6 +3,10 @@ procedure main() returns integer {
 
   b.2->std_output;
   '\n' -> std_output;
+  b.2 = 1;
+  b.2->std_output;
+  '\n' -> std_output;
+
 
   b.3->std_output;
   '\n' -> std_output;
