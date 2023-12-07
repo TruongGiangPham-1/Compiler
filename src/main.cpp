@@ -82,6 +82,7 @@ int main(int argc, char **argv) {
 #endif
       gazprea::Ref ref(symbolTable, mlirIDptr);
       ref.walk(ast);
+      ref.mainErrorCheck();
 
 #ifdef DEBUG
       std::cout << "\n\n=== TYPECHECK PASS\n";
