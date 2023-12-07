@@ -1,0 +1,7 @@
+procedure test() {
+    return;
+}
+
+procedure main() returns integer {
+    call test();
+}
