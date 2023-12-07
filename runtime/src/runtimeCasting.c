@@ -223,6 +223,7 @@ commonType* charCast(char fromValue, commonType* toType) {
       return allocateCommonType(&fromValue, CHAR);
     }
     case VECTOR:
+    case STRING:
     {
       list* toList = (list*)toType->value;
       list* newList = allocateList(toList->currentSize);
@@ -231,7 +232,7 @@ commonType* charCast(char fromValue, commonType* toType) {
         appendList(newList, charCast(fromValue, toList->values[i]));
       }
 
-      return allocateCommonType(&newList, VECTOR);
+      return allocateCommonType(&newList, toType->type);
     }
     default:
   #ifdef DEBUGTYPES
