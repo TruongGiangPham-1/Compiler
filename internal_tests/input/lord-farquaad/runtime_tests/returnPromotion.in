@@ -31,3 +31,4 @@ procedure main() returns integer {
   '\n' -> std_output;
   return 1;
 }
+
