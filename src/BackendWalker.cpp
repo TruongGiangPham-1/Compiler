@@ -100,7 +100,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
 
       auto one = codeGenerator.generateValue(1);
 
-      auto newVector = codeGenerator.generateValue(size);
+      auto newVector = codeGenerator.generateValue(size, tree->isString);
 
       mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
       mlir::Block *trueBlock = codeGenerator.generateBlock();
@@ -206,14 +206,18 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
       case TUPLE: 
       {
           auto mtree = std::dynamic_pointer_cast<TupleTypeNode>(tree);
-   
+          int index = 1;
           std::vector<mlir::Value> children;
           for (auto child : mtree->getTypes()) {
 
+            auto rhsItem = codeGenerator.indexCommonType(*(this->inferenceContext.end()-1), codeGenerator.generateValue(index));
+
+            this->inferenceContext.push_back(rhsItem);
             auto val = std::any_cast<mlir::Value>(walk(child));
+            this->inferenceContext.pop_back();
 
             children.push_back(val);
-            
+            index ++;
           }
           return codeGenerator.generateValue(children);
         }
@@ -289,7 +293,7 @@ std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
   return result;
 }
 
-std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
+std::any BackendWalker::visitString(std::shared_ptr<VectorNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }
 
@@ -316,7 +320,10 @@ std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+
+  this->inferenceContext.push_back(val);
   auto type = std::any_cast<mlir::Value>(walk(tree->getType()));
+  this->inferenceContext.pop_back();
 
   return codeGenerator.cast(val, type);
 }
