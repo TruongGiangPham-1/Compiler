@@ -15,5 +15,17 @@ procedure main() returns integer {
     }
     '\n' -> std_output;
 
+  loop i in "hello world" {
+      i -> std_output;
+      ' ' -> std_output;
+    }
+    '\n' -> std_output;
+
+  loop i in reverse("hello world") {
+      i -> std_output;
+      ' ' -> std_output;
+    }
+    '\n' -> std_output;
+
   return 0;
 }
