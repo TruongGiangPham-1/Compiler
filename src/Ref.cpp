@@ -804,12 +804,32 @@ namespace gazprea {
         return 0;
     }
 
-
-
-
     int Ref::getNextId() {
         (*varID)++;
         return (*varID);
+    }
+
+    void Ref::mainErrorCheck() const {
+        // check SymbolTable for a main function, and if it is a procedure with the proper signature
+        auto mainSym = symtab->globalScope->resolve("main");
+        if (mainSym == nullptr) {
+            throw MainError(0, "main function not defined");
+        } else {
+            if (std::dynamic_pointer_cast<ProcedureSymbol>(mainSym)) {
+                auto mainSymCast = std::dynamic_pointer_cast<ProcedureSymbol>(mainSym);
+                if (!mainSymCast->orderedArgs.empty()) {
+                    throw MainError(0, "main function must have 0 arguments");
+                }
+                auto retType = mainSymCast->typeSym;
+                bool correctRetType = retType->baseTypeEnum == TYPE::INTEGER && retType->vectorOrMatrixEnum == TYPE::NONE;
+                if (!correctRetType) {
+                    throw MainError(mainSymCast->line, "main function does not have correct return type");
+                }
+                // all good!
+            } else {
+                throw MainError(0, "main function must be a procedure");
+            }
+        }
     }
 }
 
