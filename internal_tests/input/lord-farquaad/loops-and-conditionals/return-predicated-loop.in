@@ -22,7 +22,7 @@ procedure postPredicatedTest() returns integer {
 procedure main() returns integer {
     var x = predicatedTest();
     x -> std_output;
-    var x = postPredicatedTest();
+    x = postPredicatedTest();
     x -> std_output;
 
     return 0;
