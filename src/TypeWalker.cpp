@@ -1297,7 +1297,7 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitCall(std::shared_ptr<CallNode> tree) {
-        if (tree->MethodRef->orderedArgs.size() != tree->children.size()) {
+        if (!tree->MethodRef->isBuiltIn() &&tree->MethodRef->orderedArgs.size() != tree->children.size()) {
             throw SyntaxError(tree->loc(), "call argument size do not match method definition");
         }
         if (tree->procCall) {
