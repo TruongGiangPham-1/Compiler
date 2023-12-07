@@ -1,0 +1,3 @@
+procedure main() returns string {
+    return "Hello World!";
+}

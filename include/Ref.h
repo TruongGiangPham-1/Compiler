@@ -87,6 +87,10 @@ namespace gazprea {
         // miscaleous function
         void printTupleType(std::shared_ptr<Type> ty);
 
+        // MainError stuff
+        // this relies on the SymbolTable, so run this after walking the tree with Def and Ref
+        // throws a MainError if there is no main function
+        void mainErrorCheck() const;
     };
 }
 #endif //GAZPREABASE_REF_H
