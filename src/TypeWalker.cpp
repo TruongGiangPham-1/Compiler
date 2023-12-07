@@ -639,31 +639,31 @@ namespace gazprea {
     TypeWalker::~TypeWalker() {}
 
     std::any TypeWalker::visitInt(std::shared_ptr<IntNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("integer"));
+        tree->evaluatedType = promotedType->getTypeCopy(std::dynamic_pointer_cast<Type>(currentScope->resolveType("integer")));
         return nullptr;
     }
 
     std::any TypeWalker::visitReal(std::shared_ptr<RealNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("real"));
+        tree->evaluatedType = promotedType->getTypeCopy(std::dynamic_pointer_cast<Type>(currentScope->resolveType("real")));
         return nullptr;
     }
 
     std::any TypeWalker::visitChar(std::shared_ptr<CharNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("character"));
+        tree->evaluatedType = promotedType->getTypeCopy(std::dynamic_pointer_cast<Type>(currentScope->resolveType("character")));
         return nullptr;
     }
 
     std::any TypeWalker::visitBool(std::shared_ptr<BoolNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("boolean"));
+        tree->evaluatedType = promotedType->getTypeCopy(std::dynamic_pointer_cast<Type>(currentScope->resolveType("boolean")));
         return nullptr;
     }
 
     std::any TypeWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("identity"));
+        tree->evaluatedType = promotedType->getTypeCopy(std::dynamic_pointer_cast<Type>(currentScope->resolveType("identity")));
         return nullptr;
     }
     std::any TypeWalker::visitNull(std::shared_ptr<NullNode> tree) {
-        tree->evaluatedType = std::dynamic_pointer_cast<Type>(currentScope->resolveType("null"));
+        tree->evaluatedType = promotedType->getTypeCopy(std::dynamic_pointer_cast<Type>(currentScope->resolveType("null")));
         return nullptr;
     }
 
@@ -1587,7 +1587,7 @@ namespace gazprea {
             walk(arg);
         }
         if (tree->getRetTypeNode()) {
-            tree->evaluatedType = symtab->resolveTypeUser(tree->getRetTypeNode());
+            tree->evaluatedType = promotedType->getTypeCopy(symtab->resolveTypeUser(tree->getRetTypeNode()));
             tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
         }
         else {

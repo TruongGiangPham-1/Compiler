@@ -15,5 +15,20 @@ procedure main() returns integer {
   '\n' -> std_output;
 
 
+  tuple(integer[*], integer[*]) a1 = (98..100, 100..108);
+
+  var b1 = as<tuple(character[*], string)>(a1);
+
+  a1.1 -> std_output;
+  '\n' -> std_output;
+  a1.2 -> std_output;
+
+  '\n' -> std_output;
+  b1.1 -> std_output;
+  '\n' -> std_output;
+  b1.2 -> std_output;
+  '\n' -> std_output;
+
+
   return 0;
 }
