@@ -787,7 +787,10 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
     auto enter = blockInfo.first;
     auto exit = blockInfo.second;
 
-    codeGenerator.generateEnterBlock(enter);
+    // if there is a return, we only skip the first layer of block jumps back (it seems to work?)
+    if (!this->returnDropped) codeGenerator.generateEnterBlock(enter);
+    this->returnDropped = false;
+
     codeGenerator.setBuilderInsertionPoint(exit);
   }
   this->loopBlocks.pop_back();
