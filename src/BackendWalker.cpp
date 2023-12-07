@@ -710,7 +710,8 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopCheck);
+  if (!this->returnDropped) codeGenerator.generateEnterBlock(loopCheck);
+  this->returnDropped = false;
 
   // conditional
   codeGenerator.setBuilderInsertionPoint(loopCheck);
