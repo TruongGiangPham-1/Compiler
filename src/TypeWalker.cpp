@@ -1340,13 +1340,15 @@ namespace gazprea {
                     tree->evaluatedType = argVectorType;
                     break;
                 }
-                case FUNC_FORMAT:
+                case FUNC_FORMAT: {
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isScalar(argType)) {
                         throw CallError(tree->loc(), "format only accepts scalar as input");
                     }
-                    tree->evaluatedType = promotedType->getTypeCopy(symtab->globalScope->resolveType("string"));
+                    auto argVectorType = promotedType->createArrayType("character", VECTOR);
+                    tree->evaluatedType = argVectorType;
                     break;
+                }
                 case FUNC_SSTATE:
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     tree->evaluatedType = promotedType->getTypeCopy(symtab->globalScope->resolveType("integer"));
