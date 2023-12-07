@@ -1,0 +1,33 @@
+procedure testInt() returns integer[10] {
+  return 1;
+}
+
+procedure testChar() returns character[10] {
+  return 'a';
+}
+
+procedure testString() returns string {
+  return 'b';
+}
+
+procedure testCharArrayToString() returns string {
+  return ['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'];
+}
+
+procedure testStringToCharArray() returns character[*] {
+  return "hello world";
+}
+
+procedure main() returns integer {
+  testInt() -> std_output; 
+  '\n' -> std_output;
+  testChar() -> std_output;
+  '\n' -> std_output;
+  testString() -> std_output;
+  '\n' -> std_output;
+  testCharArrayToString()->std_output;
+  '\n' -> std_output;
+  testStringToCharArray() -> std_output;
+  '\n' -> std_output;
+  return 1;
+}

@@ -643,11 +643,12 @@ commonType* __stream_state(int* state) {
 }
 
 commonType* __length(commonType* vector)  {
+  int length;
   if (!isCompositeType(vector->type)) {
-    UnsupportedTypeError("Trying to take length of non-vector type");
+    length = 1;
+  } else {
+    length = ((list*)vector->value)->currentSize;
   }
-
-  int length = ((list*)vector->value)->currentSize;
 
   return allocateCommonType(&length, INTEGER);
 }
