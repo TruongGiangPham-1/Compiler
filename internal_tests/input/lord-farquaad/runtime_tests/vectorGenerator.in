@@ -2,6 +2,8 @@ procedure main() returns integer {
 
   [i in 1..10 | i * i] -> std_output;
   '\n' -> std_output;
+  [i in 97..100 | as<character>(i)] -> std_output;
+  '\n' -> std_output;
 
   return 0;
 }

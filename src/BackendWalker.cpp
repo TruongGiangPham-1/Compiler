@@ -100,7 +100,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
 
       auto one = codeGenerator.generateValue(1);
 
-      auto newVector = codeGenerator.generateValue(size);
+      auto newVector = codeGenerator.generateValue(size, tree->isString);
 
       mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
       mlir::Block *trueBlock = codeGenerator.generateBlock();
@@ -293,7 +293,7 @@ std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
   return result;
 }
 
-std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
+std::any BackendWalker::visitString(std::shared_ptr<VectorNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }
 

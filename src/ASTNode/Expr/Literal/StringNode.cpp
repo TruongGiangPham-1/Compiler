@@ -13,3 +13,8 @@ std::string StringNode::toString() {
 std::string StringNode::getVal() {
     return val;
 }
+
+
+int StringNode::getSize() {
+    return size;
+}

@@ -56,21 +56,46 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visit Type" << ctx->typeString->getText() << std::endl;
 #endif
-        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->typeString->getText());
-        std::shared_ptr<TypeNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
 
-        return std::dynamic_pointer_cast<ASTNode>(t);
+        if (ctx->typeString->getText() == "string") {
+            std::shared_ptr<Symbol> sym = std::make_shared<Symbol>("character[*]");
+
+            std::shared_ptr<Symbol> baseSym = std::make_shared<Symbol>("character");
+            std::shared_ptr<TypeNode> baseType = std::make_shared<TypeNode>(ctx->getStart()->getLine(), baseSym);
+            auto innerType = std::dynamic_pointer_cast<ASTNode>(baseType);
+
+            auto t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+            t->isString = true;
+            return std::dynamic_pointer_cast<ASTNode>(t);
+        }
+        else {
+            std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->typeString->getText());
+            std::shared_ptr<TypeNode> t = std::make_shared<TypeNode>(ctx->getStart()->getLine(), sym);
+            return std::dynamic_pointer_cast<ASTNode>(t);
+        }
     }
 
     std::any ASTBuilder::visitVectorType(GazpreaParser::VectorTypeContext *ctx) {
 #ifdef DEBUG
         std::cout << "visit VectorType" << ctx->getText() << std::endl;
 #endif
-        std::shared_ptr<Symbol> sym = std::make_shared<Symbol>(ctx->getText());
-
-        // inner type
-        auto innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
-        auto t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+        std::shared_ptr<Symbol> sym = nullptr;
+        std::shared_ptr<ASTNode> innerType = nullptr;
+        std::shared_ptr<VectorTypeNode> t;
+        if (ctx->type()->getText() == "string") {
+            std::string typeText = std::string("character") + "[" + ctx->typeSize()->getText() + "]";
+            sym = std::make_shared<Symbol>(typeText);
+            std::shared_ptr<Symbol> baseSym = std::make_shared<Symbol>("character");
+            std::shared_ptr<TypeNode> baseType = std::make_shared<TypeNode>(ctx->getStart()->getLine(), baseSym);
+            innerType = std::dynamic_pointer_cast<ASTNode>(baseType);
+            t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+            t->isString = true;
+        }
+        else {
+            sym = std::make_shared<Symbol>(ctx->getText());
+            innerType = std::any_cast<std::shared_ptr<ASTNode>>(visit(ctx->type()));
+            t = std::make_shared<VectorTypeNode>(ctx->getStart()->getLine(), sym, innerType);
+        }
 
         if (ctx->typeSize()->expression()) {
             // size is specified
@@ -261,7 +286,6 @@ namespace gazprea {
         std::cout << "visitCharacter" << ctx->getText() << std::endl;
 #endif
         std::string charContent = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
-
         try {
             auto charPair = CharNode::consumeChar(charContent);
 
@@ -279,14 +303,16 @@ namespace gazprea {
 #ifdef DEBUG
         std::cout << "visitLiteralString" << ctx->getText() << std::endl;
 #endif
-        auto t = std::make_shared<StringNode>(ctx->getStart()->getLine());
-
+        auto t = std::make_shared<VectorNode>(ctx->getStart()->getLine());
+        t->isString = true;
         std::string val = ctx->getText().substr(1, ctx->getText().size() - 2); // remove quotes
+
         // iteratively consume chars until the string is empty
         while (!val.empty()) {
             try {
                 auto charPair = CharNode::consumeChar(val);
-                t->val.push_back(charPair.first);
+                auto chNode = std::make_shared<CharNode>(ctx->getStart()->getLine(), charPair.first);
+                t->addChild(std::dynamic_pointer_cast<ASTNode>(chNode));
                 val = charPair.second;
             } catch (std::runtime_error& error) {
                 throw SyntaxError(ctx->getStart()->getLine(), error.what());

@@ -1,0 +1,7 @@
+procedure main() returns integer {
+  string x = ['a', 'b'];
+
+  x -> std_output;
+
+  return 0;
+}
