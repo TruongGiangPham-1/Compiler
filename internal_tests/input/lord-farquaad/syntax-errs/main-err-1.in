@@ -1,0 +1,3 @@
+function main() returns integer {
+    return 1;
+}
