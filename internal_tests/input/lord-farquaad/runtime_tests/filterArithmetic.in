@@ -1,6 +1,0 @@
-procedure main() returns integer {
-  var x = [i in 1..5 & i == 3, i == 2, i % 2 == 0] + [i in 1..5 & i == 3, i == 2, i % 2 == 0];
-
-  
-  return 1;
-}
