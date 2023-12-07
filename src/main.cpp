@@ -76,13 +76,13 @@ int main(int argc, char **argv) {
 #endif
       gazprea::SyntaxWalker syntaxWalker;
       syntaxWalker.walk(ast);
-      syntaxWalker.checkMain();
 
 #ifdef DEBUG
       std::cout << "\n\n=== REF PASS\n";
 #endif
       gazprea::Ref ref(symbolTable, mlirIDptr);
       ref.walk(ast);
+      ref.mainErrorCheck();
 
 #ifdef DEBUG
       std::cout << "\n\n=== TYPECHECK PASS\n";

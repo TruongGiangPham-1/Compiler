@@ -10,7 +10,6 @@ namespace gazprea {
     SyntaxWalker::SyntaxWalker() {
         scopeDepth = 0;
         contexts = {CONTEXT::NONE};
-        hasMain = false;
     }
 
     bool SyntaxWalker::inGlobalScope() {
