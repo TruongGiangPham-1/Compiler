@@ -657,11 +657,17 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopBody);
 
   // loop exit
-  codeGenerator.setBuilderInsertionPoint(loopExit);
+  if (!this->returnDropped)  {
+      codeGenerator.generateEnterBlock(loopBody);
+      codeGenerator.setBuilderInsertionPoint(loopExit);
+  } else {
+      loopExit->erase();
+  }
   this->loopBlocks.pop_back();
+
+  this->earlyReturn = false;
 
   return 0;
 }
@@ -683,7 +689,8 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // body of loop
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopCheck);
+  if (!this->returnDropped) codeGenerator.generateEnterBlock(loopCheck);
+  this->returnDropped = false;
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -704,7 +711,8 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.generateEnterBlock(loopCheck);
+  if (!this->returnDropped) codeGenerator.generateEnterBlock(loopCheck);
+  this->returnDropped = false;
 
   // conditional
   codeGenerator.setBuilderInsertionPoint(loopCheck);
@@ -780,7 +788,10 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
     auto enter = blockInfo.first;
     auto exit = blockInfo.second;
 
-    codeGenerator.generateEnterBlock(enter);
+    // if there is a return, we only skip the first layer of block jumps back (it seems to work?)
+    if (!this->returnDropped) codeGenerator.generateEnterBlock(enter);
+    this->returnDropped = false;
+
     codeGenerator.setBuilderInsertionPoint(exit);
   }
   this->loopBlocks.pop_back();

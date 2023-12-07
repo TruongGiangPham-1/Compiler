@@ -67,6 +67,7 @@ commonType* copyCommonType(commonType* copyFrom) {
   commonType* copy = (commonType*)malloc(sizeof(commonType));
   copy->type = copyFrom->type;
   copy->value = copyValue(copyFrom);
+  copy->unset = false;
   return copy;
 }
 
