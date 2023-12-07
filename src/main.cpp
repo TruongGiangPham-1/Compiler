@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
 #endif
       gazprea::SyntaxWalker syntaxWalker;
       syntaxWalker.walk(ast);
+      syntaxWalker.checkMain();
 
 #ifdef DEBUG
       std::cout << "\n\n=== REF PASS\n";

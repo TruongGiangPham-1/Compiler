@@ -18,6 +18,9 @@ namespace gazprea {
 
     class SyntaxWalker : public ASTWalker {
     private:
+        // MainError stuff
+        bool hasMain;
+
         // the entire file is wrapped inside a `block` scope
         // thus, it's easier to just count the scope depth
         // global scope is depth == 1
@@ -57,6 +60,10 @@ namespace gazprea {
         std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
         // this also includes visitCall when it is a procedure call
+
+        // MainError stuff
+        // throws a MainError if there is no valid main function
+        void checkMain();
     };
 
 }

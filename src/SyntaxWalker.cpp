@@ -10,6 +10,7 @@ namespace gazprea {
     SyntaxWalker::SyntaxWalker() {
         scopeDepth = 0;
         contexts = {CONTEXT::NONE};
+        hasMain = false;
     }
 
     bool SyntaxWalker::inGlobalScope() {
@@ -168,6 +169,20 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "(forward) procedure declaration found in non-global scope");
         }
 
+        // check if the name is "main". If it is, check for the correct signature
+        if (tree->nameSym->getName() == "main") {
+            // return type is integer?
+            auto retType = std::dynamic_pointer_cast<TypeNode>(tree->getRetTypeNode());
+            bool correctReturn = retType && retType->getTypeName() == "integer";
+            bool correctArgs = tree->orderedArgs.size() == 0;
+
+            if (!correctReturn || !correctArgs) {
+                throw MainError(tree->loc(), "Main function has incorrect signature");
+            } else {
+                hasMain = true;
+            }
+        }
+
         // if there isn't a body, this is a forward declaration
         if (tree->body) {
             scopeDepth++;
@@ -240,5 +255,11 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "Function body cannot contain streamout (impure I/O)");
         }
         return 0;
+    }
+
+    void SyntaxWalker::checkMain() {
+        if (!hasMain) {
+            throw MainError(0, "No main procedure found");
+        }
     }
 }
