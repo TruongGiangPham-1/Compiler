@@ -1,0 +1,4 @@
+procedure main() returns integer {
+  tuple(real[2, 2], real) a  = ([1.0, 2.0], 1);     // error cant cast real vec to matrix
+  return 1;
+}

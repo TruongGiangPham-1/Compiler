@@ -133,11 +133,11 @@ namespace gazprea {
             std::cout << "about to visit Char" << std::endl;
 #endif // DEBUG
             return this->visitChar(std::dynamic_pointer_cast<CharNode>(tree));
-        } else if (std::dynamic_pointer_cast<StringNode>(tree)) {
+        } else if (std::dynamic_pointer_cast<VectorNode>(tree) and std::dynamic_pointer_cast<VectorNode>(tree)->isString) {
 #ifdef DEBUG
             std::cout << "about to visit String" << std::endl;
 #endif // DEBUG
-            return this->visitString(std::dynamic_pointer_cast<StringNode>(tree));
+            return this->visitString(std::dynamic_pointer_cast<VectorNode>(tree));
 
         }else if (std::dynamic_pointer_cast<BinaryArithNode>(tree)) {
 #ifdef DEBUG
@@ -159,7 +159,7 @@ namespace gazprea {
 
             return this->visitStride(std::dynamic_pointer_cast<StrideNode>(tree));
         }
-        else if (std::dynamic_pointer_cast<VectorNode>(tree)) {
+        else if (std::dynamic_pointer_cast<VectorNode>(tree) and !std::dynamic_pointer_cast<VectorNode>(tree)->isString) {
 #ifdef DEBUG
             std::cout << "about to visit literal Vector" << std::endl;
 #endif // DEBUG
@@ -375,7 +375,7 @@ namespace gazprea {
     std::any ASTWalker::visitChar(std::shared_ptr<CharNode> tree) {
         return this->walkChildren(tree);
     }
-    std::any ASTWalker::visitString(std::shared_ptr<StringNode> tree) {
+    std::any ASTWalker::visitString(std::shared_ptr<VectorNode> tree) {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitVector(std::shared_ptr<VectorNode> tree) {
@@ -476,8 +476,9 @@ namespace gazprea {
         return this->walkChildren(tree);
     }
     std::any ASTWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+        auto node = std::dynamic_pointer_cast<ASTNode>(tree);
         walk(tree->getReturnExpr());
-        return this->walkChildren(tree);
+        return this->walkChildren(node);
     }
     std::any ASTWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
         return this->walkChildren(tree);

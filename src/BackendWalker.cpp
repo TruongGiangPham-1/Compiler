@@ -1,6 +1,7 @@
 #include "BackendWalker.h"
 #include "ASTNode/Expr/CastNode.h"
 #include "ASTNode/Type/VectorTypeNode.h"
+#include "ASTNode/Type/TupleTypeNode.h"
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTWalker.h"
 #include "Operands/BINOP.h"
@@ -85,9 +86,8 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-  std::cout << tree->evaluatedType->baseTypeEnum << std::endl;
-  std::cout << tree->evaluatedType->vectorOrMatrixEnum<< std::endl;
-  if (tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
+
+  if (!tree->evaluatedType->vectorInnerTypes.empty() && tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
       mlir::Value size;
@@ -101,7 +101,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
 
       auto one = codeGenerator.generateValue(1);
 
-      auto newVector = codeGenerator.generateValue(size);
+      auto newVector = codeGenerator.generateValue(size, tree->isString);
 
       mlir::Block *loopBeginBlock = codeGenerator.generateBlock();
       mlir::Block *trueBlock = codeGenerator.generateBlock();
@@ -204,15 +204,25 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
   }else {
     
     switch (tree->evaluatedType->baseTypeEnum) {
-      case TUPLE:
-        for (auto child : tree->children) {
+      case TUPLE: 
+      {
+          auto mtree = std::dynamic_pointer_cast<TupleTypeNode>(tree);
+          int index = 1;
           std::vector<mlir::Value> children;
-          auto val = std::any_cast<mlir::Value>(walk(child));
+          for (auto child : mtree->getTypes()) {
 
-          children.push_back(val);
+            auto rhsItem = codeGenerator.indexCommonType(*(this->inferenceContext.end()-1), codeGenerator.generateValue(index));
+
+            this->inferenceContext.push_back(rhsItem);
+            auto val = std::any_cast<mlir::Value>(walk(child));
+            this->inferenceContext.pop_back();
+
+            children.push_back(val);
+            index ++;
+          }
           return codeGenerator.generateValue(children);
         }
-          default:
+        default:
        // base type, can resolve directly
         return codeGenerator.generateNullValue(tree->evaluatedType);
     }
@@ -284,7 +294,7 @@ std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
   return result;
 }
 
-std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
+std::any BackendWalker::visitString(std::shared_ptr<VectorNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }
 
@@ -311,7 +321,10 @@ std::any BackendWalker::visitStdInputNode(std::shared_ptr<StdInputNode> tree) {
 // Expr/Binary
 std::any BackendWalker::visitCast(std::shared_ptr<CastNode> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
+
+  this->inferenceContext.push_back(val);
   auto type = std::any_cast<mlir::Value>(walk(tree->getType()));
+  this->inferenceContext.pop_back();
 
   return codeGenerator.cast(val, type);
 }
@@ -583,6 +596,8 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
   }
   mlir::Block *endBlock = codeGenerator.generateBlock();
 
+  bool allReturn = true;
+
   // now, go through the conditions and bodies and generate the code
   // the number of bodies is never less than the number of conditions
   for (int i = 0; i < tree->conditions.size(); i++) {
@@ -596,6 +611,7 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
 
     // return was dropped during walk, don't need to bound back
     if (!this->returnDropped) codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn);
+    allReturn = allReturn & returnDropped;
   
     this->returnDropped = false;
     this->earlyReturn = false;
@@ -603,18 +619,26 @@ std::any BackendWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) 
     codeGenerator.setBuilderInsertionPoint(falseBlocks[i]);
   }
 
-  this->returnDropped = false;
   // if there is an "else" clause, we will have one more "body" node
   if (tree->bodies.size() > tree->conditions.size()) {
+    this->returnDropped = false;
     walk(tree->bodies[tree->bodies.size() - 1]);
+
+    allReturn = allReturn & returnDropped;
+  } else {
+    allReturn = false;
   }
 
   if (!this->returnDropped)  {
     codeGenerator.conditionalJumpToBlock(endBlock, !earlyReturn); 
-    codeGenerator.setBuilderInsertionPoint(endBlock);
-  } else {
+  }  
+
+   if (allReturn){
     endBlock->erase();
+  } else {
+    codeGenerator.setBuilderInsertionPoint(endBlock);
   }
+  this->returnDropped = allReturn & returnDropped;
 
   // note returnDropped isn't turned off. dropping a return in an else
   // guarantees early return. stop generating code, it will be unreachable
@@ -633,8 +657,7 @@ std::any BackendWalker::visitInfiniteLoop(std::shared_ptr<InfiniteLoopNode> tree
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopBody, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopBody);
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -660,8 +683,7 @@ std::any BackendWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> 
   // body of loop
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopCheck);
 
   // loop exit
   codeGenerator.setBuilderInsertionPoint(loopExit);
@@ -682,8 +704,7 @@ std::any BackendWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLo
   codeGenerator.generateEnterBlock(loopBody);
   codeGenerator.setBuilderInsertionPoint(loopBody);
   walk(tree->getBody());
-  codeGenerator.conditionalJumpToBlock(loopCheck, !earlyReturn);
-  this->earlyReturn = false;
+  codeGenerator.generateEnterBlock(loopCheck);
 
   // conditional
   codeGenerator.setBuilderInsertionPoint(loopCheck);
@@ -713,7 +734,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
 
       // var to index the domain
       auto domainIdx = codeGenerator.generateValue(1);
-      auto domainIdxVal = codeGenerator.generateValue(0);
+      auto domainIdxVal = codeGenerator.generateNullValue(domainSym->typeSym);
       codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
 
       // get length of domainVec
@@ -747,22 +768,21 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
 
   // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
   // if there is a break/continue statement, we need to jump to the correct exit block
-  this->loopBlocks.push_back(std::make_pair(blocks[0].first, blocks[0].second));
+  this->loopBlocks.push_back(std::make_pair(blocks[blocks.size() - 1].first, blocks[blocks.size() - 1].second));
 
   // walk the body
   walk(tree->getBody());
 
   // add all exitBlocks, increment domainIdx
-  // reverse it first
+  // reverse it first; we need to traverse in reverse order
   std::reverse(blocks.begin(), blocks.end());
   for (auto &blockInfo : blocks) {
     auto enter = blockInfo.first;
     auto exit = blockInfo.second;
 
-    codeGenerator.conditionalJumpToBlock(enter, !earlyReturn);
+    codeGenerator.generateEnterBlock(enter);
     codeGenerator.setBuilderInsertionPoint(exit);
   }
-  this->earlyReturn = false;
   this->loopBlocks.pop_back();
 
   return 0;

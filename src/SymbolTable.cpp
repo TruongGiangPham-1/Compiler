@@ -66,7 +66,7 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getName());  // create typenode with integer
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
         resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;
-
+        resolvedType->isString = typeN->isString;
         // make innertype node, which is a vector
         std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
@@ -85,6 +85,10 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         if (innerTypeRes->baseTypeEnum == TYPE::TUPLE || innerTypeRes->baseTypeEnum == TYPE::IDENTITY || innerTypeRes->baseTypeEnum == TYPE::NULL_) {
             throw (typeNode->loc(), "matrix can only be int, real, boolean, char");
         }
+        // scalar type
+        auto scalarType = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
+        scalarType->baseTypeEnum = innerTypeRes->baseTypeEnum;
+        scalarType->vectorOrMatrixEnum = TYPE::NONE;
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
@@ -94,12 +98,14 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
         innerType_->vectorOrMatrixEnum = TYPE::VECTOR;  //  matrices is just vector of vector
+
+        innerType_->vectorInnerTypes.push_back(scalarType);
         resolvedType->vectorInnerTypes.push_back(innerType_);
+
+
         return resolvedType;
 
-    } else if (std::dynamic_pointer_cast<StringTypeNode>(typeNode)){
-
-    } else if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
+    }  else if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
         // tuple typenode
         auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(typeNode);
 
