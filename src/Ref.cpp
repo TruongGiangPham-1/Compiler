@@ -351,6 +351,7 @@ namespace gazprea {
             // reference to the function Symbol that we are calling. can get all arguments using
             // tree->functionRef->orderedArgs
             tree->MethodRef = cast;
+            tree->procCall = true;
         } else {
             // function call overshaddowed by a non function declaration above || function dont exist
             std::string errMSg = sym->getName() + " is not a function to be called. It is undefined or overshadowed"

@@ -1297,6 +1297,9 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitCall(std::shared_ptr<CallNode> tree) {
+        if (tree->MethodRef->orderedArgs.size() != tree->children.size()) {
+            throw SyntaxError(tree->loc(), "call argument size do not match method definition");
+        }
         if (tree->procCall) {
             walkChildren(tree);
             tree->evaluatedType = tree->MethodRef->typeSym;  // could be null if procedure call dont have ret type
@@ -1319,7 +1322,7 @@ namespace gazprea {
                     // typecheck must be vector
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isVector(argType)) {
-                        throw CallError(tree->loc(), "length() only accepts vector as input");
+                        throw TypeError(tree->loc(), "length() only accepts vector as input");
                     }
                     tree->evaluatedType = symtab->globalScope->resolveType("integer");  // return type should just be int
                     break;
@@ -1327,14 +1330,14 @@ namespace gazprea {
                 case FUNC_COLUMN:
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isMatrix(argType)) {
-                        throw CallError(tree->loc(), "rows() or columns() only accepts matrix as input");
+                        throw TypeError(tree->loc(), "rows() or columns() only accepts matrix as input");
                     }
                     tree->evaluatedType = symtab->globalScope->resolveType("integer");  // return type should just be int
                     break;
                 case FUNC_REVERSE: {
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isVector(argType)) {
-                        throw CallError(tree->loc(), "reverse only accepts vector as input");
+                        throw TypeError(tree->loc(), "reverse only accepts vector as input");
                     }
                     auto argVectorType = promotedType->createArrayType(argType->getBaseTypeEnumName(), VECTOR);
                     tree->evaluatedType = argVectorType;
@@ -1343,7 +1346,7 @@ namespace gazprea {
                 case FUNC_FORMAT:
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isScalar(argType)) {
-                        throw CallError(tree->loc(), "format only accepts scalar as input");
+                        throw TypeError(tree->loc(), "format only accepts scalar as input");
                     }
                     tree->evaluatedType = promotedType->getTypeCopy(symtab->globalScope->resolveType("string"));
                     break;
