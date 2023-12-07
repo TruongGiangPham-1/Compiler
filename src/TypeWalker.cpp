@@ -667,17 +667,26 @@ namespace gazprea {
         return nullptr;
     }
 
-    std::any TypeWalker::visitString(std::shared_ptr<StringNode> tree) {
-        // string is a vector Type node where baseEnum = string
+    std::any TypeWalker::visitString(std::shared_ptr<VectorNode> tree) {
         // and vectorInnerType of character
+        for (auto &exprNode: tree->getElements()) {
+            walk(exprNode);  // set the evaluated type of each expr
+        }
         tree->evaluatedType = std::make_shared<AdvanceType>("");  // just initialize it
+        tree->evaluatedType->vectorOrMatrixEnum = TYPE::VECTOR;
+        if (tree->getElements().empty()) {
+            // we will represent empty vector literal if it is vector but doesnt have a type
+            tree->evaluatedType->baseTypeEnum = TYPE::CHAR;
+            tree->isEmpty = true;
+            return nullptr;
+        }
         tree->evaluatedType->baseTypeEnum = TYPE::CHAR;
-        tree->evaluatedType->vectorOrMatrixEnum = VECTOR;
         tree->evaluatedType->vectorInnerTypes.clear();
+        // add the inner types to type class
         tree->evaluatedType->isString = true;
         // Populating Inner Types of String "vector" with char types
         tree->evaluatedType->vectorInnerTypes.push_back(promotedType->getTypeCopy(currentScope->resolveType("character")));
-        tree->evaluatedType->dims.push_back(tree->getSize());  // the length of the string
+        tree->evaluatedType->dims.push_back(tree->getSize());  // the row size of this vector
         return nullptr;
     }
 

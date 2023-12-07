@@ -289,7 +289,7 @@ std::any BackendWalker::visitVector(std::shared_ptr<VectorNode> tree) {
   return result;
 }
 
-std::any BackendWalker::visitString(std::shared_ptr<StringNode> tree) {
+std::any BackendWalker::visitString(std::shared_ptr<VectorNode> tree) {
   return codeGenerator.generateValue(tree->getVal());
 }
 
