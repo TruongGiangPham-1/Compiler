@@ -72,7 +72,7 @@ namespace gazprea {
 /*real*/         {"",         "",         "",         "real",    "",   "real", ""},
 /*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
 /*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
-/*null*/         {"boolean",  "character", "integer", "real", "tuple" , "", ""}
+/*null*/         {"",  "", "", "", "" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
     void PromotedType::populateInnerTypes(std::shared_ptr<Type> type, std::shared_ptr<VectorNode> tree) {
