@@ -473,6 +473,7 @@ commonType* charPromotion(commonType* fromValue, commonType* toType) {
     return cast(fromValue, toType);
 
     case VECTOR:
+    case STRING:
     {
       list* toList = (list*)toType->value;
       list* newList = allocateList(toList->currentSize);
@@ -481,7 +482,7 @@ commonType* charPromotion(commonType* fromValue, commonType* toType) {
         appendList(newList, charPromotion(fromValue, toList->values[i]));
       }
 
-      return allocateCommonType(&newList, VECTOR);
+      return allocateCommonType(&newList, toType->type);
     }
     default:
 #ifdef DEBUGTYPES
@@ -540,6 +541,7 @@ commonType* promotion(commonType* from, commonType* to) {
     case REAL:
     return realPromotion(from, to);
     case VECTOR:
+    case STRING:
     return vectorPromotion((list*)from->value, to);
     default:
     PromotionError("Attempting promotion on invalid or tuple type");

@@ -86,6 +86,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
+
   if (!tree->evaluatedType->vectorInnerTypes.empty() && tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
@@ -830,6 +831,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         false);
 
     this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
+    this->returnType = tree->getRetTypeNode();
 
     walk(tree->body);
 
@@ -854,6 +856,7 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         false);
     // stack
     this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
+    this->returnType = tree->getRetTypeNode();
 
     walk(tree->body);
 
@@ -877,6 +880,16 @@ std::any BackendWalker::visitCall(std::shared_ptr<CallNode> tree) {
 
 std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
   auto returnValue = tree->returnExpr ? std::any_cast<mlir::Value>(walk(tree->returnExpr)) : codeGenerator.generateValue(0);
+
+  if (tree->returnExpr) {
+    this->inferenceContext.push_back(returnValue);
+    auto toType = std::any_cast<mlir::Value>(walk(this->returnType));
+    returnValue = codeGenerator.promotion(returnValue, toType);
+    this->inferenceContext.pop_back();
+  } else {
+    returnValue = codeGenerator.generateValue(0);
+  }
+
   codeGenerator.generateReturn(returnValue, this->methodStack);
 
   this->returnDropped = true;
