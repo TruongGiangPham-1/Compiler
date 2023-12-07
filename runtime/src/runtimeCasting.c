@@ -306,7 +306,7 @@ commonType* vectorCast(list* fromValue, commonType* toType) {
           appendList(newList, promotedItem);
       }
 
-      return allocateCommonType(&newList, VECTOR);
+      return allocateCommonType(&newList, toType->type);
     }
     default:
     RuntimeOPError("wierd stuff goin on man");
