@@ -851,10 +851,7 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
 
     walk(tree->body);
 
-    // cheeky return. catches void functions + generalizes if/else returns
-    if (!returnDropped && !tree->getRetTypeNode()) { 
-      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->variableStack.back()) ;
-    }
+
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
@@ -916,6 +913,11 @@ std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
 
   this->variableStack.push_back(codeGenerator.initializeStack(20));
   auto returnVal = walkChildren(tree);
+
+  // cheeky return. catches void functions + generalizes if/else returns
+  if (!returnDropped && !this->returnType) { 
+    codeGenerator.generateReturn(codeGenerator.generateValue(0), this->variableStack.back()) ;
+  }
   this->variableStack.pop_back();
 
   codeGenerator.popScope();
