@@ -1,0 +1,9 @@
+procedure main() returns integer {
+  tuple(real a, real b) z;
+
+  tuple(real a, real b) x;
+
+  x == z -> std_output;
+
+  return 0;
+}

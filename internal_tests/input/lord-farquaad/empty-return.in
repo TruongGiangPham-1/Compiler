@@ -1,0 +1,9 @@
+procedure test() {
+    "test called" -> std_output;
+    return;
+}
+
+procedure main() returns integer {
+    call test();
+    return 0;
+}

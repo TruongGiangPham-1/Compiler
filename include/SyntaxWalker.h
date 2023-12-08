@@ -26,6 +26,9 @@ namespace gazprea {
         bool inGlobalScope();
         std::string debugGlobalScope();
 
+        // how many layers of a vector literal are we in?
+        int getVectorLiteralDepth();
+
         // CONTEXT gives us more info as to what we're currently visiting
         // it's a vector so it's easy to push/pop as we enter into new contexts
         std::vector<CONTEXT> contexts;
