@@ -79,7 +79,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
     codeGenerator.generateAssignment(
         codeGenerator.indexCommonType(
           this->variableStack.back(), 
-          codeGenerator.generateValue(tree->sym->functionStackIndex)
+          codeGenerator.generateValue(tree->sym->declarationIndex)
           ),
         initializedType);
   } else {
