@@ -1625,7 +1625,12 @@ namespace gazprea {
         }
         tree->evaluatedType = symtab->resolveTypeUser(tree->getRetTypeNode());
         tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
-
+        auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getRetTypeNode());
+        if (tupleNode) {
+            for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                tupleNode->getTypes()[i]->evaluatedType = symtab->resolveTypeUser(tupleNode->getTypes()[i]);
+            }
+        }
         if (tree->body) {
             auto blockNode = tree->body;
             walkChildren(blockNode);
@@ -1640,6 +1645,12 @@ namespace gazprea {
         if (tree->getRetTypeNode()) {
             tree->evaluatedType = promotedType->getTypeCopy(symtab->resolveTypeUser(tree->getRetTypeNode()));
             tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
+            auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getRetTypeNode());
+            if (tupleNode) {
+                for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                    tupleNode->getTypes()[i]->evaluatedType = symtab->resolveTypeUser(tupleNode->getTypes()[i]);
+                }
+            }
         }
         else {
             tree->evaluatedType = nullptr;
