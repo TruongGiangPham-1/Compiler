@@ -14,10 +14,13 @@ namespace gazprea {
         // whenever we encounter a procedure call
         // we go through the variable args and add the mlirName of the id into the
         std::set<std::string> mlirNames;
+
+        bool insideProcedureArgs;
     public:
         AliasErrorWalker();
 
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
+        std::any visitID(std::shared_ptr<IDNode> tree) override;
     };
 }
 
