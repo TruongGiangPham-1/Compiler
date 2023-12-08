@@ -1446,8 +1446,25 @@ namespace gazprea {
                 throw TypeError(tree->loc(), "Cannot cast " + exprType->getBaseTypeEnumName() + " to " + toType->getBaseTypeEnumName());
             }
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
-            tree->evaluatedType = resultType; // base Type
-            tree->children[0]->evaluatedType = resultType;
+            // array handling
+            if (toType->vectorOrMatrixEnum == VECTOR) {
+                if (promotedType->isMatrix(toType) && promotedType->isVector(tree->getExpr()->evaluatedType)) {
+                    throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
+                }
+                if (promotedType->isScalar(exprType)) {
+                    promotedType->promoteLiteralToArray(toType, tree->getExpr(), promotedType->castTable);
+                } else if (promotedType->isEmptyArrayLiteral(exprType)) {
+                    // empty array literal. simply promote to ltype
+                    //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
+                    tree->getExpr()->evaluatedType = promotedType->getTypeCopy(toType);
+                } else {
+                    promotedType->promoteVectorElements(toType, tree->getExpr(), promotedType->castTable);
+                    promotedType->updateVectorNodeEvaluatedType(toType, tree->getExpr());  // copy ltype to exprNode's type except for the size attribute
+                }
+            }
+            // array handling;
+            tree->evaluatedType = promotedType->getTypeCopy(toType); // base Type
+            tree->getType()->evaluatedType = promotedType->getTypeCopy(tree->evaluatedType);
         }
         return nullptr;
     }
@@ -1589,6 +1606,12 @@ namespace gazprea {
     std::any TypeWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
         tree->evaluatedType = symtab->resolveTypeUser(tree->type);
         tree->type->evaluatedType = tree->evaluatedType;
+        auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->type);
+        if (tupleNode) {
+            for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                tupleNode->getTypes()[i]->evaluatedType = symtab->resolveTypeUser(tupleNode->getTypes()[i]);
+            }
+        }
         return nullptr;
     }
 
@@ -1679,6 +1702,8 @@ namespace gazprea {
         if (tree->body) {
             auto blockNode = tree->body;
             walkChildren(blockNode);
+        } else if (tree->expr) {
+            walkChildren(tree->expr);
         }
         return nullptr;
     }
