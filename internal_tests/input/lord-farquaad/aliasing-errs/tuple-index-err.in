@@ -3,7 +3,7 @@ procedure p(var tuple(integer, real) t1, integer x) {
 }
 
 procedure main() returns integer {
-    tuple(integer, real) t1 = identity;
+    tuple(integer, real) t1 = (identity, identity);
     call p(t1, t1.2);
     return 0;
 }
