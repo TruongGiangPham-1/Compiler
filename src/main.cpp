@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
       std::cout << "\n\n=== CALL ERROR PASS\n";
 #endif
-      gazprea::CallErrorWalker callErrWalker(symbolTable);
+      gazprea::CallErrorWalker callErrWalker;
       callErrWalker.walk(ast);
 
 #ifdef DEBUG
