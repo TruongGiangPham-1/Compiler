@@ -38,6 +38,8 @@ namespace gazprea {
                 return "VECTOR_LITERAL";
             case WALKER_CONTEXT::NONE:
                 return "NONE";
+            case WALKER_CONTEXT::STREAM_OUT:
+                return "STREAM_OUT";
         }
     }
 }

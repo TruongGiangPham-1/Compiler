@@ -24,8 +24,16 @@ namespace gazprea {
         static std::string contextToString(WALKER_CONTEXT context);
 
         std::shared_ptr<SymbolTable> symTab;
+
+        // true if it is a procedure, false if it is a function
+        bool checkCallNodeType(const std::shared_ptr<CallNode>& tree);
     public:
         CallErrorWalker(std::shared_ptr<SymbolTable> symTab);
+
+        std::any visitCall(std::shared_ptr<CallNode> tree) override;
+
+        // === STREAMS
+        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
     };
 }
 

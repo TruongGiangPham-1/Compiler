@@ -11,6 +11,7 @@ enum class WALKER_CONTEXT {
     FUNCTION,
     DECL_BODY, // inside `type qualifier ID = ***`
     VECTOR_LITERAL, // inside a VectorNode
+    STREAM_OUT,
     NONE,
 };
 
