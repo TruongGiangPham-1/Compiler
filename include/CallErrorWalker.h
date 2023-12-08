@@ -15,12 +15,10 @@
 namespace gazprea {
     class CallErrorWalker : public ContextedWalker {
     private:
-        std::shared_ptr<SymbolTable> symTab;
-
         // true if it is a procedure, false if it is a function
         bool checkCallNodeType(const std::shared_ptr<CallNode>& tree);
     public:
-        CallErrorWalker(std::shared_ptr<SymbolTable> symTab);
+        CallErrorWalker();
 
         std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
         std::any visitDecl(std::shared_ptr<DeclNode> tree) override;

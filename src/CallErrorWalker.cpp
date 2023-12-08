@@ -7,9 +7,7 @@
 #include <utility>
 
 namespace gazprea {
-    CallErrorWalker::CallErrorWalker(std::shared_ptr<SymbolTable> symTab) : ContextedWalker() {
-        this->symTab = std::move(symTab);
-    }
+    CallErrorWalker::CallErrorWalker() : ContextedWalker() {}
 
     // true if the call symbol is a procedure
     // false if function
