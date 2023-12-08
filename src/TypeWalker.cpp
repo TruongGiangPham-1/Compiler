@@ -72,7 +72,7 @@ namespace gazprea {
 /*real*/         {"",         "",         "",         "real",    "",   "real", ""},
 /*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
 /*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
-/*null*/         {"",  "", "", "", "" , "", ""}
+/*null*/         {"boolean",  "character", "integer", "real", "tuple" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
     };
     void PromotedType::populateInnerTypes(std::shared_ptr<Type> type, std::shared_ptr<VectorNode> tree) {
@@ -718,7 +718,7 @@ namespace gazprea {
             case BINOP::EXP:
             case BINOP::SUB:
             case BINOP::REM:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->arithmeticResult);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
@@ -726,14 +726,14 @@ namespace gazprea {
             case BINOP::XOR:
             case BINOP::OR:
             case BINOP::AND:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->booleanResult);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->booleanResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
                 break;
             case BINOP::DOT_PROD:
                 promotedType->dotProductErrorCheck(lhsType, rhsType, tree->loc());
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->arithmeticResult);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
 
 
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
@@ -1297,6 +1297,9 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitCall(std::shared_ptr<CallNode> tree) {
+        if (!tree->MethodRef->isBuiltIn() &&tree->MethodRef->orderedArgs.size() != tree->children.size()) {
+            throw SyntaxError(tree->loc(), "call argument size do not match method definition");
+        }
         if (tree->procCall) {
             walkChildren(tree);
             tree->evaluatedType = tree->MethodRef->typeSym;  // could be null if procedure call dont have ret type
@@ -1319,7 +1322,7 @@ namespace gazprea {
                     // typecheck must be vector
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isVector(argType)) {
-                        throw CallError(tree->loc(), "length() only accepts vector as input");
+                        throw TypeError(tree->loc(), "length() only accepts vector as input");
                     }
                     tree->evaluatedType = symtab->globalScope->resolveType("integer");  // return type should just be int
                     break;
@@ -1327,14 +1330,14 @@ namespace gazprea {
                 case FUNC_COLUMN:
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isMatrix(argType)) {
-                        throw CallError(tree->loc(), "rows() or columns() only accepts matrix as input");
+                        throw TypeError(tree->loc(), "rows() or columns() only accepts matrix as input");
                     }
                     tree->evaluatedType = symtab->globalScope->resolveType("integer");  // return type should just be int
                     break;
                 case FUNC_REVERSE: {
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isVector(argType)) {
-                        throw CallError(tree->loc(), "reverse only accepts vector as input");
+                        throw TypeError(tree->loc(), "reverse only accepts vector as input");
                     }
                     auto argVectorType = promotedType->createArrayType(argType->getBaseTypeEnumName(), VECTOR);
                     tree->evaluatedType = argVectorType;
@@ -1343,7 +1346,7 @@ namespace gazprea {
                 case FUNC_FORMAT: {
                     assert(tree->children.size() == 1);  // all invalid arg size builtin call should be weeded out by defref
                     if (!promotedType->isScalar(argType)) {
-                        throw CallError(tree->loc(), "format only accepts scalar as input");
+                        throw TypeError(tree->loc(), "format only accepts scalar as input");
                     }
                     auto argVectorType = promotedType->createArrayType("character", VECTOR);
                     tree->evaluatedType = argVectorType;
@@ -1534,14 +1537,7 @@ namespace gazprea {
             tree->evaluatedType->vectorOrMatrixEnum = NONE;
             tree->evaluatedType->dims.clear();    // evaluted type is just a non vector literal with no dimention
         } else if (promotedType->isMatrix(indexee->evaluatedType)) {  // case: its a matrix indx
-            auto typeCopy = promotedType->getTypeCopy(indexee->evaluatedType);
-            for (int i = 0; i < typeCopy->vectorInnerTypes.size(); i++) {
-                typeCopy->vectorInnerTypes[i] = promotedType->getTypeCopy(currentScope->resolveType(typeCopy->getBaseTypeEnumName()));
-            }
-            tree->evaluatedType = typeCopy;
-            tree->evaluatedType->vectorOrMatrixEnum = VECTOR;  // return a vector
-            tree->evaluatedType->dims.clear();    // evaluted type is just a  vector literal with no dimention
-            tree->evaluatedType->dims.push_back(1);
+            auto typeCopy = promotedType->getTypeCopy(currentScope->resolveType(indexee->evaluatedType->getBaseTypeEnumName()));
         } else {
             assert(indexee->evaluatedType->dims.empty());
             throw SyntaxError(tree->loc(), "cannot index non vector or matrices");  // TODO is this the correct error
@@ -1556,66 +1552,25 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-        walk(tree->returnExpr);
+        if (tree->returnExpr) {
+            walk(tree->returnExpr);
+        }
+        else {
+            if (tree->returnFunc->typeSym) {
+                throw TypeError(tree->loc(), "No return expression present");
+            }
+            return nullptr;
+        }
         auto node = std::dynamic_pointer_cast<ASTNode>(tree);
         walkChildren(node);
         tree->evaluatedType = tree->returnExpr->evaluatedType;
         auto type = tree->returnFunc->typeSym;
-        auto rhsType = tree->returnExpr->evaluatedType;
-        if (type->getBaseTypeEnumName() == "tuple" and rhsType->getBaseTypeEnumName() == "tuple") {
-            if (type->tupleChildType.size() != rhsType->tupleChildType.size()) {
-                throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
-            }
-            for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
-                auto leftTypeString = type->tupleChildType[i].second->getBaseTypeEnumName();
-                auto rightTypeString = rhsType->tupleChildType[i].second->getBaseTypeEnumName();
-
-                if (leftTypeString != rightTypeString) {
-                    auto leftIndex = promotedType->getTypeIndex(rightTypeString);
-                    auto rightIndex = promotedType->getTypeIndex(leftTypeString);
-                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
-                    if (resultTypeString.empty()) {
-                        throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
-                    }
-                }
-            }
-            promotedType->promoteTupleElements(type, tree->returnExpr, promotedType->promotionTable);
-            //promotedType->printTypeClass(tree->getRvalue()->evaluatedType);
-
-            tree->evaluatedType = type;
-        } else if (type->vectorOrMatrixEnum == TYPE::VECTOR) {
-            // handle vector literal. promote rhs
-            if (promotedType->isMatrix(type) && promotedType->isVector(rhsType)) {
-                throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
-            }
-            if (rhsType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rhsType)) {
-                promotedType->promoteLiteralToArray(type, tree->returnExpr, promotedType->promotionTable);
-            } else if (promotedType->isEmptyArrayLiteral(rhsType)) {
-                tree->returnExpr->evaluatedType = promotedType->getTypeCopy(type);
-                tree->evaluatedType = tree->returnExpr->evaluatedType;
-            }
-            else {
-                promotedType->promoteVectorElements(type, tree->returnExpr, promotedType->promotionTable);
-                promotedType->updateVectorNodeEvaluatedType(type, tree->returnExpr);
-            }
-            tree->evaluatedType = promotedType->getTypeCopy(tree->returnExpr->evaluatedType);  // update the tree evaluated type with promoted
-            return nullptr;
+        auto leftIndex = promotedType->getTypeIndex(tree->returnExpr->evaluatedType->getBaseTypeEnumName());
+        auto rightIndex = promotedType->getTypeIndex(type->getBaseTypeEnumName());
+        std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+        if (resultTypeString.empty()) {
+            throw TypeError(node->loc(), "Cannot implicitly promote " + tree->returnExpr->evaluatedType->getBaseTypeEnumName() + " to " + type->getBaseTypeEnumName());
         }
-        else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
-            tree->evaluatedType = type;  //
-            promotedType->promoteIdentityAndNull(type, tree->returnExpr);
-        }
-
-        else if (rhsType->getBaseTypeEnumName() != type->getBaseTypeEnumName()) {
-            auto leftIndex = promotedType->getTypeIndex(tree->returnExpr->evaluatedType->getBaseTypeEnumName());
-            auto rightIndex = promotedType->getTypeIndex(type->getBaseTypeEnumName());
-            std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
-            if (resultTypeString.empty()) {
-                throw TypeError(node->loc(), "Cannot implicitly promote " + tree->returnExpr->evaluatedType->getBaseTypeEnumName() + " to " + type->getBaseTypeEnumName());
-            }
-        }
-        else
-            tree->evaluatedType = tree->returnExpr->evaluatedType;
         return nullptr;
     }
 
