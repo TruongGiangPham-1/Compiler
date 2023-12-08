@@ -8,8 +8,9 @@
 // additional context as to what we're currently visiting
 
 enum class WALKER_CONTEXT {
-    FUNCTION,
+    FUNCTION, // func body
     DECL_BODY, // inside `type qualifier ID = ***`
+    ASSIGN_BODY, // inside `a = ***`
     VECTOR_LITERAL, // inside a VectorNode
     STREAM_OUT,
     NONE,

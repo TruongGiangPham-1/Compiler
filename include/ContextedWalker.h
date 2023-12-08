@@ -18,6 +18,7 @@ namespace gazprea {
         // it's a vector so it's easy to push/pop as we enter into new contexts
         std::vector<WALKER_CONTEXT> contexts;
         bool inContext(WALKER_CONTEXT context);
+        bool directlyInContext(WALKER_CONTEXT context);
 
         std::string debugContext();
         static std::string contextToString(WALKER_CONTEXT context);

@@ -28,12 +28,20 @@ namespace gazprea {
         return std::find(contexts.begin(), contexts.end(), context) != contexts.end();
     }
 
+    bool ContextedWalker::directlyInContext(WALKER_CONTEXT context) {
+        // check if we are *directly* inside a context
+        assert(!contexts.empty()); // this HAS to be true;
+        return contexts.back() == context;
+    }
+
     std::string ContextedWalker::contextToString(WALKER_CONTEXT context) {
         switch (context) {
             case WALKER_CONTEXT::FUNCTION:
                 return "FUNCTION";
             case WALKER_CONTEXT::DECL_BODY:
                 return "DECL_BODY";
+            case WALKER_CONTEXT::ASSIGN_BODY:
+                return "ASSIGN_BODY";
             case WALKER_CONTEXT::VECTOR_LITERAL:
                 return "VECTOR_LITERAL";
             case WALKER_CONTEXT::NONE:

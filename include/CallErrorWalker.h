@@ -15,20 +15,15 @@
 namespace gazprea {
     class CallErrorWalker : public ContextedWalker {
     private:
-        // WALKER_CONTEXT gives us more info as to what we're currently visiting
-        // it's a vector so it's easy to push/pop as we enter into new contexts
-        std::vector<WALKER_CONTEXT> contexts;
-        bool inContext(WALKER_CONTEXT context);
-
-        std::string debugContext();
-        static std::string contextToString(WALKER_CONTEXT context);
-
         std::shared_ptr<SymbolTable> symTab;
 
         // true if it is a procedure, false if it is a function
         bool checkCallNodeType(const std::shared_ptr<CallNode>& tree);
     public:
         CallErrorWalker(std::shared_ptr<SymbolTable> symTab);
+
+        std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
+        std::any visitDecl(std::shared_ptr<DeclNode> tree) override;
 
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
 
