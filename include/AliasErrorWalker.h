@@ -10,12 +10,13 @@
 namespace gazprea {
     class AliasErrorWalker : public ASTWalker {
     private:
-        bool isProcedure(const std::shared_ptr<CallNode>& tree);
         // whenever we encounter a procedure call
         // we go through the variable args and add the mlirName of the id into the
         std::set<std::string> mlirNames;
 
-        bool insideProcedureArgs;
+        // -1 if we are not in a procedure call
+        std::shared_ptr<ProcedureSymbol> procSymbol;
+        int procedureArgIdx;
     public:
         AliasErrorWalker();
 

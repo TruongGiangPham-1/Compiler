@@ -8,41 +8,43 @@
 
 namespace gazprea {
     AliasErrorWalker::AliasErrorWalker() : ASTWalker() {
-        insideProcedureArgs = false;
-    }
-
-    // true if the call symbol is a procedure
-    bool AliasErrorWalker::isProcedure(const std::shared_ptr<CallNode>& tree) {
-        if (std::dynamic_pointer_cast<FunctionSymbol>(tree->MethodRef)) {
-            return false;
-        } else if (std::dynamic_pointer_cast<ProcedureSymbol>(tree->MethodRef)) {
-            return true;
-        } else {
-            throw std::runtime_error("AliasErrorWalker encountered something weird. See: AliasErrorWalker::checkCallNodeType method");
-        }
+        procedureArgIdx = -1;
     }
 
     std::any AliasErrorWalker::visitCall(std::shared_ptr<CallNode> tree) {
-        // we don't care abt function calls, as their inputs are strictly const
-        if (!isProcedure(tree)) return 0;
+        procSymbol = std::dynamic_pointer_cast<ProcedureSymbol>(tree->MethodRef);
+        if (!procSymbol) return 0; // we don't care about function calls
 
         // as procedures cannot be used as arguments in other procedures (this is checked in the CallError pass)
         // this reduces a LOT of complexity w.r.t alias checking (we don't have to check for aliases in the return types of procedures)
         // so instead we check the mlirName of all the variables passed into the procedure
-        insideProcedureArgs = true;
         mlirNames.clear();
-        walkChildren(tree);
-        insideProcedureArgs = false;
+        procedureArgIdx = 0;
+        for (const auto& arg: tree->children) {
+            walk(arg);
+            procedureArgIdx++;
+        }
+        procedureArgIdx = -1;
         return 0;
     }
 
     std::any AliasErrorWalker::visitID(std::shared_ptr<IDNode> tree) {
-        if (!insideProcedureArgs) return 0;
-        if (tree->sym->qualifier == QUALIFIER::CONST) return 0; // immutable
+        if (procedureArgIdx < 0) return 0;
+        if (tree->sym->qualifier == QUALIFIER::CONST) return 0; // is the variable is immutable, we do not care
+
+        // what is the argument supposed to be?
+        auto actualArgSym = procSymbol->orderedArgs.at(procedureArgIdx);
+        assert(actualArgSym); // typechecker would have gotten invalid arg calls
+
+        if (actualArgSym->qualifier == QUALIFIER::CONST) {
+            // we only care about var args when checking for aliasing errors
+            // since this argument is const, the value will be immutably passed
+            return 0;
+        }
 
         auto search = mlirNames.find(tree->sym->mlirName);
         if (search != mlirNames.end()) {
-            throw AliasingError(tree->loc(), "Duplicate alias with var " + tree->getName() + " in procedure call");
+            throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call");
         } else {
             mlirNames.insert(tree->sym->mlirName);
         }
