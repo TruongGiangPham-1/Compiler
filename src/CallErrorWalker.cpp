@@ -47,7 +47,7 @@ namespace gazprea {
 
         if (isProcedure) {
             bool validProcedureContext = directlyInContext(WALKER_CONTEXT::DECL_BODY)
-                    && directlyInContext(WALKER_CONTEXT::ASSIGN_BODY);
+                    || directlyInContext(WALKER_CONTEXT::ASSIGN_BODY);
             if (!validProcedureContext && !tree->procCall) {
                 throw CallError(tree->loc(), "Procedure statement in an invalid context. Got: " + contextToString(contexts.back()));
             }
@@ -56,6 +56,43 @@ namespace gazprea {
         walkChildren(tree);
         return 0;
     }
+
+    // === BINOP ===
+    std::any CallErrorWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::BINOP);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitCmp(std::shared_ptr<BinaryCmpNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::BINOP);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitIndex(std::shared_ptr<IndexNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::BINOP);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitConcat(std::shared_ptr<ConcatNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::BINOP);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitStride(std::shared_ptr<StrideNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::BINOP);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
 
     // === STREAM ===
     std::any CallErrorWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {

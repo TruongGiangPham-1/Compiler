@@ -27,6 +27,13 @@ namespace gazprea {
 
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
 
+        // === BINOP
+        std::any visitArith(std::shared_ptr<BinaryArithNode> tree) override;
+        std::any visitCmp(std::shared_ptr<BinaryCmpNode> tree) override;
+        std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+        std::any visitConcat(std::shared_ptr<ConcatNode> tree) override;
+        std::any visitStride(std::shared_ptr<StrideNode> tree) override;
+
         // === STREAMS
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
     };

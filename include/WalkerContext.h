@@ -13,6 +13,7 @@ enum class WALKER_CONTEXT {
     ASSIGN_BODY, // inside `a = ***`
     VECTOR_LITERAL, // inside a VectorNode
     STREAM_OUT,
+    BINOP, // inside any binary operation
     NONE,
 };
 

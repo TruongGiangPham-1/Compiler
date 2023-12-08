@@ -44,6 +44,8 @@ namespace gazprea {
                 return "ASSIGN_BODY";
             case WALKER_CONTEXT::VECTOR_LITERAL:
                 return "VECTOR_LITERAL";
+            case WALKER_CONTEXT::BINOP:
+                return "BINOP";
             case WALKER_CONTEXT::NONE:
                 return "NONE";
             case WALKER_CONTEXT::STREAM_OUT:
