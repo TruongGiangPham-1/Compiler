@@ -1,5 +1,6 @@
 procedure main() returns integer {
     integer a = 1;
     a = 1 + null;
+    a ->std_output;
     return 0;
 }

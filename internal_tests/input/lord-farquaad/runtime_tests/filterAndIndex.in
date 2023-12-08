@@ -1,0 +1,6 @@
+procedure main() returns integer {
+    /* y == ([1, 3, 5], [2, 4]) */
+    var y = [i in 1..5 & i % 2 == 1];
+    length(y.1) -> std_output;
+    return 0;
+}
