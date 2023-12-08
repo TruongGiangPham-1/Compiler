@@ -11,13 +11,13 @@ namespace gazprea {
 
     std::string PromotedType::booleanResult[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null:*/
-/*boolean*/  {"boolean",  "",         "",         "",       "",  "boolean", ""},
-/*character*/{"",         "",         "",         "",       "",  "character", ""},
-/*integer*/  {"",         "",         "",         "",       "" , "integer", ""},
-/*real*/     {"",         "",         "",         "",       "" , "real", ""},
-/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
-/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
-/*null*/     {"",  "", "", "", "" , "", ""}
+/*boolean*/  {"boolean",  "",         "",         "",       "",  "boolean", "boolean"},
+/*character*/{"",         "",         "",         "",       "",  "", ""},
+/*integer*/  {"",         "",         "",         "",       "" , "", ""},
+/*real*/     {"",         "",         "",         "",       "" , "", ""},
+/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
+/*identity*/ {"boolean",  "", "", "",  "" , "", ""},
+/*null*/     {"boolean",  "", "", "", "" , "", ""}
     };
 
     std::string PromotedType::castTable[7][7] = {
@@ -33,44 +33,44 @@ namespace gazprea {
 
     std::string PromotedType::arithmeticResult[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
-/*boolean*/  {"",         "",         "",         "",       "" , "boolean", ""},
-/*character*/{"",         "",         "",         "",       "" , "character", ""},
-/*integer*/  {"",         "",         "integer",  "real",   "" , "integer", ""},
-/*real*/     {"",         "",         "real",     "real",   "" , "real", ""},
-/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
-/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
-/*null*/         {"",  "", "", "", "" , "", ""}
+/*boolean*/  {"",         "",         "",         "",       "" , "", ""},
+/*character*/{"",         "",         "",         "",       "" , "", ""},
+/*integer*/  {"",         "",         "integer",  "real",   "" , "integer", "integer"},
+/*real*/     {"",         "",         "real",     "real",   "" , "real", "real"},
+/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
+/*identity*/ {"",  "", "integer", "real",  "" , "", ""},
+/*null*/         {"",  "", "integer", "real", "" , "", ""}
     };
 
     std::string PromotedType::comparisonResult[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
-/*boolean*/  {"",         "",         "",         "",       "" , "boolean", ""},
-/*character*/{"",         "",         "",         "",       "" , "character", ""},
-/*integer*/  {"",         "",         "boolean",  "boolean","" , "integer", ""},
-/*real*/     {"",         "",         "boolean",  "boolean","" , "real", ""},
-/*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
-/*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
-/*null*/         {"",  "", "", "", "" , "", ""}
+/*boolean*/  {"",         "",         "",         "",       "" , "", ""},
+/*character*/{"",         "",         "",         "",       "" , "", ""},
+/*integer*/  {"",         "",         "boolean",  "boolean","" , "boolean", "boolean"},
+/*real*/     {"",         "",         "boolean",  "boolean","" , "boolean", "boolean"},
+/*tuple*/    {"",         "",         "",         "",       "" , "", ""},
+/*identity*/ {"",  "", "boolean", "boolean",  "" , "", ""},
+/*null*/         {"",  "", "boolean", "boolean", "" , "", ""}
     };
 
     std::string PromotedType::equalityResult[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
-/*boolean*/  {"boolean",  "",         "",         "",        "" ,       "boolean", ""},
-/*character*/{"",         "boolean",  "",         "",        "" ,       "character", ""},
-/*integer*/  {"",         "",         "boolean",  "boolean", "" ,       "integer", ""},
-/*real*/     {"",         "",         "boolean",  "boolean", "" ,       "real", ""},
-/*tuple*/    {"",         "",         "",         "",        "boolean", "tuple", ""},
-/*identity*/ {"boolean",  "character", "integer", "real", "tuple",      "", ""},
-/*null*/         {"",  "", "", "", "" , "", ""}
+/*boolean*/  {"boolean",  "",         "",         "",        "" ,       "boolean", "boolean"},
+/*character*/{"",         "boolean",  "",         "",        "" ,       "boolean", "boolean"},
+/*integer*/  {"",         "",         "boolean",  "boolean", "" ,       "boolean", "boolean"},
+/*real*/     {"",         "",         "boolean",  "boolean", "" ,       "boolean", "boolean"},
+/*tuple*/    {"",         "",         "",         "",        "", "", ""},
+/*identity*/ {"boolean",  "boolean", "boolean", "boolean", "",      "", ""},
+/*null*/     {"boolean",  "boolean", "boolean", "boolean", "",      "", ""}
     };
 
     std::string PromotedType::promotionTable[7][7] = {
 /*                      boolean   character    integer  real  tuple identity null*/
-/*boolean*/      {"boolean",  "",         "",         "",        "",   "boolean", ""},
-/*character*/    {"",         "character","",         "",        "",   "character", ""},
-/*integer*/      {"",         "",         "integer",  "real",    "",   "integer", ""},
-/*real*/         {"",         "",         "",         "real",    "",   "real", ""},
-/*tuple*/        {"",         "",         "",         "",        "",   "tuple", ""},
+/*boolean*/      {"boolean",  "",         "",         "",        "",   "boolean", "boolean"},
+/*character*/    {"",         "character","",         "",        "",   "character", "character"},
+/*integer*/      {"",         "",         "integer",  "real",    "",   "integer", "integer"},
+/*real*/         {"",         "",         "",         "real",    "",   "real", "real"},
+/*tuple*/        {"",         "",         "",         "",        "tuple",   "tuple", "tuple"},
 /*identity*/     {"boolean",  "character", "integer", "real", "tuple", "", ""},
 /*null*/         {"boolean",  "character", "integer", "real", "tuple" , "", ""}
 // TODO: Add identity and null support promotion when Def Ref is done.
@@ -293,13 +293,25 @@ namespace gazprea {
         if (isEmptyArrayLiteral(left->evaluatedType) || isEmptyArrayLiteral(right->evaluatedType)) {
             throw TypeError(left->loc(), "cannot use empty array in binop");
         }
-
         auto LtoRpromotion = getPromotedTypeString(table, left->evaluatedType, right->evaluatedType);
         auto RtoLpromotion = getPromotedTypeString(table, right->evaluatedType, left->evaluatedType);
         if (LtoRpromotion.empty() && RtoLpromotion.empty())  throw TypeError(left->loc(), "invalid vectors type binop");
-
-        std::shared_ptr<Type> dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
-        std::shared_ptr<ASTNode> promoteNode = !LtoRpromotion.empty()? left: right; // l to r promotion valid so promote left node, vice versa
+        std::shared_ptr<Type> dominantType;
+        std::shared_ptr<ASTNode> promoteNode;
+        if(left->evaluatedType->baseTypeEnum != TYPE::IDENTITY && left->evaluatedType->baseTypeEnum != TYPE::NULL_ && right->evaluatedType->baseTypeEnum != TYPE::IDENTITY && right->evaluatedType->baseTypeEnum != TYPE::NULL_) {
+            dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
+            promoteNode = !LtoRpromotion.empty()? left: right; // l to r promotion valid so promote left node, vice versa
+        }
+        else {
+            if(left->evaluatedType->baseTypeEnum == TYPE::IDENTITY || left->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+                dominantType = right->evaluatedType;
+                promoteNode = left;
+            }
+            else if(right->evaluatedType->baseTypeEnum == TYPE::IDENTITY || right->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+                dominantType = left->evaluatedType;
+                promoteNode = right;
+            }
+        }
         // vector handling
         if (isVector(left->evaluatedType) && isVector(right->evaluatedType)) {
             //if (left->evaluatedType->dims[0] != right->evaluatedType->dims[0]) throw SizeError(left->loc(), "incompatible size binop");
@@ -718,7 +730,7 @@ namespace gazprea {
             case BINOP::EXP:
             case BINOP::SUB:
             case BINOP::REM:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable); //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
@@ -840,7 +852,34 @@ namespace gazprea {
             case BINOP::EQUAL:
             case BINOP::NEQUAL:
                 promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
-                tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
+                if(tree->getLHS()->evaluatedType->getBaseTypeEnumName() == "tuple" or tree->getRHS()->evaluatedType->getBaseTypeEnumName() == "tuple") {
+                    if (tree->getLHS()->evaluatedType->baseTypeEnum == TYPE::NULL_ or tree->getLHS()->evaluatedType->baseTypeEnum == TYPE::IDENTITY) {
+                        promotedType->promoteIdentityAndNull(tree->getRHS()->evaluatedType, tree->getLHS());
+                    }
+                    else if (tree->getRHS()->evaluatedType->baseTypeEnum == TYPE::NULL_ or tree->getRHS()->evaluatedType->baseTypeEnum == TYPE::IDENTITY) {
+                        promotedType->promoteIdentityAndNull(tree->getLHS()->evaluatedType, tree->getRHS());
+                    }
+                    if (tree->getLHS()->evaluatedType->tupleChildType.size() != tree->getRHS()->evaluatedType->tupleChildType.size()) {
+                        throw TypeError(tree->loc(), "#lvalues != #rvalues when comparing tuples.");
+                    }
+                    for (size_t i = 0; i < tree->getRHS()->evaluatedType->tupleChildType.size(); i++) {
+                        auto leftTypeString = tree->getLHS()->evaluatedType->tupleChildType[i].second->getBaseTypeEnumName();
+                        auto rightTypeString = tree->getRHS()->evaluatedType->tupleChildType[i].second->getBaseTypeEnumName();
+
+                        if (leftTypeString != rightTypeString) {
+                            auto leftIndex = promotedType->getTypeIndex(leftTypeString);
+                            auto rightIndex = promotedType->getTypeIndex(rightTypeString);
+                            std::string resultTypeString = promotedType->equalityResult[leftIndex][rightIndex];
+                            if (resultTypeString.empty()) {
+                                throw TypeError(tree->loc(), "Cannot perform equality operation between " + leftTypeString + " to " + rightTypeString);
+                            }
+                        }
+                    }
+                    tree->evaluatedType = currentScope->resolveType("boolean");
+                }
+                else {
+                    tree->evaluatedType = promotedType->getType(promotedType->equalityResult, tree->getLHS(), tree->getRHS(), tree);
+                }
                 break;
 
         }
