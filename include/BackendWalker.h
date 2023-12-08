@@ -17,6 +17,7 @@ private:
   // this boolean is true when we are inside a loop and we encounter a break
   bool earlyReturn = false;
   bool returnDropped = false;
+  bool fetchRaw = false; // we do casting, which creates a copy. to assign we don't want copy
   std::vector<mlir::Value> inferenceContext;
   mlir::Value methodStack;
   std::shared_ptr<ASTNode> returnType;
@@ -27,6 +28,8 @@ private:
   std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
 
   std::any visitType(std::shared_ptr<TypeNode> tree) override;
+  std::any visitTypedef(std::shared_ptr<TypeDefNode> tree) override;
+
 
   // === EXPRESSION AST NODES ===
   std::any visitID(std::shared_ptr<IDNode> tree) override;

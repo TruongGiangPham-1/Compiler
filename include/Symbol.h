@@ -12,11 +12,12 @@
 #include "ASTNode/ASTNode.h"
 
 class Scope; // forward declaration of Scope to resolve circular dependency
-
+class ASTNode;
 class Symbol { // A generic programming language symbol
 public:
     std::string name;  // All symbols at least have a name
     std::shared_ptr<Scope> scope;
+    std::shared_ptr<ASTNode> typeNode;
     QUALIFIER qualifier;
     TYPE type;
     std::shared_ptr<Type> typeSym;  // cast to advancedType!

@@ -40,11 +40,15 @@ std::any BackendWalker::visitAssign(std::shared_ptr<AssignNode> tree) {
   auto exprList = std::dynamic_pointer_cast<ExprListNode>(tree->getLvalue());
  
   if (exprList->children.size() == 1) {
+    this->fetchRaw = true;
     auto dest = std::any_cast<mlir::Value>(walk(exprList->children[0]));
+    this->fetchRaw = false;
     codeGenerator.generateAssignment(dest, val);
   } else {
     for (int i = 0 ; i < exprList->children.size() ; i++) {
+      this->fetchRaw = true;
       auto dest = std::any_cast<mlir::Value>(walk(exprList->children[i]));
+      this->fetchRaw = false;
       auto indexedValue = codeGenerator.indexCommonType(val, codeGenerator.generateValue(i+1));
 
       codeGenerator.generateAssignment(dest, indexedValue);
@@ -86,7 +90,6 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-
   if (!tree->evaluatedType->vectorInnerTypes.empty() && tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
@@ -117,6 +120,7 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
       codeGenerator.generateCompAndJump(trueBlock, exitBlock, codeGenerator.downcastToBool(inBounds));
 
       codeGenerator.setBuilderInsertionPoint(trueBlock);
+
       auto result = codeGenerator.generateNullValue(mtree->evaluatedType);
 
       codeGenerator.appendCommon(newVector, result);
@@ -228,6 +232,9 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
     }
   }
 }
+std::any BackendWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
+  return 0;
+}
 
 std::any BackendWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
   auto val = std::any_cast<mlir::Value>(walk(tree->getExpr()));
@@ -250,7 +257,17 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   // might be arg
   
   if (tree->sym->index >= 0) {
-    return codeGenerator.generateLoadArgument(tree->sym->index);
+    auto val = codeGenerator.generateLoadArgument(tree->sym->index);
+
+    this->inferenceContext.push_back(val);
+    auto toType = std::any_cast<mlir::Value>(walk(tree->sym->typeNode));
+    this->inferenceContext.pop_back();
+
+    if (this->fetchRaw) {
+      return val;
+    } else {
+      return codeGenerator.cast(val, toType);
+    }
   } else if (tree->sym->functionStackIndex >= 0) {
     return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
   } else {
