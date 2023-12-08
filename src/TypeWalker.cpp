@@ -1552,7 +1552,15 @@ namespace gazprea {
     }
 
     std::any TypeWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
-        walk(tree->returnExpr);
+        if (tree->returnExpr) {
+            walk(tree->returnExpr);
+        }
+        else {
+            if (tree->returnFunc->typeSym) {
+                throw TypeError(tree->loc(), "No return expression present");
+            }
+            return nullptr;
+        }
         auto node = std::dynamic_pointer_cast<ASTNode>(tree);
         walkChildren(node);
         tree->evaluatedType = tree->returnExpr->evaluatedType;
