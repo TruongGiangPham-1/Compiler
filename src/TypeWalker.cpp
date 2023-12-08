@@ -293,13 +293,25 @@ namespace gazprea {
         if (isEmptyArrayLiteral(left->evaluatedType) || isEmptyArrayLiteral(right->evaluatedType)) {
             throw TypeError(left->loc(), "cannot use empty array in binop");
         }
-
         auto LtoRpromotion = getPromotedTypeString(table, left->evaluatedType, right->evaluatedType);
         auto RtoLpromotion = getPromotedTypeString(table, right->evaluatedType, left->evaluatedType);
         if (LtoRpromotion.empty() && RtoLpromotion.empty())  throw TypeError(left->loc(), "invalid vectors type binop");
-
-        std::shared_ptr<Type> dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
-        std::shared_ptr<ASTNode> promoteNode = !LtoRpromotion.empty()? left: right; // l to r promotion valid so promote left node, vice versa
+        std::shared_ptr<Type> dominantType;
+        std::shared_ptr<ASTNode> promoteNode;
+        if(left->evaluatedType->baseTypeEnum != TYPE::IDENTITY && left->evaluatedType->baseTypeEnum != TYPE::NULL_ && right->evaluatedType->baseTypeEnum != TYPE::IDENTITY && right->evaluatedType->baseTypeEnum != TYPE::NULL_) {
+            dominantType = !LtoRpromotion.empty()? right->evaluatedType: left->evaluatedType;  // l to r promotion, so r has dominant type
+            promoteNode = !LtoRpromotion.empty()? left: right; // l to r promotion valid so promote left node, vice versa
+        }
+        else {
+            if(left->evaluatedType->baseTypeEnum == TYPE::IDENTITY || left->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+                dominantType = right->evaluatedType;
+                promoteNode = left;
+            }
+            else if(right->evaluatedType->baseTypeEnum == TYPE::IDENTITY || right->evaluatedType->baseTypeEnum == TYPE::NULL_) {
+                dominantType = left->evaluatedType;
+                promoteNode = right;
+            }
+        }
         // vector handling
         if (isVector(left->evaluatedType) && isVector(right->evaluatedType)) {
             //if (left->evaluatedType->dims[0] != right->evaluatedType->dims[0]) throw SizeError(left->loc(), "incompatible size binop");
@@ -718,7 +730,8 @@ namespace gazprea {
             case BINOP::EXP:
             case BINOP::SUB:
             case BINOP::REM:
-                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable);  //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
+                std::cout << tree->getLHS()->evaluatedType->getBaseTypeEnumName() << std::endl;
+                promotedType->possiblyPromoteBinop(tree->getLHS(), tree->getRHS(), promotedType->promotionTable); //  right now, only handles vectors. make sure rhs and lhs vectors are same type.promote if neccesary
                 tree->evaluatedType = promotedType->getType(promotedType->arithmeticResult, tree->getLHS(), tree->getRHS(), tree);
                 if (lhsType->getBaseTypeEnumName() == "identity") tree->getLHS()->evaluatedType = tree->evaluatedType;  // promote LHS
                 if (rhsType->getBaseTypeEnumName() == "identity") tree->getRHS()->evaluatedType = tree->evaluatedType;  // promote RHS
