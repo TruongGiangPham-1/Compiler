@@ -1612,6 +1612,7 @@ namespace gazprea {
     std::any TypeWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
         tree->evaluatedType = symtab->resolveTypeUser(tree->type);
         tree->type->evaluatedType = tree->evaluatedType;
+        tree->idSym->typeNode = tree->type;
         auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->type);
         if (tupleNode) {
             for (int i = 0; i < tupleNode->getTypes().size(); i++) {
