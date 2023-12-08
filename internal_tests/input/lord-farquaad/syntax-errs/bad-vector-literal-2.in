@@ -1,4 +1,4 @@
 procedure main() returns integer {
-    integer[*] x = [[[1]]];
+    [[[1,2],[3,4]]] -> std_output;
     return 0;
 }

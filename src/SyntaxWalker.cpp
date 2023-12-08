@@ -24,6 +24,14 @@ namespace gazprea {
         }
     }
 
+    int SyntaxWalker::getVectorLiteralDepth() {
+        int count = 0;
+        for (const auto &context : contexts) {
+            if (context == CONTEXT::VECTOR_LITERAL) count++;
+        }
+        return count;
+    }
+
     std::string SyntaxWalker::debugContext() {
         std::string result = "\n\tCtxs: ";
         for (const auto& context : contexts) {
@@ -203,15 +211,16 @@ namespace gazprea {
         std::cout << "Visiting " << tree->toString()
                   << " inside global scope: " << debugGlobalScope() << debugContext() << std::endl;
 #endif
-        // if we are already in a vector, this is an error
-        //if (inContext(CONTEXT::VECTOR_LITERAL)) {
-        //    throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
-        //}
+        contexts.push_back(CONTEXT::VECTOR_LITERAL);
 
-        //// else, we are in a vector. Go through children
-        //contexts.push_back(CONTEXT::VECTOR_LITERAL);
-        //walkChildren(tree);
-        //contexts.pop_back();
+        // if we are in more than 2 layers of a vector literal, this is an error
+        // matrix is 2 layers and that's the max
+        if (getVectorLiteralDepth() > 2) {
+            throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
+        }
+
+        walkChildren(tree);
+        contexts.pop_back();
 
         return 0;
     }
@@ -227,6 +236,7 @@ namespace gazprea {
         if (inContext(CONTEXT::FUNCTION)) {
             throw SyntaxError(tree->loc(), "Function body cannot contain streamin (impure I/O)");
         }
+        walkChildren(tree);
         return 0;
     }
 
@@ -239,6 +249,7 @@ namespace gazprea {
         if (inContext(CONTEXT::FUNCTION)) {
             throw SyntaxError(tree->loc(), "Function body cannot contain streamout (impure I/O)");
         }
+        walkChildren(tree);
         return 0;
     }
 }
