@@ -301,7 +301,7 @@ namespace gazprea {
     }
 
     std::any Ref::visitReturn(std::shared_ptr<ReturnNode> tree) {
-        walk(tree->getReturnExpr());
+        if (tree->getReturnExpr()) walk(tree->getReturnExpr());
         auto node = std::dynamic_pointer_cast<ASTNode>(tree);
         walkChildren(node);
         tree->returnFunc = methodStack.top();
