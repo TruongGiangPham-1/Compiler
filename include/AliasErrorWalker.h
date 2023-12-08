@@ -28,8 +28,14 @@ namespace gazprea {
     public:
         AliasErrorWalker();
 
+        // common code for visitID, visitIndex, visitTupleIndex
+        // i can't name things for the life of me
+        void handleSymbolAlias(std::shared_ptr<Symbol> sym, int loc, std::string varName);
+
         std::any visitCall(std::shared_ptr<CallNode> tree) override;
         std::any visitID(std::shared_ptr<IDNode> tree) override;
+//        std::any visitIndex(std::shared_ptr<IndexNode> tree) override;
+//        std::any visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) override;
     };
 }
 
