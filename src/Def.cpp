@@ -99,7 +99,7 @@ std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
             throw TypeError(tree->loc(), "cannot typedef partial vector ");
         }
     } else if (std::dynamic_pointer_cast<MatrixTypeNode>(tree->getType())) {
-        auto mcast = std::dynamic_pointer_cast<VectorTypeNode>(tree->getType());
+        auto mcast = std::dynamic_pointer_cast<MatrixTypeNode>(tree->getType());
         auto innerTypeNameS = mcast->getInnerType()->getTypeName();
         if (symtab->globalScope->typedefTypeNode.find(innerTypeNameS) != symtab->globalScope->typedefTypeNode.end()) {
             throw TypeError(tree->loc(), "cannot typedef partial ");
