@@ -361,6 +361,9 @@ namespace gazprea {
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
             identityNode->evaluatedType = getTypeCopy(promoteTo);
+            for (auto childExpr: std::dynamic_pointer_cast<VectorNode>(identityNode)->getElements()) {
+                childExpr->evaluatedType = getTypeCopy(identityNode->evaluatedType->vectorInnerTypes[0]);
+            }
         } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
 
         } else {
@@ -625,6 +628,20 @@ namespace gazprea {
             }
             if (isDominant) {
                 // this is the dominant type
+                bestType = promoteTo;
+            }
+            // might be all null or identity
+            else {
+                for (int j = 0; j < tree->getSize(); j++) {
+                    if (i == j) continue;
+                    auto promoteFrom = tree->getElement(j)->evaluatedType;
+                    if (promoteFrom->baseTypeEnum == TYPE::NULL_ or promoteFrom->baseTypeEnum == TYPE::IDENTITY) {
+                        continue;
+                    }
+                    else {
+                        throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
+                    }
+                }
                 bestType = promoteTo;
             }
         }
@@ -1496,9 +1513,12 @@ namespace gazprea {
         // TODO handle empty vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
+        if (bestType->baseTypeEnum == TYPE::IDENTITY || bestType->baseTypeEnum == TYPE::NULL_) {
+            tree->evaluatedType->baseTypeEnum = bestType->baseTypeEnum;
+            return nullptr;
+        }
         promotedType->promoteVectorElements(bestType, tree, promotedType->promotionTable);  // now every elements of vector have same type
         tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
-
         // add the inner types to type class
         promotedType->populateInnerTypes(tree->evaluatedType, tree);
 
@@ -1767,8 +1787,5 @@ namespace gazprea {
             case TYPE::NONE:
                 return "none";
         }
-
     }
-
-
 }
