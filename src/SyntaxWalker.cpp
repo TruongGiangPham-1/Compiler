@@ -196,7 +196,7 @@ namespace gazprea {
         // a function or procedure call
         // if we are in a global declaration initialization, this is an error
         if (inContext(CONTEXT::DECL_BODY) && inGlobalScope()) {
-            throw SyntaxError(tree->loc(), "Global initialization cannot contain function/procedure calls");
+            throw GlobalError(tree->loc(), "Global initialization cannot contain function/procedure calls");
         }
 
         // if this is a procedure call and we are in a function body, this is an error
