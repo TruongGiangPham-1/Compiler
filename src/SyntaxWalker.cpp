@@ -65,11 +65,11 @@ namespace gazprea {
 #endif
         if (inGlobalScope()) {
             if (tree->getQualifier() == QUALIFIER::VAR) {
-                throw SyntaxError(tree->loc(), "Global Variables must be declared constant");
+                throw GlobalError(tree->loc(), "Global Variables must be declared constant");
             }
 
             if (!tree->getExprNode()) {
-                throw SyntaxError(tree->loc(), "Global Variables must be initialized");
+                throw GlobalError(tree->loc(), "Global Variables must be initialized");
             }
         }
 
