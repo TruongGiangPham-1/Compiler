@@ -638,6 +638,8 @@ namespace gazprea {
                     if (promoteFrom->baseTypeEnum == TYPE::NULL_ or promoteFrom->baseTypeEnum == TYPE::IDENTITY) {
                         continue;
                     }
+                    if (isEmptyArrayLiteral(promoteTo)) continue;
+                    else if (tree->getSize() == 2) continue; //dominant type amongst two elements is impossible if they are different
                     else {
                         throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
                     }
