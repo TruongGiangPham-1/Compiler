@@ -52,6 +52,14 @@ namespace gazprea {
                 return "NONE";
             case WALKER_CONTEXT::STREAM_OUT:
                 return "STREAM_OUT";
+            case WALKER_CONTEXT::INPUT_ARGS:
+                return "INPUT_ARGS";
+            case WALKER_CONTEXT::RETURN_STMT:
+                return "RETURN_STMT";
+            case WALKER_CONTEXT::CONDITIONAL_EXPR:
+                return "CONDITIONAL_EXPR";
+            case WALKER_CONTEXT::ITERATOR_DOMAIN:
+                return "ITERATOR_DOMAIN";
         }
     }
 }

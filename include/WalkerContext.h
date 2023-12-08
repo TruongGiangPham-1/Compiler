@@ -15,6 +15,10 @@ enum class WALKER_CONTEXT {
     VECTOR_LITERAL, // inside a VectorNode
     STREAM_OUT,
     BINOP, // inside any binary operation
+    INPUT_ARGS, // f(***) argument inside a func/procedure call
+    RETURN_STMT,
+    CONDITIONAL_EXPR, // e.g. `if (***) else...` or `loop while (***)`
+    ITERATOR_DOMAIN,
     NONE,
 };
 

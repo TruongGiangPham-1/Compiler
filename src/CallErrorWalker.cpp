@@ -57,11 +57,13 @@ namespace gazprea {
             }
         }
 
+        contexts.push_back(WALKER_CONTEXT::INPUT_ARGS);
         walkChildren(tree);
+        contexts.pop_back();
         return 0;
     }
 
-    // === BINOP ===
+    // === EXPR ===
     std::any CallErrorWalker::visitArith(std::shared_ptr<BinaryArithNode> tree) {
         contexts.push_back(WALKER_CONTEXT::BINOP);
         walkChildren(tree);
@@ -97,6 +99,20 @@ namespace gazprea {
         return 0;
     }
 
+    std::any CallErrorWalker::visitRangeVec(std::shared_ptr<RangeVecNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::BINOP);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitVector(std::shared_ptr<VectorNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::VECTOR_LITERAL);
+        walkChildren(tree);
+        contexts.pop_back();
+        return 0;
+    }
+
     // === STREAM ===
     std::any CallErrorWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
         contexts.push_back(WALKER_CONTEXT::STREAM_OUT);
@@ -105,7 +121,7 @@ namespace gazprea {
         return 0;
     }
 
-    // === MISC ===
+    // === FUNC STUFF ===
     std::any CallErrorWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         contexts.push_back(WALKER_CONTEXT::FUNCTION);
         for (const auto &arg : tree->orderedArgs) {
@@ -124,6 +140,56 @@ namespace gazprea {
         }
         if (tree->body) walk(tree->body);
         contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::RETURN_STMT);
+        if (tree->getReturnExpr()) walk(tree->getReturnExpr());
+        contexts.pop_back();
+        return 0;
+    }
+
+    // === OTHER BLOCKS ===
+    std::any CallErrorWalker::visitConditional(std::shared_ptr<ConditionalNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::CONDITIONAL_EXPR);
+        for (const auto &condition : tree->conditions) {
+            walk(condition);
+        }
+        contexts.pop_back();
+
+        for (auto body : tree->bodies) {
+            walk(body);
+        }
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitPredicatedLoop(std::shared_ptr<PredicatedLoopNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::CONDITIONAL_EXPR);
+        walk(tree->getCondition());
+        contexts.pop_back();
+
+        walk(tree->getBody());
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitPostPredicatedLoop(std::shared_ptr<PostPredicatedLoopNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::CONDITIONAL_EXPR);
+        walk(tree->getCondition());
+        contexts.pop_back();
+
+        walk(tree->getBody());
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::ITERATOR_DOMAIN);
+        for (const auto &domainExpr : tree->getDomainExprs()) {
+            walk(domainExpr.second);
+        }
+        contexts.pop_back();
+
+        walk(tree->getBody());
         return 0;
     }
 }
