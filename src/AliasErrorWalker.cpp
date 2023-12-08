@@ -83,5 +83,5 @@ namespace gazprea {
         handleSymbolAlias(tree->sym, tree->loc(), tree->getName());
 
         return 0;
-    }s
+    }
 }
