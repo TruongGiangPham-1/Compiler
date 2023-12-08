@@ -54,6 +54,9 @@ namespace gazprea {
                 throw CallError(tree->loc(), "Procedure statement in a function (Functions do not allow impure stmts)");
             }
         }
+        if (tree->MethodRef == nullptr) {
+            throw DefinitionError(tree->loc(), "attempting to call a function without definition");
+        }
 
         contexts.push_back(WALKER_CONTEXT::INPUT_ARGS);
         walkChildren(tree);

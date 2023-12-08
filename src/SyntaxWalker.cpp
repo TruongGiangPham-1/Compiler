@@ -169,9 +169,6 @@ namespace gazprea {
         if (inContext(WALKER_CONTEXT::FUNCTION) && tree->procCall) {
             throw SyntaxError(tree->loc(), "Function body cannot contain (impure) procedure calls");
         }
-        if (tree->MethodRef == nullptr) {
-            throw DefinitionError(tree->loc(), "attempting to call a function without definition");
-        }
         return 0;
     }
 
