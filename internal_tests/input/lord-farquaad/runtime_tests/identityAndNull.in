@@ -1,0 +1,18 @@
+procedure main() returns integer {
+
+  integer[3] b = identity;
+  b->std_output;
+  '\n' -> std_output;
+  integer[3] d = null;
+  d->std_output;
+  '\n' -> std_output;
+
+  integer[3,3] e = identity;
+  e -> std_output;
+  '\n' -> std_output;
+  integer[3,3] f = null;
+  f -> std_output;
+  '\n' -> std_output;
+
+  return 1;
+}
