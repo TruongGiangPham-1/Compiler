@@ -88,6 +88,24 @@ std::any Def::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
     symtab->defineTypeDef(tree->getType(), typdefToString, getNextId());
 
     auto typeN = std::dynamic_pointer_cast<TypeNode>(tree->getType());
+
+    // error check for vector partial typedef like
+    //typedef integer i;
+    //typedef i[10] ten_ints;
+    if (std::dynamic_pointer_cast<VectorTypeNode>(tree->getType())) {
+        auto vcast = std::dynamic_pointer_cast<VectorTypeNode>(tree->getType());
+        auto innerTypeNameS = vcast->getInnerType()->getTypeName();
+        if (symtab->globalScope->typedefTypeNode.find(innerTypeNameS) != symtab->globalScope->typedefTypeNode.end()) {
+            throw TypeError(tree->loc(), "cannot typedef partial vector ");
+        }
+    } else if (std::dynamic_pointer_cast<MatrixTypeNode>(tree->getType())) {
+        auto mcast = std::dynamic_pointer_cast<VectorTypeNode>(tree->getType());
+        auto innerTypeNameS = mcast->getInnerType()->getTypeName();
+        if (symtab->globalScope->typedefTypeNode.find(innerTypeNameS) != symtab->globalScope->typedefTypeNode.end()) {
+            throw TypeError(tree->loc(), "cannot typedef partial ");
+        }
+    }
+
     if (symtab->globalScope->typedefTypeNode.find(typeN->getTypeName()) != symtab->globalScope->typedefTypeNode.end()) {
         // this mapping already exists
         /*  eg
