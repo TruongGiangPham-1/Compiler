@@ -161,13 +161,13 @@ namespace gazprea {
 
         // a function or procedure call
         // if we are in a global declaration initialization, this is an error
-        if (inContext(CONTEXT::DECL_BODY) && inGlobalScope()) {
+        if (inContext(WALKER_CONTEXT::DECL_BODY) && inGlobalScope()) {
             throw GlobalError(tree->loc(), "Global initialization cannot contain function/procedure calls");
         }
 
         // if this is a procedure call and we are in a function body, this is an error
         if (inContext(WALKER_CONTEXT::FUNCTION) && tree->procCall) {
-            throw GlobalError(tree->loc(), "Function body cannot contain (impure) procedure calls");
+            throw SyntaxError(tree->loc(), "Function body cannot contain (impure) procedure calls");
         }
         return 0;
     }
