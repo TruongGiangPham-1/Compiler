@@ -8,11 +8,19 @@
 #include "ASTWalker.h"
 
 namespace gazprea {
+    class AliasCount {
+    public:
+        int constReferences; // const reference count
+        bool mutReferenced; // true if the variable has been referenced at least once mutably
+        explicit AliasCount(bool mut);
+        void incrementConstRef();
+    };
+
     class AliasErrorWalker : public ASTWalker {
     private:
         // whenever we encounter a procedure call
         // we go through the variable args and add the mlirName of the id into the
-        std::set<std::string> mlirNames;
+        std::map<std::string, std::shared_ptr<AliasCount>> mlirNames;
 
         // -1 if we are not in a procedure call
         std::shared_ptr<ProcedureSymbol> procSymbol;

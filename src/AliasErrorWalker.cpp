@@ -7,6 +7,21 @@
 #define DEBUG
 
 namespace gazprea {
+    AliasCount::AliasCount(bool mut) {
+        if (mut) {
+            mutReferenced = true;
+            constReferences = 0;
+        } else {
+            constReferences = 1;
+            mutReferenced = false;
+        }
+    }
+
+    void AliasCount::incrementConstRef() {
+        constReferences++;
+    }
+
+
     AliasErrorWalker::AliasErrorWalker() : ASTWalker() {
         procedureArgIdx = -1;
     }
@@ -36,18 +51,36 @@ namespace gazprea {
         auto actualArgSym = procSymbol->orderedArgs.at(procedureArgIdx);
         assert(actualArgSym); // typechecker would have gotten invalid arg calls
 
+        auto idMlirName = tree->sym->mlirName;
+        auto search = mlirNames.find(idMlirName);
+
         if (actualArgSym->qualifier == QUALIFIER::CONST) {
-            // we only care about var args when checking for aliasing errors
             // since this argument is const, the value will be immutably passed
-            return 0;
+            if (search != mlirNames.end()) {
+                // check if it has been mutably referenced
+                // if it has, this is an error (if there is a mutable reference, we can't use it again in a const reference
+                if (mlirNames[idMlirName]->mutReferenced) {
+                    throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call (var then const)");
+                } else {
+                    // if not, increment constReference by 1
+                    mlirNames[idMlirName]->incrementConstRef();
+                }
+            } else {
+                mlirNames[idMlirName] = std::make_shared<AliasCount>(false);
+            }
+        } else {
+            // arg is variable (mutable)
+            if (search != mlirNames.end()) {
+                // if there is already another argument, no matter if it's const or var, we will throw an error
+                throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call");
+            } else {
+                mlirNames[idMlirName] = std::make_shared<AliasCount>(true);
+            }
         }
 
-        auto search = mlirNames.find(tree->sym->mlirName);
-        if (search != mlirNames.end()) {
-            throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call");
-        } else {
-            mlirNames.insert(tree->sym->mlirName);
-        }
+
         return 0;
     }
+
+
 }
