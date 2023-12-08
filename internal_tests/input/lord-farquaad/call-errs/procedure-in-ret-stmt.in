@@ -1,0 +1,7 @@
+procedure p() returns integer {
+    return 1;
+}
+
+procedure main() returns integer {
+    return p();
+}

@@ -1,5 +1,4 @@
-typedef integer int;
-typedef int[*] IntegerSet;
+typedef integer[*] IntegerSet;
 
 procedure main() returns integer {
     IntegerSet a = 1..10;

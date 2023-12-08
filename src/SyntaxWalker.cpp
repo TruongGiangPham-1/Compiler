@@ -7,9 +7,8 @@
 //#define DEBUG
 
 namespace gazprea {
-    SyntaxWalker::SyntaxWalker() {
+    SyntaxWalker::SyntaxWalker() : ContextedWalker() {
         scopeDepth = 0;
-        contexts = {CONTEXT::NONE};
     }
 
     bool SyntaxWalker::inGlobalScope() {
@@ -21,39 +20,6 @@ namespace gazprea {
             return "true";
         } else {
             return "false " + std::to_string(scopeDepth);
-        }
-    }
-
-    int SyntaxWalker::getVectorLiteralDepth() {
-        int count = 0;
-        for (const auto &context : contexts) {
-            if (context == CONTEXT::VECTOR_LITERAL) count++;
-        }
-        return count;
-    }
-
-    std::string SyntaxWalker::debugContext() {
-        std::string result = "\n\tCtxs: ";
-        for (const auto& context : contexts) {
-            result += contextToString(context) + " ";
-        }
-        return result;
-    }
-
-    bool SyntaxWalker::inContext(CONTEXT context) {
-        return std::find(contexts.begin(), contexts.end(), context) != contexts.end();
-    }
-
-    std::string SyntaxWalker::contextToString(gazprea::CONTEXT context)  {
-        switch (context) {
-            case CONTEXT::FUNCTION:
-                return "FUNCTION";
-            case CONTEXT::DECL_BODY:
-                return "DECL_BODY";
-            case CONTEXT::VECTOR_LITERAL:
-                return "VECTOR_LITERAL";
-            case CONTEXT::NONE:
-                return "NONE";
         }
     }
 
@@ -75,7 +41,7 @@ namespace gazprea {
 
         // visit DECL body
         if (tree->getExprNode()) {
-            contexts.push_back(CONTEXT::DECL_BODY);
+            contexts.push_back(WALKER_CONTEXT::DECL_BODY);
             walk(tree->getExprNode());
             contexts.pop_back();
         }
@@ -152,7 +118,7 @@ namespace gazprea {
             throw SyntaxError(tree->loc(), "(forward) function declarations found in non-global scope");
         }
 
-        contexts.push_back(CONTEXT::FUNCTION);
+        contexts.push_back(WALKER_CONTEXT::FUNCTION);
         if (tree->body) {
             scopeDepth++;
             walk(tree->body);
@@ -200,8 +166,8 @@ namespace gazprea {
         }
 
         // if this is a procedure call and we are in a function body, this is an error
-        if (inContext(CONTEXT::FUNCTION) && tree->procCall) {
-            throw SyntaxError(tree->loc(), "Function body cannot contain (impure) procedure calls");
+        if (inContext(WALKER_CONTEXT::FUNCTION) && tree->procCall) {
+            throw GlobalError(tree->loc(), "Function body cannot contain (impure) procedure calls");
         }
         return 0;
     }
@@ -211,11 +177,11 @@ namespace gazprea {
         std::cout << "Visiting " << tree->toString()
                   << " inside global scope: " << debugGlobalScope() << debugContext() << std::endl;
 #endif
-        contexts.push_back(CONTEXT::VECTOR_LITERAL);
+        contexts.push_back(WALKER_CONTEXT::VECTOR_LITERAL);
 
         // if we are in more than 2 layers of a vector literal, this is an error
         // matrix is 2 layers and that's the max
-        if (getVectorLiteralDepth() > 2) {
+        if (countContextDepth(WALKER_CONTEXT::VECTOR_LITERAL) > 2) {
             throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
         }
 
@@ -233,7 +199,7 @@ namespace gazprea {
                   << " inside global scope: " << debugGlobalScope() << debugContext() << std::endl;
 #endif
         // if we are in a function context, this is an error
-        if (inContext(CONTEXT::FUNCTION)) {
+        if (inContext(WALKER_CONTEXT::FUNCTION)) {
             throw SyntaxError(tree->loc(), "Function body cannot contain streamin (impure I/O)");
         }
         walkChildren(tree);
@@ -246,7 +212,7 @@ namespace gazprea {
                   << " inside global scope: " << debugGlobalScope() << debugContext() << std::endl;
 #endif
         // if we are in a function context, this is an error
-        if (inContext(CONTEXT::FUNCTION)) {
+        if (inContext(WALKER_CONTEXT::FUNCTION)) {
             throw SyntaxError(tree->loc(), "Function body cannot contain streamout (impure I/O)");
         }
         walkChildren(tree);

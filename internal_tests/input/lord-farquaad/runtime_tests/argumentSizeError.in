@@ -1,0 +1,14 @@
+procedure test(var string[20] a) returns character[*] {
+  a = "hello, world";
+  return a;
+}
+
+procedure main() returns integer {
+  var testVar = ['h','e','l','l','o'];
+
+  call test(testVar);
+  
+  '\n' -> std_output;
+  
+  return 1;
+}
