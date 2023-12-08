@@ -6,16 +6,9 @@
 #define GAZPREABASE_SYNTAXWALKER_H
 
 #include "ASTWalker.h"
+#include "WalkerContext.h"
 
 namespace gazprea {
-    // additional context as to what we're currently visiting
-    enum class CONTEXT {
-        FUNCTION,
-        DECL_BODY, // inside `type qualifier ID = ***`
-        VECTOR_LITERAL, // inside a VectorNode
-        NONE,
-    };
-
     class SyntaxWalker : public ASTWalker {
     private:
         // the entire file is wrapped inside a `block` scope
@@ -29,13 +22,13 @@ namespace gazprea {
         // how many layers of a vector literal are we in?
         int getVectorLiteralDepth();
 
-        // CONTEXT gives us more info as to what we're currently visiting
+        // WALKER_CONTEXT gives us more info as to what we're currently visiting
         // it's a vector so it's easy to push/pop as we enter into new contexts
-        std::vector<CONTEXT> contexts;
-        bool inContext(CONTEXT context);
+        std::vector<WALKER_CONTEXT> contexts;
+        bool inContext(WALKER_CONTEXT context);
         std::string debugContext();
 
-        static std::string contextToString(CONTEXT context);
+        static std::string contextToString(WALKER_CONTEXT context);
     public:
         SyntaxWalker();
 

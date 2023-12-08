@@ -113,6 +113,10 @@ set(
         ASTNode/Expr/Literal/StringNode.cpp
         ASTNode/Loop/IteratorLoopNode.cpp
         ../include/ASTNode/Expr/StdInputNode.h
+        CallErrorWalker.cpp
+        ../include/CallErrorWalker.h
+        WalkerContext.cpp
+        ../include/WalkerContext.h
 )
 
 # Build our executable from the source files.

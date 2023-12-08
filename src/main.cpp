@@ -16,6 +16,7 @@
 #include "BackendWalker.h"
 #include "Def.h"
 #include "Ref.h"
+#include "CallErrorWalker.h"
 #include "../include/customError/ErrorListener.h"
 
 #include <iostream>
@@ -83,6 +84,12 @@ int main(int argc, char **argv) {
       gazprea::Ref ref(symbolTable, mlirIDptr);
       ref.walk(ast);
       ref.mainErrorCheck();
+
+#ifdef DEBUG
+      std::cout << "\n\n=== CALL ERROR PASS\n";
+#endif
+      gazprea::CallErrorWalker callErrWalker(symbolTable);
+      callErrWalker.walk(ast);
 
 #ifdef DEBUG
       std::cout << "\n\n=== TYPECHECK PASS\n";
