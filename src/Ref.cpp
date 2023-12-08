@@ -2,7 +2,7 @@
 // Created by truong on 02/11/23.
 //
 #include "../include/Ref.h"
-#define DEBUG
+//#define DEBUG
 namespace gazprea {
     Ref::Ref(std::shared_ptr<SymbolTable> symTab, std::shared_ptr<int> mlirIDptr) : symtab(symTab), varID(mlirIDptr) {
         // globalscope aleady populated
@@ -441,14 +441,14 @@ namespace gazprea {
             this->methodStackOffset += 1;
             methodSym->declaredVars.push_back(std::make_pair(tree->getIDName(), this->methodStackOffset));
             idSym->functionStackIndex = this->methodStackOffset;
-#ifdef DEBUG
-            std::cout << "stackoffset is " << idSym->functionStackIndex << "\n";
-#endif
         }
         // -------------------------------
         idSym->declarationIndex = currentScope->incrementAndGetNumVarDeclared();  //
         idSym->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
         //
+#ifdef DEBUG
+        std::cout << "declarationIndex= " << idSym->declarationIndex << " in scope " << currentScope->getScopeName() << "\n";
+#endif
 
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
@@ -486,12 +486,12 @@ namespace gazprea {
         }
 
         //
-        if (std::dynamic_pointer_cast<ScopedSymbol>(referencedSymbol) == nullptr) {
             // we only care about defined identifiers thats not function
+        if (referencedSymbol->declarationIndex >= 0) {
             referencedSymbol->numStackBehind = symtab->getCurrentScopeSize() - referencedSymbol->scopeDepthItWasDeclared;
 #ifdef DEBUG
-            std::cout << referencedSymbol->getName() << " is " << referencedSymbol->numStackBehind << " stack behind"
-            << referencedSymbol->declarationIndex << " th item in the stack\n";
+            std::cout << referencedSymbol->getName() << " is " << referencedSymbol->numStackBehind << " stack behind and "
+                      << referencedSymbol->declarationIndex << " th item in the stack\n";
 #endif
         }
 
