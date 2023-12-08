@@ -17,6 +17,7 @@ private:
   // this boolean is true when we are inside a loop and we encounter a break
   bool earlyReturn = false;
   bool returnDropped = false;
+  bool fetchRaw = false; // we do casting, which creates a copy. to assign we don't want copy
   std::vector<mlir::Value> inferenceContext;
   mlir::Value methodStack;
   std::shared_ptr<ASTNode> returnType;
