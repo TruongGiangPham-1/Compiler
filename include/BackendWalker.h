@@ -19,7 +19,7 @@ private:
   bool returnDropped = false;
   bool fetchRaw = false; // we do casting, which creates a copy. to assign we don't want copy
   std::vector<mlir::Value> inferenceContext;
-  mlir::Value methodStack;
+  std::vector<mlir::Value> variableStack;
   std::shared_ptr<ASTNode> returnType;
 
   std::any visitAssign(std::shared_ptr<AssignNode> tree) override;
