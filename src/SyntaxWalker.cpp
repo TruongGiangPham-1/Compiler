@@ -31,11 +31,11 @@ namespace gazprea {
 #endif
         if (inGlobalScope()) {
             if (tree->getQualifier() == QUALIFIER::VAR) {
-                throw SyntaxError(tree->loc(), "Global Variables must be declared constant");
+                throw GlobalError(tree->loc(), "Global Variables must be declared constant");
             }
 
             if (!tree->getExprNode()) {
-                throw SyntaxError(tree->loc(), "Global Variables must be initialized");
+                throw GlobalError(tree->loc(), "Global Variables must be initialized");
             }
         }
 
@@ -162,7 +162,7 @@ namespace gazprea {
         // a function or procedure call
         // if we are in a global declaration initialization, this is an error
         if (inContext(WALKER_CONTEXT::DECL_BODY) && inGlobalScope()) {
-            throw SyntaxError(tree->loc(), "Global initialization cannot contain function/procedure calls");
+            throw GlobalError(tree->loc(), "Global initialization cannot contain function/procedure calls");
         }
 
         // if this is a procedure call and we are in a function body, this is an error
