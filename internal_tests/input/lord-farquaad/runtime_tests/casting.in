@@ -10,5 +10,27 @@ procedure main() returns integer {
   as<boolean>('\0') -> std_output;
   '\n' -> std_output;
 
+
+  as<character[*]>("hello world") -> std_output;
+  '\n' -> std_output;
+  as<string[3]>("dont truncate me!") -> std_output;
+  '\n' -> std_output;
+  
+  /*normalization into truncation. "testing" has 7 chars, we extend everythign then cut off*/
+  var test =  as<character[2,*]>([['i'], ['h','a','t','e'], ['t','e','s','t','i','n','g']]);
+  test -> std_output;
+  '\n' -> std_output;
+
+  string[5] stringTrunc = as<character[5]>("abcdefg");
+  integer[5] integerTrunc = as<integer[5]>(1..20);
+  character[5] charTrunc = as<string[5]>(['a','b','c','d','e','f','g']);
+
+  stringTrunc -> std_output;
+  '\n' -> std_output;
+  integerTrunc -> std_output;
+  '\n' -> std_output;
+  charTrunc -> std_output;
+  '\n' -> std_output;
+
   return 1;
 }
