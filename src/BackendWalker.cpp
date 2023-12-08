@@ -269,7 +269,7 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
       return codeGenerator.cast(val, toType);
     }
   } else if (tree->sym->functionStackIndex >= 0) {
-    return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->sym->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
+    return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }

@@ -484,13 +484,12 @@ namespace gazprea {
             std::cout << "\n";
 #endif
         }
-
         //
             // we only care about defined identifiers thats not function
         if (referencedSymbol->declarationIndex >= 0) {
-            referencedSymbol->numStackBehind = symtab->getCurrentScopeSize() - referencedSymbol->scopeDepthItWasDeclared;
+            tree->numStackBehind = symtab->getCurrentScopeSize() - referencedSymbol->scopeDepthItWasDeclared;
 #ifdef DEBUG
-            std::cout << referencedSymbol->getName() << " is " << referencedSymbol->numStackBehind << " stack behind and "
+            std::cout << referencedSymbol->getName() << " is " << tree->numStackBehind << " stack behind and "
                       << referencedSymbol->declarationIndex << " th item in the stack\n";
 #endif
         }
