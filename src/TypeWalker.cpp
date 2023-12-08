@@ -39,7 +39,7 @@ namespace gazprea {
 /*real*/     {"",         "",         "real",     "real",   "" , "real", ""},
 /*tuple*/    {"",         "",         "",         "",       "" , "tuple", ""},
 /*identity*/ {"boolean",  "character", "integer", "real",  "tuple" , "", ""},
-/*null*/         {"",  "", "", "", "" , "", ""}
+/*null*/         {"boolean",  "character", "integer", "real", "" , "", ""}
     };
 
     std::string PromotedType::comparisonResult[7][7] = {
