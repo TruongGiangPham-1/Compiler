@@ -1,4 +1,4 @@
-procedure p(tuple(integer, real) t1, integer x) {
+procedure p(var tuple(integer, real) t1, integer x) {
     return;
 }
 

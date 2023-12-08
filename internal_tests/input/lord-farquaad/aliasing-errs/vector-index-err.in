@@ -1,4 +1,4 @@
-procedure p(integer[*] v, integer v1) {
+procedure p(var integer[*] v, integer v1) {
     return;
 }
 
