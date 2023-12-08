@@ -21,10 +21,17 @@ namespace gazprea {
         bool inContext(WALKER_CONTEXT context);
 
         std::string debugContext();
+        static std::string contextToString(WALKER_CONTEXT context);
 
         std::shared_ptr<SymbolTable> symTab;
     public:
         CallErrorWalker(std::shared_ptr<SymbolTable> symTab);
+
+        std::any visitCall(std::shared_ptr<CallNode> tree) override;
+
+        // === STREAMS
+        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
+        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
     };
 }
 
