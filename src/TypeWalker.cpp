@@ -1481,7 +1481,9 @@ namespace gazprea {
         auto tupleSize = tree->getExprList().size() + 1;  // + 1 for the last vector that did not satisfy any condition
         auto tupleType = std::make_shared<AdvanceType>("tuple");
         for (int i = 0; i < tupleSize; i++) {
-            tupleType->tupleChildType.push_back(std::make_pair("", currentScope->resolveType("integer")));
+            auto typeOfTupleVec = promotedType->getTypeCopy(tree->getDomain()->evaluatedType);  // vector type
+            tupleType->tupleChildType.push_back(std::make_pair("", typeOfTupleVec));
+
         }
         tree->evaluatedType = tupleType;
         return nullptr;
@@ -1587,8 +1589,7 @@ namespace gazprea {
         if (tree->getRetTypeNode()) {
             tree->evaluatedType = promotedType->getTypeCopy(symtab->resolveTypeUser(tree->getRetTypeNode()));
             tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
-        }
-        else {
+        }else {
             tree->evaluatedType = nullptr;
         }
         if (tree->body) {
