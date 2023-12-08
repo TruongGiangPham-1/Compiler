@@ -17,7 +17,7 @@ procedure main() returns integer {
   '\n' -> std_output;
   
   /*normalization into truncation. "testing" has 7 chars, we extend everythign then cut off*/
-  var test =  as<character[2,*]>([['i'], ['h','a','t','e'], ['t','e','s','t','i','n','g']]);
+  var test =  as<integer[2,*]>([['i'], ['h','a','t','e'], ['t','e','s','t','i','n','g']]);
   test -> std_output;
   '\n' -> std_output;
 
