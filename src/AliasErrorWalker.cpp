@@ -43,15 +43,15 @@ namespace gazprea {
         return 0;
     }
 
-    void AliasErrorWalker::handleSymbolAlias(std::shared_ptr<Symbol> sym, int loc, std::string varName) {
-        if (procedureArgIdx < 0) return;
-        if (sym->qualifier == QUALIFIER::CONST) return; // is the variable is immutable, we do not care
+    std::any AliasErrorWalker::visitID(std::shared_ptr<IDNode> tree) {
+        if (procedureArgIdx < 0) return 0;
+        if (tree->sym->qualifier == QUALIFIER::CONST) return 0; // is the variable is immutable, we do not care
 
         // what is the argument supposed to be?
         auto actualArgSym = procSymbol->orderedArgs.at(procedureArgIdx);
         assert(actualArgSym); // typechecker would have gotten invalid arg calls
 
-        auto idMlirName = sym->mlirName;
+        auto idMlirName = tree->sym->mlirName;
         auto search = mlirNames.find(idMlirName);
 
         if (actualArgSym->qualifier == QUALIFIER::CONST) {
@@ -60,7 +60,7 @@ namespace gazprea {
                 // check if it has been mutably referenced
                 // if it has, this is an error (if there is a mutable reference, we can't use it again in a const reference
                 if (mlirNames[idMlirName]->mutReferenced) {
-                    throw AliasingError(loc, "Repeated alias with var " + varName + " in procedure call (var then const)");
+                    throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call (var then const)");
                 } else {
                     // if not, increment constReference by 1
                     mlirNames[idMlirName]->incrementConstRef();
@@ -72,15 +72,11 @@ namespace gazprea {
             // arg is variable (mutable)
             if (search != mlirNames.end()) {
                 // if there is already another argument, no matter if it's const or var, we will throw an error
-                throw AliasingError(loc, "Repeated alias with var " + varName + " in procedure call");
+                throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call");
             } else {
                 mlirNames[idMlirName] = std::make_shared<AliasCount>(true);
             }
         }
-    }
-
-    std::any AliasErrorWalker::visitID(std::shared_ptr<IDNode> tree) {
-        handleSymbolAlias(tree->sym, tree->loc(), tree->getName());
 
         return 0;
     }
