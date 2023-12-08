@@ -1,4 +1,5 @@
 procedure test() {
+    "test called" -> std_output;
     return;
 }
 
