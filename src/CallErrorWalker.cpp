@@ -49,7 +49,11 @@ namespace gazprea {
             bool validProcedureContext = directlyInContext(WALKER_CONTEXT::DECL_BODY)
                     || directlyInContext(WALKER_CONTEXT::ASSIGN_BODY);
             if (!validProcedureContext && !tree->procCall) {
-                throw CallError(tree->loc(), "Procedure statement in an invalid context. Got: " + contextToString(contexts.back()));
+                throw CallError(tree->loc(), "Procedure statement in an invalid context: " + contextToString(contexts.back()));
+            }
+
+            if (inContext(WALKER_CONTEXT::FUNCTION)) {
+                throw CallError(tree->loc(), "Procedure statement in a function (Functions do not allow impure stmts)");
             }
         }
 
@@ -93,11 +97,32 @@ namespace gazprea {
         return 0;
     }
 
-
     // === STREAM ===
     std::any CallErrorWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
         contexts.push_back(WALKER_CONTEXT::STREAM_OUT);
         walk(tree->getExpr());
+        contexts.pop_back();
+        return 0;
+    }
+
+    // === MISC ===
+    std::any CallErrorWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::FUNCTION);
+        for (const auto &arg : tree->orderedArgs) {
+            walk(arg);
+        }
+        if (tree->body) walk(tree->body);
+        else if (tree->expr) walk(tree->expr);
+        contexts.pop_back();
+        return 0;
+    }
+
+    std::any CallErrorWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
+        contexts.push_back(WALKER_CONTEXT::PROCEDURE);
+        for (const auto& arg : tree->orderedArgs) {
+            walk(arg);
+        }
+        if (tree->body) walk(tree->body);
         contexts.pop_back();
         return 0;
     }

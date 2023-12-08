@@ -38,6 +38,8 @@ namespace gazprea {
         switch (context) {
             case WALKER_CONTEXT::FUNCTION:
                 return "FUNCTION";
+            case WALKER_CONTEXT::PROCEDURE:
+                return "PROCEDURE";
             case WALKER_CONTEXT::DECL_BODY:
                 return "DECL_BODY";
             case WALKER_CONTEXT::ASSIGN_BODY:

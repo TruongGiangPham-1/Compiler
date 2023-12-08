@@ -36,6 +36,10 @@ namespace gazprea {
 
         // === STREAMS
         std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
+
+        // === misc?
+        std::any visitFunction(std::shared_ptr<FunctionNode> tree) override;
+        std::any visitProcedure(std::shared_ptr<ProcedureNode> tree) override;
     };
 }
 

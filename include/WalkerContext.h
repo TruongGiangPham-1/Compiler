@@ -8,7 +8,8 @@
 // additional context as to what we're currently visiting
 
 enum class WALKER_CONTEXT {
-    FUNCTION, // func body
+    FUNCTION, // func def
+    PROCEDURE, // procedure def
     DECL_BODY, // inside `type qualifier ID = ***`
     ASSIGN_BODY, // inside `a = ***`
     VECTOR_LITERAL, // inside a VectorNode
