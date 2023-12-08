@@ -1569,6 +1569,12 @@ namespace gazprea {
     std::any TypeWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
         tree->evaluatedType = symtab->resolveTypeUser(tree->type);
         tree->type->evaluatedType = tree->evaluatedType;
+        auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->type);
+        if (tupleNode) {
+            for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                tupleNode->getTypes()[i]->evaluatedType = symtab->resolveTypeUser(tupleNode->getTypes()[i]);
+            }
+        }
         return nullptr;
     }
 
@@ -1659,6 +1665,8 @@ namespace gazprea {
         if (tree->body) {
             auto blockNode = tree->body;
             walkChildren(blockNode);
+        } else if (tree->expr) {
+            walkChildren(tree->expr);
         }
         return nullptr;
     }
