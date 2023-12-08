@@ -561,7 +561,10 @@ namespace gazprea {
         auto intType = currentScope->resolveType("integer");  // domain var is just int right?
         for (auto &domainExpr: tree->getDomainExprs()) {
             auto domainVar = domainExpr.first;
-
+            // --- for offstes
+            domainVar->declarationIndex = currentScope->incrementAndGetNumVarDeclared();
+            domainVar->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
+            // --
             domainVar->mlirName = "VAR_DEF" + std::to_string(getNextId());
             domainVar->typeSym = intType;
             domainVar->scope = currentScope;
@@ -761,6 +764,10 @@ namespace gazprea {
         domainVar1Sym->mlirName = "VAR_DEF" + std::to_string(getNextId());
         tree->scope = currentScope;
         if (isVec) {
+            // declare
+            domainVar1Sym->declarationIndex = currentScope->incrementAndGetNumVarDeclared();
+            domainVar1Sym->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
+            // ---
             currentScope->define(domainVar1Sym);
             tree->domainVar1Sym = domainVar1Sym;
 #ifdef DEBUG
@@ -769,6 +776,12 @@ namespace gazprea {
                       << domainVar1Sym->mlirName << std::endl;
 #endif
         } else {
+            // declare
+            domainVar1Sym->declarationIndex = currentScope->incrementAndGetNumVarDeclared();
+            domainVar1Sym->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
+            domainVar2Sym->declarationIndex = currentScope->incrementAndGetNumVarDeclared();
+            domainVar2Sym->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
+            // ---
             domainVar2Sym->scope = currentScope;
             domainVar2Sym->mlirName = "VAR_DEF" + std::to_string(getNextId());
             currentScope->define(domainVar1Sym);
@@ -801,6 +814,10 @@ namespace gazprea {
         domainVarSym->scope = currentScope;
         domainVarSym->mlirName = "VAR_DEF" + std::to_string(getNextId());
         currentScope->define(domainVarSym);
+        // define
+        domainVarSym->declarationIndex = currentScope->incrementAndGetNumVarDeclared();
+        domainVarSym->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
+        // define
         tree->domainVarSym = domainVarSym;
 #ifdef DEBUG
         std::cout << "in line " << tree->loc()
