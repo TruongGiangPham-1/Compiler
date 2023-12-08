@@ -45,11 +45,19 @@ namespace gazprea {
 
     std::any AliasErrorWalker::visitID(std::shared_ptr<IDNode> tree) {
         if (procedureArgIdx < 0) return 0;
-        if (tree->sym->qualifier == QUALIFIER::CONST) return 0; // is the variable is immutable, we do not care
 
         // what is the argument supposed to be?
         auto actualArgSym = procSymbol->orderedArgs.at(procedureArgIdx);
         assert(actualArgSym); // typechecker would have gotten invalid arg calls
+
+        if (tree->sym->qualifier == QUALIFIER::CONST) {
+            // the variable is declared immutable
+            // if it is being passed into a variable argument slot, we should throw an error
+            // which error? I'm doing an AssignError
+            if (actualArgSym->qualifier == QUALIFIER::VAR) {
+                throw AssignError(tree->loc(), "Const var is being passed into variable procedure arg");
+            }
+        }
 
         auto idMlirName = tree->sym->mlirName;
         auto search = mlirNames.find(idMlirName);
