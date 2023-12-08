@@ -328,6 +328,11 @@ namespace gazprea {
                 std::cout << "line: " << tree->loc() << " ref function call " << sym->getName() << "\n";
 #endif
             }
+            if (!cast->isBuiltIn() && tree->MethodRef == nullptr) {
+                // exist a fucntion declaratoin without definition
+                throw DefinitionError(tree->loc(), "calling function without a definition");
+            }
+
             if (cast->isBuiltIn() && tree->children.size() != 1) {
                 // every builtin function must have an argument
                 throw CallError(tree->loc(), "builtin function must have 1 argument");
@@ -340,6 +345,10 @@ namespace gazprea {
             // resolved to a procedure
             // any procedure call in an expression will trigger functionCall runle :(
             std::shared_ptr<ProcedureSymbol> cast = std::dynamic_pointer_cast<ProcedureSymbol>(sym);
+            if (!cast->isBuiltIn() && tree->MethodRef == nullptr) {
+                // exist a fucntion declaratoin without definition
+                throw DefinitionError(tree->loc(), "calling function without a definition");
+            }
             if (tree->loc() < (size_t) cast->line) {
                 throw SymbolError(tree->loc(), ":procedure " + cast->getName() + " not defined at this point");
             } else {
