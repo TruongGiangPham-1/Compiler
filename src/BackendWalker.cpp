@@ -86,7 +86,6 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
 }
 
 std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
-
   if (!tree->evaluatedType->vectorInnerTypes.empty() && tree->evaluatedType->vectorOrMatrixEnum == VECTOR && tree->evaluatedType->vectorInnerTypes[0]->vectorOrMatrixEnum != VECTOR) {
       auto mtree = std::dynamic_pointer_cast<VectorTypeNode>(tree);
 
@@ -227,6 +226,9 @@ std::any BackendWalker::visitType(std::shared_ptr<TypeNode> tree) {
         return codeGenerator.generateNullValue(tree->evaluatedType);
     }
   }
+}
+std::any BackendWalker::visitTypedef(std::shared_ptr<TypeDefNode> tree) {
+  return 0;
 }
 
 std::any BackendWalker::visitStreamOut(std::shared_ptr<StreamOut> tree) {
