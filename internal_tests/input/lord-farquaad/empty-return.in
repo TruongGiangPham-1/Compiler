@@ -5,4 +5,5 @@ procedure test() {
 
 procedure main() returns integer {
     call test();
+    return 0;
 }
