@@ -1465,8 +1465,6 @@ namespace gazprea {
             // array handling;
             tree->evaluatedType = promotedType->getTypeCopy(toType); // base Type
             tree->getType()->evaluatedType = promotedType->getTypeCopy(tree->evaluatedType);
-            promotedType->printTypeClass(tree->evaluatedType);
-            promotedType->printTypeClass(tree->getExpr()->evaluatedType);
         }
         return nullptr;
     }
