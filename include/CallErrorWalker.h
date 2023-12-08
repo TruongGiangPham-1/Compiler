@@ -8,12 +8,12 @@
 #ifndef GAZPREABASE_CALLERRORWALKER_H
 #define GAZPREABASE_CALLERRORWALKER_H
 
-#include "ASTWalker.h"
+#include "ContextedWalker.h"
 #include "SyntaxWalker.h"
 #include "SymbolTable.h"
 
 namespace gazprea {
-    class CallErrorWalker : public ASTWalker {
+    class CallErrorWalker : public ContextedWalker {
     private:
         // WALKER_CONTEXT gives us more info as to what we're currently visiting
         // it's a vector so it's easy to push/pop as we enter into new contexts
@@ -26,12 +26,6 @@ namespace gazprea {
         std::shared_ptr<SymbolTable> symTab;
     public:
         CallErrorWalker(std::shared_ptr<SymbolTable> symTab);
-
-        std::any visitCall(std::shared_ptr<CallNode> tree) override;
-
-        // === STREAMS
-        std::any visitStreamIn(std::shared_ptr<StreamIn> tree) override;
-        std::any visitStreamOut(std::shared_ptr<StreamOut> tree) override;
     };
 }
 

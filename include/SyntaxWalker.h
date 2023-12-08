@@ -5,11 +5,11 @@
 #ifndef GAZPREABASE_SYNTAXWALKER_H
 #define GAZPREABASE_SYNTAXWALKER_H
 
-#include "ASTWalker.h"
+#include "ContextedWalker.h"
 #include "WalkerContext.h"
 
 namespace gazprea {
-    class SyntaxWalker : public ASTWalker {
+    class SyntaxWalker : public ContextedWalker {
     private:
         // the entire file is wrapped inside a `block` scope
         // thus, it's easier to just count the scope depth
@@ -18,17 +18,6 @@ namespace gazprea {
 
         bool inGlobalScope();
         std::string debugGlobalScope();
-
-        // how many layers of a vector literal are we in?
-        int getVectorLiteralDepth();
-
-        // WALKER_CONTEXT gives us more info as to what we're currently visiting
-        // it's a vector so it's easy to push/pop as we enter into new contexts
-        std::vector<WALKER_CONTEXT> contexts;
-        bool inContext(WALKER_CONTEXT context);
-        std::string debugContext();
-
-        static std::string contextToString(WALKER_CONTEXT context);
     public:
         SyntaxWalker();
 

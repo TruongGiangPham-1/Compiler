@@ -117,6 +117,8 @@ set(
         ../include/CallErrorWalker.h
         WalkerContext.cpp
         ../include/WalkerContext.h
+        ContextedWalker.cpp
+        ../include/ContextedWalker.h
 )
 
 # Build our executable from the source files.

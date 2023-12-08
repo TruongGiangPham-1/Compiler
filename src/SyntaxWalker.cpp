@@ -7,9 +7,8 @@
 //#define DEBUG
 
 namespace gazprea {
-    SyntaxWalker::SyntaxWalker() {
+    SyntaxWalker::SyntaxWalker() : ContextedWalker() {
         scopeDepth = 0;
-        contexts = {WALKER_CONTEXT::NONE};
     }
 
     bool SyntaxWalker::inGlobalScope() {
@@ -21,39 +20,6 @@ namespace gazprea {
             return "true";
         } else {
             return "false " + std::to_string(scopeDepth);
-        }
-    }
-
-    int SyntaxWalker::getVectorLiteralDepth() {
-        int count = 0;
-        for (const auto &context : contexts) {
-            if (context == WALKER_CONTEXT::VECTOR_LITERAL) count++;
-        }
-        return count;
-    }
-
-    std::string SyntaxWalker::debugContext() {
-        std::string result = "\n\tCtxs: ";
-        for (const auto& context : contexts) {
-            result += contextToString(context) + " ";
-        }
-        return result;
-    }
-
-    bool SyntaxWalker::inContext(WALKER_CONTEXT context) {
-        return std::find(contexts.begin(), contexts.end(), context) != contexts.end();
-    }
-
-    std::string SyntaxWalker::contextToString(WALKER_CONTEXT context)  {
-        switch (context) {
-            case WALKER_CONTEXT::FUNCTION:
-                return "FUNCTION";
-            case WALKER_CONTEXT::DECL_BODY:
-                return "DECL_BODY";
-            case WALKER_CONTEXT::VECTOR_LITERAL:
-                return "VECTOR_LITERAL";
-            case WALKER_CONTEXT::NONE:
-                return "NONE";
         }
     }
 
@@ -215,7 +181,7 @@ namespace gazprea {
 
         // if we are in more than 2 layers of a vector literal, this is an error
         // matrix is 2 layers and that's the max
-        if (getVectorLiteralDepth() > 2) {
+        if (countContextDepth(WALKER_CONTEXT::VECTOR_LITERAL) > 2) {
             throw SyntaxError(tree->loc(), "Bad vector literal (too many nested vectors)");
         }
 
