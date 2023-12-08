@@ -55,7 +55,7 @@ namespace gazprea {
             // if it is being passed into a variable argument slot, we should throw an error
             // which error? I'm doing an AssignError
             if (actualArgSym->qualifier == QUALIFIER::VAR) {
-                throw AssignError(tree->loc(), "Const var is being passed into variable procedure arg");
+                throw TypeError(tree->loc(), "Const var is being passed into variable procedure arg");
             }
         }
 
