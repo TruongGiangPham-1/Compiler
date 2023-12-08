@@ -1,0 +1,9 @@
+procedure p(tuple(integer, real) t1, integer x) {
+    return;
+}
+
+procedure main() returns integer {
+    tuple(integer, real) t1 = identity;
+    call p(t1, t1.2);
+    return 0;
+}
