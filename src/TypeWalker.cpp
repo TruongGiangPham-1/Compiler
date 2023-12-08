@@ -621,6 +621,7 @@ namespace gazprea {
                 if (i == j) continue;
                 auto promoteFrom = tree->getElement(j)->evaluatedType;
                 if (isEmptyArrayLiteral(promoteFrom)) continue;   // skip if its empty
+                if (promoteFrom->baseTypeEnum == TYPE::NULL_ or promoteFrom->baseTypeEnum == TYPE::IDENTITY) continue;
                 if (getPromotedTypeString(promotionTable, promoteFrom, promoteTo).empty()){
                     //
                     isDominant = 0;
@@ -628,22 +629,6 @@ namespace gazprea {
             }
             if (isDominant) {
                 // this is the dominant type
-                bestType = promoteTo;
-            }
-            // might be all null or identity
-            else {
-                for (int j = 0; j < tree->getSize(); j++) {
-                    if (i == j) continue;
-                    auto promoteFrom = tree->getElement(j)->evaluatedType;
-                    if (promoteFrom->baseTypeEnum == TYPE::NULL_ or promoteFrom->baseTypeEnum == TYPE::IDENTITY) {
-                        continue;
-                    }
-                    if (isEmptyArrayLiteral(promoteTo)) continue;
-                    else if (tree->getSize() == 2) continue; //dominant type amongst two elements is impossible if they are different
-                    else {
-                        throw TypeError(tree->loc(), "invalid vector literal type, failed promotion");
-                    }
-                }
                 bestType = promoteTo;
             }
         }
