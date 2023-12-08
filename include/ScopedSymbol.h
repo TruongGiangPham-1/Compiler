@@ -35,6 +35,11 @@ public:
         return "ScopeSymbol";
     };
 
+    int incrementAndGetNumVarDeclared() override {
+        this->numVarDeclared += 1;
+        return this->numVarDeclared;
+    };
+
     // from Symbol.h
     std::string getName() override;
     std::string toString() override;

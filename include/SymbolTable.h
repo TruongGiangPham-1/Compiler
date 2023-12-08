@@ -38,7 +38,11 @@ public:
     int isTypeDefed(std::string typedefTo);  // check if a given typestring is in typedef mapping
 
     std::shared_ptr<Scope> exitScope(std::shared_ptr<Scope> currentScope) {
+        scopes.pop_back();
         return currentScope->getEnclosingScope();
+    }
+    unsigned long getCurrentScopeSize() {
+        return scopes.size();
     }
 
 
