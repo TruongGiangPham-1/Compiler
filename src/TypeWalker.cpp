@@ -1565,12 +1565,61 @@ namespace gazprea {
         walkChildren(node);
         tree->evaluatedType = tree->returnExpr->evaluatedType;
         auto type = tree->returnFunc->typeSym;
-        auto leftIndex = promotedType->getTypeIndex(tree->returnExpr->evaluatedType->getBaseTypeEnumName());
-        auto rightIndex = promotedType->getTypeIndex(type->getBaseTypeEnumName());
-        std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
-        if (resultTypeString.empty()) {
-            throw TypeError(node->loc(), "Cannot implicitly promote " + tree->returnExpr->evaluatedType->getBaseTypeEnumName() + " to " + type->getBaseTypeEnumName());
+        auto rhsType = tree->returnExpr->evaluatedType;
+        if (type->getBaseTypeEnumName() == "tuple" and rhsType->getBaseTypeEnumName() == "tuple") {
+            if (type->tupleChildType.size() != rhsType->tupleChildType.size()) {
+                throw TypeError(tree->loc(), "#lvalues != #rvalues when unpacking tuple.");
+            }
+            for (size_t i = 0; i < rhsType->tupleChildType.size(); i++) {
+                auto leftTypeString = type->tupleChildType[i].second->getBaseTypeEnumName();
+                auto rightTypeString = rhsType->tupleChildType[i].second->getBaseTypeEnumName();
+
+                if (leftTypeString != rightTypeString) {
+                    auto leftIndex = promotedType->getTypeIndex(rightTypeString);
+                    auto rightIndex = promotedType->getTypeIndex(leftTypeString);
+                    std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+                    if (resultTypeString.empty()) {
+                        throw TypeError(tree->loc(), "Cannot implicitly promote " + rightTypeString + " to " + leftTypeString);
+                    }
+                }
+            }
+            promotedType->promoteTupleElements(type, tree->returnExpr, promotedType->promotionTable);
+            //promotedType->printTypeClass(tree->getRvalue()->evaluatedType);
+
+            tree->evaluatedType = type;
+        } else if (type->vectorOrMatrixEnum == TYPE::VECTOR) {
+            // handle vector literal. promote rhs
+            if (promotedType->isMatrix(type) && promotedType->isVector(rhsType)) {
+                throw TypeError(tree->loc(), "cannot promote vectorNode to matrix");
+            }
+            if (rhsType->vectorOrMatrixEnum == NONE && promotedType->isScalar(rhsType)) {
+                promotedType->promoteLiteralToArray(type, tree->returnExpr, promotedType->promotionTable);
+            } else if (promotedType->isEmptyArrayLiteral(rhsType)) {
+                tree->returnExpr->evaluatedType = promotedType->getTypeCopy(type);
+                tree->evaluatedType = tree->returnExpr->evaluatedType;
+            }
+            else {
+                promotedType->promoteVectorElements(type, tree->returnExpr, promotedType->promotionTable);
+                promotedType->updateVectorNodeEvaluatedType(type, tree->returnExpr);
+            }
+            tree->evaluatedType = promotedType->getTypeCopy(tree->returnExpr->evaluatedType);  // update the tree evaluated type with promoted
+            return nullptr;
         }
+        else if (rhsType->getBaseTypeEnumName() == "null" || rhsType->getBaseTypeEnumName() == "identity") {  // if it null then we just set it to ltype
+            tree->evaluatedType = type;  //
+            promotedType->promoteIdentityAndNull(type, tree->returnExpr);
+        }
+
+        else if (rhsType->getBaseTypeEnumName() != type->getBaseTypeEnumName()) {
+            auto leftIndex = promotedType->getTypeIndex(tree->returnExpr->evaluatedType->getBaseTypeEnumName());
+            auto rightIndex = promotedType->getTypeIndex(type->getBaseTypeEnumName());
+            std::string resultTypeString = promotedType->promotionTable[leftIndex][rightIndex];
+            if (resultTypeString.empty()) {
+                throw TypeError(node->loc(), "Cannot implicitly promote " + tree->returnExpr->evaluatedType->getBaseTypeEnumName() + " to " + type->getBaseTypeEnumName());
+            }
+        }
+        else
+            tree->evaluatedType = tree->returnExpr->evaluatedType;
         return nullptr;
     }
 
@@ -1580,7 +1629,12 @@ namespace gazprea {
         }
         tree->evaluatedType = symtab->resolveTypeUser(tree->getRetTypeNode());
         tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
-
+        auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getRetTypeNode());
+        if (tupleNode) {
+            for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                tupleNode->getTypes()[i]->evaluatedType = symtab->resolveTypeUser(tupleNode->getTypes()[i]);
+            }
+        }
         if (tree->body) {
             auto blockNode = tree->body;
             walkChildren(blockNode);
@@ -1595,6 +1649,12 @@ namespace gazprea {
         if (tree->getRetTypeNode()) {
             tree->evaluatedType = promotedType->getTypeCopy(symtab->resolveTypeUser(tree->getRetTypeNode()));
             tree->getRetTypeNode()->evaluatedType = tree->evaluatedType;
+            auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->getRetTypeNode());
+            if (tupleNode) {
+                for (int i = 0; i < tupleNode->getTypes().size(); i++) {
+                    tupleNode->getTypes()[i]->evaluatedType = symtab->resolveTypeUser(tupleNode->getTypes()[i]);
+                }
+            }
         }
         else {
             tree->evaluatedType = nullptr;
