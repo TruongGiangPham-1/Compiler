@@ -78,7 +78,7 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   if (tree->sym->functionStackIndex >= 0) {
     codeGenerator.generateAssignment(
         codeGenerator.indexCommonType(
-          this->methodStack, 
+          this->variableStack.back(), 
           codeGenerator.generateValue(tree->sym->functionStackIndex)
           ),
         initializedType);
@@ -269,7 +269,7 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
       return codeGenerator.cast(val, toType);
     }
   } else if (tree->sym->functionStackIndex >= 0) {
-    return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
+    return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->sym->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
   }
@@ -847,14 +847,13 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(),
         false);
 
-    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
     this->returnType = tree->getRetTypeNode();
 
     walk(tree->body);
 
     // cheeky return. catches void functions + generalizes if/else returns
     if (!returnDropped && !tree->getRetTypeNode()) { 
-      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->methodStack) ;
+      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->variableStack.back()) ;
     }
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
@@ -872,7 +871,6 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         tree->orderedArgs.size(),
         false);
     // stack
-    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
     this->returnType = tree->getRetTypeNode();
 
     walk(tree->body);
@@ -907,7 +905,7 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
     returnValue = codeGenerator.generateValue(0);
   }
 
-  codeGenerator.generateReturn(returnValue, this->methodStack);
+  codeGenerator.generateReturn(returnValue, this->variableStack.back());
 
   this->returnDropped = true;
   return 0;
@@ -916,7 +914,9 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
 std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   codeGenerator.pushScope();
 
+  this->variableStack.push_back(codeGenerator.initializeStack(20));
   auto returnVal = walkChildren(tree);
+  this->variableStack.pop_back();
 
   codeGenerator.popScope();
   return returnVal;
