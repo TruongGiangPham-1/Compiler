@@ -16,6 +16,7 @@
 #include "BackendWalker.h"
 #include "Def.h"
 #include "Ref.h"
+#include "AliasErrorWalker.h"
 #include "../include/customError/ErrorListener.h"
 
 #include <iostream>
@@ -91,6 +92,12 @@ int main(int argc, char **argv) {
       auto promotionTypes = std::make_shared<gazprea::PromotedType>(symbolTable);
       gazprea::TypeWalker typeWalker(symbolTable, promotionTypes);
       typeWalker.walk(ast);
+
+#ifdef DEBUG
+      std::cout << "\n\n=== ALIAS ERROR PASS\n"
+#endif
+      gazprea::AliasErrorWalker aliasErrorWalker;
+      aliasErrorWalker.walk(ast);
 
 #ifdef DEBUG
       std::cout << "\n\n=== CODEGEN\n";
