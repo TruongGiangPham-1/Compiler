@@ -272,7 +272,6 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
       return codeGenerator.cast(val, toType);
     }
   } else if (tree->sym->declarationIndex>= 0) {
-    std::cout << "Reaching back " << tree->numStackBehind << " " << tree->sym->declarationIndex << std::endl;
     return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
   } 
 }
@@ -927,7 +926,7 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
 std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   codeGenerator.pushScope();
 
-  this->variableStack.push_back(codeGenerator.initializeStack(20));
+  this->variableStack.push_back(codeGenerator.initializeStack(tree->scope->numVarDeclared));
   auto returnVal = walkChildren(tree);
 
   // cheeky return. catches void functions + generalizes if/else returns
