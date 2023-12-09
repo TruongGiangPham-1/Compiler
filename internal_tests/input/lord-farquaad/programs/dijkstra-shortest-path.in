@@ -1,7 +1,7 @@
 // circular queue type
 typedef integer[*] IntegerSet;
 
-procedure print_graph(integer[*, *] GRAPH, integer n) {
+procedure print_graph(integer[*, *] GRAPH, integer n) returns integer{
     // prints out the adjacency matrix
     loop i in 1..n {
         GRAPH[i, 1] -> std_output;
@@ -11,18 +11,20 @@ procedure print_graph(integer[*, *] GRAPH, integer n) {
         }
         "\n" -> std_output;
     }
+
+    // Somehow we hae a control flow error when the proc doesn't return anything?
+    // ugh whatver
+    return 0;
 }
 
 // start all of the nodes as unvisited
 function initVisited(integer n) returns IntegerSet = [ i in 1..n | 0 ];
 
 // true if we have visited all nodes (i.e. all nodes are 1)
-// TODO: some bugs in typecheck integer stuff
 function doneVisiting(integer[*] visited) returns boolean {
     // filtered = ([ i is 0 ], [ i is 1 ]);
     var filtered = [ i in visited & i == 0 ];
-    integer[*] filteredVisited = filtered.1;
-    return length(filteredVisited) == 0; // true if there no unvisited nodes
+    return length(filtered.1) == 0; // true if there no unvisited nodes
 }
 
 procedure popMinNode(var integer[*] visited, const real[*] dist, integer n) returns integer {
@@ -54,14 +56,14 @@ procedure main() returns integer {
     s <- std_input;
     t <- std_input;
 
-    "Going from " || format(s) || " to " || t || " in a graph with " || format(n) || " nodes.\n"-> std_output;
+    "Going from " || format(s) || " to " || format(t) || " in a graph with " || format(n) || " nodes.\n"-> std_output;
 
     // read the graph
     integer[n, n] GRAPH;
     loop i in 1..n, j in 1..n {
         GRAPH[i, j] <- std_input;
     }
-    call print_graph(GRAPH, n);
+    // call print_graph(GRAPH, n);
 
     // ==============
     // START DIJKSTRA
@@ -74,19 +76,15 @@ procedure main() returns integer {
 
     loop while (not doneVisiting(visited)) {
         integer minNode = popMinNode(visited, dist, n);
-        "Current minNode is " || format(minNode) || " with distance " || format(dist[minNode]) || "\n" -> std_output;
+        // "Current minNode is " || format(minNode) || " with distance " || format(dist[minNode]) || "\n" -> std_output;
 
         if (minNode == t) {
-            "Found target node " || format(t) || " with distance " || format(dist[t]) || "\n" -> std_output;
+            // "Found target node " || format(t) || " with distance " || format(dist[t]) || "\n" -> std_output;
             break;
         }
 
         // loop through all neighbours of minNode that are in Q
         var validNeighboursFilter = [ i in 1..n & GRAPH[minNode, i] > 0 and visited[i] == 0 ];
-        // integer[*] validNeighbours = validNeighboursFilter.1;
-        // "  Valid Neighbours: " -> std_output;
-        // validNeighbours -> std_output;
-        // "\n" -> std_output;
 
         loop i in validNeighboursFilter.1 {
             real alt = dist[minNode] + GRAPH[minNode, i];
