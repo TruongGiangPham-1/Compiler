@@ -27,8 +27,8 @@ namespace gazprea {
 /*integer*/  {"boolean",  "character",   "integer",  "real", "", "", ""},
 /*real*/     {"",         "",            "integer",  "real", "", "", ""},
 /*tuple*/    {"",         "",            "",             "", "", "", ""},
-/*identity*/ {"",         "",            "",             "", "", "", ""},
-/*null*/     {"",         "",            "",             "", "", "", ""},
+/*identity*/ {"boolean",         "character",            "integer",             "real", "", "", ""},
+/*null*/     {"boolean",         "character",            "integer",             "real", "", "", ""},
     };
 
     std::string PromotedType::arithmeticResult[7][7] = {
@@ -1480,6 +1480,9 @@ namespace gazprea {
                     promotedType->promoteVectorElements(toType, tree->getExpr(), promotedType->castTable);
                     promotedType->updateVectorNodeEvaluatedType(toType, tree->getExpr());  // copy ltype to exprNode's type except for the size attribute
                 }
+            }
+            if ((exprType->baseTypeEnum == TYPE::NULL_) || (exprType->baseTypeEnum == TYPE::IDENTITY)) {
+                tree->getExpr()->evaluatedType = promotedType->getTypeCopy(toType);
             }
             // array handling;
             tree->evaluatedType = promotedType->getTypeCopy(toType); // base Type
