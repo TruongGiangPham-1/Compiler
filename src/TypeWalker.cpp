@@ -27,8 +27,8 @@ namespace gazprea {
 /*integer*/  {"boolean",  "character",   "integer",  "real", "", "", ""},
 /*real*/     {"",         "",            "integer",  "real", "", "", ""},
 /*tuple*/    {"",         "",            "",             "", "", "", ""},
-/*identity*/ {"",         "",            "",             "", "", "", ""},
-/*null*/     {"",         "",            "",             "", "", "", ""},
+/*identity*/ {"boolean",         "character",            "integer",             "real", "", "", ""},
+/*null*/     {"boolean",         "character",            "integer",             "real", "", "", ""},
     };
 
     std::string PromotedType::arithmeticResult[7][7] = {
