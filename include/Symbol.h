@@ -24,6 +24,10 @@ public:
     //
     int index = -1;  // for method parameters
     int functionStackIndex = -1;  // -1 indicates its in global
+    // 2 indexes that stan requested
+    int declarationIndex = -1;  // what is the order of declaration? even counts global scope
+    int scopeDepthItWasDeclared = -1;  // num depth of the scope tree that it was declared at
+
     std::unordered_map<std::string , int> tupleIndexMap;  // look up map if the tuple index is an ID
 
     mlir::Value mlirAddr;
