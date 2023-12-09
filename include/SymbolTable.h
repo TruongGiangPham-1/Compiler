@@ -3,21 +3,22 @@
 #include <memory>
 #include <vector>
 
-#include "CompileTimeExceptions.h"
-#include "BaseScope.h"
 #include "ASTNode/Type/TypeNode.h"
+#include "BaseScope.h"
+#include "CompileTimeExceptions.h"
 
 class SymbolTable {
 private:
     std::vector<std::shared_ptr<Scope>> scopes;
+
 public:
-    SymbolTable() {}
+    SymbolTable() { }
     std::shared_ptr<GlobalScope> globalScope;
     std::shared_ptr<Scope> enterScope(std::string& name, const std::shared_ptr<Scope>& currentScope);
     std::shared_ptr<Scope> enterScope(std::shared_ptr<Scope> newScope);
 
-    //std::pair<TYPE, std::string>  resolveType(std::shared_ptr<ASTNode> typeNode);
-    std::shared_ptr<Type>  resolveTypeUser(std::shared_ptr<ASTNode> typeNode);
+    // std::pair<TYPE, std::string>  resolveType(std::shared_ptr<ASTNode> typeNode);
+    std::shared_ptr<Type> resolveTypeUser(std::shared_ptr<ASTNode> typeNode);
 
     /*
      * [if typeNode is a tupleTYpe, we create the Tuple type object, and define this custom type in GlobalScope]
@@ -34,17 +35,18 @@ public:
      *
      * @param: ID: used to create a unique type name for the tuple Type created in typedef, used Def::getID()
      */
-    void defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string typeDefTo, int ID);  // define using typenode
-    int isTypeDefed(std::string typedefTo);  // check if a given typestring is in typedef mapping
+    void defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string typeDefTo, int ID); // define using typenode
+    int isTypeDefed(std::string typedefTo); // check if a given typestring is in typedef mapping
 
-    std::shared_ptr<Scope> exitScope(std::shared_ptr<Scope> currentScope) {
+    std::shared_ptr<Scope> exitScope(std::shared_ptr<Scope> currentScope)
+    {
         scopes.pop_back();
         return currentScope->getEnclosingScope();
     }
-    unsigned long getCurrentScopeSize() {
+    unsigned long getCurrentScopeSize()
+    {
         return scopes.size();
     }
-
 
     std::string toString();
 };
