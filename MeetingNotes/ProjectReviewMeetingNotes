@@ -79,3 +79,76 @@
 	Identity and Null
 	Tuple resolving
 ============================================================================================
+*** Meeting Date/Time start/end:
+ 20/11/2023 5:30 PM (After reading week so no meeting on 13th)
+ 20/11/2023 6:00 PM
+
+*** Attendees:
+    Stan
+    Truong
+    Sanjeev
+    Joshua
+
+*** Member's Progress:
+	Truong: Concat & Vector Type Support
+	Joshua: Predicated Loop, stream state builtin, reverse and format
+	Sanjeev: Bug Squashing for tuple types and vector type check
+    Stan: Generators and Filters
+*** Discussion items/agenda:
+    Procedure/Function restrictions
+    runtime size errors
+*** Actions:
+	None
+*** Outstanding Issues:
+	typing bugs with vectors
+	new vector operations (Dot product etc)
+============================================================================================
+*** Meeting Date/Time start/end:
+ 27/11/2023 1:00 PM
+ 27/11/2023 2:00 PM
+
+*** Attendees:
+    Stan
+    Truong
+    Sanjeev
+    Joshua
+
+*** Member's Progress:
+	Truong: Frontend matrices, testing right now for binops
+	Joshua: in built functions typechecks
+	Sanjeev: casting tuple types for each individual member
+    Stan: backend testing
+*** Discussion items/agenda:
+    Post Predicated Loops
+    TypeCheck Tables
+*** Actions:
+	None
+*** Outstanding Issues:
+	Post predicated loops
+    Function return type evaluations
+============================================================================================
+*** Meeting Date/Time start/end:
+ 04/12/2023 1:00 PM
+ 04/12/2023 2:00 PM
+
+*** Attendees:
+    Stan
+    Truong
+    Sanjeev
+    Joshua
+
+*** Member's Progress:
+	Truong: Def Ref, Maybe Tuple TypeCheck help
+	Joshua: Streams State and Gnarly Tests
+	Sanjeev: String TypeChecking, TypeCheck for vecs and matrices inside tuples
+    Stan: Runtime errors and void returns, some cool tests
+*** Discussion items/agenda:
+    Minden Exchange
+*** Actions:
+	Stan: Runtime
+    Sanjeev: Grammar (Reals and its issue with TupleIndex and Range)
+*** Outstanding Issues:
+	Casting and Vectors inside tuples for typecheck vectors and matrices
+    Bug With Iterator Loop.
+    Early Returns for Control Flow in Syntax Walker
+============================================================================================
