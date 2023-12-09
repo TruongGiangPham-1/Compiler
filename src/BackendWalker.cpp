@@ -255,7 +255,6 @@ std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   // might be arg
-  
   if (tree->sym->index >= 0) {
     auto val = codeGenerator.generateLoadArgument(tree->sym->index);
 
@@ -268,7 +267,7 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
     } else {
       return codeGenerator.cast(val, toType);
     }
-  } else if (tree->sym->functionStackIndex >= 0) {
+  } else if (tree->sym->declarationIndex >= 0) {
     return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
@@ -471,7 +470,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
     std::vector<mlir::Value> argument;
     argument.push_back(baseVec);
 
-    codeGenerator.generateDeclaration(tree->domainVar1Sym->mlirName, domain);
+
 
     auto length = codeGenerator.generateCallNamed("length", argument);
     auto generatorVector = codeGenerator.generateValue(length);
@@ -748,14 +747,18 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
   // important loop info we need to have
   // tuple of <loopStart, loopExit>
   std::vector<std::pair<mlir::Block *, mlir::Block *>> blocks;
-
+  auto stack = codeGenerator.initializeStack(tree->getDomainExprs().size());
+  std::cout << tree->getDomainExprs().size() << std::endl;
   // create new nested loop for each domainExpr
+  int i = 1;
   for (auto &domainExpr : tree->getDomainExprs()) {
       auto domainNode = domainExpr.second;
       auto domainSym = domainExpr.first;
 
-      // create/load domain vector
+            // create/load domain vector
       auto domain = std::any_cast<mlir::Value>(walk(domainNode));
+
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, codeGenerator.generateValue(i)), domain);
 
       // var to index the domain
       auto domainIdx = codeGenerator.generateValue(1);
@@ -789,14 +792,19 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       auto one = codeGenerator.generateValue(1);
       auto newDomainIdx = codeGenerator.performBINOP(domainIdx, one, ADD);
       codeGenerator.generateAssignment(domainIdx, newDomainIdx);
+      i += 1;
   }
 
   // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
   // if there is a break/continue statement, we need to jump to the correct exit block
   this->loopBlocks.push_back(std::make_pair(blocks[blocks.size() - 1].first, blocks[blocks.size() - 1].second));
 
+  this->variableStack.push_back(stack);
+
   // walk the body
   walk(tree->getBody());
+
+  this->variableStack.pop_back();
 
   // add all exitBlocks, increment domainIdx
   // reverse it first; we need to traverse in reverse order
