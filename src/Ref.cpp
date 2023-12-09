@@ -90,6 +90,7 @@ namespace gazprea {
         if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
+
             auto retType = symtab->resolveTypeUser(tree->getRetTypeNode());
             if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve function return type");
 
@@ -99,6 +100,7 @@ namespace gazprea {
             std::string scopeName= "funcScope" + tree->funcNameSym->getName() +std::to_string(tree->loc());
             std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
                                                                                        scopeName, retType, symtab->globalScope, tree->loc());
+            methodSym->defined = true;
             methodSym->typeSym = retType;
             currentScope->define(methodSym);  // define methd symbol in global
             currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
@@ -151,6 +153,7 @@ namespace gazprea {
                 // IMPORTANT: update the line number of the method symbol to be one highest
                 funcSymCast->line = tree->loc() < funcSymCast->line ? tree->loc(): funcSymCast->line;
                 //
+                funcSymCast->defined = true;
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
                 defineFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
@@ -223,6 +226,7 @@ namespace gazprea {
             std::string scopeName= "procScope" + tree->nameSym->getName() +std::to_string(tree->loc());
             std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
                                                                                         scopeName, retType, symtab->globalScope, tree->loc());
+            methodSym->defined = true;
             methodSym->typeSym = retType;
             currentScope->define(methodSym);  // define methd symbol in global
             currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
@@ -263,6 +267,7 @@ namespace gazprea {
                 }
                 // IMPORTANT: update the line number of the method symbol to be one highest
                 procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
+                procSymCast->defined = true;
                 // --------------------------------------------------------------
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
