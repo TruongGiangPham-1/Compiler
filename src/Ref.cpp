@@ -86,10 +86,15 @@ namespace gazprea {
             }
             return 0;  // forward declaration node, we skip
         }
+
+        for (auto arg : tree->orderedArgs) {
+            walk(arg);
+        }
         auto funcSym = currentScope->resolve(tree->funcNameSym->getName());  // try to resolve procedure name
         if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
             // define method scope and push. define method symbol
+
             auto retType = symtab->resolveTypeUser(tree->getRetTypeNode());
             if (retType == nullptr) throw TypeError(tree->loc(), "cannot resolve function return type");
 
@@ -99,6 +104,7 @@ namespace gazprea {
             std::string scopeName= "funcScope" + tree->funcNameSym->getName() +std::to_string(tree->loc());
             std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<FunctionSymbol>(tree->funcNameSym->getName(),
                                                                                        scopeName, retType, symtab->globalScope, tree->loc());
+            methodSym->defined = true;
             methodSym->typeSym = retType;
             currentScope->define(methodSym);  // define methd symbol in global
             currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
@@ -151,6 +157,7 @@ namespace gazprea {
                 // IMPORTANT: update the line number of the method symbol to be one highest
                 funcSymCast->line = tree->loc() < funcSymCast->line ? tree->loc(): funcSymCast->line;
                 //
+                funcSymCast->defined = true;
                 currentScope = symtab->enterScope(funcSymCast);     // enter the procedure symbol scope
 
                 defineFunctionAndProcedureArgs(tree->loc(), funcSymCast, tree->orderedArgs, retType);
@@ -207,6 +214,9 @@ namespace gazprea {
             return 0;  // forward declaration node, we skip
         }
 
+        for (auto arg : tree->orderedArgs) {
+            walk(arg);
+        }
 
         auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
         if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
@@ -223,6 +233,7 @@ namespace gazprea {
             std::string scopeName= "procScope" + tree->nameSym->getName() +std::to_string(tree->loc());
             std::shared_ptr<ScopedSymbol> methodSym = std::make_shared<ProcedureSymbol>(tree->nameSym->getName(),
                                                                                         scopeName, retType, symtab->globalScope, tree->loc());
+            methodSym->defined = true;
             methodSym->typeSym = retType;
             currentScope->define(methodSym);  // define methd symbol in global
             currentScope = symtab->enterScope(methodSym);     // enter the procedure symbol scope
@@ -263,6 +274,7 @@ namespace gazprea {
                 }
                 // IMPORTANT: update the line number of the method symbol to be one highest
                 procSymCast->line = tree->loc() < procSymCast->line ? tree->loc(): procSymCast->line;
+                procSymCast->defined = true;
                 // --------------------------------------------------------------
                 assert(std::dynamic_pointer_cast<GlobalScope>(currentScope));
                 currentScope = symtab->enterScope(procSymCast);     // enter the procedure symbol scope
@@ -340,6 +352,7 @@ namespace gazprea {
             // resolved to a procedure
             // any procedure call in an expression will trigger functionCall runle :(
             std::shared_ptr<ProcedureSymbol> cast = std::dynamic_pointer_cast<ProcedureSymbol>(sym);
+
             if (tree->loc() < (size_t) cast->line) {
                 throw SymbolError(tree->loc(), ":procedure " + cast->getName() + " not defined at this point");
             } else {
@@ -441,10 +454,14 @@ namespace gazprea {
             this->methodStackOffset += 1;
             methodSym->declaredVars.push_back(std::make_pair(tree->getIDName(), this->methodStackOffset));
             idSym->functionStackIndex = this->methodStackOffset;
-#ifdef DEBUG
-            std::cout << "stackoffset is " << idSym->functionStackIndex << "\n";
-#endif
         }
+        // -------------------------------
+        idSym->declarationIndex = currentScope->incrementAndGetNumVarDeclared();  //
+        idSym->scopeDepthItWasDeclared = symtab->getCurrentScopeSize();  // the depth that this was declared
+        //
+#ifdef DEBUG
+        std::cout << "declarationIndex= " << idSym->declarationIndex << " in scope " << currentScope->getScopeName() << "\n";
+#endif
 
         idSym->mlirName = mlirName;
         idSym->scope = currentScope;
@@ -478,6 +495,16 @@ namespace gazprea {
                 }
             }
             std::cout << "\n";
+#endif
+        }
+
+        //
+            // we only care about defined identifiers thats not function
+        if (referencedSymbol->declarationIndex >= 0) {
+            referencedSymbol->numStackBehind = symtab->getCurrentScopeSize() - referencedSymbol->scopeDepthItWasDeclared;
+#ifdef DEBUG
+            std::cout << referencedSymbol->getName() << " is " << referencedSymbol->numStackBehind << " stack behind and "
+                      << referencedSymbol->declarationIndex << " th item in the stack\n";
 #endif
         }
 
@@ -715,11 +742,18 @@ namespace gazprea {
          * potentially swap to typedef node
          *
          */
+
         auto typeN = std::dynamic_pointer_cast<TypeNode>(typeNode);
         if (symtab->isTypeDefed(typeN->getTypeName())) {  // this type has typedef mapping
-            tree->children[0] = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];   // swap the real typenode here
+            if (std::dynamic_pointer_cast<ArgNode>(tree)) {
+                auto argN = std::dynamic_pointer_cast<ArgNode>(tree);
+                argN->type = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];
+            } else {
+                tree->children[0] = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];   // swap the real typenode here
+            }
         }
         return;
+
     }
 
     std::any Ref::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
@@ -801,6 +835,10 @@ namespace gazprea {
 
         currentScope = symtab->exitScope(currentScope);
 
+        return 0;
+    }
+    std::any Ref::visitParameter(std::shared_ptr<ArgNode> tree) {
+        potentiallySwapTypeDefNode(tree->type, tree);
         return 0;
     }
 

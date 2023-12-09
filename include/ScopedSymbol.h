@@ -13,7 +13,7 @@ protected:
     bool isBuiltin;
 public:
 
-
+    bool defined = false;
     FUNCTYPE functypeENUM = FUNCTYPE::FUNC_NORMAL;  // enum of buildIN
     std::shared_ptr<Scope>enclosingScope;
     std::vector<std::shared_ptr<Symbol>>orderedArgs;
@@ -33,6 +33,11 @@ public:
     std::shared_ptr<Type> resolveType(const std::string & name) override;
     std::string getScopeName() override {
         return "ScopeSymbol";
+    };
+
+    int incrementAndGetNumVarDeclared() override {
+        this->numVarDeclared += 1;
+        return this->numVarDeclared;
     };
 
     // from Symbol.h
