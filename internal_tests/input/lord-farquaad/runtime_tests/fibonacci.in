@@ -10,7 +10,7 @@ function fib(integer n) returns integer {
  
 
 procedure main() returns integer {
-  fib(27) -> std_output;
+  fib(25) -> std_output;
   '\n' -> std_output;
   return 1;
 }
