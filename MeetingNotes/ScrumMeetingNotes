@@ -146,3 +146,171 @@
         - Today - Working on def ref functions, functions parameters scope
         - Blockers - None
 ============================================================================================
+*** Meeting Date/Time start/end:
+  21/11/2023 3:30 PM
+  21/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Backend Generators
+        - Today -  Backend for Filters
+        - Blockers - Typechecking
+    - Sanjeev
+        - Yesterday - None
+        - Today - Merge truong’s pr and work on tuples typecheck fix
+        - Blockers - None
+    - Joshua
+        - Yesterday - None
+        - Today - Stream State
+        - Blockers - None
+    - Truong
+        - Yesterday - Def ref for generators and filters, a bit of type checking
+        - Today - vector and matrices type check
+        - Blockers - None
+============================================================================================
+*** Meeting Date/Time start/end:
+  23/11/2023 3:30 PM
+  23/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Generators.
+        - Today -  Filters
+        - Blockers - None
+    - Sanjeev
+        - Yesterday - Tuple Vector Casts
+        - Today - Null/Identity TypeCheck
+        - Blockers - None
+    - Joshua
+        - Yesterday - Built Ins
+        - Today - Stream State
+        - Blockers - None
+    - Truong
+        - Yesterday -  Concat.
+        - Today - Vector TypeCheck
+        - Blockers - None
+============================================================================================
+*** Meeting Date/Time start/end:
+  28/11/2023 3:30 PM
+  28/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - None
+        - Today -  Runtime typechecks
+        - Blockers - None
+    - Sanjeev
+        - Yesterday - None
+        - Today - String Char Vec Support
+        - Blockers - None
+    - Joshua
+        - Yesterday - Stream State
+        - Today - Iterator Loops
+        - Blockers - None
+    - Truong
+        - Yesterday -  Def Ref Iterator Loops
+        - Today - Swapping
+        - Blockers - None
+============================================================================================
+*** Meeting Date/Time start/end:
+  30/11/2023 3:30 PM
+  30/11/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Backend Testing.
+        - Today -  Same
+        - Blockers -
+    - Sanjeev
+        - Yesterday - Tuple Casts bugs
+        - Today - String Char support bugs
+        - Blockers - None
+    - Joshua
+        - Yesterday - In built functions supports
+        - Today - Gnarly testing
+        - Blockers - None
+    - Truong
+        - Yesterday -  Matrices frontend
+        - Today - vector binop testing
+        - Blockers - None
+============================================================================================
+*** Meeting Date/Time start/end:
+  05/12/2023 3:30 PM
+  05/12/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Recursion
+        - Today -  Recursion Tests
+        - Blockers -
+    - Sanjeev
+        - Yesterday - Strings <-> Char Vecs
+        - Today - String tests, vector index
+        - Blockers - None
+    - Joshua
+        - Yesterday - Fixed tests
+        - Today - Iterator loop continue/break bug
+        - Blockers - None
+    - Truong
+        - Yesterday -  return type vectors and matrix
+        - Today - Tuple Type bugs
+        - Blockers - None
+============================================================================================
+*** Meeting Date/Time start/end:
+  07/12/2023 3:30 PM
+  07/12/2023 3:45 PM
+
+*** Attendees:
+    Truong
+    Stan
+    Joshua
+    Sanjeev
+
+*** Progress:
+    - Stan:
+        - Yesterday - Backend bug squash.
+        - Today -  Backend bug squash
+        - Blockers - None
+    - Sanjeev
+        - Yesterday - type check bug squash
+        - Today - type check bug squash
+        - Blockers - None
+    - Joshua
+        - Yesterday - fixing tests
+        - Today - more gnarly tests (dijkstra)
+        - Blockers - None
+    - Truong
+        - Yesterday -  type check bug squash
+        - Today - stack manipulation for def ref
+        - Blockers - None
+============================================================================================
