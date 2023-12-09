@@ -4,15 +4,16 @@
 
 #ifndef GAZPREABASE_ADVANCETYPE_H
 #define GAZPREABASE_ADVANCETYPE_H
-#include "Type.h"
-#include "Symbol.h"
-#include <vector>
-#include "Types/TYPES.h"
 #include "CompileTimeExceptions.h"
+#include "Symbol.h"
+#include "Type.h"
+#include "Types/TYPES.h"
+#include <vector>
 
-class AdvanceType : public Type, public Symbol{
+class AdvanceType : public Type, public Symbol {
 private:
-    void parseBaseTypeEnum(std::string name) {
+    void parseBaseTypeEnum(std::string name)
+    {
         if (name == "integer") {
             baseTypeEnum = TYPE::INTEGER;
         } else if (name == "real") {
@@ -29,49 +30,59 @@ private:
             baseTypeEnum = TYPE::IDENTITY;
         } else if (name == "null") {
             baseTypeEnum = TYPE::NULL_;
-        }else {
+        } else {
             // throw TypeError(0, "invalid typename when creating AdvancedType object");
             // custom user type
         }
     }
+
 public:
     /*
      * Typedef integer int;
      * name = integer
      * typedef name = int;
      */
-    std::string typDefName;  // typedef  name?
+    std::string typDefName; // typedef  name?
     /*
      * vector of dimentions. if it is a Vector, dims,size() = 1, if it is a matrix, dims.size() = 2
      */
 
-    AdvanceType(std::string name) : Symbol(name), typDefName(name) {
+    AdvanceType(std::string name)
+        : Symbol(name)
+        , typDefName(name)
+    {
         parseBaseTypeEnum(name);
     }
 
     // at Def.cpp push <integer, integer>
-    AdvanceType(std::string name, std::string typeDefName) : Symbol(name), typDefName(typeDefName) {
+    AdvanceType(std::string name, std::string typeDefName)
+        : Symbol(name)
+        , typDefName(typeDefName)
+    {
         parseBaseTypeEnum(name);
     };
 
-    std::string getName() {
+    std::string getName()
+    {
         return Symbol::getName();
     };
 
-    void setName(std::string name) override{
+    void setName(std::string name) override
+    {
         this->name = name;
     };
-    std::string getBaseTypeEnumName() override {
+    std::string getBaseTypeEnumName() override
+    {
         return typeString[baseTypeEnum];
     };
-    std::string getTypDefname() {
+    std::string getTypDefname()
+    {
         return typDefName;
     }
 };
 
-class TupleType: public Type, public Symbol{
+class TupleType : public Type, public Symbol {
     // as stan and josh discussed, add maybe have vector<TypeNode>?
-
 };
 
-#endif //GAZPREABASE_ADVANCETYPE_H
+#endif // GAZPREABASE_ADVANCETYPE_H

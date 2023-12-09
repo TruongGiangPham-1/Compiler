@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(GazpreaBase)
+project(GazpreaLordFarquaad)
 
 # Ensure tool dependencies.
 include(ExternalProject) # Required to download and build external projects (i.e. ANTLR).

@@ -1,6 +1,6 @@
 CMPUT 415 Student Submission License (Version 1.0)
 
-Copyright 2023 `student name`
+Copyright 2023 `Joshua Ji, Stan Fedyk, Truong-Giang Pham, Sanjeev Kotha`
 
 Unauthorized redistribution is forbidden in all circumstances. Use of this
 software without explicit authorization from the author **or** CMPUT 415
