@@ -3,6 +3,7 @@
 #include "Types/TYPES.h"
 #include <string>
 #include <vector>
+#include <memory>
 class Type {
 public:
     TYPE baseTypeEnum = TYPE::NONE; // [integer, real, character, boolean, string, tuple,   identity, null]
