@@ -1,20 +1,13 @@
 procedure test(var string[*] a) returns character[*] {
-  a -> std_output;
-  '\n' -> std_output;
-  a = "abcde";
-  a -> std_output;
-  '\n' -> std_output;
+  a = "hello, world";
   return a;
 }
 
 procedure main() returns integer {
   var testVar = ['h','e','l','l','o'];
 
-  testVar->std_output;
-  '\n' -> std_output;
-
   call test(testVar);
-  testVar -> std_output;
+  
   '\n' -> std_output;
   
   return 1;

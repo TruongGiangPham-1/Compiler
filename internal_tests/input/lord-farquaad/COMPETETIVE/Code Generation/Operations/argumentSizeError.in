@@ -1,4 +1,4 @@
-procedure test(var string a) returns character[*] {
+procedure test(var char[*] a) returns character[*] {
   a = "hello, world";
   return a;
 }
