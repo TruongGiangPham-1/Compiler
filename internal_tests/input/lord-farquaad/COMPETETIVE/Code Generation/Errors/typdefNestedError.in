@@ -1,0 +1,6 @@
+typedef integer i;
+typedef i[10] ten_ints;
+
+procedure main() returns integer {
+    return 0;
+}

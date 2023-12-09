@@ -1,0 +1,8 @@
+procedure p() returns integer {
+    return 1;
+}
+
+procedure main() returns integer {
+    integer[*] x = [p()];
+    return 0;
+}

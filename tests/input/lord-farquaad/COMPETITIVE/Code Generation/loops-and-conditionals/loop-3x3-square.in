@@ -1,0 +1,22 @@
+procedure main() returns integer {
+    /* Prints a 3x3 square of *'s */
+    integer y = 0;
+
+    loop while (y < 3) {
+        y = y + 1;
+        integer x = 0;
+
+        /* Normally this would loop forever, but the break exits this inner loop */
+        loop {
+            if (x >= 3)
+                break;
+
+            x = x + 1;
+            '*' -> std_output;
+        }
+
+        '\n' -> std_output;
+    }
+
+    return 0;
+}

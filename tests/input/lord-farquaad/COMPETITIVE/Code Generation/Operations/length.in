@@ -1,0 +1,12 @@
+procedure main() returns integer {
+  length([1,2,3]) -> std_output;
+  '\n' -> std_output;
+  length([1,2,3,4,5,6]) -> std_output;
+  '\n' -> std_output;
+  length([1,2,3,4,5,6] || [7,8]) -> std_output;
+  '\n' -> std_output;
+  length(1..5) -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}

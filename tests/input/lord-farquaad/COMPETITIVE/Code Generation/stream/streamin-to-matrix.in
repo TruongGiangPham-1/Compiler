@@ -1,0 +1,14 @@
+procedure main() returns integer {
+    integer a;
+    a <- std_input;
+    integer b;
+    b <- std_input;
+
+    integer[a, b] M;
+    loop i in 1..a, j in 1..b {
+        M[i, j] <- std_input;
+    }
+    M -> std_output;
+
+    return 0;
+}

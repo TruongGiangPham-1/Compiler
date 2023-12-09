@@ -1,0 +1,10 @@
+procedure f(tuple(real[2, 2], integer) a) {
+   a.1 -> std_output;
+}
+
+procedure main() returns integer {
+  tuple(real[2, 2], integer) a = ([[2.2, 1], [1, 2]], 1);
+
+  call f(a);
+  return 1;
+}

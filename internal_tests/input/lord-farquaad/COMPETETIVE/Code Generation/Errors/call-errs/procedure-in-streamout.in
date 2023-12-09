@@ -1,0 +1,8 @@
+procedure p() returns integer {
+    return 1;
+}
+procedure main() returns integer {
+    p() -> std_output;
+
+    return 0;
+}

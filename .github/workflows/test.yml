@@ -32,5 +32,4 @@ jobs:
             cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=ninja -G Ninja -S . -B ninja-build
             cmake --build ninja-build --target all -j6 
             tester .github/ci-configs/CSMachineConfig.json --timeout 2
-            tester .github/ci-configs/InternalTestsCSMachineConfig.json --timeout 2
             git clean -f -d

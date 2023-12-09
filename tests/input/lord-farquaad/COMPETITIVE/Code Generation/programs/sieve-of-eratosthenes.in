@@ -1,0 +1,36 @@
+procedure main() returns integer {
+  integer n;
+  n <- std_input;
+
+  if (n < 2 or n > 100) {
+    "Error: n must be between 2 and 100 (n was" -> std_output;
+    n -> std_output;
+    ")" -> std_output;
+    return 1;
+  }
+
+  boolean[n] is_prime = true;
+  is_prime[1] = false;
+
+  integer i = 2;
+  loop while (i * i <= n) {
+    if (is_prime[i]) {
+      integer j = i * i;
+      loop while (j <= n) {
+        is_prime[j] = false;
+        j = j + i;
+      }
+    }
+    i = i + 1;
+  }
+
+  "Got primes\n" -> std_output;
+  loop i in 2..n {
+    if (is_prime[i]) {
+      i -> std_output;
+      " " -> std_output;
+    }
+  }
+  "\n" -> std_output;
+  return 0;
+}

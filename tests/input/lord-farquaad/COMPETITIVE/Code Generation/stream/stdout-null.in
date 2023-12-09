@@ -1,0 +1,6 @@
+// I generated the output file with the following command:
+// echo -n '\0' > output.txt
+procedure main() returns integer {
+    '\0' -> std_output;
+    return 0;
+}

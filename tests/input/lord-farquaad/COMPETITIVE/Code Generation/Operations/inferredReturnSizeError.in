@@ -1,0 +1,9 @@
+procedure tooBig() returns integer[*] {
+  return 1..10;
+}
+
+procedure main() returns integer {
+  integer[5] tooSmall = tooBig();
+
+  return 0;
+}

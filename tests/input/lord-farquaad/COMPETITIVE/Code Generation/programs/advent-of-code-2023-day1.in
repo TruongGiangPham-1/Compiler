@@ -1,0 +1,74 @@
+const EOF = as<character>(255);
+
+function parseDigit(character c) returns integer {
+    if (c == '0') {
+        return 0;
+    } else if (c == '1') {
+        return 1;
+    } else if (c == '2') {
+        return 2;
+    } else if (c == '3') {
+        return 3;
+    } else if (c == '4') {
+        return 4;
+    } else if (c == '5') {
+        return 5;
+    } else if (c == '6') {
+        return 6;
+    } else if (c == '7') {
+        return 7;
+    } else if (c == '8') {
+        return 8;
+    } else if (c == '9') {
+        return 9;
+    }
+
+    return -1;
+}
+
+procedure getLineNum() returns integer {
+    integer startNum = -1;
+    integer endNum = -1;
+
+    character c;
+    c <- std_input;
+
+    loop {
+        if (c == EOF) {
+            // end of file (return from function)
+            return -1;
+        }
+
+        if (c == '\n') {
+            // line ended
+            break;
+        }
+
+        integer digit = parseDigit(c);
+        if (digit != -1) {
+            if (startNum == -1) {
+                startNum = digit;
+            }
+            endNum = digit;
+        }
+        c <- std_input;
+    }
+
+    return startNum * 10 + endNum;
+}
+procedure main() returns integer {
+    integer count = 0;
+    integer lineNum = 0;
+    integer sum = 0;
+
+    loop while (lineNum != -1) {
+        sum = sum + lineNum;
+        count = count + 1;
+
+        lineNum = getLineNum();
+    }
+
+    sum -> std_output;
+
+    return 0;
+}

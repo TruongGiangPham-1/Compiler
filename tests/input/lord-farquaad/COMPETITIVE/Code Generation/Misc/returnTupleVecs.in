@@ -1,0 +1,10 @@
+procedure func() returns
+tuple(character[*], character[*]){
+  return ("hello", "world");
+}
+
+procedure main() returns integer{
+    tuple(string, character[*]) t = func();
+    t.1 -> std_output;
+    return 0;
+}
