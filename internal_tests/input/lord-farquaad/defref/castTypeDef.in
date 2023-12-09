@@ -1,0 +1,10 @@
+const integer N = 4;
+
+typedef integer[N, N] Board;
+
+
+procedure main() returns integer {
+    Board a = as<Board>(1);
+    a-> std_output;
+    return 0;
+}

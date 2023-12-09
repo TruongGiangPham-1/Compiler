@@ -82,6 +82,7 @@ namespace gazprea {
 
 
         std::any visitBlock(std::shared_ptr<BlockNode>tree) override;
+        std::any visitCast(std::shared_ptr<CastNode> tree) override;
         //std::any visitType(std::shared_ptr<TypeNode> tree) override;
 
         std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
