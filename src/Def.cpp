@@ -48,12 +48,12 @@ void Def::defineBuiltins() {
     auto format = std::make_shared<FunctionSymbol>("format", "global", resolvedInt, symtab->globalScope, -1, true);
 
 
-    streamState->functypeENUM = FUNC_SSTATE;
-    length->functypeENUM = FUNC_LENGTH;
-    rows->functypeENUM = FUNC_ROW;
-    columns->functypeENUM = FUNC_COLUMN;
-    reverse->functypeENUM = FUNC_REVERSE;
-    format->functypeENUM = FUNC_FORMAT;
+    streamState->functypeENUM = FUNC_SSTATE; streamState->defined = true;
+    length->functypeENUM = FUNC_LENGTH; length->defined = true;
+    rows->functypeENUM = FUNC_ROW;  rows->defined = true;
+    columns->functypeENUM = FUNC_COLUMN; columns->defined = true;
+    reverse->functypeENUM = FUNC_REVERSE; reverse->defined = true;
+    format->functypeENUM = FUNC_FORMAT; format->defined = true;
     symtab->globalScope->define(streamState);
     symtab->globalScope->define(length);
     symtab->globalScope->define(rows);
