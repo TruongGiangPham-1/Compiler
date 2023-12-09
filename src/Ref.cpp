@@ -735,11 +735,18 @@ namespace gazprea {
          * potentially swap to typedef node
          *
          */
+
         auto typeN = std::dynamic_pointer_cast<TypeNode>(typeNode);
         if (symtab->isTypeDefed(typeN->getTypeName())) {  // this type has typedef mapping
-            tree->children[0] = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];   // swap the real typenode here
+            if (std::dynamic_pointer_cast<ArgNode>(tree)) {
+                auto argN = std::dynamic_pointer_cast<ArgNode>(tree);
+                argN->type = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];
+            } else {
+                tree->children[0] = symtab->globalScope->typedefTypeNode[typeN->getTypeName()];   // swap the real typenode here
+            }
         }
         return;
+
     }
 
     std::any Ref::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
@@ -821,6 +828,10 @@ namespace gazprea {
 
         currentScope = symtab->exitScope(currentScope);
 
+        return 0;
+    }
+    std::any Ref::visitParameter(std::shared_ptr<ArgNode> tree) {
+        potentiallySwapTypeDefNode(tree->type, tree);
         return 0;
     }
 
