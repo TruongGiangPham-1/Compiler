@@ -1,13 +1,13 @@
-const integer N = 10;
+const integer N = 8;
 
 typedef integer[N, N] Board;
 
-procedure boardElement(Board board, integer row, integer col) returns character {
+function boardElement(Board board, integer row, integer col) returns character {
     if (board[row, col] == 1) return 'Q';
     else return '.';
 }
 
-procedure printBoard(Board board) {
+procedure printBoard(Board board) returns integer {
     loop row in 1..N {
         boardElement(board, row, 1) -> std_output;
         loop col in 2..N {
@@ -16,6 +16,8 @@ procedure printBoard(Board board) {
         }
         '\n' -> std_output;
     }
+
+    return 0;
 }
 
 procedure isSafe(Board board, const integer row, const integer col) returns boolean {
@@ -50,16 +52,17 @@ procedure solveNQueens(var Board board, integer col) returns boolean {
     if (col > N) return true;
 
     loop row in 1..N {
-        if (isSafe(board, row, col)) {
+        boolean safe = isSafe(board, row, col);
+        if (safe) {
             board[row, col] = 1;
             boolean success = solveNQueens(board, col + 1);
 
             if (success) {
                 return true;
-            } else {
-                // remove queen from board (backtrack)
-                board[row, col] = 0;
             }
+
+            // If not true, remove queen from board (backtrack)
+            board[row, col] = 0;
         }
     }
 
@@ -69,11 +72,12 @@ procedure solveNQueens(var Board board, integer col) returns boolean {
 procedure main() returns integer {
     Board board = 0;
 
-    if (not solveNQueens(board, 1)) {
+    const solved = solveNQueens(board, 1);
+    if (not solved) {
         "No solution found\n" -> std_output;
     } else {
-        "Solution found!" -> std_output;
-        // call printBoard(board);
+        "Solution found!\n" -> std_output;
+        call printBoard(board);
     }
 
     return 0;
