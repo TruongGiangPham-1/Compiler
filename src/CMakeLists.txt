@@ -119,6 +119,8 @@ set(
         ../include/WalkerContext.h
         ContextedWalker.cpp
         ../include/ContextedWalker.h
+        ProcedureCallArgWalker.cpp
+        ../include/ProcedureCallArgWalker.h
 )
 
 # Build our executable from the source files.
