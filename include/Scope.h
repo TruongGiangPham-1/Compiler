@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Symbol.h"
+#include "Type.h"
 
 class Symbol; // forward declaration of Symbol to resolve circular dependency
 
