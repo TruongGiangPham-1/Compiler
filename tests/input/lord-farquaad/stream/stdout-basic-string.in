@@ -1,4 +1,0 @@
-procedure main() returns integer {
-  "Hello world!" -> std_output;
-  return 0;
-}
