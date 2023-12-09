@@ -1,5 +1,5 @@
 // circular queue type
-// typedef integer[*] IntegerSet;
+typedef integer[*] IntegerSet;
 
 procedure print_graph(integer[*, *] GRAPH, integer n) {
     // prints out the adjacency matrix
@@ -14,7 +14,7 @@ procedure print_graph(integer[*, *] GRAPH, integer n) {
 }
 
 // start all of the nodes as unvisited
-function initVisited(integer n) returns integer[*] = [ i in 1..n | 0 ];
+function initVisited(integer n) returns IntegerSet = [ i in 1..n | 0 ];
 
 // true if we have visited all nodes (i.e. all nodes are 1)
 // TODO: some bugs in typecheck integer stuff
@@ -54,14 +54,7 @@ procedure main() returns integer {
     s <- std_input;
     t <- std_input;
 
-    // when format works, remove this
-    "Going from " -> std_output;
-    s -> std_output;
-    " to " -> std_output;
-    t -> std_output;
-    " in a graph with " -> std_output;
-    n -> std_output;
-    " nodes.\n" -> std_output;
+    "Going from " || format(s) || " to " || t || " in a graph with " || format(n) || " nodes.\n"-> std_output;
 
     // read the graph
     integer[n, n] GRAPH;
@@ -77,22 +70,14 @@ procedure main() returns integer {
     dist[s] = 0; // distance from source to source is 0
 
     integer[n] prev = -1;
-    integer[*] visited = initVisited(n);
+    IntegerSet visited = initVisited(n);
 
     loop while (not doneVisiting(visited)) {
         integer minNode = popMinNode(visited, dist, n);
-        "Current minNode is " -> std_output;
-        minNode -> std_output;
-        " with distance " -> std_output;
-        dist[minNode] -> std_output;
-        "\n" -> std_output;
+        "Current minNode is " || format(minNode) || " with distance " || format(dist[minNode]) || "\n" -> std_output;
 
         if (minNode == t) {
-            "Found target node " -> std_output;
-            t -> std_output;
-            " with distance " -> std_output;
-            dist[t] -> std_output;
-            "\n" -> std_output;
+            "Found target node " || format(t) || " with distance " || format(dist[t]) || "\n" -> std_output;
             break;
         }
 
@@ -115,13 +100,7 @@ procedure main() returns integer {
     // ============
     // Print answer
     // ============
-    "Shortest path from " -> std_output;
-    s -> std_output;
-    " to " -> std_output;
-    t -> std_output;
-    " is " -> std_output;
-    dist[t] -> std_output;
-    "\n" -> std_output;
+    "Shortest path from " || format(s) || " to " || format(t) || " is " || format(dist[t]) || "\n" -> std_output;
 
     return 0;
 }
