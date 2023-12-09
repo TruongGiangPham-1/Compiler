@@ -1464,6 +1464,7 @@ namespace gazprea {
             if (resultTypeString.empty()) {
                 throw TypeError(tree->loc(), "Cannot cast " + exprType->getBaseTypeEnumName() + " to " + toType->getBaseTypeEnumName());
             }
+            std::cout << resultTypeString << std::endl;
             auto resultType = std::dynamic_pointer_cast<Type>(currentScope->resolveType(resultTypeString));
             // array handling
             if (toType->vectorOrMatrixEnum == VECTOR) {
@@ -1472,7 +1473,7 @@ namespace gazprea {
                 }
                 if (promotedType->isScalar(exprType)) {
                     promotedType->promoteLiteralToArray(toType, tree->getExpr(), promotedType->castTable);
-                } else if (promotedType->isEmptyArrayLiteral(exprType)) {
+                } else if (promotedType->isEmptyArrayLiteral(exprType) || (exprType->baseTypeEnum == TYPE::NULL_) || (exprType->baseTypeEnum == TYPE::IDENTITY)) {
                     // empty array literal. simply promote to ltype
                     //promotedType->emptyArrayErrorCheck(tree->getTypeNode());
                     tree->getExpr()->evaluatedType = promotedType->getTypeCopy(toType);
