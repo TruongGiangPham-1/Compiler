@@ -2,7 +2,7 @@
 // Created by Joshua Ji on 2023-12-08.
 //
 
-#include "AliasErrorWalker.h"
+#include "ProcedureCallArgWalker.h"
 
 #define DEBUG
 
@@ -21,12 +21,11 @@ namespace gazprea {
         constReferences++;
     }
 
-
-    AliasErrorWalker::AliasErrorWalker() : ASTWalker() {
+    ProcedureCallArgWalker::ProcedureCallArgWalker() : ASTWalker() {
         procedureArgIdx = -1;
     }
 
-    std::any AliasErrorWalker::visitCall(std::shared_ptr<CallNode> tree) {
+    std::any ProcedureCallArgWalker::visitCall(std::shared_ptr<CallNode> tree) {
         procSymbol = std::dynamic_pointer_cast<ProcedureSymbol>(tree->MethodRef);
         if (!procSymbol) return 0; // we don't care about function calls
 
@@ -36,6 +35,14 @@ namespace gazprea {
         mlirNames.clear();
         procedureArgIdx = 0;
         for (const auto& arg: tree->children) {
+            // what is the argument defined as?
+            auto actualArgSym = procSymbol->orderedArgs.at(procedureArgIdx);
+            assert(actualArgSym);
+
+            if (!validMutArg(arg) && actualArgSym->qualifier == QUALIFIER::VAR) {
+                throw TypeError(arg->loc(), "Invalid argument passed into variable arg slot");
+            }
+
             walk(arg);
             procedureArgIdx++;
         }
@@ -43,23 +50,23 @@ namespace gazprea {
         return 0;
     }
 
-    std::any AliasErrorWalker::visitID(std::shared_ptr<IDNode> tree) {
-        if (procedureArgIdx < 0) return 0;
+    void ProcedureCallArgWalker::checkAliasing(std::shared_ptr<Symbol> sym, int loc, std::string varName) {
+        if (procedureArgIdx < 0) return;
 
         // what is the argument supposed to be?
         auto actualArgSym = procSymbol->orderedArgs.at(procedureArgIdx);
         assert(actualArgSym); // typechecker would have gotten invalid arg calls
 
-        if (tree->sym->qualifier == QUALIFIER::CONST) {
+        if (sym->qualifier == QUALIFIER::CONST) {
             // the variable is declared immutable
             // if it is being passed into a variable argument slot, we should throw an error
             // which error? I'm doing an AssignError
             if (actualArgSym->qualifier == QUALIFIER::VAR) {
-                throw TypeError(tree->loc(), "Const var is being passed into variable procedure arg");
+                throw TypeError(loc, "Const var is being passed into variable procedure arg");
             }
         }
 
-        auto idMlirName = tree->sym->mlirName;
+        auto idMlirName = sym->mlirName;
         auto search = mlirNames.find(idMlirName);
 
         if (actualArgSym->qualifier == QUALIFIER::CONST) {
@@ -68,7 +75,7 @@ namespace gazprea {
                 // check if it has been mutably referenced
                 // if it has, this is an error (if there is a mutable reference, we can't use it again in a const reference
                 if (mlirNames[idMlirName]->mutReferenced) {
-                    throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call (var then const)");
+                    throw AliasingError(loc, "Repeated alias with var " + varName + " in procedure call (var then const)");
                 } else {
                     // if not, increment constReference by 1
                     mlirNames[idMlirName]->incrementConstRef();
@@ -80,12 +87,27 @@ namespace gazprea {
             // arg is variable (mutable)
             if (search != mlirNames.end()) {
                 // if there is already another argument, no matter if it's const or var, we will throw an error
-                throw AliasingError(tree->loc(), "Repeated alias with var " + tree->getName() + " in procedure call");
+                throw AliasingError(loc, "Repeated alias with var " + varName + " in procedure call");
             } else {
                 mlirNames[idMlirName] = std::make_shared<AliasCount>(true);
             }
         }
 
+    }
+
+    std::any ProcedureCallArgWalker::visitID(std::shared_ptr<IDNode> tree) {
+        checkAliasing(tree->sym, tree->loc(), tree->getName());
         return 0;
+    }
+
+    bool ProcedureCallArgWalker::validMutArg(std::shared_ptr<ASTNode> tree) {
+        if (std::dynamic_pointer_cast<IDNode>(tree)) {
+            return true;
+        } else if (std::dynamic_pointer_cast<TupleIndexNode>(tree)) {
+            return true;
+        } else if (std::dynamic_pointer_cast<IndexNode>(tree)) {
+            return true;
+        }
+        return false;
     }
 }

@@ -17,7 +17,7 @@
 #include "Def.h"
 #include "Ref.h"
 #include "CallErrorWalker.h"
-#include "AliasErrorWalker.h"
+#include "ProcedureCallArgWalker.h"
 #include "../include/customError/ErrorListener.h"
 
 #include <iostream>
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
       std::cout << "\n\n=== ALIAS ERROR PASS\n"
 #endif
-      gazprea::AliasErrorWalker aliasErrorWalker;
+      gazprea::ProcedureCallArgWalker aliasErrorWalker;
       aliasErrorWalker.walk(ast);
 
 #ifdef DEBUG
