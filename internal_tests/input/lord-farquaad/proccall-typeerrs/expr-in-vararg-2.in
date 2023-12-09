@@ -1,0 +1,9 @@
+procedure p(var integer x) returns integer {
+    return 10;
+}
+
+procedure main() returns integer {
+    var integer a = 10;
+    const x = p(-a);
+    return 0;
+}

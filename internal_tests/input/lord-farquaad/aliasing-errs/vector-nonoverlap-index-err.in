@@ -1,0 +1,9 @@
+procedure p(var integer[*] v, integer v1) {
+    return;
+}
+
+procedure main() returns integer {
+    integer[*] ns = 1..10;
+    call p(ns[1], ns[2 + 3]);
+    return 0;
+}
