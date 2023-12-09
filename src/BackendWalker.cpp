@@ -254,6 +254,10 @@ std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
 
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
+  if (tree->sym->scope->getScopeName() == "Global"){
+    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
+
   // might be arg
   if (tree->sym->index >= 0) {
     auto val = codeGenerator.generateLoadArgument(tree->sym->index);
@@ -270,9 +274,7 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
   } else if (tree->sym->declarationIndex>= 0) {
     std::cout << "Reaching back " << tree->numStackBehind << " " << tree->sym->declarationIndex << std::endl;
     return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
-  } else {
-    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
-  }
+  } 
 }
 
 std::any BackendWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
