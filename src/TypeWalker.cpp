@@ -27,8 +27,8 @@ namespace gazprea {
 /*integer*/  {"boolean",  "character",   "integer",  "real", "", "", ""},
 /*real*/     {"",         "",            "integer",  "real", "", "", ""},
 /*tuple*/    {"",         "",            "",             "", "", "", ""},
-/*identity*/ {"",         "",            "",             "", "", "", ""},
-/*null*/     {"",         "",            "",             "", "", "", ""},
+/*identity*/ {"boolean",         "character",            "integer",             "real", "", "", ""},
+/*null*/     {"boolean",         "character",            "integer",             "real", "", "", ""},
     };
 
     std::string PromotedType::arithmeticResult[7][7] = {
@@ -356,11 +356,23 @@ namespace gazprea {
             // case everything else. like base type
             promoteNode->evaluatedType = dominantType;
         }
-
     }
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
             identityNode->evaluatedType = getTypeCopy(promoteTo);
+            if (std::dynamic_pointer_cast<VectorNode>(identityNode)) {
+                for (auto childExpr: std::dynamic_pointer_cast<VectorNode>(identityNode)->getElements()) {
+                    childExpr->evaluatedType = getTypeCopy(identityNode->evaluatedType->vectorInnerTypes[0]);
+                }
+                return;
+            }
+
+            else if ((isVector(identityNode->evaluatedType) || isMatrix(identityNode->evaluatedType)) && (identityNode->evaluatedType->baseTypeEnum != TYPE::IDENTITY && identityNode->evaluatedType->baseTypeEnum != TYPE::NULL_) ) {
+                for (int i = 0; i < identityNode->evaluatedType->vectorInnerTypes.size(); i++) {
+                    identityNode->evaluatedType->vectorInnerTypes[i] = promoteTo->vectorInnerTypes[0];
+                }
+                return;
+            }
         } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
 
         } else {
@@ -618,6 +630,7 @@ namespace gazprea {
                 if (i == j) continue;
                 auto promoteFrom = tree->getElement(j)->evaluatedType;
                 if (isEmptyArrayLiteral(promoteFrom)) continue;   // skip if its empty
+                if (promoteFrom->baseTypeEnum == TYPE::NULL_ or promoteFrom->baseTypeEnum == TYPE::IDENTITY) continue;
                 if (getPromotedTypeString(promotionTable, promoteFrom, promoteTo).empty()){
                     //
                     isDominant = 0;
@@ -1468,6 +1481,9 @@ namespace gazprea {
                     promotedType->updateVectorNodeEvaluatedType(toType, tree->getExpr());  // copy ltype to exprNode's type except for the size attribute
                 }
             }
+            if ((exprType->baseTypeEnum == TYPE::NULL_) || (exprType->baseTypeEnum == TYPE::IDENTITY)) {
+                tree->getExpr()->evaluatedType = promotedType->getTypeCopy(toType);
+            }
             // array handling;
             tree->evaluatedType = promotedType->getTypeCopy(toType); // base Type
             tree->getType()->evaluatedType = promotedType->getTypeCopy(tree->evaluatedType);
@@ -1502,9 +1518,12 @@ namespace gazprea {
         // TODO handle empty vector
         // promote every element to the dominant type
         auto bestType = promotedType->getDominantTypeFromVector(tree);
+        if (bestType->baseTypeEnum == TYPE::IDENTITY || bestType->baseTypeEnum == TYPE::NULL_) {
+            tree->evaluatedType->baseTypeEnum = bestType->baseTypeEnum;
+            return nullptr;
+        }
         promotedType->promoteVectorElements(bestType, tree, promotedType->promotionTable);  // now every elements of vector have same type
         tree->evaluatedType->baseTypeEnum = tree->getElement(0)->evaluatedType->baseTypeEnum; // this will be modified by visitDecl when we promote all RHS
-
         // add the inner types to type class
         promotedType->populateInnerTypes(tree->evaluatedType, tree);
 
@@ -1554,13 +1573,21 @@ namespace gazprea {
         walkChildren(tree);
         tree->evaluatedType = tree->getVectDomain()->evaluatedType;
         auto exprType = tree->getExpr()->evaluatedType;
-
         // walk the domain var to resolve them first
+        // [i in 1..10 | 'a'] we want to make the evaltype char vec
+        // [i in ['a', 'a', 'a' | i] we want ot mae evaltype char vect. first ensure 'i' is type char by copying from its domainvec
         if (tree->getVectDomain()) {
             // this is a vector generator
+            tree->domainVar1Sym->typeSym = promotedType->getTypeCopy(currentScope->resolveType(tree->getVectDomain()->evaluatedType->getBaseTypeEnumName()));
+            walk(tree->getExpr());  // walk again to update evaltype
+            exprType = tree->getExpr()->evaluatedType;
             tree->evaluatedType = promotedType->createArrayType(exprType->getBaseTypeEnumName(), VECTOR);
         } else {
             // this is a matrix generator
+            tree->domainVar1Sym->typeSym = promotedType->getTypeCopy(currentScope->resolveType(tree->getVectDomain()->evaluatedType->getBaseTypeEnumName()));
+            tree->domainVar2Sym->typeSym = promotedType->getTypeCopy(currentScope->resolveType(tree->getVectDomain()->evaluatedType->getBaseTypeEnumName()));
+            walk(tree->getExpr());  // walk again to update evaltype
+            exprType = tree->getExpr()->evaluatedType;
             tree->evaluatedType = promotedType->createArrayType(exprType->getBaseTypeEnumName(), MATRIX);
         }
 #ifdef DEBUG
@@ -1774,8 +1801,5 @@ namespace gazprea {
             case TYPE::NONE:
                 return "none";
         }
-
     }
-
-
 }
