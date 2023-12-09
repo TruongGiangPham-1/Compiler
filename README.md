@@ -7,7 +7,7 @@ Updated by: Deric Cheung (dacheung@ualberta.ca)
 
 Updated by: Quinn Pham (qpham@ualberta.ca)
 
-Project done by:    Joshua Ji, Stan Fedyk, Truong Pham, Sanjeev Kotha
+Project done by:    Joshua Ji, Stan Fedyk, Truong-Giang Pham, Sanjeev Kotha
                     
 # Usage
 ## Installing MLIR
