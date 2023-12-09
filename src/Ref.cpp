@@ -381,7 +381,11 @@ namespace gazprea {
 
 
 
-
+    std::any Ref::visitCast(std::shared_ptr<CastNode> tree) {
+        walkChildren(tree);
+        potentiallySwapTypeDefNode(tree->getType(), tree);
+        return 0;
+    }
 
     std::any Ref::visitDecl(std::shared_ptr<DeclNode> tree) {
         // this is declare statement defined in funciton/procedure. NOT in global scope
