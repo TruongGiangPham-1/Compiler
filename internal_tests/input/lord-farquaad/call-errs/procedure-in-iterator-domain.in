@@ -1,0 +1,10 @@
+procedure q(integer n) returns integer[*] {
+    return 1..n;
+}
+
+procedure main() returns integer {
+    loop i in q(10) {
+        i -> std_output;
+    }
+    return 1;
+}

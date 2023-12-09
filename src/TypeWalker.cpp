@@ -878,14 +878,20 @@ namespace gazprea {
                     for (size_t i = 0; i < tree->getRHS()->evaluatedType->tupleChildType.size(); i++) {
                         auto leftTypeString = tree->getLHS()->evaluatedType->tupleChildType[i].second->getBaseTypeEnumName();
                         auto rightTypeString = tree->getRHS()->evaluatedType->tupleChildType[i].second->getBaseTypeEnumName();
-
-                        if (leftTypeString != rightTypeString) {
-                            auto leftIndex = promotedType->getTypeIndex(leftTypeString);
-                            auto rightIndex = promotedType->getTypeIndex(rightTypeString);
-                            std::string resultTypeString = promotedType->equalityResult[leftIndex][rightIndex];
-                            if (resultTypeString.empty()) {
-                                throw TypeError(tree->loc(), "Cannot perform equality operation between " + leftTypeString + " to " + rightTypeString);
+                        if ((promotedType->isVector(tree->getLHS()->evaluatedType->tupleChildType[i].second) and promotedType->isVector(tree->getRHS()->evaluatedType->tupleChildType[i].second))
+                            or (promotedType->isMatrix(tree->getLHS()->evaluatedType->tupleChildType[i].second) and promotedType->isMatrix(tree->getRHS()->evaluatedType->tupleChildType[i].second))
+                            or (promotedType->isScalar(tree->getLHS()->evaluatedType->tupleChildType[i].second) and promotedType->isScalar(tree->getRHS()->evaluatedType->tupleChildType[i].second))) {
+                            if (leftTypeString != rightTypeString) {
+                                auto leftIndex = promotedType->getTypeIndex(leftTypeString);
+                                auto rightIndex = promotedType->getTypeIndex(rightTypeString);
+                                std::string resultTypeString = promotedType->equalityResult[leftIndex][rightIndex];
+                                if (resultTypeString.empty()) {
+                                    throw TypeError(tree->loc(), "Cannot perform equality operation between " + leftTypeString + " to " + rightTypeString);
+                                }
                             }
+                        }
+                        else {
+                            throw TypeError(tree->loc(), "Cannot perform equality operation between " + leftTypeString + " to " + rightTypeString);
                         }
                     }
                     tree->evaluatedType = currentScope->resolveType("boolean");
@@ -1622,6 +1628,7 @@ namespace gazprea {
     std::any TypeWalker::visitParameter(std::shared_ptr<ArgNode> tree) {
         tree->evaluatedType = symtab->resolveTypeUser(tree->type);
         tree->type->evaluatedType = tree->evaluatedType;
+        tree->idSym->typeNode = tree->type;
         auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(tree->type);
         if (tupleNode) {
             for (int i = 0; i < tupleNode->getTypes().size(); i++) {

@@ -4,6 +4,8 @@ procedure main() returns integer {
   '\n' -> std_output;
   [i in 97..100 | as<character>(i)] -> std_output;
   '\n' -> std_output;
+  [i in 97..100 | as<integer[5]>(i)] -> std_output;
+  '\n' -> std_output;
 
   return 0;
 }

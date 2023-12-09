@@ -1,0 +1,11 @@
+procedure test(var string[20] a) returns character[*] {
+  return a;
+}
+
+procedure main() returns integer {
+  var testVar = ['h','e','l','l','o'];
+
+  call test(testVar);
+  
+  return 1;
+}
