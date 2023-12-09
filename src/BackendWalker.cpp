@@ -78,8 +78,8 @@ std::any BackendWalker::visitDecl(std::shared_ptr<DeclNode> tree) {
   if (tree->sym->functionStackIndex >= 0) {
     codeGenerator.generateAssignment(
         codeGenerator.indexCommonType(
-          this->methodStack, 
-          codeGenerator.generateValue(tree->sym->functionStackIndex)
+          this->variableStack.back(), 
+          codeGenerator.generateValue(tree->sym->declarationIndex)
           ),
         initializedType);
   } else {
@@ -254,8 +254,11 @@ std::any BackendWalker::visitStreamIn(std::shared_ptr<StreamIn> tree) {
 
 // === EXPRESSION AST NODES ===
 std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
+  if (tree->sym->scope->getScopeName() == "Global"){
+    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
+  }
+
   // might be arg
-  
   if (tree->sym->index >= 0) {
     auto val = codeGenerator.generateLoadArgument(tree->sym->index);
 
@@ -268,11 +271,9 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
     } else {
       return codeGenerator.promotion(val, toType);
     }
-  } else if (tree->sym->functionStackIndex >= 0) {
-    return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
-  } else {
-    return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
-  }
+  } else if (tree->sym->declarationIndex>= 0) {
+    return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
+  } 
 }
 
 std::any BackendWalker::visitIdentity(std::shared_ptr<IdentityNode> tree) {
@@ -383,6 +384,9 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   auto filteree = std::any_cast<mlir::Value>(walk(tree->getDomain()));
   auto one = codeGenerator.generateValue(1);
 
+  auto stack = codeGenerator.initializeStack(1);
+  this->variableStack.push_back(stack);
+
   // max amount of filters
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size()+1);
 
@@ -391,9 +395,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
-  auto domain = codeGenerator.generateValue(0);
-  codeGenerator.generateDeclaration(tree->domainVarSym->mlirName, domain);
-
+  
   auto maxVectorSize = codeGenerator.generateCallNamed("length", argument);
 
   // +1 for left over
@@ -416,10 +418,9 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   codeGenerator.setBuilderInsertionPoint(trueBlock);
 
-
   auto indexedVal = codeGenerator.indexCommonType(filteree, index);
+  codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, one), indexedVal);
 
-  codeGenerator.generateAssignment(domain, indexedVal);
   auto appended = codeGenerator.generateValue(false);
   for (int i = 0 ; i < tree->getExprList().size() ; i ++) {
 
@@ -454,24 +455,26 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   codeGenerator.generateEnterBlock(loopBeginBlock);
   codeGenerator.setBuilderInsertionPoint(exitBlock);
 
+  this->variableStack.pop_back();
   return filter;
 }
 
 std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
-
+  
   if (tree->getVectDomain()) {
+    auto stack = codeGenerator.initializeStack(1);
     auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVectDomain()));
 
     // we do a little indexing
     auto index = codeGenerator.generateValue(1);
-    auto domain = codeGenerator.generateValue(0);
+
     auto one = codeGenerator.generateValue(1);
+
+    this->variableStack.push_back(stack);
 
     // build arg list
     std::vector<mlir::Value> argument;
     argument.push_back(baseVec);
-
-    codeGenerator.generateDeclaration(tree->domainVar1Sym->mlirName, domain);
 
     auto length = codeGenerator.generateCallNamed("length", argument);
     auto generatorVector = codeGenerator.generateValue(length);
@@ -489,7 +492,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.setBuilderInsertionPoint(trueBlock);
     auto indexedVal = codeGenerator.indexCommonType(baseVec, index);
-    codeGenerator.generateAssignment(domain, indexedVal);
+    codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, one), indexedVal);
 
     auto result = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
@@ -498,18 +501,22 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.generateEnterBlock(loopBeginBlock);
     codeGenerator.setBuilderInsertionPoint(exitBlock);
-
+  
+    this->variableStack.pop_back();
     return generatorVector;
   } else {
     auto row = std::any_cast<mlir::Value>(walk(tree->getMatrixDomain().first));
     auto column = std::any_cast<mlir::Value>(walk(tree->getMatrixDomain().second));
 
     // we do a little indexing
+    auto stack = codeGenerator.initializeStack(2);
+
     auto rowIndex = codeGenerator.generateValue(1);
     auto rowDomain = codeGenerator.generateValue(1);
     auto colDomain = codeGenerator.generateValue(1);
-
+    
     auto one = codeGenerator.generateValue(1);
+    auto two = codeGenerator.generateValue(2);
 
     // build arg list
     std::vector<mlir::Value> rowArgument;
@@ -569,8 +576,8 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
       auto indexedRow = codeGenerator.indexCommonType(row, rowIndex);
       auto indexedCol = codeGenerator.indexCommonType(column, colIndex);
 
-      codeGenerator.generateAssignment(rowDomain, indexedRow);
-      codeGenerator.generateAssignment(colDomain, indexedCol);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, one), indexedRow);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, two), indexedCol);
 
       auto result = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
@@ -748,19 +755,21 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
   // important loop info we need to have
   // tuple of <loopStart, loopExit>
   std::vector<std::pair<mlir::Block *, mlir::Block *>> blocks;
-
+  auto stack = codeGenerator.initializeStack(tree->getDomainExprs().size());
   // create new nested loop for each domainExpr
+  int i = 1;
   for (auto &domainExpr : tree->getDomainExprs()) {
       auto domainNode = domainExpr.second;
       auto domainSym = domainExpr.first;
 
-      // create/load domain vector
+            // create/load domain vector
       auto domain = std::any_cast<mlir::Value>(walk(domainNode));
 
+      
       // var to index the domain
       auto domainIdx = codeGenerator.generateValue(1);
       auto domainIdxVal = codeGenerator.generateNullValue(domainSym->typeSym);
-      codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, codeGenerator.generateValue(i)), domainIdxVal);
 
       // get length of domainVec
       auto domainLength = codeGenerator.generateCallNamed("length", {domain});
@@ -782,21 +791,26 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       codeGenerator.setBuilderInsertionPoint(trueBlock);
       // set domainIdxVal to domain[domainIdx]
       auto indexedVal = codeGenerator.indexCommonType(domain, domainIdx);
-      codeGenerator.generateAssignment(domainIdxVal, indexedVal);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, codeGenerator.generateValue(i)), indexedVal);
 
       // increment domainIdx
       // doing this here so if there is a `break` of `continue` stmt in the body, we won't be stuck in an infinite loop
       auto one = codeGenerator.generateValue(1);
       auto newDomainIdx = codeGenerator.performBINOP(domainIdx, one, ADD);
       codeGenerator.generateAssignment(domainIdx, newDomainIdx);
+      i += 1;
   }
 
   // although the iterator loop can be split into multiple loop, it is in essence only one singular loop
   // if there is a break/continue statement, we need to jump to the correct exit block
   this->loopBlocks.push_back(std::make_pair(blocks[blocks.size() - 1].first, blocks[blocks.size() - 1].second));
 
+  this->variableStack.push_back(stack);
+
   // walk the body
   walk(tree->getBody());
+
+  this->variableStack.pop_back();
 
   // add all exitBlocks, increment domainIdx
   // reverse it first; we need to traverse in reverse order
@@ -847,15 +861,11 @@ std::any BackendWalker::visitProcedure(std::shared_ptr<ProcedureNode> tree) {
         tree->orderedArgs.size(),
         false);
 
-    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
     this->returnType = tree->getRetTypeNode();
 
     walk(tree->body);
 
-    // cheeky return. catches void functions + generalizes if/else returns
-    if (!returnDropped && !tree->getRetTypeNode()) { 
-      codeGenerator.generateReturn(codeGenerator.generateValue(0), this->methodStack) ;
-    }
+
 
     codeGenerator.generateEndFunctionDefinition(block, tree->loc());
     codeGenerator.verifyFunction(tree->loc(), "Procedure " + tree->nameSym->name);
@@ -872,7 +882,6 @@ std::any BackendWalker::visitFunction(std::shared_ptr<FunctionNode> tree) {
         tree->orderedArgs.size(),
         false);
     // stack
-    this->methodStack = codeGenerator.initializeStack(tree->declaredVars.size());
     this->returnType = tree->getRetTypeNode();
 
     walk(tree->body);
@@ -907,7 +916,7 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
     returnValue = codeGenerator.generateValue(0);
   }
 
-  codeGenerator.generateReturn(returnValue, this->methodStack);
+  codeGenerator.generateReturn(returnValue, this->variableStack.back());
 
   this->returnDropped = true;
   return 0;
@@ -916,7 +925,14 @@ std::any BackendWalker::visitReturn(std::shared_ptr<ReturnNode> tree) {
 std::any BackendWalker::visitBlock(std::shared_ptr<BlockNode> tree) {
   codeGenerator.pushScope();
 
+  this->variableStack.push_back(codeGenerator.initializeStack(tree->scope->numVarDeclared));
   auto returnVal = walkChildren(tree);
+
+  // cheeky return. catches void functions + generalizes if/else returns
+  if (!returnDropped && !this->returnType) { 
+    codeGenerator.generateReturn(codeGenerator.generateValue(0), this->variableStack.back()) ;
+  }
+  this->variableStack.pop_back();
 
   codeGenerator.popScope();
   return returnVal;
