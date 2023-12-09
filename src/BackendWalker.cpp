@@ -266,7 +266,7 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
     if (this->fetchRaw) {
       return val;
     } else {
-      return codeGenerator.cast(val, toType);
+      return codeGenerator.promotion(val, toType);
     }
   } else if (tree->sym->functionStackIndex >= 0) {
     return codeGenerator.indexCommonType(this->methodStack, codeGenerator.generateValue(tree->sym->functionStackIndex));
