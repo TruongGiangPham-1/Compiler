@@ -86,6 +86,10 @@ namespace gazprea {
             }
             return 0;  // forward declaration node, we skip
         }
+
+        for (auto arg : tree->orderedArgs) {
+            walk(arg);
+        }
         auto funcSym = currentScope->resolve(tree->funcNameSym->getName());  // try to resolve procedure name
         if (funcSym == nullptr) {  //  can't resolve means that there was no forward declaration
             // no forward declaration
@@ -210,6 +214,9 @@ namespace gazprea {
             return 0;  // forward declaration node, we skip
         }
 
+        for (auto arg : tree->orderedArgs) {
+            walk(arg);
+        }
 
         auto procSym = currentScope->resolve(tree->nameSym->getName());  // try to resolve procedure name
         if (procSym == nullptr) {  //  can't resolve means that there was no forward declaration
