@@ -1,19 +1,37 @@
 #include "Symbol.h"
 #include "ASTNode/ASTNode.h"
 
-Symbol::Symbol(std::string name) : name(name), typeSym(nullptr) {}
-Symbol::Symbol(std::string name, std::shared_ptr<Type> type) : name(name), typeSym(type) {}
-Symbol::Symbol(std::string name, std::shared_ptr<Type> type  , std::shared_ptr<Scope> scope) : name(name), typeSym(type), scope(scope) {}
-Symbol::Symbol(std::string name, std::shared_ptr<Type> type, int index) : name(name), typeSym(type), index(index) {};
+Symbol::Symbol(std::string name)
+    : name(name)
+    , typeSym(nullptr)
+{
+}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type)
+    : name(name)
+    , typeSym(type)
+{
+}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type, std::shared_ptr<Scope> scope)
+    : name(name)
+    , typeSym(type)
+    , scope(scope)
+{
+}
+Symbol::Symbol(std::string name, std::shared_ptr<Type> type, int index)
+    : name(name)
+    , typeSym(type)
+    , index(index) {};
 
 std::string Symbol::getName() { return name; }
 
-std::string Symbol::toString() {
-    //if (type != nullptr) return '<' + getName() + ":" + type->getName() + '>';
+std::string Symbol::toString()
+{
+    // if (type != nullptr) return '<' + getName() + ":" + type->getName() + '>';
     return getName();
 }
 
-std::string Symbol::source() {
+std::string Symbol::source()
+{
     std::string info = name + " defined ";
     if (scope) {
         info += "in scope " + scope->getScopeName() + " ";
@@ -21,4 +39,4 @@ std::string Symbol::source() {
     return info + "\n";
 }
 
-Symbol::~Symbol() {}
+Symbol::~Symbol() { }

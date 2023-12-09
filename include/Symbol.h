@@ -3,32 +3,32 @@
 #include "Types/TYPES.h"
 #include "mlir/IR/Value.h"
 
-#include <string>
 #include <memory>
+#include <string>
 
-#include "Type.h"
-#include "Scope.h"
-#include "Types/QUALIFIER.h"
 #include "ASTNode/ASTNode.h"
+#include "Scope.h"
+#include "Type.h"
+#include "Types/QUALIFIER.h"
 
 class Scope; // forward declaration of Scope to resolve circular dependency
 class ASTNode;
 class Symbol { // A generic programming language symbol
 public:
-    std::string name;  // All symbols at least have a name
+    std::string name; // All symbols at least have a name
     std::shared_ptr<Scope> scope;
     std::shared_ptr<ASTNode> typeNode;
     QUALIFIER qualifier;
     TYPE type;
-    std::shared_ptr<Type> typeSym;  // cast to advancedType!
+    std::shared_ptr<Type> typeSym; // cast to advancedType!
     //
-    int index = -1;  // for method parameters
-    int functionStackIndex = -1;  // -1 indicates its in global
+    int index = -1; // for method parameters
+    int functionStackIndex = -1; // -1 indicates its in global
     // 2 indexes that stan requested
-    int declarationIndex = -1;  // what is the order of declaration? even counts global scope
-    int scopeDepthItWasDeclared = -1;  // num depth of the scope tree that it was declared at
+    int declarationIndex = -1; // what is the order of declaration? even counts global scope
+    int scopeDepthItWasDeclared = -1; // num depth of the scope tree that it was declared at
 
-    std::unordered_map<std::string , int> tupleIndexMap;  // look up map if the tuple index is an ID
+    std::unordered_map<std::string, int> tupleIndexMap; // look up map if the tuple index is an ID
 
     mlir::Value mlirAddr;
     std::string mlirName;
@@ -52,7 +52,12 @@ public:
 
 class VariableSymbol : public Symbol {
 public:
-    VariableSymbol(std::string name, std::shared_ptr<Type> t) : Symbol(name, t) {}
-    VariableSymbol(std::string name, std::shared_ptr<Type> t, std::shared_ptr<Scope> scope) : Symbol(name, t, scope) {}
+    VariableSymbol(std::string name, std::shared_ptr<Type> t)
+        : Symbol(name, t)
+    {
+    }
+    VariableSymbol(std::string name, std::shared_ptr<Type> t, std::shared_ptr<Scope> scope)
+        : Symbol(name, t, scope)
+    {
+    }
 };
-

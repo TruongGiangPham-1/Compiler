@@ -5,26 +5,29 @@
 #include "SymbolTable.h"
 #include <sstream>
 
-#include "SymbolTable.h"
-#include "BaseScope.h"
-#include "ASTNode/Type/TypeNode.h"
-#include "ASTNode/Type/VectorTypeNode.h"
 #include "ASTNode/Type/MatrixTypeNode.h"
 #include "ASTNode/Type/StringTypeNode.h"
 #include "ASTNode/Type/TupleTypeNode.h"
-//#define DEBUG
-std::shared_ptr<Scope> SymbolTable::enterScope(std::string& name, const std::shared_ptr<Scope>& enclosingScope) {
+#include "ASTNode/Type/TypeNode.h"
+#include "ASTNode/Type/VectorTypeNode.h"
+#include "BaseScope.h"
+#include "SymbolTable.h"
+// #define DEBUG
+std::shared_ptr<Scope> SymbolTable::enterScope(std::string& name, const std::shared_ptr<Scope>& enclosingScope)
+{
     std::shared_ptr<Scope> newScope = std::make_shared<LocalScope>(name, enclosingScope);
     scopes.push_back(newScope);
     return newScope;
 }
 
-std::shared_ptr<Scope> SymbolTable::enterScope(std::shared_ptr<Scope> newScope) {
+std::shared_ptr<Scope> SymbolTable::enterScope(std::shared_ptr<Scope> newScope)
+{
     scopes.push_back(newScope);
     return newScope;
 }
 
-std::string SymbolTable::toString() {
+std::string SymbolTable::toString()
+{
     std::stringstream str;
     str << "SymbolTable {" << std::endl;
     for (const auto& s : scopes) {
@@ -33,7 +36,6 @@ std::string SymbolTable::toString() {
     str << "}" << std::endl;
     return str.str();
 }
-
 
 /*
  * if typeNode is a tuple, create a new type object for tuple, and populate the children's type
@@ -44,7 +46,8 @@ std::string SymbolTable::toString() {
  *      if typenode == basetype, return regular type object
  *
  */
-std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> typeNode) {
+std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> typeNode)
+{
     // cast it to vector or matrix type
     if (std::dynamic_pointer_cast<VectorTypeNode>(typeNode)) {
         // resolve innertyp
@@ -59,18 +62,18 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
             throw TypeError(typeNode->loc(), "cannot resolve innner type " + innerTypeN->getTypeName());
         }
         if (innerTypeRes->baseTypeEnum == TYPE::TUPLE || innerTypeRes->baseTypeEnum == TYPE::IDENTITY || innerTypeRes->baseTypeEnum == TYPE::NULL_) {
-            throw (typeNode->loc(), "vector can only be int, real, boolean, char");
+            throw(typeNode->loc(), "vector can only be int, real, boolean, char");
         }
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
 
-        std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getName());  // create typenode with integer
+        std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getName()); // create typenode with integer
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
         resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;
         resolvedType->isString = typeN->isString;
         // make innertype node, which is a vector
         std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
-        innerType_->vectorOrMatrixEnum = TYPE::NONE;  //  matrices is just vector of vector
+        innerType_->vectorOrMatrixEnum = TYPE::NONE; //  matrices is just vector of vector
         resolvedType->vectorInnerTypes.push_back(innerType_);
         return resolvedType;
 
@@ -83,7 +86,7 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
             throw TypeError(typeNode->loc(), "cannot resolve innner type " + innerTypeN->getTypeName());
         }
         if (innerTypeRes->baseTypeEnum == TYPE::TUPLE || innerTypeRes->baseTypeEnum == TYPE::IDENTITY || innerTypeRes->baseTypeEnum == TYPE::NULL_) {
-            throw (typeNode->loc(), "matrix can only be int, real, boolean, char");
+            throw(typeNode->loc(), "matrix can only be int, real, boolean, char");
         }
         // scalar type
         auto scalarType = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
@@ -92,38 +95,37 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
         // create a new type object to set the advancedTYPE to TYPE::VECTOR
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         resolvedType->baseTypeEnum = innerTypeRes->baseTypeEnum;
-        resolvedType->vectorOrMatrixEnum = TYPE::VECTOR;  //  matrices is just vector of vector
+        resolvedType->vectorOrMatrixEnum = TYPE::VECTOR; //  matrices is just vector of vector
 
         // make innertype node, which is a vector
         std::shared_ptr<Type> innerType_ = std::make_shared<AdvanceType>(innerTypeRes->getBaseTypeEnumName());
         innerType_->baseTypeEnum = innerTypeRes->baseTypeEnum;
-        innerType_->vectorOrMatrixEnum = TYPE::VECTOR;  //  matrices is just vector of vector
+        innerType_->vectorOrMatrixEnum = TYPE::VECTOR; //  matrices is just vector of vector
 
         innerType_->vectorInnerTypes.push_back(scalarType);
         resolvedType->vectorInnerTypes.push_back(innerType_);
 
-
         return resolvedType;
 
-    }  else if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
+    } else if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
         // tuple typenode
         auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(typeNode);
 
         std::shared_ptr<Type> resolvedType = std::make_shared<AdvanceType>("tuple");
         resolvedType->baseTypeEnum = TYPE::TUPLE;
 
-        auto tupleChild = tupleNode->innerTypes;  // vector of inner types
-        for (auto c: tupleChild) {
+        auto tupleChild = tupleNode->innerTypes; // vector of inner types
+        for (auto c : tupleChild) {
             // recursively resolve children's type. resolves typedef too
             auto resolvedChild = resolveTypeUser(std::dynamic_pointer_cast<TypeNode>(c.second));
-            if (resolvedChild == nullptr) throw TypeError(typeNode->loc(), "cannot resolve type in tuple");
+            if (resolvedChild == nullptr)
+                throw TypeError(typeNode->loc(), "cannot resolve type in tuple");
             resolvedType->tupleChildType.push_back(std::make_pair(c.first, resolvedChild));
         }
 
         return resolvedType;
 
-    }
-    else {
+    } else {
         // base typenode like [integer, real, ID, boolean, etc], resolves typedef too
         auto typeN = std::dynamic_pointer_cast<TypeNode>(typeNode);
         return globalScope->resolveType(typeN->getTypeName());
@@ -133,35 +135,36 @@ std::shared_ptr<Type> SymbolTable::resolveTypeUser(std::shared_ptr<ASTNode> type
  * Eg Typedef [typeNode] [typeDefto]
  * define type def mapping in the global
  */
-void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string typeDefTo, int ID) {
+void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string typeDefTo, int ID)
+{
     if (std::dynamic_pointer_cast<TupleTypeNode>(typeNode)) {
         // tuple typenode
         auto tupleNode = std::dynamic_pointer_cast<TupleTypeNode>(typeNode);
 
         // create a Type object with that hashed Name since the tuple TypeNode that is going to map to should be unique
-        std::shared_ptr<AdvanceType> typedefType = std::make_shared<AdvanceType>("tuple" + typeDefTo + std::to_string(ID));  // string hash
-        typedefType->baseTypeEnum = TYPE::TUPLE;   // set type to TUPLE
+        std::shared_ptr<AdvanceType> typedefType = std::make_shared<AdvanceType>("tuple" + typeDefTo + std::to_string(ID)); // string hash
+        typedefType->baseTypeEnum = TYPE::TUPLE; // set type to TUPLE
 
-        auto tupleChild = tupleNode->innerTypes;  // vector of inner types
-        for (auto c: tupleChild) {
+        auto tupleChild = tupleNode->innerTypes; // vector of inner types
+        for (auto c : tupleChild) {
             // resolve children's type
             auto resolvedChild = resolveTypeUser(std::dynamic_pointer_cast<TypeNode>(c.second));
-            if (resolvedChild == nullptr) throw TypeError(typeNode->loc(), "cannot resolve type in tuple");
-            typedefType->tupleChildType.push_back(std::make_pair(c.first ,resolvedChild));  // recursively resolve type
+            if (resolvedChild == nullptr)
+                throw TypeError(typeNode->loc(), "cannot resolve type in tuple");
+            typedefType->tupleChildType.push_back(std::make_pair(c.first, resolvedChild)); // recursively resolve type
         }
         typedefType->typDefName = typeDefTo;
         globalScope->defineType(typedefType);
     } else if (std::dynamic_pointer_cast<VectorTypeNode>(typeNode)) {
         auto vNode = std::dynamic_pointer_cast<VectorTypeNode>(typeNode);
-        auto innerType  = resolveTypeUser(vNode->getInnerType());
-
+        auto innerType = resolveTypeUser(vNode->getInnerType());
 
         auto typeDefType = std::make_shared<AdvanceType>("vector" + typeDefTo + std::to_string(ID));
         typeDefType->typDefName = typeDefTo;
         typeDefType->baseTypeEnum = innerType->baseTypeEnum;
         typeDefType->vectorOrMatrixEnum = VECTOR;
 
-        auto c1 = std::make_shared<AdvanceType>(innerType->getBaseTypeEnumName());  // create a inner child
+        auto c1 = std::make_shared<AdvanceType>(innerType->getBaseTypeEnumName()); // create a inner child
         c1->baseTypeEnum = innerType->baseTypeEnum;
         c1->vectorOrMatrixEnum = NONE;
 
@@ -170,24 +173,24 @@ void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string 
 
     } else if (std::dynamic_pointer_cast<MatrixTypeNode>(typeNode)) {
         auto vNode = std::dynamic_pointer_cast<MatrixTypeNode>(typeNode);
-        auto innerType  = resolveTypeUser(vNode->getInnerType());
+        auto innerType = resolveTypeUser(vNode->getInnerType());
 
         auto typeDefType = std::make_shared<AdvanceType>("matrix" + typeDefTo + std::to_string(ID));
         typeDefType->typDefName = typeDefTo;
         typeDefType->baseTypeEnum = innerType->baseTypeEnum;
         typeDefType->vectorOrMatrixEnum = VECTOR;
 
-        auto c = std::make_shared<AdvanceType>(innerType->getBaseTypeEnumName());  // create a child type
+        auto c = std::make_shared<AdvanceType>(innerType->getBaseTypeEnumName()); // create a child type
         c->baseTypeEnum = innerType->baseTypeEnum;
         c->vectorOrMatrixEnum = VECTOR;
 
-        auto c1 = std::make_shared<AdvanceType>(innerType->getBaseTypeEnumName());  // create a second child
+        auto c1 = std::make_shared<AdvanceType>(innerType->getBaseTypeEnumName()); // create a second child
         c1->baseTypeEnum = innerType->baseTypeEnum;
         c1->vectorOrMatrixEnum = NONE;
 
         c->vectorInnerTypes.push_back(c1);
 
-        typeDefType->vectorInnerTypes.push_back(c);   // typeDefType node now a vector that contains vector
+        typeDefType->vectorInnerTypes.push_back(c); // typeDefType node now a vector that contains vector
         globalScope->defineType(typeDefType);
 
     } else if (std::dynamic_pointer_cast<StringTypeNode>(typeNode)) {
@@ -200,9 +203,10 @@ void SymbolTable::defineTypeDef(std::shared_ptr<TypeNode> typeNode, std::string 
     }
 }
 
-int SymbolTable::isTypeDefed(std::string typedefTo) {
+int SymbolTable::isTypeDefed(std::string typedefTo)
+{
     if (globalScope->typedefTypeNode.find(typedefTo) != globalScope->typedefTypeNode.end()) {
-        return  1;
+        return 1;
     }
     return 0;
 }
