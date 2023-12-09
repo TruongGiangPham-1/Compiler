@@ -267,7 +267,8 @@ std::any BackendWalker::visitID(std::shared_ptr<IDNode> tree) {
     } else {
       return codeGenerator.cast(val, toType);
     }
-  } else if (tree->sym->functionStackIndex >= 0) {
+  } else if (tree->sym->declarationIndex>= 0) {
+    std::cout << "Reaching back " << tree->numStackBehind << " " << tree->sym->declarationIndex << std::endl;
     return codeGenerator.indexCommonType(*(this->variableStack.end()-1-tree->numStackBehind), codeGenerator.generateValue(tree->sym->declarationIndex));
   } else {
     return codeGenerator.generateLoadIdentifier(tree->sym->mlirName);
@@ -457,20 +458,21 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 }
 
 std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
-
+  
   if (tree->getVectDomain()) {
+    auto stack = codeGenerator.initializeStack(1);
     auto baseVec = std::any_cast<mlir::Value>(walk(tree->getVectDomain()));
 
     // we do a little indexing
     auto index = codeGenerator.generateValue(1);
-    auto domain = codeGenerator.generateValue(0);
+
     auto one = codeGenerator.generateValue(1);
+
+    this->variableStack.push_back(stack);
 
     // build arg list
     std::vector<mlir::Value> argument;
     argument.push_back(baseVec);
-
-
 
     auto length = codeGenerator.generateCallNamed("length", argument);
     auto generatorVector = codeGenerator.generateValue(length);
@@ -488,7 +490,7 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.setBuilderInsertionPoint(trueBlock);
     auto indexedVal = codeGenerator.indexCommonType(baseVec, index);
-    codeGenerator.generateAssignment(domain, indexedVal);
+    codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, one), indexedVal);
 
     auto result = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
@@ -497,18 +499,22 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
 
     codeGenerator.generateEnterBlock(loopBeginBlock);
     codeGenerator.setBuilderInsertionPoint(exitBlock);
-
+  
+    this->variableStack.pop_back();
     return generatorVector;
   } else {
     auto row = std::any_cast<mlir::Value>(walk(tree->getMatrixDomain().first));
     auto column = std::any_cast<mlir::Value>(walk(tree->getMatrixDomain().second));
 
     // we do a little indexing
+    auto stack = codeGenerator.initializeStack(2);
+
     auto rowIndex = codeGenerator.generateValue(1);
     auto rowDomain = codeGenerator.generateValue(1);
     auto colDomain = codeGenerator.generateValue(1);
-
+    
     auto one = codeGenerator.generateValue(1);
+    auto two = codeGenerator.generateValue(2);
 
     // build arg list
     std::vector<mlir::Value> rowArgument;
@@ -568,8 +574,8 @@ std::any BackendWalker::visitGenerator(std::shared_ptr<GeneratorNode> tree) {
       auto indexedRow = codeGenerator.indexCommonType(row, rowIndex);
       auto indexedCol = codeGenerator.indexCommonType(column, colIndex);
 
-      codeGenerator.generateAssignment(rowDomain, indexedRow);
-      codeGenerator.generateAssignment(colDomain, indexedCol);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, one), indexedRow);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, two), indexedCol);
 
       auto result = std::any_cast<mlir::Value>(walk(tree->getExpr()));
 
