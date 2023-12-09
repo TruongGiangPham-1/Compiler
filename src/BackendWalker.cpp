@@ -385,6 +385,9 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   auto filteree = std::any_cast<mlir::Value>(walk(tree->getDomain()));
   auto one = codeGenerator.generateValue(1);
 
+  auto stack = codeGenerator.initializeStack(1);
+  this->variableStack.push_back(stack);
+
   // max amount of filters
   auto maxFiltered = codeGenerator.generateValue((int)tree->getExprList().size()+1);
 
@@ -393,9 +396,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   
   std::vector<mlir::Value> argument;
   argument.push_back(filteree);
-  auto domain = codeGenerator.generateValue(0);
-  codeGenerator.generateDeclaration(tree->domainVarSym->mlirName, domain);
-
+  
   auto maxVectorSize = codeGenerator.generateCallNamed("length", argument);
 
   // +1 for left over
@@ -418,10 +419,9 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
 
   codeGenerator.setBuilderInsertionPoint(trueBlock);
 
-
   auto indexedVal = codeGenerator.indexCommonType(filteree, index);
+  codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, one), indexedVal);
 
-  codeGenerator.generateAssignment(domain, indexedVal);
   auto appended = codeGenerator.generateValue(false);
   for (int i = 0 ; i < tree->getExprList().size() ; i ++) {
 
@@ -456,6 +456,7 @@ std::any BackendWalker::visitFilter(std::shared_ptr<FilterNode> tree) {
   codeGenerator.generateEnterBlock(loopBeginBlock);
   codeGenerator.setBuilderInsertionPoint(exitBlock);
 
+  this->variableStack.pop_back();
   return filter;
 }
 
