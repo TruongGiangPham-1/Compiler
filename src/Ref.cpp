@@ -22,6 +22,11 @@ namespace gazprea {
         } else {
         }
     }
+    std::any Ref::visitBlock(std::shared_ptr<BlockNode> tree) {
+        walkChildren(tree);
+        tree->scope = currentScope;
+        return 0;
+    }
 
     std::any Ref::visitTupleIndex(std::shared_ptr<TupleIndexNode> tree) {
         // resolve id

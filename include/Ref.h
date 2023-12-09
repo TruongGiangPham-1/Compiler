@@ -80,6 +80,7 @@ namespace gazprea {
         std::any visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree) override;
 
 
+        std::any visitBlock(std::shared_ptr<BlockNode>tree);
         //std::any visitType(std::shared_ptr<TypeNode> tree) override;
 
         std::any visitGenerator(std::shared_ptr<GeneratorNode> tree) override;
