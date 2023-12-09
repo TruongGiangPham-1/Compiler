@@ -356,15 +356,22 @@ namespace gazprea {
             // case everything else. like base type
             promoteNode->evaluatedType = dominantType;
         }
-
     }
     void PromotedType::promoteIdentityAndNull(std::shared_ptr<Type> promoteTo, std::shared_ptr<ASTNode> identityNode) {
         if (promoteTo->vectorOrMatrixEnum == TYPE::VECTOR) {
             identityNode->evaluatedType = getTypeCopy(promoteTo);
-            if (isVector(identityNode->evaluatedType) || isMatrix(identityNode->evaluatedType)) {
+            if (std::dynamic_pointer_cast<VectorNode>(identityNode)) {
+                for (auto childExpr: std::dynamic_pointer_cast<VectorNode>(identityNode)->getElements()) {
+                    childExpr->evaluatedType = getTypeCopy(identityNode->evaluatedType->vectorInnerTypes[0]);
+                }
+                return;
+            }
+
+            else if ((isVector(identityNode->evaluatedType) || isMatrix(identityNode->evaluatedType)) && (identityNode->evaluatedType->baseTypeEnum != TYPE::IDENTITY && identityNode->evaluatedType->baseTypeEnum != TYPE::NULL_) ) {
                 for (int i = 0; i < identityNode->evaluatedType->vectorInnerTypes.size(); i++) {
                     identityNode->evaluatedType->vectorInnerTypes[i] = promoteTo->vectorInnerTypes[0];
                 }
+                return;
             }
         } else if (promoteTo->vectorOrMatrixEnum == TYPE::MATRIX) {
 
