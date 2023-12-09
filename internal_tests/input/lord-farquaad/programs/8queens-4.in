@@ -1,0 +1,86 @@
+const integer N = 4;
+
+typedef integer[N, N] Board;
+
+function boardElement(Board board, integer row, integer col) returns character {
+    if (board[row, col] == 1) return 'Q';
+    else return '.';
+}
+
+procedure printBoard(Board board) returns integer {
+    loop row in 1..N {
+        boardElement(board, row, 1) -> std_output;
+        loop col in 2..N {
+            " " -> std_output;
+            boardElement(board, row, col) -> std_output;
+        }
+        '\n' -> std_output;
+    }
+
+    return 0;
+}
+
+procedure isSafe(Board board, const integer row, const integer col) returns boolean {
+    integer x = row;
+    integer y = col;
+
+    // row check
+    loop i in 1..col {
+        if (board[row, i] == 1) return false;
+    }
+
+    // diagonal check (part 1)
+    loop while (x >= 1 and y >= 1) {
+        if (board[x, y] == 1) return false;
+        x = x - 1;
+        y = y - 1;
+    }
+
+    // diagonal check (part 2)
+    x = row;
+    y = col;
+    loop while (x <= N and y >= 1) {
+        if (board[x, y] == 1) return false;
+        x = x + 1;
+        y = y - 1;
+    }
+
+    return true;
+}
+
+procedure solveNQueens(var Board board, integer col) returns boolean {
+    if (col > N) return true;
+
+    loop row in 1..N {
+        boolean safe = isSafe(board, row, col);
+        if (safe) {
+            board[row, col] = 1;
+            boolean success = solveNQueens(board, col + 1);
+
+            if (success) {
+                if (col == N) {
+                    call printBoard(board);
+                }
+                return true;
+            }
+
+            // If not true, remove queen from board (backtrack)
+            board[row, col] = 0;
+        }
+    }
+
+    return false;
+}
+
+procedure main() returns integer {
+    Board board = 0;
+
+    const solved = solveNQueens(board, 1);
+    if (not solved) {
+        "No solution found\n" -> std_output;
+    } else {
+        "Solution found!\n" -> std_output;
+    }
+
+    return 0;
+}
