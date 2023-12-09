@@ -1,0 +1,7 @@
+procedure main() returns integer {
+  character[*] x = "hello world\n";
+
+  x -> std_output;
+
+  return 0;
+}

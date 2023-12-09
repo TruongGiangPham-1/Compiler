@@ -1,0 +1,7 @@
+procedure main() returns integer {
+
+  integer[*] a = 1..(1+4*2);
+
+  a[10] -> std_output;
+  return 0;
+}

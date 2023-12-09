@@ -1,0 +1,14 @@
+procedure main() returns integer {
+  real x;
+  integer i;
+
+  // input: 12.heheheh
+  x <- std_input;
+  x -> std_output;
+  ' ' -> std_output;
+  i = stream_state(std_input);
+  i -> std_output;
+  '\n' -> std_output;
+
+  return 0;
+}

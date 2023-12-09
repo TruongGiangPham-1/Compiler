@@ -1,0 +1,10 @@
+procedure p() returns integer {
+    return 1;
+}
+
+function f(integer i) returns integer = i + 1;
+
+procedure main() returns integer {
+    integer x = f(p());
+    return 0;
+}

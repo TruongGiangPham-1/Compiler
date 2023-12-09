@@ -1,0 +1,104 @@
+// circular queue type
+typedef integer[*] IntegerSet;
+
+procedure print_graph(integer[*, *] GRAPH, integer n) returns integer{
+    // prints out the adjacency matrix
+    loop i in 1..n {
+        GRAPH[i, 1] -> std_output;
+        loop j in 2..n {
+            " " -> std_output;
+            GRAPH[i, j] -> std_output;
+        }
+        "\n" -> std_output;
+    }
+
+    // Somehow we hae a control flow error when the proc doesn't return anything?
+    // ugh whatver
+    return 0;
+}
+
+// start all of the nodes as unvisited
+function initVisited(integer n) returns IntegerSet = [ i in 1..n | 0 ];
+
+// true if we have visited all nodes (i.e. all nodes are 1)
+function doneVisiting(integer[*] visited) returns boolean {
+    // filtered = ([ i is 0 ], [ i is 1 ]);
+    var filtered = [ i in visited & i == 0 ];
+    return length(filtered.1) == 0; // true if there no unvisited nodes
+}
+
+procedure popMinNode(var integer[*] visited, const real[*] dist, integer n) returns integer {
+    // find the minimum node that we haven't visited yet
+    // after doing so, mark it as visited
+
+    integer minNode = -1;
+    real minDist = 1e100; // simulate infinity
+
+    loop i in 1..n {
+        if (visited[i] == 0) { // out of all the unvisited nodes...
+            if (dist[i] < minDist) { // if the distance is less than the current minimum...
+                minNode = i;
+                minDist = dist[i];
+            }
+        }
+    }
+    visited[minNode] = 1; // mark the node as visited
+
+    return minNode;
+}
+
+procedure main() returns integer {
+    integer n; // number of nodes in the graph
+    n <- std_input;
+
+    integer s; // source node
+    integer t; // target node
+    s <- std_input;
+    t <- std_input;
+
+    "Going from " || format(s) || " to " || format(t) || " in a graph with " || format(n) || " nodes.\n"-> std_output;
+
+    // read the graph
+    integer[n, n] GRAPH;
+    loop i in 1..n, j in 1..n {
+        GRAPH[i, j] <- std_input;
+    }
+    // call print_graph(GRAPH, n);
+
+    // ==============
+    // START DIJKSTRA
+    // ==============
+    real[n] dist = 1e100; // simulate infinity
+    dist[s] = 0; // distance from source to source is 0
+
+    integer[n] prev = -1;
+    IntegerSet visited = initVisited(n);
+
+    loop while (not doneVisiting(visited)) {
+        integer minNode = popMinNode(visited, dist, n);
+        // "Current minNode is " || format(minNode) || " with distance " || format(dist[minNode]) || "\n" -> std_output;
+
+        if (minNode == t) {
+            // "Found target node " || format(t) || " with distance " || format(dist[t]) || "\n" -> std_output;
+            break;
+        }
+
+        // loop through all neighbours of minNode that are in Q
+        var validNeighboursFilter = [ i in 1..n & GRAPH[minNode, i] > 0 and visited[i] == 0 ];
+
+        loop i in validNeighboursFilter.1 {
+            real alt = dist[minNode] + GRAPH[minNode, i];
+            if (alt < dist[i]) {
+                dist[i] = alt;
+                prev[i] = minNode;
+            }
+        }
+    }
+
+    // ============
+    // Print answer
+    // ============
+    "Shortest path from " || format(s) || " to " || format(t) || " is " || format(dist[t]) || "\n" -> std_output;
+
+    return 0;
+}

@@ -1,0 +1,11 @@
+procedure p() returns integer {
+    return 1;
+}
+procedure main() returns integer {
+    // var x = p(); /* Legal */
+    // var y = -p(); /* Legal, depending on the return type of p */
+    // var z = not p(); /* Legal, depending on the return type of p */
+    var u = p() + p(); /* Illegal */
+
+    return 0;
+}

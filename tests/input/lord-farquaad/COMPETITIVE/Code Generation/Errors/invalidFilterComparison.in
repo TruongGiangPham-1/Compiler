@@ -1,0 +1,7 @@
+procedure main() returns integer {
+  [i in 1..5 & i == 3, i == 2, i % 2 == 0] ==
+  [i in 2..10 & i == 3, i == 2, i % 2 == 0] -> std_output;
+
+
+  return 1;
+}
