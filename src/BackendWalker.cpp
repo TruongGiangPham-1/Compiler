@@ -790,7 +790,7 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
       codeGenerator.setBuilderInsertionPoint(trueBlock);
       // set domainIdxVal to domain[domainIdx]
       auto indexedVal = codeGenerator.indexCommonType(domain, domainIdx);
-      codeGenerator.generateAssignment(domainIdxVal, indexedVal);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, codeGenerator.generateValue(i)), indexedVal);
 
       // increment domainIdx
       // doing this here so if there is a `break` of `continue` stmt in the body, we won't be stuck in an infinite loop
