@@ -764,12 +764,11 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
             // create/load domain vector
       auto domain = std::any_cast<mlir::Value>(walk(domainNode));
 
-      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, codeGenerator.generateValue(i)), domain);
-
+      
       // var to index the domain
       auto domainIdx = codeGenerator.generateValue(1);
       auto domainIdxVal = codeGenerator.generateNullValue(domainSym->typeSym);
-      codeGenerator.generateDeclaration(domainSym->mlirName, domainIdxVal);
+      codeGenerator.generateAssignment(codeGenerator.indexCommonType(stack, codeGenerator.generateValue(i)), domainIdxVal);
 
       // get length of domainVec
       auto domainLength = codeGenerator.generateCallNamed("length", {domain});
