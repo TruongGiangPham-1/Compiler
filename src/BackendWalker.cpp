@@ -756,7 +756,6 @@ std::any BackendWalker::visitIteratorLoop(std::shared_ptr<IteratorLoopNode> tree
   // tuple of <loopStart, loopExit>
   std::vector<std::pair<mlir::Block *, mlir::Block *>> blocks;
   auto stack = codeGenerator.initializeStack(tree->getDomainExprs().size());
-  std::cout << tree->getDomainExprs().size() << std::endl;
   // create new nested loop for each domainExpr
   int i = 1;
   for (auto &domainExpr : tree->getDomainExprs()) {
