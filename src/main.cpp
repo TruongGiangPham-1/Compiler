@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
       typeWalker.walk(ast);
 
 #ifdef DEBUG
-      std::cout << "\n\n=== ALIAS ERROR PASS\n"
+      std::cout << "\n\n=== ALIAS ERROR PASS\n";
 #endif
       gazprea::ProcedureCallArgWalker aliasErrorWalker;
       aliasErrorWalker.walk(ast);
