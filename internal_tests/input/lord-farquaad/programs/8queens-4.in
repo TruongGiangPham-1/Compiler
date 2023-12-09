@@ -58,6 +58,9 @@ procedure solveNQueens(var Board board, integer col) returns boolean {
             boolean success = solveNQueens(board, col + 1);
 
             if (success) {
+                if (col == N) {
+                    call printBoard(board);
+                }
                 return true;
             }
 
@@ -77,7 +80,6 @@ procedure main() returns integer {
         "No solution found\n" -> std_output;
     } else {
         "Solution found!\n" -> std_output;
-        call printBoard(board);
     }
 
     return 0;
