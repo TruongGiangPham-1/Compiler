@@ -1,0 +1,6 @@
+function test() returns integer;
+
+procedure main() returns integer {
+    integer a = test();
+    return 0;
+}

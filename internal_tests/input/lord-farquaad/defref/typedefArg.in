@@ -1,0 +1,14 @@
+const integer N = 4;
+
+typedef integer[N, N] Board;
+
+procedure printBoard(Board board) {
+    board -> std_output;
+}
+
+procedure main() returns integer {
+    Board board = 0;
+    call printBoard(board);
+
+    return 0;
+}
