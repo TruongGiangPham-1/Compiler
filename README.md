@@ -1,4 +1,8 @@
 # LordFarquaad
+## Introduction
+A compiler written for our class using C++, LLVM and MLIR (LLVM-dialect). The specifications of the language can be found [here](https://cmput415.github.io/415-docs/gazprea/).
+
+## Authors
 The base cmake setup by
 
 Author: Braedy Kuzma (braedy@ualberta.ca)  
@@ -11,23 +15,14 @@ Project done by:    Joshua Ji, Stan Fedyk, Truong-Giang Pham, Sanjeev Kotha
                     
 # Usage
 ## Installing MLIR
-In this project you will be working with MLIR and LLVM.
 Due to the complex nature (and size) of the project we did not want to include
 MLIR as a subproject. Therefore, there is some additional setup required to get
 your build up and running.
 
 ### On a personal machine
-  1. Follow the instructions on the
+Follow the instructions on the
      [setup page](https://cmput415.github.io/415-docs/setup/cs_computers.html)
      for your machine.
-
-### On a university machine
-You won't be building MLIR on the university machines: AICT wouldn't be very
-happy with you. Instead, we are providing a **RELEASE** build available for
-everyone.
-  1. Follow the instructions on the
-     [setup page](https://cmput415.github.io/415-docs/setup/cs_computers.html)
-     for the CS computers and MLIR/LLVM will be available to you.
 
 ## Building
 ### Linux
