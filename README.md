@@ -1,5 +1,5 @@
-# GazpreaLordFarquaad
-The base cmake setup for Gazprea assignment.
+# LordFarquaad
+The base cmake setup by
 
 Author: Braedy Kuzma (braedy@ualberta.ca)  
 
