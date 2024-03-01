@@ -40,6 +40,8 @@ It should produce a `bin` folder.
   1. `./bin/gazc <path-to-input-file>.in <path-to-output-file>.ll` to compile the input program into LLVM IR
   2.  `lli -dlopen=./bin/libgazrt.so <path-to-output-file>.ll` to execute the LLVM IR program with the dynamic library
 
+Many examples of program it can compile can be found [here](https://github.com/TruongGiangPham-1/Compiler/tree/master/tests/input/lord-farquaad/COMPETITIVE/Code%20Generation)
+
 ## Pulling in upstream changes
 If there are updates to your assignment you can retrieve them using the
 instructions here.
@@ -56,12 +58,12 @@ Once the remote has been added, future updates are simply the `fetch` and
 `merge` steps.
 
 # How it work
-  1. grammar written in ANTLR4 which parses the program to create a parse tree
-  2. the parse tree is converted to AST tree, which removes uneccesary nodes.
-  3. a define + reference pass to the AST to resolve symbols and scopes.
-  4. a typecheck pass to the AST to  resolve, promote, and infer types.
-  5. a syntax check pass to the AST to raise more compile time errors.
-  6. code generation pass to emit LLVM IR.
+  1. Grammar written in ANTLR4 which parses the program to create a parse tree
+  2. The parse tree is converted to AST tree, which removes uneccesary nodes.
+  3. Define + reference passes to the AST to resolve symbols and scopes.
+  4. A typecheck pass to the AST to  resolve, promote, and infer types.
+  5. A syntax check pass to the AST to raise more compile time errors.
+  6. Code generation pass to emit LLVM IR.
 
 
 
