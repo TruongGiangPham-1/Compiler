@@ -51,21 +51,6 @@ It should produce a `bin` folder.
 
 Many examples of programs it can compile can be found [here](https://github.com/TruongGiangPham-1/Compiler/tree/master/tests/input/lord-farquaad/COMPETITIVE/Code%20Generation)
 
-## Pulling in upstream changes
-If there are updates to your assignment you can retrieve them using the
-instructions here.
-  1. Add the upstream as a remote using `git remote add upstream <clone-link>`.
-  1. Fetch updates from the upstream using `git fetch upstream`
-  1. Merge the updates into a local branch using
-     `git merge <local branch> upstream/<upstream branch>`. Usually both
-     branches are `master`.
-  1. Make sure that everything builds before committing to your personal
-     master! It's much easier to try again if you can make a fresh clone
-     without the merge!
-
-Once the remote has been added, future updates are simply the `fetch` and
-`merge` steps.
-
 
 
 
