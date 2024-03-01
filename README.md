@@ -1,6 +1,6 @@
 # LordFarquaad
 ## Introduction
-A compiler written for our class using C++, LLVM and MLIR (LLVM-dialect). The specifications of the language can be found [here](https://cmput415.github.io/415-docs/gazprea/).
+A compiler for a language(developed by IBM) using C++, LLVM and MLIR (LLVM-dialect). The specifications of the language can be found [here](https://cmput415.github.io/415-docs/gazprea/).
 
 ## Authors
 The base cmake setup by
@@ -34,9 +34,9 @@ Follow the instructions on the
   1. Run `cmake <path-to-cmake-src>`.
   1. Run `make`.
   1. Done.
-It should produce a `bin` folder
+It should produce a `bin` folder.
 
-## Usage
+## Compile and run a program
   1. `./bin/gazc <path-to-input-file>.in <path-to-output-file>.ll` to compile the input program into LLVM IR
   2.  `lli -dlopen=./bin/libgazrt.so <path-to-output-file>.ll` to execute the LLVM IR program with the dynamic library
 
@@ -54,3 +54,14 @@ instructions here.
 
 Once the remote has been added, future updates are simply the `fetch` and
 `merge` steps.
+
+# How it work
+  1. grammar written in ANTLR4 which parses the program to create a parse tree
+  2. the parse tree is converted to AST tree, which removes uneccesary nodes.
+  3. a define + reference pass to the AST to resolve symbols and scopes.
+  4. a typecheck pass to the AST to  resolve, promote, and infer types.
+  5. a syntax check pass to the AST to raise more compile time errors.
+  6. code generation pass to emit LLVM IR.
+
+
+
