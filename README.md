@@ -1,6 +1,6 @@
-# LordFarquaad
+# LordFarquaad Compiler
 ## Introduction
-A compiler written for our class using C++, LLVM and MLIR (LLVM-dialect). The specifications of the language can be found [here](https://cmput415.github.io/415-docs/gazprea/).
+A compiler for a language(developed by IBM) using C++, LLVM and MLIR (LLVM-dialect). The specifications of the language can be found [here](https://cmput415.github.io/415-docs/gazprea/).
 
 ## Authors
 The base cmake setup by
@@ -13,6 +13,15 @@ Updated by: Quinn Pham (qpham@ualberta.ca)
 
 Project done by:    Joshua Ji, Stan Fedyk, Truong-Giang Pham, Sanjeev Kotha
                     
+# How it work
+  1. Grammar written in ANTLR4 which parses the program to create a parse tree
+  2. The parse tree is converted to AST tree, which removes uneccesary nodes.
+  3. Define + reference passes to the AST to resolve symbols and scopes.
+  4. A typecheck pass to the AST to  resolve, promote, and infer types.
+  5. A syntax check pass to the AST to raise more compile time errors.
+  6. Code generation pass to emit LLVM IR.
+
+
 # Usage
 ## Installing MLIR
 Due to the complex nature (and size) of the project we did not want to include
@@ -34,18 +43,18 @@ Follow the instructions on the
   1. Run `cmake <path-to-cmake-src>`.
   1. Run `make`.
   1. Done.
+It should produce a `bin` folder.
 
-## Pulling in upstream changes
-If there are updates to your assignment you can retrieve them using the
-instructions here.
-  1. Add the upstream as a remote using `git remote add upstream <clone-link>`.
-  1. Fetch updates from the upstream using `git fetch upstream`
-  1. Merge the updates into a local branch using
-     `git merge <local branch> upstream/<upstream branch>`. Usually both
-     branches are `master`.
-  1. Make sure that everything builds before committing to your personal
-     master! It's much easier to try again if you can make a fresh clone
-     without the merge!
+## Compile and run a program
+  1. `./bin/gazc <path-to-input-file>.in <path-to-output-file>.ll` to compile the input program into LLVM IR
+  2.  `lli -dlopen=./bin/libgazrt.so <path-to-output-file>.ll` to execute the LLVM IR program with the dynamic library
 
-Once the remote has been added, future updates are simply the `fetch` and
-`merge` steps.
+Many examples of programs it can compile can be found [here](https://github.com/TruongGiangPham-1/Compiler/tree/master/tests/input/lord-farquaad/COMPETITIVE/Code%20Generation)
+
+## Running Sieve of eratosthenes program
+![sieve2nd](https://github.com/TruongGiangPham-1/Compiler/assets/66976914/d9b53622-2412-4ea5-9991-8651a9316ba4)
+
+
+
+
+
