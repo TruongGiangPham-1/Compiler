@@ -34,6 +34,11 @@ Follow the instructions on the
   1. Run `cmake <path-to-cmake-src>`.
   1. Run `make`.
   1. Done.
+It should produce a `bin` folder
+
+## Usage
+  1. `./bin/gazc <path-to-input-file>.in <path-to-output-file>.ll` to compile the input program into LLVM IR
+  2.  `lli -dlopen=./bin/libgazrt.so <path-to-output-file>.ll` to execute the LLVM IR program with the dynamic library
 
 ## Pulling in upstream changes
 If there are updates to your assignment you can retrieve them using the
