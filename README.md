@@ -1,4 +1,4 @@
-# LordFarquaad
+# LordFarquaad Compiler
 ## Introduction
 A compiler for a language(developed by IBM) using C++, LLVM and MLIR (LLVM-dialect). The specifications of the language can be found [here](https://cmput415.github.io/415-docs/gazprea/).
 
