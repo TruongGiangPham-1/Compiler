@@ -51,7 +51,8 @@ It should produce a `bin` folder.
 
 Many examples of programs it can compile can be found [here](https://github.com/TruongGiangPham-1/Compiler/tree/master/tests/input/lord-farquaad/COMPETITIVE/Code%20Generation)
 
-![sieveGifcrop](https://github.com/TruongGiangPham-1/Compiler/assets/66976914/bb123deb-1264-4bcf-bda5-497405198051)
+## Running Sieve of eratosthenes program
+![sieve2nd](https://github.com/TruongGiangPham-1/Compiler/assets/66976914/d9b53622-2412-4ea5-9991-8651a9316ba4)
 
 
 
