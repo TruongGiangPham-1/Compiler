@@ -51,6 +51,9 @@ It should produce a `bin` folder.
 
 Many examples of programs it can compile can be found [here](https://github.com/TruongGiangPham-1/Compiler/tree/master/tests/input/lord-farquaad/COMPETITIVE/Code%20Generation)
 
+![sieveGif](https://github.com/TruongGiangPham-1/Compiler/assets/66976914/5a4043da-131e-4311-8cfc-94a01830b18a)
+
+
 
 
 
