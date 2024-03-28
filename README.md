@@ -23,6 +23,8 @@ Project done by:    Joshua Ji, Stan Fedyk, Truong-Giang Pham, Sanjeev Kotha
 
 
 # Usage
+Pre-built binaries and library (gazc, libgazer.so) for Linux (x86_64) available alongside [each release](https://github.com/TruongGiangPham-1/Compiler/releases/tag/v1)
+Instructions to build from source below.
 ## Installing MLIR
 Due to the complex nature (and size) of the project we did not want to include
 MLIR as a subproject. Therefore, there is some additional setup required to get
